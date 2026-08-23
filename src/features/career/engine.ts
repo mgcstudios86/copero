@@ -1,11 +1,21 @@
-import type { CareerSnapshot, Club, Foot, PlayerProfile, Position } from '@/types/career';
+import type {
+  CareerSnapshot,
+  Club,
+  Foot,
+  PlayerProfile,
+  Position,
+  StrategyId,
+} from '@/types/career';
+import { applyChoice, advanceWeek } from './simulation';
+import { createRng } from './rng';
 
 /**
- * Reducer puro para el state machine del simulador de carrera (MGC-430).
+ * Reducer puro para el state machine del simulador de carrera (MGC-430
+ * + MGC-442).
  *
- * Cadena mínima: identity -> dashboard -> academy -> clubStart.
- * Mantenemos el reducer fuera del store para poder testearlo sin
- * inicializar zustand ni AsyncStorage.
+ * Cadena: identity -> dashboard -> academy -> clubStart -> dashboard (loop).
+ * La simulación corre con RNG determinista por (week, season) para que
+ * QA pueda validar feedback estable (acceptance bar #7 de strategies.md).
  */
 
 export type CareerAction =
@@ -17,6 +27,8 @@ export type CareerAction =
   | { type: 'commitIdentity' }
   | { type: 'openAcademy' }
   | { type: 'acceptClub'; club: Club }
+  | { type: 'decide'; strategyId: StrategyId; choiceId: string }
+  | { type: 'advance' }
   | { type: 'reset' };
 
 export const initialProfile: PlayerProfile = {
@@ -30,6 +42,25 @@ export const initialProfile: PlayerProfile = {
   value: 0,
   ovr: 50,
   stats: { apps: 0, goals: 0, ast: 0 },
+  attrs: { tecnico: 60, fisico: 60, mental: 60, portero: 50 },
+  career: {
+    presupuesto: 0,
+    moral: 70,
+    fisico: 80,
+    confianza: 60,
+    racha: 0,
+    lesion: { kind: 'ninguna', fechasOut: 0 },
+    reputation: {
+      prensa: 'neutral',
+      hinchada: 'aceptado',
+      vestuario: 'integrado',
+      seleccionConvocado: false,
+    },
+  },
+  week: 1,
+  season: 1,
+  clubPresupuesto: 0,
+  clubInteres: false,
 };
 
 export const initialSnapshot = (): CareerSnapshot => ({
@@ -61,6 +92,18 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
         stage: 'clubStart',
         profile: { ...state.profile, club: action.club },
       };
+    case 'decide': {
+      const seed = state.profile.week * 1009 + state.profile.season * 31 + action.strategyId.charCodeAt(0);
+      const { profile } = applyChoice(
+        state.profile,
+        action.strategyId,
+        action.choiceId,
+        createRng(seed),
+      );
+      return { ...state, profile };
+    }
+    case 'advance':
+      return { ...state, profile: advanceWeek(state.profile) };
     case 'reset':
       return initialSnapshot();
     default:

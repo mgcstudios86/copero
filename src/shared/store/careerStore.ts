@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { storage } from '@/shared/store/storage';
 import { step, initialSnapshot, isIdentityComplete } from '@/features/career/engine';
 import type { CareerAction } from '@/features/career/engine';
-import type { CareerSnapshot, Club, Foot, Position } from '@/types/career';
+import type { CareerSnapshot, Club, Foot, Position, StrategyId } from '@/types/career';
 
 type CareerStore = CareerSnapshot & {
   setName: (name: string) => void;
@@ -14,6 +14,8 @@ type CareerStore = CareerSnapshot & {
   commitIdentity: () => void;
   openAcademy: () => void;
   acceptClub: (club: Club) => void;
+  decide: (strategyId: StrategyId, choiceId: string) => void;
+  advance: () => void;
   reset: () => void;
 };
 
@@ -29,6 +31,9 @@ export const useCareerStore = create<CareerStore>()(
       commitIdentity: () => set((s) => step(s, { type: 'commitIdentity' } satisfies CareerAction)),
       openAcademy: () => set((s) => step(s, { type: 'openAcademy' } satisfies CareerAction)),
       acceptClub: (club) => set((s) => step(s, { type: 'acceptClub', club } satisfies CareerAction)),
+      decide: (strategyId, choiceId) =>
+        set((s) => step(s, { type: 'decide', strategyId, choiceId } satisfies CareerAction)),
+      advance: () => set((s) => step(s, { type: 'advance' } satisfies CareerAction)),
       reset: () => set(() => step(initialSnapshot(), { type: 'reset' } satisfies CareerAction)),
     }),
     {

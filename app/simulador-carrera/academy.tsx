@@ -4,10 +4,18 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
+import { copy } from '@/design/copy/es-AR/simulador-carrera';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { ACADEMY_CLUBS } from '@/features/career/clubs';
 import { POSITION_LABEL } from '@/features/career/positions';
 import type { Club } from '@/types/career';
+
+/** Mapea presupuesto del club al copyId de la card tier (copy-matrix.md §3). */
+function tierCopyId(club: Club): string {
+  if (club.presupuesto >= 5) return 'academy_card_top';
+  if (club.presupuesto >= 2) return 'academy_card_medium';
+  return 'academy_card_low';
+}
 
 export default function AcademyScreen() {
   const router = useRouter();
@@ -19,11 +27,11 @@ export default function AcademyScreen() {
   const onPickClub = (club: Club) => {
     acceptClub(club);
     Alert.alert(
-      '¡Bienvenido a ' + club.name + '!',
-      'Tu carrera arranca en ' + club.name + ' (' + club.league + '). La simulación completa llega en próximos tickets.',
+      copy.resolve('academy_cta', { club: club.name }),
+      copy.resolve('academy_sub'),
       [
         {
-          text: 'Volver al dashboard',
+          text: copy.resolve('identity_cta'),
           onPress: () => router.replace('/simulador-carrera/dashboard'),
         },
       ],
@@ -46,7 +54,7 @@ export default function AcademyScreen() {
             }}
             accessibilityRole="header"
           >
-            ACADEMY
+            {copy.resolve('academy_step')}
           </Text>
           <Text
             style={{
@@ -58,11 +66,10 @@ export default function AcademyScreen() {
             }}
             accessibilityRole="header"
           >
-            Oferta del academy
+            {copy.resolve('academy_h1')}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.base }}>
-            {profile.name || 'Tu jugador'} · {POSITION_LABEL[profile.position]} · OVR {profile.ovr}.
-            Elegí un club para arrancar tu carrera.
+            {copy.resolve('academy_sub')}
           </Text>
         </View>
 

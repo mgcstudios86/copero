@@ -4,8 +4,10 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
+import { copy, copyHelpers } from '@/design/copy/es-AR/simulador-carrera';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
+import { recommendStrategy } from '@/features/career/simulation';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -19,8 +21,17 @@ export default function DashboardScreen() {
   // Placeholder timeline rows 16..38 con OVR/APPS/GOALS/AST
   const timelineRows = Array.from({ length: 38 - 16 + 1 }, (_, i) => {
     const age = 16 + i;
-    return { age, ovr: profile.ovr, apps: 0, goals: 0, ast: 0, club: 'Free agent' };
+    return {
+      age,
+      ovr: profile.ovr,
+      apps: 0,
+      goals: 0,
+      ast: 0,
+      club: profile.club?.name ?? copy.resolve('dashboard_badge_value_free'),
+    };
   });
+
+  const recommended = recommendStrategy(profile);
 
   const onAcademyPress = () => {
     openAcademy();
@@ -94,13 +105,15 @@ export default function DashboardScreen() {
                   fontSize: fontSize.md,
                   fontWeight: fontWeight.bold,
                 }}
+                accessibilityLabel={`Overall rating ${profile.ovr}`}
               >
-                {profile.ovr} OVR
+                {copyHelpers.ovrChip(profile.ovr)}
               </Text>
             </View>
           </View>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
-            Edad {profile.age} · {profile.club ? profile.club.name : 'Free agent'}
+            {copy.resolve('dashboard_badge_age', { age: profile.age })} ·{' '}
+            {profile.club ? profile.club.name : copy.resolve('dashboard_badge_value_free')}
           </Text>
         </View>
 
@@ -111,13 +124,13 @@ export default function DashboardScreen() {
             gap: spacing[3],
           }}
         >
-          <Stat label="Apps" value={profile.stats.apps} />
-          <Stat label="Goals" value={profile.stats.goals} />
-          <Stat label="Ast" value={profile.stats.ast} />
+          <Stat label={copy.resolve('dashboard_stat_apps')} value={profile.stats.apps} />
+          <Stat label={copy.resolve('dashboard_stat_goals')} value={profile.stats.goals} />
+          <Stat label={copy.resolve('dashboard_stat_ast')} value={profile.stats.ast} />
         </View>
 
         {/* Trophy case (empty) */}
-        <Section title="Trofeos">
+        <Section title={copy.resolve('dashboard_trophy_empty_h2')}>
           <View
             style={{
               borderRadius: radii.lg,
@@ -138,13 +151,13 @@ export default function DashboardScreen() {
                 textAlign: 'center',
               }}
             >
-              Aún sin títulos. Tu vitrina se llena a medida que ganes copas.
+              {copy.resolve('dashboard_trophy_empty_p')}
             </Text>
           </View>
         </Section>
 
         {/* Timeline */}
-        <Section title="Timeline">
+        <Section title={copy.resolve('dashboard_timeline_h2')}>
           <View
             style={{
               borderRadius: radii.lg,
@@ -216,7 +229,7 @@ export default function DashboardScreen() {
         </Section>
 
         {/* National team */}
-        <Section title="Selección nacional">
+        <Section title={copy.resolve('dashboard_selection_h2')}>
           <Pressable
             onPress={() => undefined}
             style={{
@@ -227,7 +240,7 @@ export default function DashboardScreen() {
               padding: spacing[4],
               gap: spacing[2],
             }}
-            accessibilityLabel="Selección nacional, aún sin convocatoria"
+            accessibilityLabel={copy.resolve('dashboard_selection_empty')}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
               <Text style={{ fontSize: 28 }}>{nat ? nat.flag : '🏳️'}</Text>
@@ -239,24 +252,50 @@ export default function DashboardScreen() {
                   flex: 1,
                 }}
               >
-                {nat ? nat.name : 'Sin selección'}
+                {nat ? nat.name : copy.resolve('dashboard_selection_empty')}
               </Text>
               <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>0 caps</Text>
             </View>
             <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
-              Debut convocado cuando tu OVR supere el umbral de la selección.
+              {profile.career.reputation.seleccionConvocado
+                ? copy.resolve('state_picked_national')
+                : copy.resolve('dashboard_selection_empty')}
             </Text>
           </Pressable>
         </Section>
 
+        {/* Recommended strategy (motor → UI sin hardcodeo) */}
+        {recommended ? (
+          <Section title="Decisión sugerida">
+            <View
+              style={{
+                borderRadius: radii.lg,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+                padding: spacing[4],
+                gap: spacing[2],
+              }}
+              testID="dashboard-recommended"
+            >
+              <Text style={{ color: colors.textStrong, fontWeight: fontWeight.semibold }}>
+                {copy.resolve(`training_${recommended.toLowerCase()}_title` as never)}
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
+                {copy.resolve(`training_${recommended.toLowerCase()}_body` as never)}
+              </Text>
+            </View>
+          </Section>
+        ) : null}
+
         <Button
-          label="Ver oferta del academy"
+          label={copy.resolve('dashboard_cta_match')}
           onPress={onAcademyPress}
           variant="primary"
           size="lg"
           fullWidth
           testID="btn-dashboard-academy"
-          accessibilityHint="Abre la pantalla de oferta del academy"
+          accessibilityHint={copy.resolve('academy_h1')}
         />
       </ScrollView>
     </SafeAreaView>

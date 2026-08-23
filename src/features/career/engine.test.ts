@@ -69,6 +69,38 @@ describe('career engine', () => {
     s = step(s, { type: 'setName', name: 'Ma' });
     expect(isIdentityComplete(s.profile)).toBe(true);
   });
+
+  it('decide aplica una decision y avanza la semana manteniendo stage', () => {
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'Mateo' });
+    s = step(s, { type: 'commitIdentity' }); // -> dashboard
+    s = step(s, { type: 'openAcademy' });
+    s = step(s, { type: 'acceptClub', club: ACADEMY_CLUBS[0] });
+
+    const beforeWeek = s.profile.week;
+    const beforeAttrs = { ...s.profile.attrs };
+    s = step(s, { type: 'decide', strategyId: 'E2', choiceId: 'e2_accept' });
+
+    expect(s.stage).toBe('clubStart'); // stage no cambia por decide
+    expect(s.profile.week).toBe(beforeWeek + 1);
+    // OVR se recalcula como pure function y no debe bajar (E2 success sube atributos).
+    expect(s.profile.attrs.tecnico).toBeGreaterThanOrEqual(beforeAttrs.tecnico - 2);
+    expect(s.profile.attrs.mental).toBeGreaterThanOrEqual(beforeAttrs.mental - 2);
+  });
+
+  it('advance drena lesión y bumpea season cada 38 semanas', () => {
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'Test' });
+    s = step(s, { type: 'commitIdentity' });
+    s = step(s, { type: 'openAcademy' });
+    s = step(s, { type: 'acceptClub', club: ACADEMY_CLUBS[0] });
+    const season = s.profile.season;
+    // Empujamos la week directo y avanzamos una vez.
+    s = { ...s, profile: { ...s.profile, week: 38 } };
+    s = step(s, { type: 'advance' });
+    expect(s.profile.season).toBe(season + 1);
+    expect(s.profile.week).toBe(1);
+  });
 });
 
 describe('career fixtures', () => {

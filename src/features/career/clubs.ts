@@ -11,6 +11,7 @@ export const ACADEMY_CLUBS: Club[] = [
     league: 'Liga Profesional',
     crestColor: '#1F2A24',
     crestAccent: '#FFFFFF',
+    presupuesto: 8,
   },
   {
     id: 'temperley',
@@ -18,6 +19,7 @@ export const ACADEMY_CLUBS: Club[] = [
     league: 'Primera Nacional',
     crestColor: '#5B0A0A',
     crestAccent: '#F0EAE0',
+    presupuesto: 3,
   },
   {
     id: 'moron',
@@ -25,5 +27,6 @@ export const ACADEMY_CLUBS: Club[] = [
     league: 'Primera Nacional',
     crestColor: '#0E1411',
     crestAccent: '#FFFFFF',
+    presupuesto: 1,
   },
 ];

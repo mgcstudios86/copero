@@ -1,0 +1,235 @@
+import { describe, expect, it } from 'vitest';
+import {
+  applyChoice,
+  advanceWeek,
+  eventFromStrategy,
+  recommendStrategy,
+  setInjury,
+} from './simulation';
+import { createRng, seedFromString } from './rng';
+import { recomputeOvrForPosition, recomputeReputation } from './reputation';
+import { STRATEGIES } from './strategy';
+import { initialProfile } from './engine';
+import type { PlayerProfile, StrategyId } from '@/types/career';
+
+/** Fixture determinista con overrides parciales. */
+function profileFixture(overrides: Partial<PlayerProfile> = {}): PlayerProfile {
+  return {
+    ...initialProfile,
+    ...overrides,
+    attrs: { ...initialProfile.attrs, ...(overrides.attrs ?? {}) },
+    career: {
+      ...initialProfile.career,
+      ...(overrides.career ?? {}),
+      reputation: {
+        ...initialProfile.career.reputation,
+        ...(overrides.career?.reputation ?? {}),
+      },
+      lesion: overrides.career?.lesion ?? initialProfile.career.lesion,
+    },
+  };
+}
+
+describe('rng determinista', () => {
+  it('mismo seed → misma secuencia', () => {
+    const a = createRng(seedFromString('copero-mgc-442'));
+    const b = createRng(seedFromString('copero-mgc-442'));
+    for (let i = 0; i < 20; i++) {
+      expect(a.next()).toBe(b.next());
+    }
+  });
+
+  it('chance(0) siempre false y chance(1) siempre true', () => {
+    const r = createRng(42);
+    for (let i = 0; i < 50; i++) {
+      expect(r.chance(0)).toBe(false);
+      expect(r.chance(1)).toBe(true);
+    }
+  });
+
+  it('int respeta min/max inclusivos', () => {
+    const r = createRng(7);
+    for (let i = 0; i < 100; i++) {
+      const v = r.int(5, 9);
+      expect(v).toBeGreaterThanOrEqual(5);
+      expect(v).toBeLessThanOrEqual(9);
+    }
+  });
+});
+
+describe('reputation pure function', () => {
+  it('moral >= 75 → prensa ensalzada', () => {
+    const rep = recomputeReputation(
+      { ...initialProfile.career, moral: 80 },
+      { ovr: 70, age: 24, week: 3 },
+    );
+    expect(rep.prensa).toBe('ensalzada');
+  });
+
+  it('moral <= 24 → prensa hostil', () => {
+    const rep = recomputeReputation(
+      { ...initialProfile.career, moral: 20 },
+      { ovr: 70, age: 24, week: 6 },
+    );
+    expect(rep.prensa).toBe('hostil');
+  });
+
+  it('racha + moral altos → hinchada idolo', () => {
+    const rep = recomputeReputation(
+      { ...initialProfile.career, racha: 6, moral: 80 },
+      { ovr: 70, age: 24, week: 2 },
+    );
+    expect(rep.hinchada).toBe('idolo');
+  });
+
+  it('selección convocada solo con OVR >= 80 y edad válida', () => {
+    const joven = recomputeReputation(
+      { ...initialProfile.career, racha: 5, moral: 80 },
+      { ovr: 85, age: 17, week: 2 },
+    );
+    expect(joven.seleccionConvocado).toBe(false);
+    const mayor = recomputeReputation(
+      { ...initialProfile.career, racha: 5, moral: 80 },
+      { ovr: 85, age: 25, week: 2 },
+    );
+    expect(mayor.seleccionConvocado).toBe(true);
+  });
+});
+
+describe('recomputeOvrForPosition', () => {
+  it('GK pondera portero', () => {
+    const ovr = recomputeOvrForPosition('GK', { tecnico: 50, fisico: 50, mental: 50, portero: 90 });
+    expect(ovr).toBeGreaterThanOrEqual(60);
+  });
+
+  it('campo excluye portero', () => {
+    const ovr = recomputeOvrForPosition('ST', { tecnico: 80, fisico: 70, mental: 60, portero: 10 });
+    expect(ovr).toBeGreaterThan(60);
+  });
+
+  it('clamp 0..99', () => {
+    expect(recomputeOvrForPosition('CM', { tecnico: 99, fisico: 99, mental: 99, portero: 99 })).toBeLessThanOrEqual(99);
+    expect(recomputeOvrForPosition('CM', { tecnico: 0, fisico: 0, mental: 0, portero: 0 })).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('eventFromStrategy', () => {
+  it('E1 devuelve title, feedback y choices sin copy hardcoded', () => {
+    const ev = eventFromStrategy('E1', profileFixture());
+    expect(ev.strategyId).toBe('E1');
+    expect(ev.title).toBe('training_e1_title');
+    expect(ev.choices.length).toBeGreaterThan(0);
+    expect(ev.choices[0].copyId).toBe('training_e1_option');
+  });
+
+  it('T1 sin clubInteres → 0 choices', () => {
+    const p = profileFixture();
+    // baseline: career.reputation.seleccionConvocado=false y club=null (sin presupuesto)
+    const ev = eventFromStrategy('T1', p);
+    expect(ev.choices).toHaveLength(0);
+  });
+
+  it('V3 sin racha negativa → 0 choices (condition no se cumple)', () => {
+    const p = profileFixture({ career: { ...initialProfile.career, racha: 0, moral: 60 } });
+    const ev = eventFromStrategy('V3', p);
+    expect(ev.choices).toHaveLength(0);
+  });
+});
+
+describe('applyChoice determinismo', () => {
+  it('mismo seed → mismos stats resultantes', () => {
+    const seed = seedFromString('fixture-1');
+    const p1 = profileFixture({ week: 3, season: 1 });
+    const p2 = profileFixture({ week: 3, season: 1 });
+    const r1 = applyChoice(p1, 'E2', 'e2_accept', createRng(seed));
+    const r2 = applyChoice(p2, 'E2', 'e2_accept', createRng(seed));
+    expect(r1.profile.career.moral).toBe(r2.profile.career.moral);
+    expect(r1.profile.career.fisico).toBe(r2.profile.career.fisico);
+    expect(r1.profile.attrs.tecnico).toBe(r2.profile.attrs.tecnico);
+    expect(r1.profile.attrs.mental).toBe(r2.profile.attrs.mental);
+  });
+
+  it('E4 (descanso) siempre exitoso: sube físico', () => {
+    const p = profileFixture({ career: { ...initialProfile.career, fisico: 30 } });
+    const r = applyChoice(p, 'E4', 'e4_accept', createRng(0));
+    expect(r.profile.career.fisico).toBe(48);
+  });
+
+  it('M1 conservadora: baja físico, sube moral', () => {
+    const p = profileFixture();
+    const r = applyChoice(p, 'M1', 'm1_conservadora', createRng(0));
+    expect(r.profile.career.fisico).toBe(initialProfile.career.fisico - 10);
+    expect(r.profile.career.moral).toBe(initialProfile.career.moral + 3);
+  });
+
+  it('clamping: moral no pasa de 100', () => {
+    const p = profileFixture({ career: { ...initialProfile.career, moral: 99 } });
+    const r = applyChoice(p, 'M1', 'm1_lider', createRng(0));
+    expect(r.profile.career.moral).toBeLessThanOrEqual(100);
+  });
+
+  it('feedback incluye copyId del matrix (sin strings hardcoded)', () => {
+    const p = profileFixture();
+    const r = applyChoice(p, 'E2', 'e2_accept', createRng(1));
+    expect(r.feedback.copyId).toMatch(/^feedback_/);
+    expect(['success', 'warning', 'danger', 'neutral']).toContain(r.feedback.kind);
+  });
+});
+
+describe('advanceWeek', () => {
+  it('drena lesión hasta cero y resetea kind', () => {
+    const lesionado = setInjury(profileFixture(), 'leve', 2);
+    const r = advanceWeek(lesionado);
+    expect(r.career.lesion.fechasOut).toBe(1);
+    expect(r.career.lesion.kind).toBe('leve');
+    const r2 = advanceWeek(r);
+    expect(r2.career.lesion.fechasOut).toBe(0);
+    expect(r2.career.lesion.kind).toBe('ninguna');
+  });
+
+  it('bumpea season cada 38 semanas', () => {
+    const r = advanceWeek(profileFixture({ week: 38 }));
+    expect(r.season).toBe(2);
+    expect(r.week).toBe(1);
+    expect(r.age).toBe(17);
+  });
+});
+
+describe('recommendStrategy', () => {
+  it('devuelve E* en semana normal', () => {
+    const id = recommendStrategy(profileFixture({ week: 5 }));
+    expect(id).toMatch(/^E\d$/);
+  });
+
+  it('V1 si racha >= 3', () => {
+    const p = profileFixture({ career: { ...initialProfile.career, racha: 4 } });
+    expect(recommendStrategy(p)).toBe('V1');
+  });
+
+  it('null cuando lesionado', () => {
+    const p = profileFixture({
+      career: { ...initialProfile.career, lesion: { kind: 'leve', fechasOut: 1 } },
+    });
+    expect(recommendStrategy(p)).toBeNull();
+  });
+});
+
+describe('cobertura del catálogo E1-V7', () => {
+  it('todos los StrategyId están definidos en STRATEGIES', () => {
+    const required: StrategyId[] = [
+      'E1','E2','E3','E4','E5','M1','M2','M3','M4','M5','T1','T2','T3','T4','L1','L2','L3','R1','R2','R3','R4','O1','O2','O3','O4','V1','V2','V3','V4','V5','V6','V7',
+    ];
+    for (const id of required) {
+      expect(STRATEGIES[id]).toBeDefined();
+      expect(STRATEGIES[id].options.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('cada option tiene feedback.success definido', () => {
+    for (const id of Object.keys(STRATEGIES) as StrategyId[]) {
+      for (const opt of STRATEGIES[id].options) {
+        expect(opt.feedback.success).toMatch(/^feedback_/);
+      }
+    }
+  });
+});
