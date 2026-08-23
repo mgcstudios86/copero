@@ -1,7 +1,10 @@
-# eas.yml — Copero (MGC-290)
+# eas.yml — Copero (MGC-290, MGC-379)
 # Preview builds cuando se pushea a feature branches (cualquier rama que NO sea main).
 # Política §8.3: builds --local. Plataforma Android + iOS.
-# El runner self-hosted del Mac mini tiene Xcode + Android Studio + eas CLI.
+# Runner self-hosted con label copero-ci (MGC-379): el runner-01 (Linux x64) corre
+# Android; el runner-02 (macOS ARM64) corre iOS. Ambos comparten label copero-ci.
+# EXPO_TOKEN viene de Infisical path=/copero env=prod (no de GH secret) — cargado
+# al shell y exportado a $GITHUB_ENV para que los steps siguientes lo hereden.
 #
 # El job decide plataforma según qué paths cambiaron (paths-filter):
 #   - 'app.json' / 'package.json' / 'eas.json' cambiados → ambas plataformas
@@ -40,7 +43,7 @@ permissions:
 jobs:
   changes:
     name: detect changed paths
-    runs-on: self-hosted
+    runs-on: [self-hosted, copero-ci, Linux]
     outputs:
       android: ${{ steps.filter.outputs.android }}
       ios: ${{ steps.filter.outputs.ios }}
@@ -77,7 +80,7 @@ jobs:
 
   preview-android:
     name: preview android (eas build --local)
-    runs-on: self-hosted
+    runs-on: [self-hosted, copero-ci, Linux]
     needs: changes
     if: needs.changes.outputs.android == 'true' || needs.changes.outputs.core == 'true'
     steps:
@@ -94,11 +97,11 @@ jobs:
             curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
           fi
       - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
-      - name: Cargar secretos (Infisical path=/copero env=prod)
+      - name: Cargar EXPO_TOKEN desde Infisical (path=/copero env=prod)
+        id: load_expo_token
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
             echo "ERROR: INFISICAL_TOKEN ausente. Configurar en GitHub repo secrets." >&2
@@ -109,12 +112,32 @@ jobs:
             exit 1
           fi
           mkdir -p .infisical-tmp
-          infisical export \
-            --projectId="${INFISICAL_PROJECT_ID}" \
-            --env=prod --path=/copero --format=dotenv > .env || echo "WARN: infisical export fallo; .env queda vacio" >&2
+          if ! infisical export \
+              --projectId="${INFISICAL_PROJECT_ID}" \
+              --env=prod --path=/copero --format=dotenv > .env; then
+            echo "ERROR: infisical export falló; abortando build" >&2
+            exit 1
+          fi
+          if ! grep -q '^EXPO_TOKEN=' .env; then
+            echo "ERROR: EXPO_TOKEN ausente en Infisical /copero env=prod (placeholder o no seteado)." >&2
+            exit 1
+          fi
+          set -a
+          # shellcheck disable=SC1091
+          source .env
+          set +a
+          if [[ "${EXPO_TOKEN}" == "test" || "${EXPO_TOKEN}" == "placeholder" ]]; then
+            echo "ERROR: EXPO_TOKEN es placeholder ('${EXPO_TOKEN}'); cargar valor real en Infisical /copero env=prod." >&2
+            exit 1
+          fi
+          {
+            echo "expo_token_len=${#EXPO_TOKEN}"
+            echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
+          }
+          echo "[eas-preview] EXPO_TOKEN cargado desde Infisical (longitud=${#EXPO_TOKEN})"
       - name: eas init (link proyecto no-interactive)
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
           if grep -q '"projectId"' eas.json; then
             echo "eas.json ya tiene projectId; skip init"
@@ -123,7 +146,7 @@ jobs:
           fi
       - name: eas build --local (android, profile=preview)
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
           JAVA_HOME: /opt/homebrew/opt/openjdk@17
         run: |
           if [[ ! -d "${JAVA_HOME}" ]]; then
@@ -134,7 +157,7 @@ jobs:
 
   preview-ios:
     name: preview ios (eas build --local)
-    runs-on: self-hosted
+    runs-on: [self-hosted, copero-ci, Linux]
     needs: changes
     if: needs.changes.outputs.ios == 'true' || needs.changes.outputs.core == 'true'
     steps:
@@ -151,11 +174,11 @@ jobs:
             curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
           fi
       - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
-      - name: Cargar secretos (Infisical path=/copero env=prod)
+      - name: Cargar EXPO_TOKEN desde Infisical (path=/copero env=prod)
+        id: load_expo_token
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
             echo "ERROR: INFISICAL_TOKEN ausente. Configurar en GitHub repo secrets." >&2
@@ -166,12 +189,29 @@ jobs:
             exit 1
           fi
           mkdir -p .infisical-tmp
-          infisical export \
-            --projectId="${INFISICAL_PROJECT_ID}" \
-            --env=prod --path=/copero --format=dotenv > .env || echo "WARN: infisical export fallo; .env queda vacio" >&2
+          if ! infisical export \
+              --projectId="${INFISICAL_PROJECT_ID}" \
+              --env=prod --path=/copero --format=dotenv > .env; then
+            echo "ERROR: infisical export falló; abortando build" >&2
+            exit 1
+          fi
+          if ! grep -q '^EXPO_TOKEN=' .env; then
+            echo "ERROR: EXPO_TOKEN ausente en Infisical /copero env=prod (placeholder o no seteado)." >&2
+            exit 1
+          fi
+          set -a
+          # shellcheck disable=SC1091
+          source .env
+          set +a
+          if [[ "${EXPO_TOKEN}" == "test" || "${EXPO_TOKEN}" == "placeholder" ]]; then
+            echo "ERROR: EXPO_TOKEN es placeholder ('${EXPO_TOKEN}'); cargar valor real en Infisical /copero env=prod." >&2
+            exit 1
+          fi
+          echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
+          echo "[eas-preview] EXPO_TOKEN cargado desde Infisical (longitud=${#EXPO_TOKEN})"
       - name: eas init (link proyecto no-interactive)
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
           if grep -q '"projectId"' eas.json; then
             echo "eas.json ya tiene projectId; skip init"
@@ -180,6 +220,6 @@ jobs:
           fi
       - name: eas build --local (ios, profile=preview)
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
           eas build --local --platform ios --profile preview --non-interactive
