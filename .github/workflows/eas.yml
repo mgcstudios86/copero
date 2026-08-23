@@ -112,6 +112,15 @@ jobs:
           infisical export \
             --projectId="${INFISICAL_PROJECT_ID}" \
             --env=prod --path=/copero --format=dotenv > .env || echo "WARN: infisical export fallo; .env queda vacio" >&2
+      - name: eas init (link proyecto no-interactive)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if grep -q '"projectId"' eas.json; then
+            echo "eas.json ya tiene projectId; skip init"
+          else
+            eas init --non-interactive --account mgcstudios || true
+          fi
       - name: eas build --local (android, profile=preview)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -160,6 +169,15 @@ jobs:
           infisical export \
             --projectId="${INFISICAL_PROJECT_ID}" \
             --env=prod --path=/copero --format=dotenv > .env || echo "WARN: infisical export fallo; .env queda vacio" >&2
+      - name: eas init (link proyecto no-interactive)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if grep -q '"projectId"' eas.json; then
+            echo "eas.json ya tiene projectId; skip init"
+          else
+            eas init --non-interactive --account mgcstudios || true
+          fi
       - name: eas build --local (ios, profile=preview)
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
