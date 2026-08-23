@@ -69,12 +69,21 @@ export default function Ronda() {
   };
 
   if (!word) {
+    // Estado de carga: expone los mismos testIDs (ronda-screen + current-word)
+    // que el estado "cargada" para que los tests E2E que esperan el primer
+    // render de /ronda (palabra aún no inyectada por el store) no se cuelguen
+    // buscando un selector inexistente. MGC-378.
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
-        <View style={styles.empty}>
-          <Text style={{ color: colors.textMuted, fontSize: fontSize.base }}>
-            Cargando palabra…
-          </Text>
+        <View
+          style={[styles.container, { padding: spacing[4], gap: spacing[4] }]}
+          testID="ronda-screen"
+        >
+          <View style={styles.empty} testID="current-word">
+            <Text style={{ color: colors.textMuted, fontSize: fontSize.base }}>
+              Cargando palabra…
+            </Text>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -104,7 +113,12 @@ export default function Ronda() {
           onTimeout={handleTimeout}
         />
 
-        <WordCard word={word.text} category="Adiviná" hint={word.hint} />
+        <WordCard
+          testID="current-word"
+          word={word.text}
+          category="Adiviná"
+          hint={word.hint}
+        />
 
         <View style={{ gap: spacing[3] }}>
           <Button
