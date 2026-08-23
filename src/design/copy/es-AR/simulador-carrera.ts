@@ -106,6 +106,7 @@ const ENTRIES: Record<string, CopyEntry> = {
   academy_card_low: { raw: '{club} · Primera Nacional · Presupuesto bajo · Semillero' },
   academy_selected_ring: { raw: 'Seleccionado' },
   academy_cta: { raw: 'Fichar por {club}' },
+  academy_accept_cta: { raw: 'Fichar y empezar' },
   academy_disclaimer: { raw: 'Escudos ilustrativos sin licencia oficial.' },
   academy_back_cta: { raw: 'Volver al dashboard' },
 

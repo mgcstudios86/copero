@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable, Alert } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, Pressable, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -26,16 +26,29 @@ export default function AcademyScreen() {
 
   const onPickClub = (club: Club) => {
     acceptClub(club);
-    Alert.alert(
-      copy.resolve('academy_cta', { club: club.name }),
-      copy.resolve('academy_sub'),
-      [
-        {
-          text: copy.resolve('identity_cta'),
-          onPress: () => router.replace('/simulador-carrera/dashboard'),
-        },
-      ],
-    );
+    const title = copy.resolve('academy_cta', { club: club.name });
+    const body = copy.resolve('academy_sub');
+    const acceptLabel = copy.resolve('academy_accept_cta');
+    const goToDashboard = () => router.replace('/simulador-carrera/dashboard');
+
+    // RN Web: Alert.alert no monta <dialog>/role="alertdialog" en el DOM
+    // (verificado por QA MGC-452 → MGC-473). En web usamos window.confirm,
+    // que dispara un dialog nativo que Playwright captura con page.on('dialog').
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+        if (window.confirm(`${title}\n\n${body}`)) {
+          goToDashboard();
+        }
+      }
+      return;
+    }
+
+    Alert.alert(title, body, [
+      {
+        text: acceptLabel,
+        onPress: goToDashboard,
+      },
+    ]);
   };
 
   return (
