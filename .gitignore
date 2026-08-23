@@ -52,4 +52,12 @@ keystore.properties
 
 # Tests
 coverage/
-e2e/
+# e2e/ — specs y fixtures DEBEN trackearse (MGC-400: ignorar e2e/ rompía
+# el discovery de specs nuevos en CI; runner solo veía los archivos
+# preexistentes en el último PR).
+# Excluímos sólo los artefactos efímeros de Playwright (results + cache).
+e2e/.results/
+e2e/.cache/
+e2e/playwright-report/
+test-results/
+playwright-report/
