@@ -10,7 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
-import { Button } from '@/design/components';
+import { Button, JerseyPreview } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { POSITIONS, GROUP_COLOR } from '@/features/career/positions';
 import { NATIONALITIES } from '@/features/career/nationalities';
@@ -84,7 +84,7 @@ export default function IdentityScreen() {
 
         {/* Jersey preview */}
         <View
-          testID="jersey-preview"
+          testID="jersey-preview-wrapper"
           style={{
             backgroundColor: colors.surface,
             borderRadius: radii.lg,
@@ -98,58 +98,16 @@ export default function IdentityScreen() {
           <Text style={{ color: colors.textMuted, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
             VISTA PREVIA DE CAMISETA
           </Text>
-          <View
-            style={{
-              width: 160,
-              height: 200,
-              borderRadius: radii.lg,
-              backgroundColor: GROUP_COLOR[
-                POSITIONS.find((p) => p.id === profile.position)?.group ?? 'attack'
-              ],
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 2,
-              borderColor: colors.borderStrong,
-            }}
+          {/* JerseyPreview renderiza SVG del país con dorsal + apellido.
+              Contraste dorsal/jersey verificado AA WCAG por MGC-465.
+              Mantiene testID="jersey-preview" + hijos "jersey-number" / "jersey-name". */}
+          <JerseyPreview
+            countryCode={profile.nationalityCode}
+            number={profile.number}
+            name={profile.name}
+            size="md"
             testID="jersey-preview"
-          >
-            {/*
-              Texto fijo #0A120E (equivale a colors.textStrong en modo claro).
-              No usamos `colors.textStrong` porque en modo oscuro es #FFFFFF y
-              vuelve a fallar WCAG sobre los 4 GROUP_COLOR. Hardcodeamos el
-              token oscuro para garantizar AA en ambos modos:
-                - attack (#E96A56)   ratio 5.92
-                - midfield (#4FBE82) ratio 8.31
-                - defense (#93C5FD)  ratio 10.7
-                - goalkeeper (#FBBF24) ratio 11.5
-              Verifica: app/simulador-carrera/identity.tsx (MGC-462).
-            */}
-            <Text
-              style={{
-                color: '#0A120E',
-                fontSize: 64,
-                fontFamily: fontFamily.display,
-                fontWeight: fontWeight.bold,
-              }}
-              numberOfLines={1}
-              accessibilityLabel={`Número ${profile.number}`}
-              testID="jersey-number"
-            >
-              {profile.number || '—'}
-            </Text>
-            <Text
-              style={{
-                color: '#0A120E',
-                fontSize: fontSize.md,
-                fontWeight: fontWeight.semibold,
-                marginTop: 4,
-              }}
-              numberOfLines={1}
-              testID="jersey-name"
-            >
-              {profile.name || 'Tu nombre'}
-            </Text>
-          </View>
+          />
           <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
             {profile.position} · OVR 50
           </Text>

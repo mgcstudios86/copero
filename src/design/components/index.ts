@@ -6,3 +6,7 @@ export { ScoreBoard } from './ScoreBoard';
 export { WordCard } from './WordCard';
 export { BannerAd } from './BannerAd';
 export { InterstitialOverlay } from './InterstitialOverlay';
+export { JerseyPreview } from './JerseyPreview';
+export type { JerseyPreviewProps, JerseyPreviewSize } from './JerseyPreview';
+export { ClubCrest } from './ClubCrest';
+export type { ClubCrestProps, ClubCrestClub } from './ClubCrest';

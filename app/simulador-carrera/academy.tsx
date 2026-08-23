@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View, Pressable, Alert } from 'react-nati
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
-import { Button } from '@/design/components';
+import { Button, ClubCrest } from '@/design/components';
 import { copy } from '@/design/copy/es-AR/simulador-carrera';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { ACADEMY_CLUBS } from '@/features/career/clubs';
@@ -92,41 +92,9 @@ export default function AcademyScreen() {
                 gap: spacing[4],
               }}
             >
-              {/* Escudo placeholder: dos círculos concéntricos con colores del club */}
-              <View
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 36,
-                  borderWidth: 2,
-                  borderColor: club.crestAccent,
-                  backgroundColor: club.crestColor,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <View
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    borderWidth: 2,
-                    borderColor: club.crestAccent,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: club.crestAccent,
-                      fontSize: fontSize.xs,
-                      fontWeight: fontWeight.bold,
-                    }}
-                  >
-                    {club.name.slice(0, 3).toUpperCase()}
-                  </Text>
-                </View>
-              </View>
+              {/* ClubCrest: escudo genérico con colores del club (MGC-466).
+                  Reemplaza placeholder de círculos. Mantiene tamaño 72px. */}
+              <ClubCrest club={club} size={72} />
               <View style={{ flex: 1, gap: spacing[1] }}>
                 <Text
                   style={{
