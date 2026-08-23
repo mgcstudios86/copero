@@ -24,7 +24,10 @@ export default defineConfig({
   testMatch: /.*\.spec\.ts$/,
   fullyParallel: false, // QA agent corre secuencial sobre hardware persistente
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // MGC-459: 1 retry era insuficiente para flakes de carga del runner
+  // copero-ci (RAM 954MB) tras 5+ specs pesados. 2 retries da margen
+  // para que el dev server se recupere del swap-thrash entre specs.
+  retries: process.env.CI ? 2 : 0,
   workers: 1,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   outputDir: './.results',
@@ -34,7 +37,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     actionTimeout: 10_000,
-    navigationTimeout: 30_000,
+    // MGC-459: 60s da holgura cuando el dev server queda bajo swap
+    // después de specs visuales/axe/keyboard. Specs rápidos no se ven
+    // afectados — page.goto retorna apenas DOM listo.
+    navigationTimeout: 60_000,
   },
   projects: [
     {
