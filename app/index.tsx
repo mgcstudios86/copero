@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   eyebrow: {
-    color: colors.primary,
+    color: colors.accent,
     letterSpacing: 4,
     fontWeight: '800',
     marginBottom: spacing.sm,
