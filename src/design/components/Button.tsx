@@ -94,6 +94,19 @@ export function Button({
     gap: spacing[2],
     alignSelf: fullWidth ? 'stretch' : 'flex-start',
     opacity: disabled ? 0.5 : 1,
+    // Web (MGC-373): Pressable se convierte en `<a>` cuando expo-router detecta
+    // router.push en onPress. El browser aplica estilos default a `<a>`
+    // (color: -webkit-link, text-decoration: underline, background: transparent)
+    // que sobrescriben los colores del design system y rompen WCAG AA 4.5:1
+    // sobre el bg del theme. Forzamos cursor, sin underline, y colores
+    // explícitos para que el `<a>` mantenga el aspect ratio del Button.
+    ...(Platform.OS === 'web'
+      ? {
+          cursor: 'pointer' as const,
+          textDecorationLine: 'none',
+          color: palette.fg,
+        }
+      : null),
   };
 
   const pressedStyle = (state: PressableStateCallbackType): ViewStyle =>
@@ -130,6 +143,10 @@ export function Button({
           fontSize: dims.fs,
           lineHeight: dims.fs * lineHeight.snug,
           fontWeight: fontWeight.semibold,
+          // MGC-373: el `<a>` web hereda text-decoration: underline del
+          // user-agent stylesheet y eso también degrada la legibilidad.
+          // Forzamos none acá para que el botón luzca plano como en native.
+          ...(Platform.OS === 'web' ? { textDecorationLine: 'none' as const } : null),
         }}
         numberOfLines={1}
       >
