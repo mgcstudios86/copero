@@ -29,7 +29,7 @@ permissions:
 jobs:
   playwright-web:
     name: Playwright (web, headless)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +38,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install deps
         run: npm ci --include=dev
@@ -54,11 +53,18 @@ jobs:
           INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID: ${{ secrets.INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID || '' }}
           INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY || '' }}
 
+      - name: Asignar puerto E2E
+        id: e2e-port
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: echo "port=$((18000 + RUN_ID % 1000))" >> "$GITHUB_OUTPUT"
+
       - name: Run Playwright
         run: npm run test:e2e:web
         env:
           CI: 'true'
-          EXPO_WEB_BASE_URL: 'http://localhost:8081'
+          EXPO_WEB_BASE_URL: http://127.0.0.1:${{ steps.e2e-port.outputs.port }}
+          EXPO_WEB_PORT: ${{ steps.e2e-port.outputs.port }}
           INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID: ${{ secrets.INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID || '' }}
           INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY || '' }}
 

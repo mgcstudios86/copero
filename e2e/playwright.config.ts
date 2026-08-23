@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { resolve } from 'node:path';
 
 /**
  * Playwright config — E2E web para Copero (Expo web build).
@@ -8,10 +9,13 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * baseURL parametrizable via EXPO_WEB_BASE_URL para CI/local.
  */
-const BASE_URL = process.env.EXPO_WEB_BASE_URL ?? 'http://localhost:8081';
+const PORT = process.env.EXPO_WEB_PORT ?? '8081';
+const BASE_URL =
+  process.env.EXPO_WEB_BASE_URL ??
+  (process.env.CI ? `http://127.0.0.1:${PORT}` : 'http://localhost:8081');
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: '.',
   testMatch: /.*\.spec\.ts$/,
   fullyParallel: false, // QA agent corre secuencial sobre hardware persistente
   forbidOnly: !!process.env.CI,
@@ -34,10 +38,15 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // En CI el workflow hace `npm run build:web` y sirve dist/ vía http-server.
+    // En CI el workflow hace `npm run build:web` y sirve dist/ vía python http.server.
     // En local asume `npx expo start --web` corriendo en :8081.
-    command: process.env.CI ? 'npx http-server dist -p 8081 -s' : 'npx expo start --web --port 8081',
+    // cwd apunta a la raíz del proyecto: playwright por default usa el dir del config (e2e/),
+    // y desde ahí `dist/` no existe.
+    command: process.env.CI
+      ? `python3 -m http.server ${PORT} --bind 127.0.0.1 --directory "${resolve(__dirname, '..', 'dist')}"`
+      : 'npx expo start --web --port 8081',
     url: BASE_URL,
+    cwd: resolve(__dirname, '..'),
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     stdout: 'pipe',
