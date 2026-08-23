@@ -9,3 +9,4 @@ describe('copero bootstrap', () => {
     expect(GAME_NAME).toBe('copero');
   });
 });
+
