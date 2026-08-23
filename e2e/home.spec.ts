@@ -36,7 +36,7 @@ test.beforeEach(async ({ context }) => {
 
 test.describe('Copero — smoke home (web)', () => {
   test('home renderiza con CTA Jugar y banner ad placeholder', async ({ page }, testInfo) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await expect(page.getByTestId('home-screen')).toBeVisible();
     await expect(page.getByTestId('btn-play')).toBeVisible();
     await expect(page.getByTestId('ad-banner-web')).toBeVisible();
@@ -45,7 +45,7 @@ test.describe('Copero — smoke home (web)', () => {
   });
 
   test('tap Jugar navega a /categoria con grilla visible', async ({ page }, testInfo) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.getByTestId('btn-play').click();
     await page.waitForURL(/\/categoria/, { timeout: 10_000 });
     await expect(page.getByTestId('categoria-screen')).toBeVisible();
@@ -55,7 +55,7 @@ test.describe('Copero — smoke home (web)', () => {
   });
 
   test('flujo completo home → categoria → ronda → fin', async ({ page }, testInfo) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.getByTestId('btn-play').click();
     await page.waitForURL(/\/categoria/);
     await page.getByTestId('cat-futbol').click();
@@ -86,7 +86,7 @@ test.describe('Copero — smoke home (web)', () => {
         blockedRequests.push(url);
       }
     });
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.getByTestId('btn-play').click();
     await page.waitForURL(/\/categoria/);
     // Al menos el placeholder de ads cargó sin tocar la red externa.
@@ -97,7 +97,7 @@ test.describe('Copero — smoke home (web)', () => {
   });
 
   test('expo error overlay no apareció en navegación home → categoria', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto('/', { waitUntil: 'networkidle', timeout: 60_000 });
     await expect(page.locator('#expo-error-screen')).toHaveCount(0);
     await page.getByTestId('btn-play').click();
     await page.waitForURL(/\/categoria/);

@@ -71,17 +71,39 @@ jobs:
           echo "[qa] puerto E2E reservado: $PORT"
 
       - name: Liberar puerto E2E antes de Playwright
-        # Limpieza defensiva: si quedó un http.server previo en el puerto
-        # que vamos a usar, lo matamos para evitar 'address already in use'.
+        # MGC-459: limpieza defensiva. El runner self-hosted retiene
+        # python3 -m http.server y chromium zombis entre runs (cancel-in-progress
+        # mata el job GH pero no los procesos hijos). Sin esto, el dev server
+        # queda no-responsive tras 5-6 specs pesados (visual+axe+keyboard)
+        # y los page.goto finales timeoutean a 30s.
+        # Matamos: (a) cualquier servidor en el nuevo puerto, (b) cualquier
+        # http.server/python3 sirviendo en el rango E2E, (c) chromium headless
+        # huérfano. Mantenemos un margen de 2s para que el kernel libere el socket.
         run: |
+          echo "[qa] cleanup defensivo antes de reservar ${{ steps.e2e-port.outputs.port }}"
           if command -v lsof >/dev/null 2>&1; then
             PIDS=$(lsof -ti:${{ steps.e2e-port.outputs.port }} 2>/dev/null || true)
             if [ -n "$PIDS" ]; then
-              echo "[qa] matando PIDs en puerto ${{ steps.e2e-port.outputs.port }} -> $PIDS"
+              echo "[qa] matando PIDs en puerto nuevo ${{ steps.e2e-port.outputs.port }} -> $PIDS"
               kill -9 $PIDS 2>/dev/null || true
-              sleep 1
+            fi
+            # Rango efímero completo 18000-18999 (definido arriba).
+            STALE=$(lsof -ti:18000-18999 2>/dev/null || true)
+            if [ -n "$STALE" ]; then
+              echo "[qa] matando servidores stale en 18000-18999 -> $STALE"
+              kill -9 $STALE 2>/dev/null || true
             fi
           fi
+          # Chromium headless huérfano (sin puerto asociado tras cancel-in-progress).
+          if command -v pgrep >/dev/null 2>&1; then
+            CHROME=$(pgrep -f 'chrome.*--headless' 2>/dev/null || true)
+            if [ -n "$CHROME" ]; then
+              echo "[qa] matando chromium headless huérfano -> $CHROME"
+              kill -9 $CHROME 2>/dev/null || true
+            fi
+          fi
+          sleep 2
+          echo "[qa] cleanup completo"
 
       - name: Install deps
         run: npm ci --include=dev
