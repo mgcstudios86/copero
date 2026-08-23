@@ -8,6 +8,11 @@ import { resolve } from 'node:path';
  * harness se levanta. Cobertura funcional completa vive en MGC-293.
  *
  * baseURL parametrizable via EXPO_WEB_BASE_URL para CI/local.
+ *
+ * El archivo de config vive en `e2e/playwright.config.ts`. `testDir`
+ * resuelve relativo al config file, así que usamos `'.'` (=> `e2e/`)
+ * para descubrir `e2e/home.spec.ts`. Si se mueve el config a la raíz
+ * del repo, ajustar a `./e2e`.
  */
 const PORT = process.env.EXPO_WEB_PORT ?? '8081';
 const BASE_URL =
@@ -22,7 +27,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   workers: 1,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
-  outputDir: './e2e/.results',
+  outputDir: './.results',
   use: {
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
@@ -38,10 +43,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // En CI el workflow hace `npm run build:web` y sirve dist/ vía python http.server.
+    // En CI el workflow hace `npm run build:web` y sirve dist/ vía python3 http.server.
     // En local asume `npx expo start --web` corriendo en :8081.
-    // cwd apunta a la raíz del proyecto: playwright por default usa el dir del config (e2e/),
-    // y desde ahí `dist/` no existe.
+    // cwd apunta a la raíz del proyecto: Playwright por default usa el dir
+    // del config (e2e/), y desde ahí `dist/` no existe.
     command: process.env.CI
       ? `python3 -m http.server ${PORT} --bind 127.0.0.1 --directory "${resolve(__dirname, '..', 'dist')}"`
       : 'npx expo start --web --port 8081',

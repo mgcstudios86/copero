@@ -5,6 +5,8 @@ name: qa
 # No corre Maestro mobile (hardware persistente — QA agent owns ZY22G728HN).
 # Trigger: PR contra main + push a main + manual dispatch.
 # Secrets inyectados por DevOps vía Infisical — placeholders abajo.
+# MGC-308: Playwright corre en runner self-hosted (Linux, label `copero-ci`)
+# para evitar minutos GH-hosted facturables. Runner: VPS mgcstudios-01.
 
 on:
   pull_request:
@@ -29,8 +31,10 @@ permissions:
 jobs:
   playwright-web:
     name: Playwright (web, headless)
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted, copero-ci, Linux]
     timeout-minutes: 15
+    env:
+      INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,12 +42,43 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          # MGC-359: cache deshabilitado en runner self-hosted.
+          # `cache: 'npm'` hacía subir ~800MB de node_modules al servicio de cache
+          # de GitHub y quedaba a 0.0 MB/s hasta timeout 95s en copero-ci.
+          # `cache: 'false'` (string) no es válido en actions/setup-node@v4 — falla
+          # con "Caching for 'false' is not supported". Solución correcta: omitir
+          # el input `cache` por completo; el default vacío no genera upload.
+          # Reuso entre jobs es bajo (runner local persistente) — aceptable.
+
+      - name: Reservar puerto efímero para E2E
+        # El runner self-hosted puede tener残余 http.server en :8081.
+        # Reservamos un puerto alto aleatorio y lo exportamos a Playwright.
+        id: e2e-port
+        run: |
+          PORT=$((18000 + RANDOM % 1000))
+          echo "port=$PORT" >> "$GITHUB_OUTPUT"
+          echo "[qa] puerto E2E reservado: $PORT"
+
+      - name: Liberar puerto E2E antes de Playwright
+        # Limpieza defensiva: si quedó un http.server previo en el puerto
+        # que vamos a usar, lo matamos para evitar 'address already in use'.
+        run: |
+          if command -v lsof >/dev/null 2>&1; then
+            PIDS=$(lsof -ti:${{ steps.e2e-port.outputs.port }} 2>/dev/null || true)
+            if [ -n "$PIDS" ]; then
+              echo "[qa] matando PIDs en puerto ${{ steps.e2e-port.outputs.port }} -> $PIDS"
+              kill -9 $PIDS 2>/dev/null || true
+              sleep 1
+            fi
+          fi
 
       - name: Install deps
         run: npm ci --include=dev
 
       - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+        # Sin --with-deps: el runner ya tiene los apt packages instalados
+        # via bootstrap-copero-runner.sh (MGC-308).
+        run: npx playwright install chromium
 
       - name: Build Expo web bundle
         run: npm run build:web
@@ -52,12 +87,6 @@ jobs:
           # Si vacío: el build igual corre; algunos SDKs nativos pueden fallar en web.
           INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID: ${{ secrets.INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID || '' }}
           INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY || '' }}
-
-      - name: Asignar puerto E2E
-        id: e2e-port
-        env:
-          RUN_ID: ${{ github.run_id }}
-        run: echo "port=$((18000 + RUN_ID % 1000))" >> "$GITHUB_OUTPUT"
 
       - name: Run Playwright
         run: npm run test:e2e:web

@@ -54,3 +54,39 @@ Los workflows leen `INFISICAL_TOKEN` (secret) y `INFISICAL_PROJECT_ID`
 - Runner-02 (Mac mini): registrado en MGC-329; reduce `npm ci` 25 min → 4 s
   y desbloquea paralelismo entre jobs de `ci (copero)`.
 - `mac-mini-pipeline-runner`: pre-existente, etiqueta genérica.
+
+## Migración Playwright a self-hosted (MGC-308)
+
+El job `Playwright (web, headless)` del workflow `qa.yml` corre en
+`runs-on: [self-hosted, copero-ci, Linux]` para evitar minutos GH-hosted
+facturables (resuelve el error de billing del run 32611369496).
+
+- **Runner destino**: `copero-ci-runner-01` (VPS, label `copero-ci`).
+  Si está ocupado, el job queda en cola — el dispatcher GH no reasigna a
+  runners sin la etiqueta `copero-ci`.
+- **Bootstrap Playwright** en el runner (sin `--with-deps`):
+  ```bash
+  sudo apt-get update && sudo apt-get install -y \
+    libnss3 libatk1.0-0 libatk-bridge2.0-0 libxcomposite1 libxdamage1 \
+    libxrandr2 libxkbcommon0 libpango-1.0-0 libcairo2 libasound2 libgbm1
+  npx --yes playwright@1.49.0 install chromium
+  ```
+- **Trampa OOM**: en VPS de 1 GB, `npx playwright install --with-deps`
+  dispara apt que descarga ~600 MB y puede OOM-kill el runner. Usar
+  `apt-get install` con paquetes individuales arriba y dejar que
+  Playwright solo baje el binario Chromium (~170 MB).
+- **Script faltante**: el job llama `npm run test:e2e:web`. Si
+  `package.json` no lo define, falla con `Missing script`. El script debe
+  ser:
+  ```json
+  "test:e2e:web": "playwright test --config=e2e/playwright.config.ts"
+  ```
+  Además `@playwright/test ^1.49.0` debe estar en `devDependencies` para
+  que `npm ci --include=dev` lo instale. Verificado en MGC-308.
+
+## Verificación de billing cero
+
+Tras mergear el cambio de `runs-on`, confirmar en
+`https://github.com/organizations/mgcstudios/settings/billing` que los
+minutos consumidos del mes no incrementan al disparar el workflow.
+Cualquier minuto nuevo en GH-hosted tras un run `qa.yml` = regresión.
