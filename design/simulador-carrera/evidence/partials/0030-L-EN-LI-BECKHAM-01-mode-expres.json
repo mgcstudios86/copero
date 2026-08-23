@@ -1,0 +1,79 @@
+{
+  "key": "430173739",
+  "label": "L-EN-LI-BECKHAM-01-mode-expres",
+  "isNew": true,
+  "text": "copero\n\nMINIJUEGOS COPERODiccionarios y enciclopedias\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 3 temporadas para disfrutarlo rápido.\n\nComenzar carrera\nVolver a Juegos\nVer más\nJuegos\nFútbol\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoDiccionarios y enciclopedias\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "div",
+      "text": "Diccionarios y enciclopedias"
+    },
+    {
+      "tag": "button",
+      "text": "ES"
+    },
+    {
+      "tag": "button",
+      "text": "EN"
+    },
+    {
+      "tag": "button",
+      "text": "PT"
+    },
+    {
+      "tag": "button",
+      "text": "Intensa"
+    },
+    {
+      "tag": "button",
+      "text": "Normal"
+    },
+    {
+      "tag": "button",
+      "text": "Exprés"
+    },
+    {
+      "tag": "button",
+      "text": "Comenzar carrera"
+    },
+    {
+      "tag": "a",
+      "text": "Volver a Juegos"
+    },
+    {
+      "tag": "button",
+      "text": ""
+    },
+    {
+      "tag": "div",
+      "text": "Ver más"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+      "alt": "Vista previa del simulador"
+    },
+    {
+      "src": "https://copero.com.ar/cafecito-dark.svg",
+      "alt": "Cafecito"
+    }
+  ],
+  "choice": "mode-expres"
+}

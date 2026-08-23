@@ -1,0 +1,3917 @@
+{
+  "nodes": [
+    {
+      "id": "706793734",
+      "label": "B-Intensa-01-mode-intensa",
+      "firstSeen": "2026-08-23T15:20:29.240Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPEROContratar Servicios De Catering Y Gastronomía\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\n1 decisión por temporada, inmersión profunda.\n\nComenzar carrera\nVolver a Juegos\nVer más\nstats\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoContratar Servicios De Catering Y Gastronomía\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "type": "",
+          "text": "copero",
+          "name": null,
+          "role": null,
+          "aria": "Ir a inicio",
+          "x": 129,
+          "y": 5,
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Contratar Servicios De Catering Y Gastronomía",
+          "name": null,
+          "role": "link",
+          "aria": "Contratar Servicios De Catering Y Gastronomía",
+          "x": 16,
+          "y": 87,
+          "w": 150,
+          "h": 49
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "ES",
+          "name": null,
+          "role": null,
+          "aria": "Español",
+          "x": 183,
+          "y": 92,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "EN",
+          "name": null,
+          "role": null,
+          "aria": "English",
+          "x": 241,
+          "y": 92,
+          "w": 55,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "PT",
+          "name": null,
+          "role": null,
+          "aria": "Português",
+          "x": 300,
+          "y": 92,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Intensa",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 51,
+          "y": 406,
+          "w": 77,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Normal",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 152,
+          "y": 406,
+          "w": 76,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Exprés",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 251,
+          "y": 406,
+          "w": 73,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Comenzar carrera",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 490,
+          "w": 343,
+          "h": 48
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Volver a Juegos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 550,
+          "w": 283,
+          "h": 48
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "",
+          "name": null,
+          "role": null,
+          "aria": "Ver logros",
+          "x": 311,
+          "y": 550,
+          "w": 48,
+          "h": 48
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "stats",
+          "name": null,
+          "role": "link",
+          "aria": "stats",
+          "x": 190,
+          "y": 749,
+          "w": 76,
+          "h": 28
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "X / Twitter",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 67,
+          "y": 891,
+          "w": 118,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Instagram",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 193,
+          "y": 891,
+          "w": 116,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Invitanos un cafecito",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 91,
+          "y": 937,
+          "w": 194,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Sobre nosotros",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 137,
+          "y": 1032,
+          "w": 101,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 153,
+          "y": 1058,
+          "w": 70,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 1084,
+          "w": 54,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Términos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1110,
+          "w": 61,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Bases Prode Mundial",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 118,
+          "y": 1136,
+          "w": 139,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Contacto",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1162,
+          "w": 60,
+          "h": 17
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Contratar Servicios De Catering Y Gastronomía",
+          "name": null,
+          "role": "link",
+          "aria": "Contratar Servicios De Catering Y Gastronomía",
+          "x": 33,
+          "y": 1243,
+          "w": 202,
+          "h": 35
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Configurar cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 251,
+          "y": 1245,
+          "w": 108,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 168,
+          "y": 726,
+          "w": 46,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 224,
+          "y": 726,
+          "w": 60,
+          "h": 15
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rechazar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Aceptar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 192,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        }
+      ],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador",
+          "w": 343,
+          "h": 224
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito",
+          "w": 23,
+          "h": 20
+        }
+      ],
+      "inputs": [],
+      "occurrences": 1
+    },
+    {
+      "id": "795666523",
+      "label": "C-Expres-01-mode-expres",
+      "firstSeen": "2026-08-23T15:20:39.389Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 3 temporadas para disfrutarlo rápido.\n\nComenzar carrera\nVolver a Juegos\nVer más\nSimulador de carrera\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "type": "",
+          "text": "copero",
+          "name": null,
+          "role": null,
+          "aria": "Ir a inicio",
+          "x": 129,
+          "y": 5,
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "ES",
+          "name": null,
+          "role": null,
+          "aria": "Español",
+          "x": 183,
+          "y": 79,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "EN",
+          "name": null,
+          "role": null,
+          "aria": "English",
+          "x": 241,
+          "y": 79,
+          "w": 55,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "PT",
+          "name": null,
+          "role": null,
+          "aria": "Português",
+          "x": 300,
+          "y": 79,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Intensa",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 51,
+          "y": 380,
+          "w": 77,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Normal",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 152,
+          "y": 380,
+          "w": 76,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Exprés",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 251,
+          "y": 380,
+          "w": 73,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Comenzar carrera",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 464,
+          "w": 343,
+          "h": 48
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Volver a Juegos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 524,
+          "w": 283,
+          "h": 48
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "",
+          "name": null,
+          "role": null,
+          "aria": "Ver logros",
+          "x": 311,
+          "y": 524,
+          "w": 48,
+          "h": 48
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Simulador de carrera",
+          "name": null,
+          "role": "link",
+          "aria": "Simulador de carrera",
+          "x": 133,
+          "y": 749,
+          "w": 189,
+          "h": 28
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "X / Twitter",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 67,
+          "y": 891,
+          "w": 118,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Instagram",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 193,
+          "y": 891,
+          "w": 116,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Invitanos un cafecito",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 91,
+          "y": 937,
+          "w": 194,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Sobre nosotros",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 137,
+          "y": 1032,
+          "w": 101,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 153,
+          "y": 1058,
+          "w": 70,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 1084,
+          "w": 54,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Términos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1110,
+          "w": 61,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Bases Prode Mundial",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 118,
+          "y": 1136,
+          "w": 139,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Contacto",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1162,
+          "w": 60,
+          "h": 17
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Configurar cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 251,
+          "y": 1230,
+          "w": 108,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 168,
+          "y": 726,
+          "w": 46,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 224,
+          "y": 726,
+          "w": 60,
+          "h": 15
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rechazar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Aceptar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 192,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        }
+      ],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador",
+          "w": 343,
+          "h": 224
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito",
+          "w": 23,
+          "h": 20
+        }
+      ],
+      "inputs": [],
+      "occurrences": 1
+    },
+    {
+      "id": "1252276159",
+      "label": "B-Intensa-00-initial",
+      "firstSeen": "2026-08-23T15:20:26.058Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPEROContratar Servicios De Catering Y Gastronomía\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nstats\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoContratar Servicios De Catering Y Gastronomía\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "type": "",
+          "text": "copero",
+          "name": null,
+          "role": null,
+          "aria": "Ir a inicio",
+          "x": 129,
+          "y": 5,
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Contratar Servicios De Catering Y Gastronomía",
+          "name": null,
+          "role": "link",
+          "aria": "Contratar Servicios De Catering Y Gastronomía",
+          "x": 16,
+          "y": 87,
+          "w": 150,
+          "h": 49
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "ES",
+          "name": null,
+          "role": null,
+          "aria": "Español",
+          "x": 183,
+          "y": 92,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "EN",
+          "name": null,
+          "role": null,
+          "aria": "English",
+          "x": 241,
+          "y": 92,
+          "w": 55,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "PT",
+          "name": null,
+          "role": null,
+          "aria": "Português",
+          "x": 300,
+          "y": 92,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Intensa",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 51,
+          "y": 406,
+          "w": 77,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Normal",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 152,
+          "y": 406,
+          "w": 76,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Exprés",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 251,
+          "y": 406,
+          "w": 73,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Comenzar carrera",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 490,
+          "w": 343,
+          "h": 48
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Volver a Juegos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 550,
+          "w": 283,
+          "h": 48
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "",
+          "name": null,
+          "role": null,
+          "aria": "Ver logros",
+          "x": 311,
+          "y": 550,
+          "w": 48,
+          "h": 48
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "stats",
+          "name": null,
+          "role": "link",
+          "aria": "stats",
+          "x": 190,
+          "y": 749,
+          "w": 76,
+          "h": 28
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "X / Twitter",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 67,
+          "y": 891,
+          "w": 118,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Instagram",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 193,
+          "y": 891,
+          "w": 116,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Invitanos un cafecito",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 91,
+          "y": 937,
+          "w": 194,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Sobre nosotros",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 137,
+          "y": 1032,
+          "w": 101,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 153,
+          "y": 1058,
+          "w": 70,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 1084,
+          "w": 54,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Términos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1110,
+          "w": 61,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Bases Prode Mundial",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 118,
+          "y": 1136,
+          "w": 139,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Contacto",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1162,
+          "w": 60,
+          "h": 17
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Contratar Servicios De Catering Y Gastronomía",
+          "name": null,
+          "role": "link",
+          "aria": "Contratar Servicios De Catering Y Gastronomía",
+          "x": 33,
+          "y": 1243,
+          "w": 202,
+          "h": 35
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Configurar cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 251,
+          "y": 1245,
+          "w": 108,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 168,
+          "y": 726,
+          "w": 46,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 224,
+          "y": 726,
+          "w": 60,
+          "h": 15
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rechazar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Aceptar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 192,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        }
+      ],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador",
+          "w": 343,
+          "h": 224
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito",
+          "w": 23,
+          "h": 20
+        }
+      ],
+      "inputs": [],
+      "occurrences": 1
+    },
+    {
+      "id": "1620637843",
+      "label": "A-Normal-ST-CALVO-02-start",
+      "firstSeen": "2026-08-23T15:20:19.670Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoVino\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "type": "",
+          "text": "copero",
+          "name": null,
+          "role": null,
+          "aria": "Ir a inicio",
+          "x": 129,
+          "y": 5,
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "text": "Buscar país",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 115,
+          "w": 343,
+          "h": 40
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Alemania",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 175,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Argentina",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 175,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Bélgica",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 229,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Bolivia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 229,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Brasil",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 283,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Canadá",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 283,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Chile",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 337,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Colombia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 337,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Croacia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 391,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Ecuador",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 391,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "España",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 445,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Estados Unidos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 445,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Francia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 499,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Inglaterra",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 499,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Italia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 553,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "México",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 553,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Países Bajos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 607,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Paraguay",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 607,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Perú",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 661,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Portugal",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 661,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rusia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 715,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Turquía",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 715,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Uruguay",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 769,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Venezuela",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 769,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "VER MÁS",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 823,
+          "w": 331,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Volver",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 749,
+          "w": 133,
+          "h": 40
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Continuar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 749,
+          "w": 198,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "X / Twitter",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 67,
+          "y": 891,
+          "w": 118,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Instagram",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 193,
+          "y": 891,
+          "w": 116,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Invitanos un cafecito",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 91,
+          "y": 937,
+          "w": 194,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Sobre nosotros",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 137,
+          "y": 1032,
+          "w": 101,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 153,
+          "y": 1058,
+          "w": 70,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 1084,
+          "w": 54,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Términos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1110,
+          "w": 61,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Bases Prode Mundial",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 118,
+          "y": 1136,
+          "w": 139,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Contacto",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1162,
+          "w": 60,
+          "h": 17
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Vino",
+          "name": null,
+          "role": "link",
+          "aria": "Vino",
+          "x": 129,
+          "y": 1227,
+          "w": 60,
+          "h": 21
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Configurar cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 251,
+          "y": 1230,
+          "w": 108,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 168,
+          "y": 726,
+          "w": 46,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 224,
+          "y": 726,
+          "w": 60,
+          "h": 15
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rechazar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Aceptar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 192,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        }
+      ],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/de.svg",
+          "alt": "Alemania",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": "Argentina",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/be.svg",
+          "alt": "Bélgica",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/bo.svg",
+          "alt": "Bolivia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": "Brasil",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ca.svg",
+          "alt": "Canadá",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/cl.svg",
+          "alt": "Chile",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/co.svg",
+          "alt": "Colombia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/hr.svg",
+          "alt": "Croacia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ec.svg",
+          "alt": "Ecuador",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/es.svg",
+          "alt": "España",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/us.svg",
+          "alt": "Estados Unidos",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/fr.svg",
+          "alt": "Francia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb-eng.svg",
+          "alt": "Inglaterra",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/it.svg",
+          "alt": "Italia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/mx.svg",
+          "alt": "México",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/nl.svg",
+          "alt": "Países Bajos",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/py.svg",
+          "alt": "Paraguay",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/pe.svg",
+          "alt": "Perú",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/pt.svg",
+          "alt": "Portugal",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ru.svg",
+          "alt": "Rusia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/tr.svg",
+          "alt": "Turquía",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/uy.svg",
+          "alt": "Uruguay",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ve.svg",
+          "alt": "Venezuela",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito",
+          "w": 23,
+          "h": 20
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": null,
+          "name": null,
+          "placeholder": "Buscar país",
+          "value": "",
+          "options": null
+        }
+      ],
+      "occurrences": 2
+    },
+    {
+      "id": "1693293759",
+      "label": "C-Expres-02-start",
+      "firstSeen": "2026-08-23T15:20:39.997Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "type": "",
+          "text": "copero",
+          "name": null,
+          "role": null,
+          "aria": "Ir a inicio",
+          "x": 129,
+          "y": 5,
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "text": "Buscar país",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 115,
+          "w": 343,
+          "h": 40
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Alemania",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 175,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Argentina",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 175,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Bélgica",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 229,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Bolivia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 229,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Brasil",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 283,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Canadá",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 283,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Chile",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 337,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Colombia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 337,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Croacia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 391,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Ecuador",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 391,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "España",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 445,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Estados Unidos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 445,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Francia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 499,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Inglaterra",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 499,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Italia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 553,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "México",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 553,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Países Bajos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 607,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Paraguay",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 607,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Perú",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 661,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Portugal",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 661,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rusia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 715,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Turquía",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 715,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Uruguay",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 769,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Venezuela",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 769,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "VER MÁS",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 823,
+          "w": 331,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Volver",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 749,
+          "w": 133,
+          "h": 40
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Continuar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 749,
+          "w": 198,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "X / Twitter",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 67,
+          "y": 891,
+          "w": 118,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Instagram",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 193,
+          "y": 891,
+          "w": 116,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Invitanos un cafecito",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 91,
+          "y": 937,
+          "w": 194,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Sobre nosotros",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 137,
+          "y": 1032,
+          "w": 101,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 153,
+          "y": 1058,
+          "w": 70,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 1084,
+          "w": 54,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Términos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1110,
+          "w": 61,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Bases Prode Mundial",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 118,
+          "y": 1136,
+          "w": 139,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Contacto",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1162,
+          "w": 60,
+          "h": 17
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Configurar cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 251,
+          "y": 1230,
+          "w": 108,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 168,
+          "y": 726,
+          "w": 46,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 224,
+          "y": 726,
+          "w": 60,
+          "h": 15
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rechazar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Aceptar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 192,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        }
+      ],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/de.svg",
+          "alt": "Alemania",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": "Argentina",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/be.svg",
+          "alt": "Bélgica",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/bo.svg",
+          "alt": "Bolivia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": "Brasil",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ca.svg",
+          "alt": "Canadá",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/cl.svg",
+          "alt": "Chile",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/co.svg",
+          "alt": "Colombia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/hr.svg",
+          "alt": "Croacia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ec.svg",
+          "alt": "Ecuador",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/es.svg",
+          "alt": "España",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/us.svg",
+          "alt": "Estados Unidos",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/fr.svg",
+          "alt": "Francia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb-eng.svg",
+          "alt": "Inglaterra",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/it.svg",
+          "alt": "Italia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/mx.svg",
+          "alt": "México",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/nl.svg",
+          "alt": "Países Bajos",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/py.svg",
+          "alt": "Paraguay",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/pe.svg",
+          "alt": "Perú",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/pt.svg",
+          "alt": "Portugal",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ru.svg",
+          "alt": "Rusia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/tr.svg",
+          "alt": "Turquía",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/uy.svg",
+          "alt": "Uruguay",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ve.svg",
+          "alt": "Venezuela",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito",
+          "w": 23,
+          "h": 20
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": null,
+          "name": null,
+          "placeholder": "Buscar país",
+          "value": "",
+          "options": null
+        }
+      ],
+      "occurrences": 2
+    },
+    {
+      "id": "-412766943",
+      "label": "A-Normal-ST-CALVO-00-initial",
+      "firstSeen": "2026-08-23T15:20:15.877Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPEROVino\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nFútbol\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoVino\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "type": "",
+          "text": "copero",
+          "name": null,
+          "role": null,
+          "aria": "Ir a inicio",
+          "x": 129,
+          "y": 5,
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Vino",
+          "name": null,
+          "role": "link",
+          "aria": "Vino",
+          "x": 61,
+          "y": 88,
+          "w": 60,
+          "h": 21
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "ES",
+          "name": null,
+          "role": null,
+          "aria": "Español",
+          "x": 183,
+          "y": 79,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "EN",
+          "name": null,
+          "role": null,
+          "aria": "English",
+          "x": 241,
+          "y": 79,
+          "w": 55,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "PT",
+          "name": null,
+          "role": null,
+          "aria": "Português",
+          "x": 300,
+          "y": 79,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Intensa",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 51,
+          "y": 380,
+          "w": 77,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Normal",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 152,
+          "y": 380,
+          "w": 76,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Exprés",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 251,
+          "y": 380,
+          "w": 73,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Comenzar carrera",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 464,
+          "w": 343,
+          "h": 48
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Volver a Juegos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 524,
+          "w": 283,
+          "h": 48
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "",
+          "name": null,
+          "role": null,
+          "aria": "Ver logros",
+          "x": 311,
+          "y": 524,
+          "w": 48,
+          "h": 48
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Fútbol",
+          "name": null,
+          "role": "link",
+          "aria": "Fútbol",
+          "x": 185,
+          "y": 749,
+          "w": 85,
+          "h": 28
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "X / Twitter",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 67,
+          "y": 891,
+          "w": 118,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Instagram",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 193,
+          "y": 891,
+          "w": 116,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Invitanos un cafecito",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 91,
+          "y": 937,
+          "w": 194,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Sobre nosotros",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 137,
+          "y": 1032,
+          "w": 101,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 153,
+          "y": 1058,
+          "w": 70,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 1084,
+          "w": 54,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Términos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1110,
+          "w": 61,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Bases Prode Mundial",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 118,
+          "y": 1136,
+          "w": 139,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Contacto",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1162,
+          "w": 60,
+          "h": 17
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Vino",
+          "name": null,
+          "role": "link",
+          "aria": "Vino",
+          "x": 129,
+          "y": 1227,
+          "w": 60,
+          "h": 21
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Configurar cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 251,
+          "y": 1230,
+          "w": 108,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 168,
+          "y": 726,
+          "w": 46,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 224,
+          "y": 726,
+          "w": 60,
+          "h": 15
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rechazar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Aceptar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 192,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        }
+      ],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador",
+          "w": 343,
+          "h": 224
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito",
+          "w": 23,
+          "h": 20
+        }
+      ],
+      "inputs": [],
+      "occurrences": 2
+    },
+    {
+      "id": "-1517965389",
+      "label": "B-Intensa-02-start",
+      "firstSeen": "2026-08-23T15:20:29.849Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoContratar Servicios De Catering Y Gastronomía\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "type": "",
+          "text": "copero",
+          "name": null,
+          "role": null,
+          "aria": "Ir a inicio",
+          "x": 129,
+          "y": 5,
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "text": "Buscar país",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 115,
+          "w": 343,
+          "h": 40
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Alemania",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 175,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Argentina",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 175,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Bélgica",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 229,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Bolivia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 229,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Brasil",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 283,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Canadá",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 283,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Chile",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 337,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Colombia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 337,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Croacia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 391,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Ecuador",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 391,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "España",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 445,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Estados Unidos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 445,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Francia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 499,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Inglaterra",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 499,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Italia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 553,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "México",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 553,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Países Bajos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 607,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Paraguay",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 607,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Perú",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 661,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Portugal",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 661,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rusia",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 715,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Turquía",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 715,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Uruguay",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 769,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Venezuela",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 194,
+          "y": 769,
+          "w": 162,
+          "h": 46
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "VER MÁS",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 24,
+          "y": 823,
+          "w": 331,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Volver",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 749,
+          "w": 133,
+          "h": 40
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Continuar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 749,
+          "w": 198,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "X / Twitter",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 67,
+          "y": 891,
+          "w": 118,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Instagram",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 193,
+          "y": 891,
+          "w": 116,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Invitanos un cafecito",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 91,
+          "y": 937,
+          "w": 194,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Sobre nosotros",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 137,
+          "y": 1032,
+          "w": 101,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 153,
+          "y": 1058,
+          "w": 70,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 1084,
+          "w": 54,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Términos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1110,
+          "w": 61,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Bases Prode Mundial",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 118,
+          "y": 1136,
+          "w": 139,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Contacto",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1162,
+          "w": 60,
+          "h": 17
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Contratar Servicios De Catering Y Gastronomía",
+          "name": null,
+          "role": "link",
+          "aria": "Contratar Servicios De Catering Y Gastronomía",
+          "x": 33,
+          "y": 1243,
+          "w": 202,
+          "h": 35
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Configurar cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 251,
+          "y": 1245,
+          "w": 108,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 168,
+          "y": 726,
+          "w": 46,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 224,
+          "y": 726,
+          "w": 60,
+          "h": 15
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rechazar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Aceptar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 192,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        }
+      ],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/de.svg",
+          "alt": "Alemania",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": "Argentina",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/be.svg",
+          "alt": "Bélgica",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/bo.svg",
+          "alt": "Bolivia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": "Brasil",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ca.svg",
+          "alt": "Canadá",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/cl.svg",
+          "alt": "Chile",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/co.svg",
+          "alt": "Colombia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/hr.svg",
+          "alt": "Croacia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ec.svg",
+          "alt": "Ecuador",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/es.svg",
+          "alt": "España",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/us.svg",
+          "alt": "Estados Unidos",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/fr.svg",
+          "alt": "Francia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb-eng.svg",
+          "alt": "Inglaterra",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/it.svg",
+          "alt": "Italia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/mx.svg",
+          "alt": "México",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/nl.svg",
+          "alt": "Países Bajos",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/py.svg",
+          "alt": "Paraguay",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/pe.svg",
+          "alt": "Perú",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/pt.svg",
+          "alt": "Portugal",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ru.svg",
+          "alt": "Rusia",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/tr.svg",
+          "alt": "Turquía",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/uy.svg",
+          "alt": "Uruguay",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ve.svg",
+          "alt": "Venezuela",
+          "w": 32,
+          "h": 22
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito",
+          "w": 23,
+          "h": 20
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": null,
+          "name": null,
+          "placeholder": "Buscar país",
+          "value": "",
+          "options": null
+        }
+      ],
+      "occurrences": 2
+    },
+    {
+      "id": "-348439726",
+      "label": "C-Expres-00-initial",
+      "firstSeen": "2026-08-23T15:20:36.184Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nSimulador de carrera\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "type": "",
+          "text": "copero",
+          "name": null,
+          "role": null,
+          "aria": "Ir a inicio",
+          "x": 129,
+          "y": 5,
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "ES",
+          "name": null,
+          "role": null,
+          "aria": "Español",
+          "x": 183,
+          "y": 79,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "EN",
+          "name": null,
+          "role": null,
+          "aria": "English",
+          "x": 241,
+          "y": 79,
+          "w": 55,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "PT",
+          "name": null,
+          "role": null,
+          "aria": "Português",
+          "x": 300,
+          "y": 79,
+          "w": 54,
+          "h": 24
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Intensa",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 51,
+          "y": 380,
+          "w": 77,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Normal",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 152,
+          "y": 380,
+          "w": 76,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Exprés",
+          "name": null,
+          "role": "radio",
+          "aria": null,
+          "x": 251,
+          "y": 380,
+          "w": 73,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Comenzar carrera",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 464,
+          "w": 343,
+          "h": 48
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Volver a Juegos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 524,
+          "w": 283,
+          "h": 48
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "",
+          "name": null,
+          "role": null,
+          "aria": "Ver logros",
+          "x": 311,
+          "y": 524,
+          "w": 48,
+          "h": 48
+        },
+        {
+          "tag": "div",
+          "type": "",
+          "text": "Simulador de carrera",
+          "name": null,
+          "role": "link",
+          "aria": "Simulador de carrera",
+          "x": 133,
+          "y": 749,
+          "w": 189,
+          "h": 28
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "X / Twitter",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 67,
+          "y": 891,
+          "w": 118,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Instagram",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 193,
+          "y": 891,
+          "w": 116,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Invitanos un cafecito",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 91,
+          "y": 937,
+          "w": 194,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Sobre nosotros",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 137,
+          "y": 1032,
+          "w": 101,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 153,
+          "y": 1058,
+          "w": 70,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 161,
+          "y": 1084,
+          "w": 54,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Términos",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1110,
+          "w": 61,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Bases Prode Mundial",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 118,
+          "y": 1136,
+          "w": 139,
+          "h": 17
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Contacto",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 157,
+          "y": 1162,
+          "w": 60,
+          "h": 17
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Configurar cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 251,
+          "y": 1230,
+          "w": 108,
+          "h": 16
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Cookies",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 168,
+          "y": 726,
+          "w": 46,
+          "h": 15
+        },
+        {
+          "tag": "a",
+          "type": "",
+          "text": "Privacidad",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 224,
+          "y": 726,
+          "w": 60,
+          "h": 15
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Rechazar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 16,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "type": "button",
+          "text": "Aceptar",
+          "name": null,
+          "role": null,
+          "aria": null,
+          "x": 192,
+          "y": 760,
+          "w": 168,
+          "h": 36
+        }
+      ],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": "",
+          "w": 20,
+          "h": 16
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador",
+          "w": 343,
+          "h": 224
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito",
+          "w": 23,
+          "h": 20
+        }
+      ],
+      "inputs": [],
+      "occurrences": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "-412766943",
+      "to": "-412766943",
+      "choice": "Normal",
+      "ts": "2026-08-23T15:20:19.064Z"
+    },
+    {
+      "from": "-412766943",
+      "to": "1620637843",
+      "choice": "Comenzar carrera",
+      "ts": "2026-08-23T15:20:19.670Z"
+    },
+    {
+      "from": "1252276159",
+      "to": "706793734",
+      "choice": "Intensa",
+      "ts": "2026-08-23T15:20:29.240Z"
+    },
+    {
+      "from": "706793734",
+      "to": "-1517965389",
+      "choice": "Comenzar carrera",
+      "ts": "2026-08-23T15:20:29.849Z"
+    },
+    {
+      "from": "-348439726",
+      "to": "795666523",
+      "choice": "Exprés",
+      "ts": "2026-08-23T15:20:39.389Z"
+    },
+    {
+      "from": "795666523",
+      "to": "1693293759",
+      "choice": "Comenzar carrera",
+      "ts": "2026-08-23T15:20:39.997Z"
+    }
+  ]
+}

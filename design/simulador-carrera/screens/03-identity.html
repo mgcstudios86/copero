@@ -1,0 +1,60 @@
+<!doctype html>
+<!-- Wireframe: IDENTITY — apellido, número y pierna hábil -->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=375,initial-scale=1" />
+<title>IDENTITY — Simulador de carrera</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" />
+<style>
+  :root { --bg:#0E1411; --surface:#16201A; --surface2:#1F2A24; --text:#F0EAE0; --text-strong:#FFFFFF; --text-muted:#B8C2BC; --border:#2E3A33; --primary:#4FBE82; --primary-soft:#1B3A2B; --focus:#93C5FD; --radius-lg:12px; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; }
+  .device { width: 375px; min-height: 812px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; }
+  .top-bar { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
+  .back { background: transparent; border: 1px solid var(--border); color: var(--text); width: 40px; height: 40px; border-radius: 10px; cursor: pointer; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin: 16px 0 24px; color: var(--text-strong); }
+  .field { margin-bottom: 24px; }
+  .field label { display: block; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 12px; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px; }
+  .field input { width: 100%; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); color: var(--text); font-size: 16px; min-height: 52px; }
+  .field input::placeholder { color: var(--text-muted); }
+  .field input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .toggle-group { display: flex; gap: 8px; }
+  .toggle { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; cursor: pointer; min-height: 52px; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); }
+  .toggle[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+  .actions { display: flex; gap: 8px; margin-top: auto; padding-top: 24px; }
+  .btn-primary { flex: 2; background: var(--primary); color: #0E1411; border: 0; padding: 14px; border-radius: var(--radius-lg); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; cursor: pointer; min-height: 48px; }
+  .btn-secondary { flex: 1; background: transparent; color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-lg); font-weight: 500; cursor: pointer; min-height: 48px; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main class="device" role="main" aria-labelledby="id-title">
+  <div class="top-bar"><button type="button" class="back" aria-label="Volver">‹</button></div>
+  <h1 id="id-title">Identidad</h1>
+
+  <div class="field">
+    <label for="lastname">APELLIDO</label>
+    <input id="lastname" type="text" placeholder="Apellido" autocomplete="off" />
+  </div>
+
+  <div class="field">
+    <label for="number">NÚMERO</label>
+    <input id="number" type="number" value="10" min="1" max="99" inputmode="numeric" />
+  </div>
+
+  <div class="field">
+    <label>PIERNA HÁBIL</label>
+    <div class="toggle-group" role="group" aria-label="Pierna hábil">
+      <button type="button" class="toggle" aria-pressed="false">Izquierda</button>
+      <button type="button" class="toggle" aria-pressed="true">Derecha</button>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="btn-secondary">Volver</button>
+    <button type="button" class="btn-primary">Continuar</button>
+  </div>
+</main>
+</body>
+</html>

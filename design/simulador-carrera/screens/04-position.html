@@ -1,0 +1,55 @@
+<!doctype html>
+<!-- Wireframe: POSITION — grid 4x3 con 12 posiciones -->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=375,initial-scale=1" />
+<title>POSITION — Simulador de carrera</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" />
+<style>
+  :root { --bg:#0E1411; --surface:#16201A; --surface2:#1F2A24; --text:#F0EAE0; --text-strong:#FFFFFF; --text-muted:#B8C2BC; --border:#2E3A33; --primary:#4FBE82; --primary-soft:#1B3A2B; --focus:#93C5FD; --radius-lg:12px; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; }
+  .device { width: 375px; min-height: 812px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; }
+  .top-bar { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
+  .back { background: transparent; border: 1px solid var(--border); color: var(--text); width: 40px; height: 40px; border-radius: 10px; cursor: pointer; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin: 16px 0 24px; color: var(--text-strong); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .pos { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 12px; cursor: pointer; min-height: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; }
+  .pos[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 2px var(--primary-soft); }
+  .pos-code { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: var(--text-strong); }
+  .pos[aria-pressed="true"] .pos-code { color: var(--primary); }
+  .pos-name { font-size: 11px; color: var(--text-muted); line-height: 1.2; }
+  .actions { display: flex; gap: 8px; margin-top: auto; padding-top: 24px; }
+  .btn-primary { flex: 2; background: var(--primary); color: #0E1411; border: 0; padding: 14px; border-radius: var(--radius-lg); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; cursor: pointer; min-height: 48px; }
+  .btn-secondary { flex: 1; background: transparent; color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-lg); font-weight: 500; cursor: pointer; min-height: 48px; }
+  button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main class="device" role="main" aria-labelledby="pos-title">
+  <div class="top-bar"><button type="button" class="back" aria-label="Volver">‹</button></div>
+  <h1 id="pos-title">Posición</h1>
+
+  <div class="grid" role="listbox" aria-label="Posición de juego">
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">EI</span><span class="pos-name">Extremo Izquierdo</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">DC</span><span class="pos-name">Delantero Centro</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">ED</span><span class="pos-name">Extremo Derecho</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">MI</span><span class="pos-name">Medio Izquierdo</span></button>
+    <button type="button" class="pos" aria-pressed="true"><span class="pos-code">MCO</span><span class="pos-name">Media Punta Ofensivo</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">MD</span><span class="pos-name">Medio Derecho</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">LI</span><span class="pos-name">Lateral Izquierdo</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">MC</span><span class="pos-name">Medio Centro</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">LD</span><span class="pos-name">Lateral Derecho</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">MCD</span><span class="pos-name">Medio Centro Defensivo</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">DFC</span><span class="pos-name">Defensa Central</span></button>
+    <button type="button" class="pos" aria-pressed="false"><span class="pos-code">POR</span><span class="pos-name">Portero</span></button>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="btn-secondary">Volver</button>
+    <button type="button" class="btn-primary">Confirmar identidad</button>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,108 @@
+{
+  "name": "H-BR-POR-NEYMAR",
+  "log": [
+    {
+      "step": 0,
+      "label": "splash",
+      "key": "1207960167",
+      "isNew": true
+    },
+    {
+      "step": 1,
+      "label": "mode-intensa",
+      "key": "2125068768",
+      "isNew": true
+    },
+    {
+      "step": 2,
+      "label": "start",
+      "key": "-1927998446",
+      "isNew": false
+    },
+    {
+      "step": 3,
+      "label": "country-br",
+      "key": "-1927998446",
+      "isNew": false
+    },
+    {
+      "step": 4,
+      "label": "continue-country",
+      "key": "2056139760",
+      "isNew": false
+    },
+    {
+      "step": 5,
+      "label": "fill-apellido",
+      "key": "1850255630",
+      "isNew": true
+    },
+    {
+      "step": 6,
+      "label": "foot-left",
+      "key": "1850255630",
+      "isNew": false
+    },
+    {
+      "step": 7,
+      "label": "continue-identity",
+      "key": "-514740504",
+      "isNew": false
+    },
+    {
+      "step": 8,
+      "label": "position-POR",
+      "key": "-514740504",
+      "isNew": false
+    },
+    {
+      "step": 9,
+      "label": "confirm-position",
+      "key": "-1770194572",
+      "isNew": true
+    },
+    {
+      "step": 10,
+      "label": "wait-dashboard",
+      "key": "-1770194572",
+      "isNew": false
+    },
+    {
+      "step": 11,
+      "label": "event-1-decision",
+      "key": "2032345363",
+      "isNew": true
+    },
+    {
+      "step": 12,
+      "label": "event-1-wait",
+      "key": "-300271144",
+      "isNew": true
+    },
+    {
+      "step": 13,
+      "label": "event-2-decision",
+      "key": "1707036592",
+      "isNew": true
+    },
+    {
+      "step": 14,
+      "label": "event-2-wait",
+      "key": "1636552468",
+      "isNew": true
+    },
+    {
+      "step": 15,
+      "label": "event-3-decision",
+      "key": "-556573733",
+      "isNew": true
+    },
+    {
+      "step": 16,
+      "label": "event-3-wait",
+      "key": "858721236",
+      "isNew": true
+    }
+  ],
+  "finalText": "copero\nOVR\n58\nBRA\n#10 POR\nRemo\nChapecoense\nEDAD\n19\nVALOR\n€447K\nEDAD\nCLUB\nOVR\nPJ\nGR\nVI\n16\nVitoria\n50\n1\n🥅\n2\n🧤\n0\n17\nRemo\n52\n2\n🥅\n3\n🧤\n0\n18\nChapecoense\n55\n1\n🥅\n1\n🧤\n0\n19\n?\nEligiendo club...\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\nBrasil\n0\n🥅\n0\n🧤\n0\nMercado de pases\n\nLlegaron ofertas después de tu último tramo de carrera. Podés aceptar una o quedarte en tu club.\n\nFichar por\nChapecoense\nBrasileirão\nFichar por\nTáchira\nLiga FUTVE\nQuedarse en\nRemo\nBrasileirão\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+}

@@ -1,0 +1,147 @@
+{
+  "key": "-231630553",
+  "label": "G-AR-DC-CALVO-11-event-1-decision",
+  "isNew": true,
+  "text": "copero\nOVR\n50\nARG\n#10 DC\n?\nLibre\nCiudad de Bolívar\nEDAD\n16\nVALOR\n€100K\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\nCiudad de Bolívar\n50\n0\n0\n0\n18\n?\nEligiendo club...\n20\n22\n24\n26\n28\n30\n32\n34\n36\n38\nArgentina\n0\n0\n0\nOferta de cantera\n\nTres clubes quieren sumarte a su proyecto juvenil. Elegí dónde empieza tu carrera.\n\nFichar por\nCiudad de Bolívar\nPrimera Nacional\nFichar por\nRacing\nLiga Profesional\nFichar por\nNueva Chicago\nPrimera Nacional\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero",
+      "aria": "Ir a inicio"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nCiudad de Bolívar\nPrimera Nacional",
+      "aria": "Fichar por Ciudad de Bolívar. Firmar por Ciudad de Bolívar"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nRacing\nLiga Profesional",
+      "aria": "Fichar por Racing. Firmar por Racing Club"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nNueva Chicago\nPrimera Nacional",
+      "aria": "Fichar por Nueva Chicago. Firmar por Nueva Chicago"
+    },
+    {
+      "tag": "button",
+      "text": "Ver logros",
+      "aria": "Ver logros"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Instagram",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Términos",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Bases Prode Mundial",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Contacto",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Configurar cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Rechazar",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Aceptar",
+      "aria": null
+    }
+  ],
+  "inputs": [],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ARG/L/ciudad-de-bolivar.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+      "alt": "Argentina"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ARG/D/ciudad-de-bolivar.svg",
+      "alt": "Ciudad de Bolívar"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ARG/D/ciudad-de-bolivar.svg",
+      "alt": "Ciudad de Bolívar"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/goal.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/international/L/ARG.svg",
+      "alt": "Argentina"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/goal.svg",
+      "alt": ""
+    }
+  ],
+  "choice": "G-AR-DC-CALVO-11-event-1-decision"
+}

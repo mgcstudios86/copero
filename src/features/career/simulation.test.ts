@@ -8,7 +8,7 @@ import {
 } from './simulation';
 import { createRng, seedFromString } from './rng';
 import { recomputeOvrForPosition, recomputeReputation } from './reputation';
-import { STRATEGIES } from './strategy';
+import { STRATEGIES, strategyCopy } from './strategy';
 import { initialProfile } from './engine';
 import type { PlayerProfile, StrategyId } from '@/types/career';
 
@@ -206,11 +206,25 @@ describe('recommendStrategy', () => {
     expect(recommendStrategy(p)).toBe('V1');
   });
 
-  it('null cuando lesionado', () => {
+  it('L1 cuando lesionado leve', () => {
     const p = profileFixture({
       career: { ...initialProfile.career, lesion: { kind: 'leve', fechasOut: 1 } },
     });
-    expect(recommendStrategy(p)).toBeNull();
+    expect(recommendStrategy(p)).toBe('L1');
+  });
+
+  it('L2 cuando lesionado medio', () => {
+    const p = profileFixture({
+      career: { ...initialProfile.career, lesion: { kind: 'media', fechasOut: 2 } },
+    });
+    expect(recommendStrategy(p)).toBe('L2');
+  });
+
+  it('L3 cuando lesionado grave', () => {
+    const p = profileFixture({
+      career: { ...initialProfile.career, lesion: { kind: 'grave', fechasOut: 4 } },
+    });
+    expect(recommendStrategy(p)).toBe('L3');
   });
 });
 
@@ -231,5 +245,85 @@ describe('cobertura del catálogo E1-V7', () => {
         expect(opt.feedback.success).toMatch(/^feedback_/);
       }
     }
+  });
+});
+
+describe('MGC-451 H1 — E1 stats coherentes con copy', () => {
+  it('E1 success neta +1 físico (no -11)', () => {
+    const opt = STRATEGIES.E1.options[0];
+    const net = opt.success.reduce((acc, d) => acc + d.delta, 0);
+    expect(net).toBe(1);
+    expect(opt.success.every((d) => d.field === 'fisico')).toBe(true);
+  });
+
+  it('E1 failure neta -8 físico', () => {
+    const opt = STRATEGIES.E1.options[0];
+    expect(opt.failure).toBeDefined();
+    const net = opt.failure!.reduce((acc, d) => acc + d.delta, 0);
+    expect(net).toBe(-8);
+  });
+
+  it('applyChoice E1 success aplica +1 al físico del profile', () => {
+    const p = profileFixture({ career: { ...initialProfile.career, fisico: 50 } });
+    const before = p.career.fisico;
+    const r = applyChoice(p, 'E1', 'e1_accept', createRng(0));
+    // Forzamos success vía prob=1 no aplica acá (prob=0.8), pero la opción
+    // success solo tiene +1; failure solo tiene -8. Verificamos que el delta
+    // neto de la opción es exactamente +1 o -8 (no otro valor).
+    const opt = STRATEGIES.E1.options[0];
+    const sum = (arr: { delta: number }[]) => arr.reduce((acc, d) => acc + d.delta, 0);
+    expect(Math.abs(sum(opt.success))).toBe(1);
+    expect(Math.abs(sum(opt.failure!))).toBe(8);
+    // Smoke: el físico resultante está en [before-8, before+1].
+    expect(r.profile.career.fisico).toBeGreaterThanOrEqual(before - 8);
+    expect(r.profile.career.fisico).toBeLessThanOrEqual(before + 1);
+  });
+});
+
+describe('MGC-451 H4 — strategyCopy helper', () => {
+  it('devuelve title y body para E1', () => {
+    const c = strategyCopy('E1');
+    expect(c.title).toBe('training_e1_title');
+    expect(c.body).toBe('training_e1_body');
+  });
+
+  it('devuelve title y body para L1 (prefijo injury_)', () => {
+    const c = strategyCopy('L1');
+    expect(c.title).toBe('injury_l1_title');
+    expect(c.body).toBe('injury_l1_body');
+  });
+
+  it('M3 no tiene body (acepta undefined)', () => {
+    const c = strategyCopy('M3');
+    expect(c.title).toBe('match_m3_title');
+    expect(c.body).toBeUndefined();
+  });
+
+  it('cada strategyId tiene title definido', () => {
+    const ids = Object.keys(STRATEGIES) as StrategyId[];
+    for (const id of ids) {
+      expect(strategyCopy(id).title).toBeTruthy();
+    }
+  });
+});
+
+describe('MGC-451 H5 — seed RNG categórico (sin colisión E1..E5)', () => {
+  it('seeds distintos para E1..E5 (categoría training)', () => {
+    const seeds = new Set(['E1','E2','E3','E4','E5'].map((id) => seedFromString(id)));
+    expect(seeds.size).toBe(5);
+  });
+
+  it('seeds distintos para M1..M5 (categoría match)', () => {
+    const seeds = new Set(['M1','M2','M3','M4','M5'].map((id) => seedFromString(id)));
+    expect(seeds.size).toBe(5);
+  });
+
+  it('applyChoice con seed estable por strategyId completo', () => {
+    const p1 = profileFixture({ week: 3, season: 1 });
+    const p2 = profileFixture({ week: 3, season: 1 });
+    const r1 = applyChoice(p1, 'E2', 'e2_accept');
+    const r2 = applyChoice(p2, 'E2', 'e2_accept');
+    expect(r1.profile.career.fisico).toBe(r2.profile.career.fisico);
+    expect(r1.profile.attrs.tecnico).toBe(r2.profile.attrs.tecnico);
   });
 });

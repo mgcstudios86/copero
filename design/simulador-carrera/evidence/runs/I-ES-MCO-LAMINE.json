@@ -1,0 +1,108 @@
+{
+  "name": "I-ES-MCO-LAMINE",
+  "log": [
+    {
+      "step": 0,
+      "label": "splash",
+      "key": "-317881103",
+      "isNew": true
+    },
+    {
+      "step": 1,
+      "label": "mode-expres",
+      "key": "-1478030022",
+      "isNew": true
+    },
+    {
+      "step": 2,
+      "label": "start",
+      "key": "-1927998446",
+      "isNew": false
+    },
+    {
+      "step": 3,
+      "label": "country-es",
+      "key": "-1927998446",
+      "isNew": false
+    },
+    {
+      "step": 4,
+      "label": "continue-country",
+      "key": "2056139760",
+      "isNew": false
+    },
+    {
+      "step": 5,
+      "label": "fill-apellido",
+      "key": "25051866",
+      "isNew": true
+    },
+    {
+      "step": 6,
+      "label": "foot-right",
+      "key": "25051866",
+      "isNew": false
+    },
+    {
+      "step": 7,
+      "label": "continue-identity",
+      "key": "-514740504",
+      "isNew": false
+    },
+    {
+      "step": 8,
+      "label": "position-MCO",
+      "key": "-514740504",
+      "isNew": false
+    },
+    {
+      "step": 9,
+      "label": "confirm-position",
+      "key": "1943824539",
+      "isNew": true
+    },
+    {
+      "step": 10,
+      "label": "wait-dashboard",
+      "key": "1943824539",
+      "isNew": false
+    },
+    {
+      "step": 11,
+      "label": "event-1-decision",
+      "key": "644590735",
+      "isNew": true
+    },
+    {
+      "step": 12,
+      "label": "event-1-wait",
+      "key": "119489900",
+      "isNew": true
+    },
+    {
+      "step": 13,
+      "label": "event-2-decision",
+      "key": "945766997",
+      "isNew": true
+    },
+    {
+      "step": 14,
+      "label": "event-2-wait",
+      "key": "-1366993418",
+      "isNew": true
+    },
+    {
+      "step": 15,
+      "label": "event-3-decision",
+      "key": "-2019983341",
+      "isNew": true
+    },
+    {
+      "step": 16,
+      "label": "event-3-wait",
+      "key": "1473341735",
+      "isNew": true
+    }
+  ],
+  "finalText": "copero\nOVR\n69\nESP\n#10 MCO\nVillarreal\nEDAD\n24\nVALOR\n€2.6M\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\nVillarreal\n50\n21\n0\n0\n19\nLeganes\n58\n94\n15\n12\n22\nMalaga\n67\n88\n9\n8\n25\n?\nEligiendo club...\n28\n31\n34\n37\nEspaña\n0\n0\n0\nRegreso a tu club\n\nVolvés a tu club, pero no vas a ser tenido en cuenta. Podés salir otra vez a préstamo o fichar definitivamente por tu club actual.\n\nPréstamo en\nMalaga\nLaLiga\nPréstamo en\nSporting Gijon\nLaLiga 2\nFichar por\nLeganes\nLaLiga 2\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+}

@@ -16,7 +16,7 @@
  * 8. Motor devuelve `{event, choices, consequences[]}` sin UI.
  */
 
-import { createRng, type Rng } from './rng';
+import { createRng, seedFromString, type Rng } from './rng';
 import { recomputeOvrForPosition, recomputeReputation } from './reputation';
 import {
   EVENT_STRATEGIES,
@@ -134,7 +134,13 @@ export function recommendStrategy(profile: PlayerProfile): StrategyId | null {
     const s = STRATEGIES[id];
     if (s.condition && s.condition(profile)) return id;
   }
-  if (profile.career.lesion.fechasOut > 0) return null;
+  // Lesión activa: ofrecer estrategia de injury según gravedad.
+  if (profile.career.lesion.fechasOut > 0) {
+    if (profile.career.lesion.kind === 'leve') return 'L1';
+    if (profile.career.lesion.kind === 'media') return 'L2';
+    if (profile.career.lesion.kind === 'grave') return 'L3';
+    return null;
+  }
   if (profile.week % 3 === 0) return MATCH_STRATEGIES[0];
   return WEEKLY_STRATEGIES[profile.week % WEEKLY_STRATEGIES.length];
 }
@@ -167,7 +173,7 @@ export function applyChoice(
   profile: PlayerProfile,
   strategyId: StrategyId,
   choiceId: string,
-  rng: Rng = createRng(profile.week * 1009 + profile.season * 31 + strategyId.charCodeAt(0)),
+  rng: Rng = createRng(profile.week * 1009 + profile.season * 31 + seedFromString(strategyId)),
 ): { profile: PlayerProfile; feedback: FeedbackPayload; consequences: Consequence[] } {
   const strategy = STRATEGIES[strategyId];
   const opt = strategy.options.find((o) => o.id === choiceId);

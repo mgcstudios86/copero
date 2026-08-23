@@ -1,0 +1,194 @@
+{
+  "ts": "2026-08-23T15:19:17.047Z",
+  "label": "initial",
+  "url": "https://copero.com.ar/juegos/simulador-carrera",
+  "isNew": true,
+  "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero",
+      "x": 129,
+      "y": 5,
+      "w": 116,
+      "h": 32
+    },
+    {
+      "tag": "button",
+      "text": "ES",
+      "x": 183,
+      "y": 79,
+      "w": 54,
+      "h": 24
+    },
+    {
+      "tag": "button",
+      "text": "EN",
+      "x": 241,
+      "y": 79,
+      "w": 55,
+      "h": 24
+    },
+    {
+      "tag": "button",
+      "text": "PT",
+      "x": 300,
+      "y": 79,
+      "w": 54,
+      "h": 24
+    },
+    {
+      "tag": "button",
+      "text": "Intensa",
+      "x": 51,
+      "y": 380,
+      "w": 77,
+      "h": 28
+    },
+    {
+      "tag": "button",
+      "text": "Normal",
+      "x": 152,
+      "y": 380,
+      "w": 76,
+      "h": 28
+    },
+    {
+      "tag": "button",
+      "text": "Exprés",
+      "x": 251,
+      "y": 380,
+      "w": 73,
+      "h": 28
+    },
+    {
+      "tag": "button",
+      "text": "Comenzar carrera",
+      "x": 16,
+      "y": 464,
+      "w": 343,
+      "h": 48
+    },
+    {
+      "tag": "a",
+      "text": "Volver a Juegos",
+      "x": 16,
+      "y": 524,
+      "w": 283,
+      "h": 48
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter",
+      "x": 67,
+      "y": 891,
+      "w": 118,
+      "h": 38
+    },
+    {
+      "tag": "a",
+      "text": "Instagram",
+      "x": 193,
+      "y": 891,
+      "w": 116,
+      "h": 38
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito",
+      "x": 91,
+      "y": 937,
+      "w": 194,
+      "h": 38
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros",
+      "x": 137,
+      "y": 1032,
+      "w": 101,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "x": 153,
+      "y": 1058,
+      "w": 70,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "x": 161,
+      "y": 1084,
+      "w": 54,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "text": "Términos",
+      "x": 157,
+      "y": 1110,
+      "w": 61,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "text": "Bases Prode Mundial",
+      "x": 118,
+      "y": 1136,
+      "w": 139,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "text": "Contacto",
+      "x": 157,
+      "y": 1162,
+      "w": 60,
+      "h": 17
+    },
+    {
+      "tag": "button",
+      "text": "Configurar cookies",
+      "x": 251,
+      "y": 1230,
+      "w": 108,
+      "h": 16
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "x": 168,
+      "y": 726,
+      "w": 46,
+      "h": 15
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "x": 224,
+      "y": 726,
+      "w": 60,
+      "h": 15
+    },
+    {
+      "tag": "button",
+      "text": "Rechazar",
+      "x": 16,
+      "y": 760,
+      "w": 168,
+      "h": 36
+    },
+    {
+      "tag": "button",
+      "text": "Aceptar",
+      "x": 192,
+      "y": 760,
+      "w": 168,
+      "h": 36
+    }
+  ],
+  "htmlLength": 126899
+}

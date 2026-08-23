@@ -1,0 +1,91 @@
+{
+  "key": "-367024740",
+  "label": "J-IT-ED-TOTTI-18-event-4-wait",
+  "isNew": true,
+  "text": "copero\nOVR\n81\nITA\n#10 ED\nReims\nMonaco\nEDAD\n23\nVALOR\n€20M\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\nSudtirol\n50\n42\n5\n1\n18\nAvellino\n60\n66\n15\n5\n20\nReims\n74\n51\n11\n3\n22\nMonaco\n79\n54\n14\n5\n24\n?\nEligiendo club...\n26\n28\n30\n32\n34\n36\n38\nItalia\n0\n0\n0\nMercado de pases\n\nLlegaron ofertas después de tu último tramo de carrera. Podés aceptar una o quedarte en tu club.\n\nFichar por\nMonaco\nLigue 1\nFichar por\nReal Sociedad\nLaLiga\nQuedarse en\nReims\nLigue 2\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoVino\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nMonaco\nLigue 1"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nReal Sociedad\nLaLiga"
+    },
+    {
+      "tag": "button",
+      "text": "Quedarse en\nReims\nLigue 2"
+    },
+    {
+      "tag": "button",
+      "text": "Ver logros"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter"
+    },
+    {
+      "tag": "a",
+      "text": "Instagram"
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito"
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros"
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad"
+    },
+    {
+      "tag": "a",
+      "text": "Cookies"
+    },
+    {
+      "tag": "a",
+      "text": "Términos"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/FRA/L/reims.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/FRA/L/as-monaco.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/it.svg",
+      "alt": "Italia"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/FRA/D/reims.svg",
+      "alt": "Reims"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/FRA/D/as-monaco.svg",
+      "alt": "AS Monaco"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ITA/D/sudtirol.svg",
+      "alt": "Sudtirol"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/goal.svg",
+      "alt": ""
+    }
+  ],
+  "choice": "event-4-wait"
+}

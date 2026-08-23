@@ -1,0 +1,63 @@
+{
+  "key": "2043213693",
+  "label": "L-EN-LI-BECKHAM-07-continue-identity",
+  "isNew": true,
+  "text": "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoDiccionarios y enciclopedias\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "button",
+      "text": "EI"
+    },
+    {
+      "tag": "button",
+      "text": "DC"
+    },
+    {
+      "tag": "button",
+      "text": "ED"
+    },
+    {
+      "tag": "button",
+      "text": "MI"
+    },
+    {
+      "tag": "button",
+      "text": "MCO"
+    },
+    {
+      "tag": "button",
+      "text": "MD"
+    },
+    {
+      "tag": "button",
+      "text": "LI"
+    },
+    {
+      "tag": "button",
+      "text": "MC"
+    },
+    {
+      "tag": "button",
+      "text": "LD"
+    },
+    {
+      "tag": "button",
+      "text": "MCD"
+    },
+    {
+      "tag": "button",
+      "text": "DFC"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://copero.com.ar/cafecito-dark.svg",
+      "alt": "Cafecito"
+    }
+  ],
+  "choice": "continue-identity"
+}

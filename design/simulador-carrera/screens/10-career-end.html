@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+  Wireframe: CAREER_END — fin de carrera / retiro (HIPOTÉTICO, no observado en 6 corridas MGC-431).
+  Pantalla especulativa basada en la hipótesis del árbol de decisión.
+-->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=375,initial-scale=1" />
+<title>CAREER_END (hipotético) — Simulador de carrera</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" />
+<style>
+  :root { --bg:#0E1411; --surface:#16201A; --surface2:#1F2A24; --text:#F0EAE0; --text-strong:#FFFFFF; --text-muted:#B8C2BC; --border:#2E3A33; --primary:#4FBE82; --primary-soft:#1B3A2B; --accent:#E96A56; --focus:#93C5FD; --radius-lg:12px; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; }
+  .device { width: 375px; min-height: 812px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; }
+  .ribbon { background: var(--primary-soft); border: 1px dashed var(--primary); border-radius: var(--radius-lg); padding: 8px 12px; font-size: 11px; color: var(--primary); margin-bottom: 16px; text-align: center; letter-spacing: 0.04em; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; line-height: 1.1; margin: 16px 0 8px; color: var(--text-strong); letter-spacing: -0.02em; }
+  .sub { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin: 0 0 24px; }
+  .summary { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  .summary h3 { font-family: 'Space Grotesk', sans-serif; font-size: 12px; letter-spacing: 0.1em; color: var(--text-muted); margin: 0 0 12px; text-transform: uppercase; }
+  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .summary-item .k { font-size: 11px; color: var(--text-muted); }
+  .summary-item .v { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--text-strong); }
+  .achievements { margin-top: 24px; }
+  .achievements h3 { font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: var(--text-strong); margin: 0 0 12px; }
+  .ach-list { display: flex; flex-direction: column; gap: 8px; }
+  .ach { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; display: flex; align-items: center; gap: 12px; }
+  .ach-emoji { font-size: 24px; }
+  .ach-text { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .actions { display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 24px; }
+  .btn-primary { background: var(--primary); color: #0E1411; border: 0; padding: 14px; border-radius: var(--radius-lg); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; cursor: pointer; min-height: 48px; }
+  .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-lg); font-weight: 500; cursor: pointer; min-height: 48px; }
+  button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main class="device" role="main" aria-labelledby="end-title">
+  <div class="ribbon" role="note">HIPOTÉTICO — árbol de decisión sin captura observada (MGC-431)</div>
+
+  <h1 id="end-title">Fin de tu carrera</h1>
+  <p class="sub">Una trayectoria llena de decisiones, clubes y momentos decisivos. Acá tu resumen final.</p>
+
+  <section class="summary" aria-label="Resumen final">
+    <h3>Resumen</h3>
+    <div class="summary-grid">
+      <div class="summary-item"><div class="k">OVR final</div><div class="v">87</div></div>
+      <div class="summary-item"><div class="k">VALOR final</div><div class="v">€45M</div></div>
+      <div class="summary-item"><div class="k">Partidos</div><div class="v">412</div></div>
+      <div class="summary-item"><div class="k">Goles</div><div class="v">94</div></div>
+    </div>
+  </section>
+
+  <section class="achievements" aria-label="Logros">
+    <h3>Logros desbloqueados</h3>
+    <div class="ach-list">
+      <div class="ach"><span class="ach-emoji" aria-hidden="true">🏆</span><div class="ach-text">Campeón de liga en 2 países distintos</div></div>
+      <div class="ach"><span class="ach-emoji" aria-hidden="true">⚽</span><div class="ach-text">Hat-trick en una final</div></div>
+      <div class="ach"><span class="ach-emoji" aria-hidden="true">🌍</span><div class="ach-text">Jugador franquicia en 4 clubes</div></div>
+      <div class="ach"><span class="ach-emoji" aria-hidden="true">📈</span><div class="ach-text">OVR máximo alcanzado: 87</div></div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button type="button" class="btn-primary">Ver logros</button>
+    <button type="button" class="btn-secondary">Volver a Juegos</button>
+  </div>
+</main>
+</body>
+</html>

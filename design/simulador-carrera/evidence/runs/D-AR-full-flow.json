@@ -1,0 +1,108 @@
+{
+  "name": "D-AR-full-flow",
+  "log": [
+    {
+      "step": 0,
+      "label": "splash",
+      "key": "-1115418125",
+      "isNew": true
+    },
+    {
+      "step": 1,
+      "label": "mode-normal",
+      "key": "-1115418125",
+      "isNew": false,
+      "choice": "Normal"
+    },
+    {
+      "step": 2,
+      "label": "start",
+      "key": "144104539",
+      "isNew": true,
+      "choice": "Comenzar carrera"
+    },
+    {
+      "step": 3,
+      "label": "country-ar",
+      "key": "144104539",
+      "isNew": false,
+      "choice": "Argentina"
+    },
+    {
+      "step": 4,
+      "label": "continue-country",
+      "key": "-1332156526",
+      "isNew": true,
+      "choice": "Continuar"
+    },
+    {
+      "step": 5,
+      "label": "wait-identity",
+      "key": "-1332156526",
+      "isNew": false
+    },
+    {
+      "step": 6,
+      "label": "fill-apellido",
+      "key": "-1475080967",
+      "isNew": true
+    },
+    {
+      "step": 7,
+      "label": "foot-right",
+      "key": "-1475080967",
+      "isNew": false,
+      "choice": "Derecha"
+    },
+    {
+      "step": 8,
+      "label": "continue-identity",
+      "key": "-2082319251",
+      "isNew": true,
+      "choice": "Continuar"
+    },
+    {
+      "step": 9,
+      "label": "wait-dashboard",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 10,
+      "label": "auto-decision-1",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 11,
+      "label": "wait-after-auto-1",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 12,
+      "label": "auto-decision-2",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 13,
+      "label": "wait-after-auto-2",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 14,
+      "label": "auto-decision-3",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 15,
+      "label": "wait-after-auto-3",
+      "key": "-2082319251",
+      "isNew": false
+    }
+  ],
+  "finalText": "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+}

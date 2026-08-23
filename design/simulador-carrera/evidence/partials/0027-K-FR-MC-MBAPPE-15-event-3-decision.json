@@ -1,0 +1,91 @@
+{
+  "key": "1550764933",
+  "label": "K-FR-MC-MBAPPE-15-event-3-decision",
+  "isNew": true,
+  "text": "copero\nOVR\n63\nFRA\n#10 MC\nGuingamp\nPAU\nEDAD\n18\nVALOR\n€1.4M\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\nToulouse\n50\n11\n0\n0\n17\nGuingamp\n56\n20\n0\n1\n18\nPAU\n63\n0\n0\n0\n19\n?\nEligiendo club...\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\nFrancia\n0\n0\n0\nMercado de pases\n\nLlegaron ofertas después de tu último tramo de carrera. Podés aceptar una o quedarte en tu club.\n\nFichar por\nPAU\nLigue 2\nFichar por\nNancy\nLigue 2\nQuedarse en\nGuingamp\nLigue 2\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nPAU\nLigue 2"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nNancy\nLigue 2"
+    },
+    {
+      "tag": "button",
+      "text": "Quedarse en\nGuingamp\nLigue 2"
+    },
+    {
+      "tag": "button",
+      "text": "Ver logros"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter"
+    },
+    {
+      "tag": "a",
+      "text": "Instagram"
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito"
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros"
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad"
+    },
+    {
+      "tag": "a",
+      "text": "Cookies"
+    },
+    {
+      "tag": "a",
+      "text": "Términos"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/FRA/L/guingamp.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/FRA/L/pau.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/fr.svg",
+      "alt": "Francia"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/FRA/D/guingamp.svg",
+      "alt": "Guingamp"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/FRA/D/pau.svg",
+      "alt": "PAU"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/FRA/D/toulouse.svg",
+      "alt": "Toulouse"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/goal.svg",
+      "alt": ""
+    }
+  ],
+  "choice": "event-3-decision"
+}

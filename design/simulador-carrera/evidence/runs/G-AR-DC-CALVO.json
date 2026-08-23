@@ -1,0 +1,120 @@
+{
+  "name": "G-AR-DC-CALVO",
+  "log": [
+    {
+      "step": 0,
+      "label": "splash",
+      "key": "1926092951",
+      "isNew": true
+    },
+    {
+      "step": 1,
+      "label": "mode-normal",
+      "key": "1926092951",
+      "isNew": false
+    },
+    {
+      "step": 2,
+      "label": "start",
+      "key": "-1927998446",
+      "isNew": true
+    },
+    {
+      "step": 3,
+      "label": "country-ar",
+      "key": "-1927998446",
+      "isNew": false
+    },
+    {
+      "step": 4,
+      "label": "continue-country",
+      "key": "2056139760",
+      "isNew": true
+    },
+    {
+      "step": 5,
+      "label": "fill-apellido",
+      "key": "886286697",
+      "isNew": true
+    },
+    {
+      "step": 6,
+      "label": "foot-right",
+      "key": "886286697",
+      "isNew": false
+    },
+    {
+      "step": 7,
+      "label": "continue-identity",
+      "key": "-514740504",
+      "isNew": true
+    },
+    {
+      "step": 8,
+      "label": "position-DC",
+      "key": "-514740504",
+      "isNew": false
+    },
+    {
+      "step": 9,
+      "label": "confirm-position",
+      "key": "759036645",
+      "isNew": true
+    },
+    {
+      "step": 10,
+      "label": "wait-dashboard",
+      "key": "759036645",
+      "isNew": false
+    },
+    {
+      "step": 11,
+      "label": "event-1-decision",
+      "key": "-231630553",
+      "isNew": true
+    },
+    {
+      "step": 12,
+      "label": "event-1-wait",
+      "key": "1245855903",
+      "isNew": true
+    },
+    {
+      "step": 13,
+      "label": "event-2-decision",
+      "key": "554175039",
+      "isNew": true
+    },
+    {
+      "step": 14,
+      "label": "event-2-wait",
+      "key": "-130529156",
+      "isNew": true
+    },
+    {
+      "step": 15,
+      "label": "event-3-decision",
+      "key": "-246307168",
+      "isNew": true
+    },
+    {
+      "step": 16,
+      "label": "event-3-wait",
+      "key": "96711421",
+      "isNew": true
+    },
+    {
+      "step": 17,
+      "label": "event-4-decision",
+      "key": "770216035",
+      "isNew": true
+    },
+    {
+      "step": 18,
+      "label": "event-4-wait",
+      "key": "770216035",
+      "isNew": false
+    }
+  ],
+  "finalText": "copero\nOVR\n78\nARG\n#10 DC\nHuracán\nEDAD\n22\nVALOR\n€13M\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\nCiudad de Bolívar\n50\n57\n10\n3\n18\nBarracas Central\n64\n65\n23\n8\n20\nHuracán\n71\n62\n16\n5\n22\n?\nDecisión de carrera...\n78\n24\n26\n28\n30\n32\n34\n36\n38\nArgentina\n0\n0\n0\nPrueba de honestidad\n\nUn individuo de apariencia sombría te hace una oferta si jugás mal el próximo partido.\n\nAceptar\n+2 OVR por dinero\n50%\nSuspensión\n50%\nRechazar\nNo pasa nada\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+}

@@ -1,0 +1,93 @@
+<!doctype html>
+<!--
+  Wireframe: SPLASH
+  Nodo origen del flujo simulador-carrera.
+  Tokens: src/design/tokens.ts (paleta dark, eje pitch-*, radii xl, spacing 5).
+  Copy: transcripción literal de https://copero.com.ar/juegos/simulador-carrera (MGC-431).
+-->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=375,initial-scale=1" />
+<title>SPLASH — Simulador de carrera</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --bg: #0E1411;
+    --surface: #16201A;
+    --surface2: #1F2A24;
+    --text: #F0EAE0;
+    --text-strong: #FFFFFF;
+    --text-muted: #B8C2BC;
+    --border: #2E3A33;
+    --primary: #4FBE82;
+    --primary-soft: #1B3A2B;
+    --accent: #E96A56;
+    --focus: #93C5FD;
+    --danger: #F87171;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; }
+  .device { width: 375px; min-height: 812px; margin: 0 auto; display: flex; flex-direction: column; padding: 24px 16px 32px; }
+  .top-bar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--text-strong); }
+  .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: grid; place-items: center; color: #0E1411; font-weight: 700; }
+  .lang { display: flex; gap: 4px; }
+  .lang button { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; min-height: 32px; }
+  .lang button[aria-pressed="true"] { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); }
+  .og { width: 100%; aspect-ratio: 16/9; background: var(--surface2); border-radius: var(--radius-xl); margin-bottom: 24px; display: grid; place-items: center; color: var(--text-muted); font-size: 12px; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; line-height: 1.15; margin: 0 0 12px; color: var(--text-strong); letter-spacing: -0.01em; }
+  .lede { color: var(--text-muted); font-size: 15px; line-height: 1.5; margin: 0 0 24px; }
+  .mode-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .mode { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; cursor: pointer; min-height: 64px; }
+  .mode[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
+  .mode-title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: var(--text-strong); margin: 0 0 4px; }
+  .mode-desc { color: var(--text-muted); font-size: 13px; line-height: 1.4; margin: 0; }
+  .actions { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+  .btn-primary { background: var(--primary); color: #0E1411; border: 0; padding: 14px; border-radius: var(--radius-lg); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; cursor: pointer; min-height: 48px; }
+  .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-lg); font-weight: 500; font-size: 14px; cursor: pointer; min-height: 44px; }
+  button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main class="device" role="main" aria-labelledby="splash-title">
+  <header class="top-bar">
+    <div class="logo"><div class="logo-mark" aria-hidden="true">C</div>Copero</div>
+    <div class="lang" role="group" aria-label="Idioma">
+      <button type="button" aria-pressed="false">EN</button>
+      <button type="button" aria-pressed="true">ES</button>
+      <button type="button" aria-pressed="false">PT</button>
+    </div>
+  </header>
+
+  <div class="og" role="img" aria-label="Imagen del juego">OG header — career-simulator/header2.jpg</div>
+
+  <h1 id="splash-title">Construí tu carrera futbolística</h1>
+  <p class="lede">Elegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.</p>
+
+  <section aria-label="Modo de carrera" class="mode-list">
+    <button type="button" class="mode" aria-pressed="false">
+      <p class="mode-title">Intensa</p>
+      <p class="mode-desc">1 decisión por temporada, inmersión profunda.</p>
+    </button>
+    <button type="button" class="mode" aria-pressed="true">
+      <p class="mode-title">Normal</p>
+      <p class="mode-desc">Decisiones cada 2 temporadas, una experiencia equilibrada.</p>
+    </button>
+    <button type="button" class="mode" aria-pressed="false">
+      <p class="mode-title">Exprés</p>
+      <p class="mode-desc">Decisiones cada 3 temporadas para disfrutarlo rápido.</p>
+    </button>
+  </section>
+
+  <div class="actions">
+    <button type="button" class="btn-primary">Comenzar carrera</button>
+    <button type="button" class="btn-secondary">Volver a Juegos</button>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<!-- Wireframe: DASHBOARD inicial — OVR=50 Edad=16 Libre, sin historial -->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=375,initial-scale=1" />
+<title>DASHBOARD inicial — Simulador de carrera</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" />
+<style>
+  :root { --bg:#0E1411; --surface:#16201A; --surface2:#1F2A24; --text:#F0EAE0; --text-strong:#FFFFFF; --text-muted:#B8C2BC; --border:#2E3A33; --primary:#4FBE82; --primary-soft:#1B3A2B; --accent:#E96A56; --focus:#93C5FD; --radius-lg:12px; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; }
+  .device { width: 375px; min-height: 812px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .header { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 12px; background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); }
+  .ovr { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: var(--text-strong); }
+  .ovr-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; }
+  .meta { font-size: 13px; color: var(--text); }
+  .meta-flag { width: 24px; height: 18px; background: var(--surface2); border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; }
+  .stat-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; }
+  .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: var(--text-strong); margin-top: 4px; }
+  .timeline { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+  .timeline h3 { font-family: 'Space Grotesk', sans-serif; font-size: 14px; margin: 0 0 12px; color: var(--text-strong); }
+  .timeline-bar { display: flex; gap: 2px; align-items: center; }
+  .timeline-dot { flex: 1; height: 8px; background: var(--surface2); border-radius: 2px; }
+  .timeline-dot.active { background: var(--primary); }
+  .timeline-dot.future { background: var(--border); }
+  .history { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; overflow-x: auto; }
+  .history h3 { font-family: 'Space Grotesk', sans-serif; font-size: 14px; margin: 0 0 12px; color: var(--text-strong); }
+  table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  th { text-align: left; color: var(--text-muted); font-weight: 500; padding: 8px 4px; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 4px; color: var(--text); border-bottom: 1px solid var(--border); }
+  .event { background: var(--primary-soft); border: 1px solid var(--primary); border-radius: var(--radius-lg); padding: 16px; }
+  .event-tag { display: inline-block; font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .event-body { font-size: 14px; line-height: 1.4; color: var(--text-strong); }
+</style>
+</head>
+<body>
+<main class="device" role="main" aria-labelledby="dash-title">
+  <h1 id="dash-title" style="position:absolute;left:-9999px;">Dashboard inicial</h1>
+
+  <section class="header" aria-label="Resumen del jugador">
+    <div>
+      <div class="ovr">50</div>
+      <div class="ovr-label">OVR</div>
+    </div>
+    <div class="meta">
+      <span class="meta-flag" aria-hidden="true"></span>#10 MCO<br/>
+      <span style="color:var(--text-muted)">Libre</span>
+    </div>
+    <div class="meta" style="text-align:right;">
+      <div style="color:var(--text-muted);font-size:11px;">Modo</div>
+      <div style="color:var(--primary);font-weight:600;">Normal</div>
+    </div>
+  </section>
+
+  <section class="stats" aria-label="Estadísticas">
+    <div class="stat"><div class="stat-label">EDAD</div><div class="stat-value">16</div></div>
+    <div class="stat"><div class="stat-label">VALOR</div><div class="stat-value">€100K</div></div>
+  </section>
+
+  <section class="timeline" aria-label="Línea de tiempo 16 a 39">
+    <h3>Carrera · 16 → 39</h3>
+    <div class="timeline-bar">
+      <div class="timeline-dot active" title="Edad 16"></div>
+      <div class="timeline-dot future" title="Edad 17"></div>
+      <div class="timeline-dot future" title="Edad 18"></div>
+      <div class="timeline-dot future" title="Edad 19"></div>
+      <div class="timeline-dot future" title="Edad 20"></div>
+      <div class="timeline-dot future" title="Edad 21"></div>
+      <div class="timeline-dot future" title="Edad 22"></div>
+      <div class="timeline-dot future" title="Edad 23"></div>
+      <div class="timeline-dot future" title="Edad 24"></div>
+      <div class="timeline-dot future" title="Edad 25"></div>
+      <div class="timeline-dot future" title="Edad 26"></div>
+      <div class="timeline-dot future" title="Edad 27"></div>
+      <div class="timeline-dot future" title="Edad 28"></div>
+      <div class="timeline-dot future" title="Edad 29"></div>
+      <div class="timeline-dot future" title="Edad 30"></div>
+      <div class="timeline-dot future" title="Edad 31"></div>
+      <div class="timeline-dot future" title="Edad 32"></div>
+      <div class="timeline-dot future" title="Edad 33"></div>
+      <div class="timeline-dot future" title="Edad 34"></div>
+      <div class="timeline-dot future" title="Edad 35"></div>
+      <div class="timeline-dot future" title="Edad 36"></div>
+      <div class="timeline-dot future" title="Edad 37"></div>
+      <div class="timeline-dot future" title="Edad 38"></div>
+      <div class="timeline-dot future" title="Edad 39"></div>
+    </div>
+  </section>
+
+  <section class="event" aria-live="polite">
+    <div class="event-tag">Oferta de cantera</div>
+    <div class="event-body">Tres clubes quieren sumarte a su proyecto juvenil. Elegí dónde...</div>
+  </section>
+
+  <section class="history" aria-label="Historial">
+    <h3>Historial</h3>
+    <table>
+      <thead><tr><th>EDAD</th><th>CLUB</th><th>OVR</th><th>PJ</th><th>GLS</th><th>AST</th></tr></thead>
+      <tbody><tr><td>16</td><td>?</td><td colspan="4">Eligiendo club...</td></tr></tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>

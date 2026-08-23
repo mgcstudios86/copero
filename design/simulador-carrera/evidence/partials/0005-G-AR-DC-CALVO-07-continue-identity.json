@@ -1,0 +1,161 @@
+{
+  "key": "-514740504",
+  "label": "G-AR-DC-CALVO-07-continue-identity",
+  "isNew": true,
+  "text": "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero",
+      "aria": "Ir a inicio"
+    },
+    {
+      "tag": "button",
+      "text": "EI",
+      "aria": "EI"
+    },
+    {
+      "tag": "button",
+      "text": "DC",
+      "aria": "DC"
+    },
+    {
+      "tag": "button",
+      "text": "ED",
+      "aria": "ED"
+    },
+    {
+      "tag": "button",
+      "text": "MI",
+      "aria": "MI"
+    },
+    {
+      "tag": "button",
+      "text": "MCO",
+      "aria": "MCO"
+    },
+    {
+      "tag": "button",
+      "text": "MD",
+      "aria": "MD"
+    },
+    {
+      "tag": "button",
+      "text": "LI",
+      "aria": "LI"
+    },
+    {
+      "tag": "button",
+      "text": "MC",
+      "aria": "MC"
+    },
+    {
+      "tag": "button",
+      "text": "LD",
+      "aria": "LD"
+    },
+    {
+      "tag": "button",
+      "text": "MCD",
+      "aria": "MCD"
+    },
+    {
+      "tag": "button",
+      "text": "DFC",
+      "aria": "DFC"
+    },
+    {
+      "tag": "button",
+      "text": "POR",
+      "aria": "POR"
+    },
+    {
+      "tag": "button",
+      "text": "Volver",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Confirmar identidad",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Instagram",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Términos",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Bases Prode Mundial",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Contacto",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Configurar cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Rechazar",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Aceptar",
+      "aria": null
+    }
+  ],
+  "inputs": [],
+  "images": [
+    {
+      "src": "https://copero.com.ar/cafecito-dark.svg",
+      "alt": "Cafecito"
+    }
+  ],
+  "choice": "G-AR-DC-CALVO-07-continue-identity"
+}

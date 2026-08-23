@@ -1,0 +1,51 @@
+{
+  "name": "C-Espana-CB-Lamine",
+  "log": [
+    {
+      "step": 0,
+      "label": "splash",
+      "key": "1889118828",
+      "isNew": true
+    },
+    {
+      "step": 1,
+      "label": "mode-normal",
+      "key": "1889118828",
+      "isNew": false,
+      "action": "clickText",
+      "target": "Normal"
+    },
+    {
+      "step": 2,
+      "label": "start",
+      "key": "-1048457734",
+      "isNew": true,
+      "action": "clickText",
+      "target": "Comenzar carrera"
+    },
+    {
+      "step": 3,
+      "label": "country-es",
+      "key": "-1048457734",
+      "isNew": false,
+      "action": "clickText",
+      "target": "España"
+    },
+    {
+      "step": 4,
+      "label": "continue-after-country",
+      "key": "2121734878",
+      "isNew": true,
+      "action": "clickText",
+      "target": "Continuar"
+    },
+    {
+      "step": 5,
+      "label": "wait-next-screen",
+      "key": "2121734878",
+      "isNew": false,
+      "action": "wait"
+    }
+  ],
+  "finalText": "copero\nIdentidad\nAPELLIDO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoDiccionarios y enciclopedias\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+}

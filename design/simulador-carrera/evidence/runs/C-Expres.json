@@ -1,0 +1,34 @@
+{
+  "strategyName": "C-Expres",
+  "log": [
+    {
+      "step": "initial",
+      "key": "-348439726",
+      "isNew": true
+    },
+    {
+      "step": 0,
+      "action": "clickText",
+      "target": "Exprés",
+      "didAct": true,
+      "key": "795666523",
+      "isNew": true
+    },
+    {
+      "step": 1,
+      "action": "clickText",
+      "target": "Comenzar carrera",
+      "didAct": true,
+      "key": "1693293759",
+      "isNew": true
+    },
+    {
+      "step": 2,
+      "action": "wait",
+      "didAct": true,
+      "key": "1693293759",
+      "isNew": false
+    }
+  ],
+  "finalText": "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+}

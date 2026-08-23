@@ -1,0 +1,96 @@
+{
+  "name": "F-BR-Expres-full",
+  "log": [
+    {
+      "step": 0,
+      "label": "splash",
+      "key": "836781543",
+      "isNew": true
+    },
+    {
+      "step": 1,
+      "label": "mode-expres",
+      "key": "-1339425090",
+      "isNew": true,
+      "choice": "Exprés"
+    },
+    {
+      "step": 2,
+      "label": "start",
+      "key": "144104539",
+      "isNew": false,
+      "choice": "Comenzar carrera"
+    },
+    {
+      "step": 3,
+      "label": "country-br",
+      "key": "144104539",
+      "isNew": false,
+      "choice": "Brasil"
+    },
+    {
+      "step": 4,
+      "label": "continue-country",
+      "key": "-1332156526",
+      "isNew": false,
+      "choice": "Continuar"
+    },
+    {
+      "step": 5,
+      "label": "wait-identity",
+      "key": "-1332156526",
+      "isNew": false
+    },
+    {
+      "step": 6,
+      "label": "fill-apellido",
+      "key": "285399732",
+      "isNew": true
+    },
+    {
+      "step": 7,
+      "label": "foot-right",
+      "key": "285399732",
+      "isNew": false,
+      "choice": "Derecha"
+    },
+    {
+      "step": 8,
+      "label": "continue-identity",
+      "key": "-2082319251",
+      "isNew": false,
+      "choice": "Continuar"
+    },
+    {
+      "step": 9,
+      "label": "wait-dashboard",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 10,
+      "label": "auto-decision-1",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 11,
+      "label": "wait-after-auto-1",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 12,
+      "label": "auto-decision-2",
+      "key": "-2082319251",
+      "isNew": false
+    },
+    {
+      "step": 13,
+      "label": "wait-after-auto-2",
+      "key": "-2082319251",
+      "isNew": false
+    }
+  ],
+  "finalText": "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+}

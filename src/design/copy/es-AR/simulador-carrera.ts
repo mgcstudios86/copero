@@ -95,6 +95,7 @@ const ENTRIES: Record<string, CopyEntry> = {
   dashboard_cta_training: { raw: 'Ir a entrenar' },
   dashboard_cta_match: { raw: 'Jugar la próxima fecha' },
   dashboard_cta_rest: { raw: 'Descansar esta semana' },
+  dashboard_suggested_h2: { raw: 'Decisión sugerida' },
 
   // ── Pantalla 3: Academy offer (copy-matrix.md §3) ────────────────
   academy_step: { raw: 'Paso 3 de 3' },
@@ -106,6 +107,7 @@ const ENTRIES: Record<string, CopyEntry> = {
   academy_selected_ring: { raw: 'Seleccionado' },
   academy_cta: { raw: 'Fichar por {club}' },
   academy_disclaimer: { raw: 'Escudos ilustrativos sin licencia oficial.' },
+  academy_back_cta: { raw: 'Volver al dashboard' },
 
   // ── Modales (copy-matrix.md §2 columna modal) ────────────────────
   modal_lesion_l1: { raw: 'Contractura. 1 fecha fuera. ¿Querés jugar igual?', tone: 'warning' },
@@ -154,7 +156,7 @@ const ENTRIES: Record<string, CopyEntry> = {
   training_e1_body: { raw: 'Doble turno mañana y tarde. Vas a llegar justo al sábado.' },
   training_e1_option: { raw: 'Aceptar ritmo alto' },
   feedback_e1_success: { raw: 'Buena semana. +1 físico.', tone: 'success' },
-  feedback_e1_failure: { raw: 'No cuajó. Sin cambios.', tone: 'warning' },
+  feedback_e1_failure: { raw: 'No cuajó. -8 físico.', tone: 'warning' },
 
   training_e2_title: { raw: 'Técnico' },
   training_e2_body: { raw: 'Practicar pelotas paradas y definición. Paciencia.' },

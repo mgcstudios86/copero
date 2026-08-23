@@ -1,0 +1,162 @@
+{
+  "key": "1732285587",
+  "label": "E-ES-Intensa-full-00-splash",
+  "isNew": true,
+  "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nSimulador de carrera\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero",
+      "aria": "Ir a inicio"
+    },
+    {
+      "tag": "button",
+      "text": "ES",
+      "aria": "Español"
+    },
+    {
+      "tag": "button",
+      "text": "EN",
+      "aria": "English"
+    },
+    {
+      "tag": "button",
+      "text": "PT",
+      "aria": "Português"
+    },
+    {
+      "tag": "button",
+      "text": "Intensa",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Normal",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Exprés",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Comenzar carrera",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Volver a Juegos",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "",
+      "aria": "Ver logros"
+    },
+    {
+      "tag": "div",
+      "text": "Ver más",
+      "aria": "Estos son temas relacionados con el artículo que podrían interesarte"
+    },
+    {
+      "tag": "div",
+      "text": "Simulador de carrera",
+      "aria": "Simulador de carrera"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Instagram",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Términos",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Bases Prode Mundial",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Contacto",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Configurar cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Rechazar",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Aceptar",
+      "aria": null
+    }
+  ],
+  "inputs": [],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+      "alt": "Vista previa del simulador"
+    },
+    {
+      "src": "https://copero.com.ar/cafecito-dark.svg",
+      "alt": "Cafecito"
+    }
+  ],
+  "choice": null
+}

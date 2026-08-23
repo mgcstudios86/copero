@@ -1,0 +1,70 @@
+<!doctype html>
+<!-- Wireframe: RETURN_PARENT — regreso al club propietario, mix de opciones -->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=375,initial-scale=1" />
+<title>RETURN_PARENT — Simulador de carrera</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" />
+<style>
+  :root { --bg:#0E1411; --surface:#16201A; --surface2:#1F2A24; --text:#F0EAE0; --text-strong:#FFFFFF; --text-muted:#B8C2BC; --border:#2E3A33; --primary:#4FBE82; --primary-soft:#1B3A2B; --accent:#E96A56; --info:#93C5FD; --info-soft:#1E3A8A; --focus:#93C5FD; --radius-lg:12px; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; }
+  .device { width: 375px; min-height: 812px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; }
+  .top-bar { display: flex; align-items: center; gap: 12px; padding-bottom: 8px; }
+  .flag-chip { display: flex; align-items: center; gap: 8px; }
+  .flag { width: 28px; height: 20px; background: var(--surface2); border-radius: 2px; }
+  .ovr-mini { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--primary); margin-left: auto; }
+  h2 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; margin: 16px 0 4px; color: var(--text-strong); }
+  .event-tag { display: inline-block; font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600; color: var(--info); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .event-body { font-size: 14px; line-height: 1.5; color: var(--text-muted); margin-bottom: 24px; }
+  .offers { display: flex; flex-direction: column; gap: 12px; }
+  .offer { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; cursor: pointer; min-height: 88px; display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 12px; }
+  .offer[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); }
+  .crest { width: 56px; height: 56px; background: var(--surface2); border-radius: 50%; display: grid; place-items: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--text-strong); font-size: 14px; }
+  .offer-info { font-size: 14px; line-height: 1.4; }
+  .offer-club { color: var(--text-strong); font-weight: 600; }
+  .offer-league { color: var(--text-muted); font-size: 12px; }
+  .badge { font-size: 11px; padding: 4px 8px; border-radius: 999px; background: var(--surface2); color: var(--text-muted); }
+  .badge.fichar { background: var(--primary-soft); color: var(--primary); }
+  .badge.prestamo { background: var(--accent-soft, #4A2118); color: var(--accent); }
+  .badge.quedarse { background: var(--info-soft); color: var(--info); }
+  button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main class="device" role="main" aria-labelledby="return-title">
+  <div class="top-bar">
+    <div class="flag-chip"><span class="flag" aria-hidden="true"></span><strong>ESP</strong> · <span style="color:var(--text-muted)">Villarreal (dueño)</span></div>
+    <div class="ovr-mini">OVR 68 · #10 MCO</div>
+  </div>
+
+  <span class="event-tag">Regreso a tu club</span>
+  <h2 id="return-title">Volvés de tu préstamo y tenés que definir tu próximo paso</h2>
+  <p class="event-body">Elegí tu próximo destino.</p>
+
+  <section class="offers" aria-label="Opciones al regreso">
+    <button type="button" class="offer" aria-pressed="false">
+      <div class="crest" aria-hidden="true">MAL</div>
+      <div class="offer-info"><div class="offer-club">Préstamo en Malaga</div><div class="offer-league">LaLiga</div></div>
+      <span class="badge prestamo">Préstamo</span>
+    </button>
+    <button type="button" class="offer" aria-pressed="true">
+      <div class="crest" aria-hidden="true">SPG</div>
+      <div class="offer-info"><div class="offer-club">Préstamo en Sporting Gijón</div><div class="offer-league">LaLiga 2</div></div>
+      <span class="badge prestamo">Préstamo</span>
+    </button>
+    <button type="button" class="offer" aria-pressed="false">
+      <div class="crest" aria-hidden="true">LEG</div>
+      <div class="offer-info"><div class="offer-club">Fichar por Leganes</div><div class="offer-league">LaLiga 2</div></div>
+      <span class="badge fichar">Fichar</span>
+    </button>
+    <button type="button" class="offer" aria-pressed="false">
+      <div class="crest" aria-hidden="true">VIL</div>
+      <div class="offer-info"><div class="offer-club">Quedarse en Villarreal</div><div class="offer-league">LaLiga</div></div>
+      <span class="badge quedarse">Quedarse</span>
+    </button>
+  </section>
+</main>
+</body>
+</html>

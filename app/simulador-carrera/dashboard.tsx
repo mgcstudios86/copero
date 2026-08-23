@@ -8,6 +8,7 @@ import { copy, copyHelpers } from '@/design/copy/es-AR/simulador-carrera';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
 import { recommendStrategy } from '@/features/career/simulation';
+import { strategyCopy } from '@/features/career/strategy';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -266,7 +267,7 @@ export default function DashboardScreen() {
 
         {/* Recommended strategy (motor → UI sin hardcodeo) */}
         {recommended ? (
-          <Section title="Decisión sugerida">
+          <Section title={copy.resolve('dashboard_suggested_h2')}>
             <View
               style={{
                 borderRadius: radii.lg,
@@ -279,10 +280,13 @@ export default function DashboardScreen() {
               testID="dashboard-recommended"
             >
               <Text style={{ color: colors.textStrong, fontWeight: fontWeight.semibold }}>
-                {copy.resolve(`training_${recommended.toLowerCase()}_title` as never)}
+                {copy.resolve(strategyCopy(recommended).title)}
               </Text>
               <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
-                {copy.resolve(`training_${recommended.toLowerCase()}_body` as never)}
+                {(() => {
+                  const body = strategyCopy(recommended).body;
+                  return body ? copy.resolve(body) : '';
+                })()}
               </Text>
             </View>
           </Section>

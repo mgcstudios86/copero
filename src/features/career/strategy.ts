@@ -66,7 +66,7 @@ export const STRATEGIES: Record<StrategyId, Strategy> = {
     options: [
       {
         id: 'e1_accept', copyId: 'training_e1_option', prob: 0.8,
-        success: [{ field: 'fisico', delta: -12 }, { field: 'fisico', delta: 1 }],
+        success: [{ field: 'fisico', delta: 1 }],
         failure: [{ field: 'fisico', delta: -8 }],
         feedback: { success: 'feedback_e1_success', failure: 'feedback_e1_failure' },
       },
@@ -367,3 +367,13 @@ export const TRANSFER_STRATEGIES: StrategyId[] = ['T1', 'T2', 'T3', 'T4'];
 export const INJURY_STRATEGIES: StrategyId[] = ['L1', 'L2', 'L3'];
 export const OFFER_STRATEGIES: StrategyId[] = ['O1', 'O2', 'O3', 'O4'];
 export const EVENT_STRATEGIES: StrategyId[] = ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7'];
+
+/**
+ * Helper tipado: devuelve los copyIds (title/body) de una estrategia para
+ * que la UI los pase por `copy.resolve(...)` sin hardcodear el prefijo
+ * `training_*` / `match_*` / etc. (MGC-451 H4).
+ */
+export function strategyCopy(id: StrategyId): { title: string; body?: string } {
+  const s = STRATEGIES[id];
+  return { title: s.title, body: s.body };
+}

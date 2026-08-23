@@ -147,7 +147,7 @@ export default function AcademyScreen() {
         </View>
 
         <Button
-          label="Volver al dashboard"
+          label={copy.resolve('academy_back_cta')}
           onPress={() => router.replace('/simulador-carrera/dashboard')}
           variant="ghost"
           size="md"

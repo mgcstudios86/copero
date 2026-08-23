@@ -7,7 +7,7 @@ import type {
   StrategyId,
 } from '@/types/career';
 import { applyChoice, advanceWeek } from './simulation';
-import { createRng } from './rng';
+import { createRng, seedFromString } from './rng';
 
 /**
  * Reducer puro para el state machine del simulador de carrera (MGC-430
@@ -93,7 +93,7 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
         profile: { ...state.profile, club: action.club },
       };
     case 'decide': {
-      const seed = state.profile.week * 1009 + state.profile.season * 31 + action.strategyId.charCodeAt(0);
+      const seed = state.profile.week * 1009 + state.profile.season * 31 + seedFromString(action.strategyId);
       const { profile } = applyChoice(
         state.profile,
         action.strategyId,

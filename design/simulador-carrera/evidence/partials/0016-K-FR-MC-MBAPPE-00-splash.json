@@ -1,0 +1,79 @@
+{
+  "key": "-23562425",
+  "label": "K-FR-MC-MBAPPE-00-splash",
+  "isNew": true,
+  "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nJuegos deportivos online\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "button",
+      "text": "ES"
+    },
+    {
+      "tag": "button",
+      "text": "EN"
+    },
+    {
+      "tag": "button",
+      "text": "PT"
+    },
+    {
+      "tag": "button",
+      "text": "Intensa"
+    },
+    {
+      "tag": "button",
+      "text": "Normal"
+    },
+    {
+      "tag": "button",
+      "text": "Exprés"
+    },
+    {
+      "tag": "button",
+      "text": "Comenzar carrera"
+    },
+    {
+      "tag": "a",
+      "text": "Volver a Juegos"
+    },
+    {
+      "tag": "button",
+      "text": ""
+    },
+    {
+      "tag": "div",
+      "text": "Ver más"
+    },
+    {
+      "tag": "div",
+      "text": "Juegos deportivos online"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+      "alt": "Vista previa del simulador"
+    },
+    {
+      "src": "https://copero.com.ar/cafecito-dark.svg",
+      "alt": "Cafecito"
+    }
+  ],
+  "choice": null
+}

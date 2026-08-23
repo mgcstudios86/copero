@@ -1,0 +1,147 @@
+{
+  "key": "-130529156",
+  "label": "G-AR-DC-CALVO-14-event-2-wait",
+  "isNew": true,
+  "text": "copero\nOVR\n71\nARG\n#10 DC\nCiudad de Bolívar\nBarracas Central\nEDAD\n19\nVALOR\n€3.2M\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\nCiudad de Bolívar\n50\n57\n10\n3\n18\nBarracas Central\n64\n65\n23\n8\n20\n?\nEligiendo club...\n22\n24\n26\n28\n30\n32\n34\n36\n38\nArgentina\n0\n0\n0\nMercado de pases\n\nLlegaron ofertas después de tu último tramo de carrera. Podés aceptar una o quedarte en tu club.\n\nFichar por\nBarracas Central\nLiga Profesional\nFichar por\nGimnasia (M)\nLiga Profesional\nQuedarse en\nCiudad de Bolívar\nPrimera Nacional\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero",
+      "aria": "Ir a inicio"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nBarracas Central\nLiga Profesional",
+      "aria": "Fichar por Barracas Central. Firmar por Barracas Central"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nGimnasia (M)\nLiga Profesional",
+      "aria": "Fichar por Gimnasia (M). Firmar por Gimnasia de Mendoza"
+    },
+    {
+      "tag": "button",
+      "text": "Quedarse en\nCiudad de Bolívar\nPrimera Nacional",
+      "aria": "Quedarse en Ciudad de Bolívar. Continuar en Ciudad de Bolívar"
+    },
+    {
+      "tag": "button",
+      "text": "Ver logros",
+      "aria": "Ver logros"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Instagram",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Términos",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Bases Prode Mundial",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Contacto",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Configurar cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Rechazar",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Aceptar",
+      "aria": null
+    }
+  ],
+  "inputs": [],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ARG/L/ciudad-de-bolivar.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ARG/L/barracas-central.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+      "alt": "Argentina"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ARG/D/ciudad-de-bolivar.svg",
+      "alt": "Ciudad de Bolívar"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ARG/D/barracas-central.svg",
+      "alt": "Barracas Central"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ARG/D/ciudad-de-bolivar.svg",
+      "alt": "Ciudad de Bolívar"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/goal.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ARG/D/barracas-central.svg",
+      "alt": "Barracas Central"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    }
+  ],
+  "choice": "G-AR-DC-CALVO-14-event-2-wait"
+}

@@ -1,0 +1,147 @@
+{
+  "key": "858721236",
+  "label": "H-BR-POR-NEYMAR-16-event-3-wait",
+  "isNew": true,
+  "text": "copero\nOVR\n58\nBRA\n#10 POR\nRemo\nChapecoense\nEDAD\n19\nVALOR\n€441K\nEDAD\nCLUB\nOVR\nPJ\nGR\nVI\n16\nVitoria\n50\n1\n🥅\n2\n🧤\n0\n17\nRemo\n52\n2\n🥅\n3\n🧤\n0\n18\nChapecoense\n55\n1\n🥅\n1\n🧤\n0\n19\n?\nEligiendo club...\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\nBrasil\n0\n🥅\n0\n🧤\n0\nMercado de pases\n\nLlegaron ofertas después de tu último tramo de carrera. Podés aceptar una o quedarte en tu club.\n\nFichar por\nChapecoense\nBrasileirão\nFichar por\nTáchira\nLiga FUTVE\nQuedarse en\nRemo\nBrasileirão\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero",
+      "aria": "Ir a inicio"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nChapecoense\nBrasileirão",
+      "aria": "Fichar por Chapecoense. Firmar por Chapecoense"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nTáchira\nLiga FUTVE",
+      "aria": "Fichar por Táchira. Firmar por Deportivo Táchira FC"
+    },
+    {
+      "tag": "button",
+      "text": "Quedarse en\nRemo\nBrasileirão",
+      "aria": "Quedarse en Remo. Continuar en Remo"
+    },
+    {
+      "tag": "button",
+      "text": "Ver logros",
+      "aria": "Ver logros"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Instagram",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Términos",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Bases Prode Mundial",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Contacto",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Configurar cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Rechazar",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Aceptar",
+      "aria": null
+    }
+  ],
+  "inputs": [],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/BRA/L/remo.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/BRA/L/chapecoense-sc.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+      "alt": "Brasil"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/BRA/D/remo.svg",
+      "alt": "Remo"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/BRA/D/chapecoense-sc.svg",
+      "alt": "Chapecoense"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/BRA/D/vitoria.svg",
+      "alt": "Vitoria"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/BRA/D/remo.svg",
+      "alt": "Remo"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/BRA/D/chapecoense-sc.svg",
+      "alt": "Chapecoense"
+    }
+  ],
+  "choice": "H-BR-POR-NEYMAR-16-event-3-wait"
+}

@@ -1,0 +1,96 @@
+{
+  "name": "L-EN-LI-BECKHAM",
+  "log": [
+    {
+      "step": 0,
+      "label": "splash",
+      "key": "865424394",
+      "isNew": true
+    },
+    {
+      "step": 1,
+      "label": "mode-expres",
+      "key": "430173739",
+      "isNew": true
+    },
+    {
+      "step": 2,
+      "label": "start",
+      "key": "157192669",
+      "isNew": true
+    },
+    {
+      "step": 3,
+      "label": "country-en",
+      "key": "157192669",
+      "isNew": false
+    },
+    {
+      "step": 4,
+      "label": "continue-country",
+      "key": "-984166085",
+      "isNew": true
+    },
+    {
+      "step": 5,
+      "label": "fill-apellido",
+      "key": "1818522230",
+      "isNew": true
+    },
+    {
+      "step": 6,
+      "label": "foot-right",
+      "key": "1818522230",
+      "isNew": false
+    },
+    {
+      "step": 7,
+      "label": "continue-identity",
+      "key": "2043213693",
+      "isNew": true
+    },
+    {
+      "step": 8,
+      "label": "position-LI",
+      "key": "2043213693",
+      "isNew": false
+    },
+    {
+      "step": 9,
+      "label": "confirm-position",
+      "key": "1977700198",
+      "isNew": true
+    },
+    {
+      "step": 10,
+      "label": "wait-dashboard",
+      "key": "1977700198",
+      "isNew": false
+    },
+    {
+      "step": 11,
+      "label": "event-1-decision",
+      "key": "-1058665064",
+      "isNew": true
+    },
+    {
+      "step": 12,
+      "label": "event-1-wait",
+      "key": "-93192594",
+      "isNew": true
+    },
+    {
+      "step": 13,
+      "label": "event-2-decision",
+      "key": "-2135494329",
+      "isNew": true
+    },
+    {
+      "step": 14,
+      "label": "event-2-wait",
+      "key": "-7236427",
+      "isNew": true
+    }
+  ],
+  "finalText": "copero\nOVR\n68\nENG\n#10 LI\nSouthampton\nEDAD\n21\nVALOR\n€2.4M\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\nSouthampton\n50\n23\n0\n0\n19\nBolton\n59\n98\n3\n7\n22\n?\nEligiendo club...\n25\n28\n31\n34\n37\nInglaterra\n0\n0\n0\nSalida a préstamo\n\nTu club quiere que sumes minutos en otro equipo. Elegí dónde seguir tu desarrollo.\n\nPréstamo en\nBolton\nChampionship\nPréstamo en\nLincoln\nChampionship\nPréstamo en\nEnergie Cottbus\n2. Bundesliga\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoDiccionarios y enciclopedias\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+}

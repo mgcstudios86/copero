@@ -1,0 +1,91 @@
+{
+  "key": "-809987886",
+  "label": "J-IT-ED-TOTTI-10-wait-dashboard",
+  "isNew": false,
+  "text": "copero\nOVR\n50\nITA\n#10 ED\n?\nLibre\nEDAD\n16\nVALOR\n€100K\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\n?\nEligiendo club...\n50\n18\n20\n22\n24\n26\n28\n30\n32\n34\n36\n38\nItalia\n0\n0\n0\nOferta de cantera\n\nTres clubes quieren sumarte a su proyecto juvenil. Elegí dónde empieza tu carrera.\n\nFichar por\nSudtirol\nSerie B\nFichar por\nUdinese\nSerie A\nFichar por\nVenezia\nSerie A\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoVino\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nSudtirol\nSerie B"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nUdinese\nSerie A"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nVenezia\nSerie A"
+    },
+    {
+      "tag": "button",
+      "text": "Ver logros"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter"
+    },
+    {
+      "tag": "a",
+      "text": "Instagram"
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito"
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros"
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad"
+    },
+    {
+      "tag": "a",
+      "text": "Cookies"
+    },
+    {
+      "tag": "a",
+      "text": "Términos"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/it.svg",
+      "alt": "Italia"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/it.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/international/L/ITA.svg",
+      "alt": "Italia"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/goal.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ITA/D/sudtirol.svg",
+      "alt": "Sudtirol"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/competitions/ITA/D/serie-b.svg",
+      "alt": "Serie B"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ITA/D/udinese.svg",
+      "alt": "Udinese"
+    }
+  ],
+  "choice": "wait-dashboard"
+}

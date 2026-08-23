@@ -1,0 +1,342 @@
+{
+  "key": "795666523",
+  "label": "C-Expres-01-mode-expres",
+  "isNew": true,
+  "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 3 temporadas para disfrutarlo rápido.\n\nComenzar carrera\nVolver a Juegos\nVer más\nSimulador de carrera\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "type": "",
+      "text": "copero",
+      "name": null,
+      "role": null,
+      "aria": "Ir a inicio",
+      "x": 129,
+      "y": 5,
+      "w": 116,
+      "h": 32
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "ES",
+      "name": null,
+      "role": null,
+      "aria": "Español",
+      "x": 183,
+      "y": 79,
+      "w": 54,
+      "h": 24
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "EN",
+      "name": null,
+      "role": null,
+      "aria": "English",
+      "x": 241,
+      "y": 79,
+      "w": 55,
+      "h": 24
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "PT",
+      "name": null,
+      "role": null,
+      "aria": "Português",
+      "x": 300,
+      "y": 79,
+      "w": 54,
+      "h": 24
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "Intensa",
+      "name": null,
+      "role": "radio",
+      "aria": null,
+      "x": 51,
+      "y": 380,
+      "w": 77,
+      "h": 28
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "Normal",
+      "name": null,
+      "role": "radio",
+      "aria": null,
+      "x": 152,
+      "y": 380,
+      "w": 76,
+      "h": 28
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "Exprés",
+      "name": null,
+      "role": "radio",
+      "aria": null,
+      "x": 251,
+      "y": 380,
+      "w": 73,
+      "h": 28
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "Comenzar carrera",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 16,
+      "y": 464,
+      "w": 343,
+      "h": 48
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Volver a Juegos",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 16,
+      "y": 524,
+      "w": 283,
+      "h": 48
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "",
+      "name": null,
+      "role": null,
+      "aria": "Ver logros",
+      "x": 311,
+      "y": 524,
+      "w": 48,
+      "h": 48
+    },
+    {
+      "tag": "div",
+      "type": "",
+      "text": "Simulador de carrera",
+      "name": null,
+      "role": "link",
+      "aria": "Simulador de carrera",
+      "x": 133,
+      "y": 749,
+      "w": 189,
+      "h": 28
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "X / Twitter",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 67,
+      "y": 891,
+      "w": 118,
+      "h": 38
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Instagram",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 193,
+      "y": 891,
+      "w": 116,
+      "h": 38
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Invitanos un cafecito",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 91,
+      "y": 937,
+      "w": 194,
+      "h": 38
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Sobre nosotros",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 137,
+      "y": 1032,
+      "w": 101,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Privacidad",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 153,
+      "y": 1058,
+      "w": 70,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Cookies",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 161,
+      "y": 1084,
+      "w": 54,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Términos",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 157,
+      "y": 1110,
+      "w": 61,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Bases Prode Mundial",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 118,
+      "y": 1136,
+      "w": 139,
+      "h": 17
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Contacto",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 157,
+      "y": 1162,
+      "w": 60,
+      "h": 17
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "Configurar cookies",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 251,
+      "y": 1230,
+      "w": 108,
+      "h": 16
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Cookies",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 168,
+      "y": 726,
+      "w": 46,
+      "h": 15
+    },
+    {
+      "tag": "a",
+      "type": "",
+      "text": "Privacidad",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 224,
+      "y": 726,
+      "w": 60,
+      "h": 15
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "Rechazar",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 16,
+      "y": 760,
+      "w": 168,
+      "h": 36
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "text": "Aceptar",
+      "name": null,
+      "role": null,
+      "aria": null,
+      "x": 192,
+      "y": 760,
+      "w": 168,
+      "h": 36
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+      "alt": "",
+      "w": 20,
+      "h": 16
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+      "alt": "",
+      "w": 20,
+      "h": 16
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+      "alt": "",
+      "w": 20,
+      "h": 16
+    },
+    {
+      "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+      "alt": "Vista previa del simulador",
+      "w": 343,
+      "h": 224
+    },
+    {
+      "src": "https://copero.com.ar/cafecito-dark.svg",
+      "alt": "Cafecito",
+      "w": 23,
+      "h": 20
+    }
+  ],
+  "inputs": [],
+  "choice": "Exprés"
+}

@@ -1,0 +1,261 @@
+{
+  "key": "144104539",
+  "label": "D-AR-full-flow-02-start",
+  "isNew": true,
+  "text": "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero",
+      "aria": "Ir a inicio"
+    },
+    {
+      "tag": "button",
+      "text": "Alemania",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Argentina",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Bélgica",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Bolivia",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Brasil",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Canadá",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Chile",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Colombia",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Croacia",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Ecuador",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "España",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Estados Unidos",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Francia",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Inglaterra",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Italia",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "México",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Países Bajos",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Paraguay",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Perú",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Portugal",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Rusia",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Turquía",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Uruguay",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Venezuela",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "VER MÁS",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Volver",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Continuar",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Instagram",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Términos",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Bases Prode Mundial",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Contacto",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Configurar cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Cookies",
+      "aria": null
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Rechazar",
+      "aria": null
+    },
+    {
+      "tag": "button",
+      "text": "Aceptar",
+      "aria": null
+    }
+  ],
+  "inputs": [
+    {
+      "tag": "input",
+      "type": null,
+      "placeholder": "Buscar país",
+      "value": ""
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/de.svg",
+      "alt": "Alemania"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+      "alt": "Argentina"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/be.svg",
+      "alt": "Bélgica"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/bo.svg",
+      "alt": "Bolivia"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+      "alt": "Brasil"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ca.svg",
+      "alt": "Canadá"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/cl.svg",
+      "alt": "Chile"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/co.svg",
+      "alt": "Colombia"
+    }
+  ],
+  "choice": "Comenzar carrera"
+}

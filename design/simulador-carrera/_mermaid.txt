@@ -1,0 +1,34 @@
+```mermaid
+flowchart TD
+  classDef screen fill:#FAF7F2,stroke:#1F6F4A,stroke-width:2px,color:#16201A
+  classDef event fill:#C73E2A22,stroke:#C73E2A,color:#16201A
+  classDef decision fill:#1F6F4A22,stroke:#1F6F4A,color:#16201A
+  classDef endNode fill:#1F6F4A,stroke:#1F6F4A,color:#FFFFFF
+  S[SPLASH: Construí tu carrera futbolística<br/>Modos: Intensa / Normal / Exprés]:::screen
+  N[NATIONALITY: Seleccionar país de origen<br/>~24 países visibles + VER MÁS]:::screen
+  I[IDENTITY: Apellido + Número + Pierna hábil<br/>Default #10, opciones Izq/Der]:::screen
+  P[POSITION: Elegir posición<br/>12 roles: EI DC ED MI MCO MD LI MC LD MCD DFC POR]:::screen
+  D1[DASHBOARD inicial<br/>OVR=50 Edad=16 Valor=€100K Club=Libre]:::screen
+  EY{EVENTO: Oferta de cantera<br/>3 clubes quieren ficharte}:::event
+  LO{EVENTO: Salida a préstamo<br/>3 destinos para sumar minutos}:::event
+  RP{EVENTO: Regreso a tu club<br/>Elegí próximo destino}:::event
+  D2[DASHBOARD con carrera activa<br/>stats crecen cada temporada]:::screen
+  CE([FIN DE CARRERA / RETIRO<br/>OVR final + logros]):::endNode
+  S -->|Continuar| N
+  N -->|Continuar| I
+  I -->|Continuar| P
+  P -->|Confirmar identidad| D1
+  D1 --> EY
+  EY -->|Fichar por Club A| D2
+  EY -->|Fichar por Club B| D2
+  EY -->|Fichar por Club C| D2
+  D2 -->|cada 2 temporadas (Normal)| LO
+  LO -->|Préstamo Club A| D2
+  LO -->|Préstamo Club B| D2
+  LO -->|Préstamo Club C| D2
+  D2 -->|fin del préstamo| RP
+  RP -->|Préstamo Club A| D2
+  RP -->|Préstamo Club B| D2
+  RP -->|Fichar Club C| D2
+  D2 -->|edad 35-39| CE
+```

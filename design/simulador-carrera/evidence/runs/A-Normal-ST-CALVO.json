@@ -1,0 +1,34 @@
+{
+  "strategyName": "A-Normal-ST-CALVO",
+  "log": [
+    {
+      "step": "initial",
+      "key": "-412766943",
+      "isNew": true
+    },
+    {
+      "step": 0,
+      "action": "clickText",
+      "target": "Normal",
+      "didAct": true,
+      "key": "-412766943",
+      "isNew": false
+    },
+    {
+      "step": 1,
+      "action": "clickText",
+      "target": "Comenzar carrera",
+      "didAct": true,
+      "key": "1620637843",
+      "isNew": true
+    },
+    {
+      "step": 2,
+      "action": "wait",
+      "didAct": true,
+      "key": "1620637843",
+      "isNew": false
+    }
+  ],
+  "finalText": "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoVino\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+}

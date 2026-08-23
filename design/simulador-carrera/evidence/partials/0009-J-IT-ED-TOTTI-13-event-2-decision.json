@@ -1,0 +1,91 @@
+{
+  "key": "1444799380",
+  "label": "J-IT-ED-TOTTI-13-event-2-decision",
+  "isNew": true,
+  "text": "copero\nOVR\n60\nITA\n#10 ED\nSudtirol\nAvellino\nEDAD\n18\nVALOR\n€760K\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\nSudtirol\n50\n42\n5\n1\n18\nAvellino\n60\n0\n0\n0\n20\n?\nEligiendo club...\n22\n24\n26\n28\n30\n32\n34\n36\n38\nItalia\n0\n0\n0\nMercado de pases\n\nLlegaron ofertas después de tu último tramo de carrera. Podés aceptar una o quedarte en tu club.\n\nFichar por\nAvellino\nSerie B\nFichar por\nJuve Stabia\nSerie B\nQuedarse en\nSudtirol\nSerie B\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoVino\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nAvellino\nSerie B"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nJuve Stabia\nSerie B"
+    },
+    {
+      "tag": "button",
+      "text": "Quedarse en\nSudtirol\nSerie B"
+    },
+    {
+      "tag": "button",
+      "text": "Ver logros"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter"
+    },
+    {
+      "tag": "a",
+      "text": "Instagram"
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito"
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros"
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad"
+    },
+    {
+      "tag": "a",
+      "text": "Cookies"
+    },
+    {
+      "tag": "a",
+      "text": "Términos"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ITA/L/sudtirol.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ITA/L/avellino.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/it.svg",
+      "alt": "Italia"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ITA/D/sudtirol.svg",
+      "alt": "Sudtirol"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ITA/D/avellino.svg",
+      "alt": "Avellino"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ITA/D/sudtirol.svg",
+      "alt": "Sudtirol"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/goal.svg",
+      "alt": ""
+    }
+  ],
+  "choice": "event-2-decision"
+}

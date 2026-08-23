@@ -1,0 +1,91 @@
+{
+  "key": "157192669",
+  "label": "L-EN-LI-BECKHAM-02-start",
+  "isNew": true,
+  "text": "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoDiccionarios y enciclopedias\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "button",
+      "text": "Alemania"
+    },
+    {
+      "tag": "button",
+      "text": "Argentina"
+    },
+    {
+      "tag": "button",
+      "text": "Bélgica"
+    },
+    {
+      "tag": "button",
+      "text": "Bolivia"
+    },
+    {
+      "tag": "button",
+      "text": "Brasil"
+    },
+    {
+      "tag": "button",
+      "text": "Canadá"
+    },
+    {
+      "tag": "button",
+      "text": "Chile"
+    },
+    {
+      "tag": "button",
+      "text": "Colombia"
+    },
+    {
+      "tag": "button",
+      "text": "Croacia"
+    },
+    {
+      "tag": "button",
+      "text": "Ecuador"
+    },
+    {
+      "tag": "button",
+      "text": "España"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/de.svg",
+      "alt": "Alemania"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+      "alt": "Argentina"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/be.svg",
+      "alt": "Bélgica"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/bo.svg",
+      "alt": "Bolivia"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+      "alt": "Brasil"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/ca.svg",
+      "alt": "Canadá"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/cl.svg",
+      "alt": "Chile"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/co.svg",
+      "alt": "Colombia"
+    }
+  ],
+  "choice": "start"
+}

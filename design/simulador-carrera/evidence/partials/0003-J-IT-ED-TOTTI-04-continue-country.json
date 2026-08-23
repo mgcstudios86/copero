@@ -1,0 +1,63 @@
+{
+  "key": "2101605020",
+  "label": "J-IT-ED-TOTTI-04-continue-country",
+  "isNew": true,
+  "text": "copero\nIdentidad\nAPELLIDO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoVino\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "label",
+      "text": "APELLIDO"
+    },
+    {
+      "tag": "label",
+      "text": "NÚMERO"
+    },
+    {
+      "tag": "button",
+      "text": "Izquierda"
+    },
+    {
+      "tag": "button",
+      "text": "Derecha"
+    },
+    {
+      "tag": "button",
+      "text": "Volver"
+    },
+    {
+      "tag": "button",
+      "text": "Continuar"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter"
+    },
+    {
+      "tag": "a",
+      "text": "Instagram"
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito"
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros"
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://copero.com.ar/cafecito-dark.svg",
+      "alt": "Cafecito"
+    }
+  ],
+  "choice": "continue-country"
+}

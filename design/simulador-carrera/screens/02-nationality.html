@@ -1,0 +1,79 @@
+<!doctype html>
+<!-- Wireframe: NATIONALITY — selección de país con búsqueda -->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=375,initial-scale=1" />
+<title>NATIONALITY — Simulador de carrera</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" />
+<style>
+  :root { --bg:#0E1411; --surface:#16201A; --surface2:#1F2A24; --text:#F0EAE0; --text-strong:#FFFFFF; --text-muted:#B8C2BC; --border:#2E3A33; --primary:#4FBE82; --primary-soft:#1B3A2B; --focus:#93C5FD; --radius-lg:12px; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); font-family: 'DM Sans', system-ui, sans-serif; }
+  .device { width: 375px; min-height: 812px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; }
+  .top-bar { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; }
+  .back { background: transparent; border: 1px solid var(--border); color: var(--text); width: 40px; height: 40px; border-radius: 10px; cursor: pointer; }
+  h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin: 16px 0; color: var(--text-strong); }
+  .search { position: relative; margin-bottom: 16px; }
+  .search input { width: 100%; padding: 12px 12px 12px 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); color: var(--text); font-size: 15px; min-height: 48px; }
+  .search input::placeholder { color: var(--text-muted); }
+  .search input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+  .countries { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; overflow-y: auto; max-height: 480px; padding-bottom: 12px; }
+  .country { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; min-height: 88px; }
+  .country[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); background: var(--primary-soft); }
+  .country[aria-pressed="true"] .country-name { color: var(--primary); }
+  .flag { width: 32px; height: 24px; background: var(--surface2); border-radius: 4px; display: grid; place-items: center; font-size: 10px; color: var(--text-muted); }
+  .country-name { font-size: 12px; color: var(--text); text-align: center; line-height: 1.2; }
+  .more { background: transparent; color: var(--text-muted); border: 1px dashed var(--border); padding: 12px; border-radius: var(--radius-lg); font-weight: 500; cursor: pointer; min-height: 44px; margin-bottom: 16px; }
+  .actions { display: flex; gap: 8px; margin-top: auto; padding-top: 16px; }
+  .btn-primary { flex: 2; background: var(--primary); color: #0E1411; border: 0; padding: 14px; border-radius: var(--radius-lg); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16px; cursor: pointer; min-height: 48px; }
+  .btn-secondary { flex: 1; background: transparent; color: var(--text); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-lg); font-weight: 500; cursor: pointer; min-height: 48px; }
+  button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main class="device" role="main" aria-labelledby="nat-title">
+  <div class="top-bar">
+    <button type="button" class="back" aria-label="Volver">‹</button>
+    <div></div>
+  </div>
+  <h1 id="nat-title">Nacionalidad</h1>
+  <label class="search">
+    <span class="search-icon" aria-hidden="true">🔍</span>
+    <input type="search" placeholder="Buscar país" aria-label="Buscar país" />
+  </label>
+  <div class="countries" role="listbox" aria-label="Países disponibles">
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">de</span><span class="country-name">Alemania</span></button>
+    <button type="button" class="country" aria-pressed="true"><span class="flag" aria-hidden="true">ar</span><span class="country-name">Argentina</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">be</span><span class="country-name">Bélgica</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">bo</span><span class="country-name">Bolivia</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">br</span><span class="country-name">Brasil</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">ca</span><span class="country-name">Canadá</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">cl</span><span class="country-name">Chile</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">co</span><span class="country-name">Colombia</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">hr</span><span class="country-name">Croacia</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">ec</span><span class="country-name">Ecuador</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">es</span><span class="country-name">España</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">us</span><span class="country-name">Estados Unidos</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">fr</span><span class="country-name">Francia</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">gb</span><span class="country-name">Inglaterra</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">it</span><span class="country-name">Italia</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">mx</span><span class="country-name">México</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">nl</span><span class="country-name">Países Bajos</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">py</span><span class="country-name">Paraguay</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">pe</span><span class="country-name">Perú</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">pt</span><span class="country-name">Portugal</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">ru</span><span class="country-name">Rusia</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">tr</span><span class="country-name">Turquía</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">uy</span><span class="country-name">Uruguay</span></button>
+    <button type="button" class="country" aria-pressed="false"><span class="flag" aria-hidden="true">ve</span><span class="country-name">Venezuela</span></button>
+  </div>
+  <button type="button" class="more">VER MÁS</button>
+  <div class="actions">
+    <button type="button" class="btn-secondary">Volver</button>
+    <button type="button" class="btn-primary">Continuar</button>
+  </div>
+</main>
+</body>
+</html>

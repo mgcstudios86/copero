@@ -1,0 +1,91 @@
+{
+  "key": "1977700198",
+  "label": "L-EN-LI-BECKHAM-10-wait-dashboard",
+  "isNew": false,
+  "text": "copero\nOVR\n50\nENG\n#10 LI\n?\nLibre\nEDAD\n16\nVALOR\n€100K\nEDAD\nCLUB\nOVR\nPJ\nGLS\nAST\n16\n?\nEligiendo club...\n50\n19\n22\n25\n28\n31\n34\n37\nInglaterra\n0\n0\n0\nOferta de cantera\n\nTres clubes quieren sumarte a su proyecto juvenil. Elegí dónde empieza tu carrera.\n\nFichar por\nSouthampton\nChampionship\nFichar por\nLincoln\nChampionship\nFichar por\nWolves\nChampionship\nVer logros\n\nLos nombres y referencias a clubes de fútbol se utilizan exclusivamente con fines identificativos dentro de la simulación. Esta plataforma no se encuentra afiliada, patrocinada ni avalada por los clubes mencionados, salvo indicación expresa en contrario.\n\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 CoperoDiccionarios y enciclopedias\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+  "buttons": [
+    {
+      "tag": "a",
+      "text": "copero"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nSouthampton\nChampionship"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nLincoln\nChampionship"
+    },
+    {
+      "tag": "button",
+      "text": "Fichar por\nWolves\nChampionship"
+    },
+    {
+      "tag": "button",
+      "text": "Ver logros"
+    },
+    {
+      "tag": "a",
+      "text": "X / Twitter"
+    },
+    {
+      "tag": "a",
+      "text": "Instagram"
+    },
+    {
+      "tag": "a",
+      "text": "Invitanos un cafecito"
+    },
+    {
+      "tag": "a",
+      "text": "Sobre nosotros"
+    },
+    {
+      "tag": "a",
+      "text": "Privacidad"
+    },
+    {
+      "tag": "a",
+      "text": "Cookies"
+    },
+    {
+      "tag": "a",
+      "text": "Términos"
+    }
+  ],
+  "images": [
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/gb-eng.svg",
+      "alt": "Inglaterra"
+    },
+    {
+      "src": "https://media.copero.com.ar/flags/4x3/gb-eng.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/international/L/ENG.svg",
+      "alt": "Inglaterra"
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/pitch.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://copero.com.ar/career-simulator/goal.svg",
+      "alt": ""
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ENG/D/southampton.svg",
+      "alt": "Southampton"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/competitions/ENG/D/championship.svg",
+      "alt": "Championship"
+    },
+    {
+      "src": "https://media.copero.com.ar/logos/football/teams/ENG/D/lincoln.svg",
+      "alt": "Lincoln City"
+    }
+  ],
+  "choice": "wait-dashboard"
+}

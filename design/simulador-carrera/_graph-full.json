@@ -1,0 +1,2120 @@
+{
+  "nodes": [
+    {
+      "id": "144104539",
+      "label": "D-AR-full-flow-02-start",
+      "firstSeen": "2026-08-23T15:23:14.863Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "button",
+          "text": "Alemania",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Argentina",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Bélgica",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Bolivia",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Brasil",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Canadá",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Chile",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Colombia",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Croacia",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Ecuador",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "España",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Estados Unidos",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Francia",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Inglaterra",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Italia",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "México",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Países Bajos",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Paraguay",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Perú",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Portugal",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rusia",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Turquía",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Uruguay",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Venezuela",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "VER MÁS",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Volver",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Continuar",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": null,
+          "placeholder": "Buscar país",
+          "value": ""
+        }
+      ],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/de.svg",
+          "alt": "Alemania"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": "Argentina"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/be.svg",
+          "alt": "Bélgica"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/bo.svg",
+          "alt": "Bolivia"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": "Brasil"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ca.svg",
+          "alt": "Canadá"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/cl.svg",
+          "alt": "Chile"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/co.svg",
+          "alt": "Colombia"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/hr.svg",
+          "alt": "Croacia"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ec.svg",
+          "alt": "Ecuador"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/es.svg",
+          "alt": "España"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/us.svg",
+          "alt": "Estados Unidos"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/fr.svg",
+          "alt": "Francia"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb-eng.svg",
+          "alt": "Inglaterra"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/it.svg",
+          "alt": "Italia"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/mx.svg",
+          "alt": "México"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/nl.svg",
+          "alt": "Países Bajos"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/py.svg",
+          "alt": "Paraguay"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/pe.svg",
+          "alt": "Perú"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/pt.svg",
+          "alt": "Portugal"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ru.svg",
+          "alt": "Rusia"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/tr.svg",
+          "alt": "Turquía"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/uy.svg",
+          "alt": "Uruguay"
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ve.svg",
+          "alt": "Venezuela"
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 6
+    },
+    {
+      "id": "285399732",
+      "label": "F-BR-Expres-full-06-fill-apellido",
+      "firstSeen": "2026-08-23T15:24:04.369Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\nIdentidad\nNEYMAR\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "label",
+          "text": "APELLIDO",
+          "aria": null
+        },
+        {
+          "tag": "label",
+          "text": "NÚMERO",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Izquierda",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Derecha",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Volver",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Continuar",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": null,
+          "placeholder": "Apellido",
+          "value": "NEYMAR"
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null,
+          "value": "10"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 2
+    },
+    {
+      "id": "535084904",
+      "label": "E-ES-Intensa-full-06-fill-apellido",
+      "firstSeen": "2026-08-23T15:23:43.613Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\nIdentidad\nLAMINE\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "label",
+          "text": "APELLIDO",
+          "aria": null
+        },
+        {
+          "tag": "label",
+          "text": "NÚMERO",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Izquierda",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Derecha",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Volver",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Continuar",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        },
+        {
+          "tag": "div",
+          "text": "Análisis de partidos",
+          "aria": null
+        },
+        {
+          "tag": "span",
+          "text": "Análisis de partidos",
+          "aria": "Ir a las opciones de Shopping de Análisis de partidos"
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "aria": "Cerrar ancla de Shopping"
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": null,
+          "placeholder": "Apellido",
+          "value": "LAMINE"
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null,
+          "value": "10"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 2
+    },
+    {
+      "id": "836781543",
+      "label": "F-BR-Expres-full-00-splash",
+      "firstSeen": "2026-08-23T15:23:59.935Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nFútbol\nVino\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "button",
+          "text": "ES",
+          "aria": "Español"
+        },
+        {
+          "tag": "button",
+          "text": "EN",
+          "aria": "English"
+        },
+        {
+          "tag": "button",
+          "text": "PT",
+          "aria": "Português"
+        },
+        {
+          "tag": "button",
+          "text": "Intensa",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Normal",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Exprés",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Comenzar carrera",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Volver a Juegos",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "aria": "Ver logros"
+        },
+        {
+          "tag": "div",
+          "text": "Ver más",
+          "aria": "Estos son temas relacionados con el artículo que podrían interesarte"
+        },
+        {
+          "tag": "div",
+          "text": "Fútbol",
+          "aria": "Fútbol"
+        },
+        {
+          "tag": "div",
+          "text": "Vino",
+          "aria": "Vino"
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        }
+      ],
+      "inputs": [],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador"
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 1
+    },
+    {
+      "id": "-1115418125",
+      "label": "D-AR-full-flow-00-splash",
+      "firstSeen": "2026-08-23T15:23:13.590Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nAplicación de deportes\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "button",
+          "text": "ES",
+          "aria": "Español"
+        },
+        {
+          "tag": "button",
+          "text": "EN",
+          "aria": "English"
+        },
+        {
+          "tag": "button",
+          "text": "PT",
+          "aria": "Português"
+        },
+        {
+          "tag": "button",
+          "text": "Intensa",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Normal",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Exprés",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Comenzar carrera",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Volver a Juegos",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "aria": "Ver logros"
+        },
+        {
+          "tag": "div",
+          "text": "Ver más",
+          "aria": "Estos son temas relacionados con el artículo que podrían interesarte"
+        },
+        {
+          "tag": "div",
+          "text": "Aplicación de deportes",
+          "aria": "Aplicación de deportes"
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        }
+      ],
+      "inputs": [],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador"
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 2
+    },
+    {
+      "id": "-1332156526",
+      "label": "D-AR-full-flow-04-continue-country",
+      "firstSeen": "2026-08-23T15:23:16.060Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\nIdentidad\nAPELLIDO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "label",
+          "text": "APELLIDO",
+          "aria": null
+        },
+        {
+          "tag": "label",
+          "text": "NÚMERO",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Izquierda",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Derecha",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Volver",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Continuar",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        },
+        {
+          "tag": "div",
+          "text": "Videojuego de simulación",
+          "aria": null
+        },
+        {
+          "tag": "span",
+          "text": "Videojuego de simulación",
+          "aria": "Ir a las opciones de Shopping de Videojuego de simulación"
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "aria": "Cerrar ancla de Shopping"
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": null,
+          "placeholder": "Apellido",
+          "value": ""
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null,
+          "value": "10"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 6
+    },
+    {
+      "id": "-1475080967",
+      "label": "D-AR-full-flow-06-fill-apellido",
+      "firstSeen": "2026-08-23T15:23:18.171Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\nIdentidad\nCALVO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "label",
+          "text": "APELLIDO",
+          "aria": null
+        },
+        {
+          "tag": "label",
+          "text": "NÚMERO",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Izquierda",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Derecha",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Volver",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Continuar",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        },
+        {
+          "tag": "div",
+          "text": "Videojuego de simulación",
+          "aria": null
+        },
+        {
+          "tag": "span",
+          "text": "Videojuego de simulación",
+          "aria": "Ir a las opciones de Shopping de Videojuego de simulación"
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "aria": "Cerrar ancla de Shopping"
+        }
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": null,
+          "placeholder": "Apellido",
+          "value": "CALVO"
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "placeholder": null,
+          "value": "10"
+        }
+      ],
+      "images": [
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 2
+    },
+    {
+      "id": "-2082319251",
+      "label": "D-AR-full-flow-08-continue-identity",
+      "firstSeen": "2026-08-23T15:23:19.302Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "button",
+          "text": "EI",
+          "aria": "EI"
+        },
+        {
+          "tag": "button",
+          "text": "DC",
+          "aria": "DC"
+        },
+        {
+          "tag": "button",
+          "text": "ED",
+          "aria": "ED"
+        },
+        {
+          "tag": "button",
+          "text": "MI",
+          "aria": "MI"
+        },
+        {
+          "tag": "button",
+          "text": "MCO",
+          "aria": "MCO"
+        },
+        {
+          "tag": "button",
+          "text": "MD",
+          "aria": "MD"
+        },
+        {
+          "tag": "button",
+          "text": "LI",
+          "aria": "LI"
+        },
+        {
+          "tag": "button",
+          "text": "MC",
+          "aria": "MC"
+        },
+        {
+          "tag": "button",
+          "text": "LD",
+          "aria": "LD"
+        },
+        {
+          "tag": "button",
+          "text": "MCD",
+          "aria": "MCD"
+        },
+        {
+          "tag": "button",
+          "text": "DFC",
+          "aria": "DFC"
+        },
+        {
+          "tag": "button",
+          "text": "POR",
+          "aria": "POR"
+        },
+        {
+          "tag": "button",
+          "text": "Volver",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Confirmar identidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        },
+        {
+          "tag": "div",
+          "text": "Videojuego de simulación",
+          "aria": null
+        },
+        {
+          "tag": "span",
+          "text": "Videojuego de simulación",
+          "aria": "Ir a las opciones de Shopping de Videojuego de simulación"
+        },
+        {
+          "tag": "svg",
+          "text": "",
+          "aria": "Cerrar ancla de Shopping"
+        }
+      ],
+      "inputs": [],
+      "images": [
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 20
+    },
+    {
+      "id": "-1665332590",
+      "label": "E-ES-Intensa-full-00-splash",
+      "firstSeen": "2026-08-23T15:23:39.189Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nEquipos de fútbol\nstats\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "button",
+          "text": "ES",
+          "aria": "Español"
+        },
+        {
+          "tag": "button",
+          "text": "EN",
+          "aria": "English"
+        },
+        {
+          "tag": "button",
+          "text": "PT",
+          "aria": "Português"
+        },
+        {
+          "tag": "button",
+          "text": "Intensa",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Normal",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Exprés",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Comenzar carrera",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Volver a Juegos",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "aria": "Ver logros"
+        },
+        {
+          "tag": "div",
+          "text": "Ver más",
+          "aria": "Estos son temas relacionados con el artículo que podrían interesarte"
+        },
+        {
+          "tag": "div",
+          "text": "Equipos de fútbol",
+          "aria": "Equipos de fútbol"
+        },
+        {
+          "tag": "div",
+          "text": "stats",
+          "aria": "stats"
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        }
+      ],
+      "inputs": [],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador"
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 1
+    },
+    {
+      "id": "-1171462325",
+      "label": "E-ES-Intensa-full-01-mode-intensa",
+      "firstSeen": "2026-08-23T15:23:39.741Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\n1 decisión por temporada, inmersión profunda.\n\nComenzar carrera\nVolver a Juegos\nVer más\nEquipos de fútbol\nstats\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "button",
+          "text": "ES",
+          "aria": "Español"
+        },
+        {
+          "tag": "button",
+          "text": "EN",
+          "aria": "English"
+        },
+        {
+          "tag": "button",
+          "text": "PT",
+          "aria": "Português"
+        },
+        {
+          "tag": "button",
+          "text": "Intensa",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Normal",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Exprés",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Comenzar carrera",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Volver a Juegos",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "aria": "Ver logros"
+        },
+        {
+          "tag": "div",
+          "text": "Ver más",
+          "aria": "Estos son temas relacionados con el artículo que podrían interesarte"
+        },
+        {
+          "tag": "div",
+          "text": "Equipos de fútbol",
+          "aria": "Equipos de fútbol"
+        },
+        {
+          "tag": "div",
+          "text": "stats",
+          "aria": "stats"
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        }
+      ],
+      "inputs": [],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador"
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 1
+    },
+    {
+      "id": "-1339425090",
+      "label": "F-BR-Expres-full-01-mode-expres",
+      "firstSeen": "2026-08-23T15:24:00.542Z",
+      "url": "https://copero.com.ar/juegos/simulador-carrera",
+      "text": "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 3 temporadas para disfrutarlo rápido.\n\nComenzar carrera\nVolver a Juegos\nVer más\nFútbol\nVino\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+      "buttons": [
+        {
+          "tag": "a",
+          "text": "copero",
+          "aria": "Ir a inicio"
+        },
+        {
+          "tag": "button",
+          "text": "ES",
+          "aria": "Español"
+        },
+        {
+          "tag": "button",
+          "text": "EN",
+          "aria": "English"
+        },
+        {
+          "tag": "button",
+          "text": "PT",
+          "aria": "Português"
+        },
+        {
+          "tag": "button",
+          "text": "Intensa",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Normal",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Exprés",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Comenzar carrera",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Volver a Juegos",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "",
+          "aria": "Ver logros"
+        },
+        {
+          "tag": "div",
+          "text": "Ver más",
+          "aria": "Estos son temas relacionados con el artículo que podrían interesarte"
+        },
+        {
+          "tag": "div",
+          "text": "Fútbol",
+          "aria": "Fútbol"
+        },
+        {
+          "tag": "div",
+          "text": "Vino",
+          "aria": "Vino"
+        },
+        {
+          "tag": "a",
+          "text": "X / Twitter",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Instagram",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Invitanos un cafecito",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Sobre nosotros",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Términos",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Bases Prode Mundial",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Contacto",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Configurar cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Cookies",
+          "aria": null
+        },
+        {
+          "tag": "a",
+          "text": "Privacidad",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Rechazar",
+          "aria": null
+        },
+        {
+          "tag": "button",
+          "text": "Aceptar",
+          "aria": null
+        }
+      ],
+      "inputs": [],
+      "images": [
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/ar.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/gb.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/flags/4x3/br.svg",
+          "alt": ""
+        },
+        {
+          "src": "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+          "alt": "Vista previa del simulador"
+        },
+        {
+          "src": "https://copero.com.ar/cafecito-dark.svg",
+          "alt": "Cafecito"
+        }
+      ],
+      "occurrences": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "-1115418125",
+      "to": "-1115418125",
+      "choice": "Normal",
+      "ts": "2026-08-23T15:23:14.262Z"
+    },
+    {
+      "from": "-1115418125",
+      "to": "144104539",
+      "choice": "Comenzar carrera",
+      "ts": "2026-08-23T15:23:14.863Z"
+    },
+    {
+      "from": "144104539",
+      "to": "144104539",
+      "choice": "Argentina",
+      "ts": "2026-08-23T15:23:15.442Z"
+    },
+    {
+      "from": "144104539",
+      "to": "-1332156526",
+      "choice": "Continuar",
+      "ts": "2026-08-23T15:23:16.060Z"
+    },
+    {
+      "from": "-1332156526",
+      "to": "-1475080967",
+      "choice": "CALVO",
+      "ts": "2026-08-23T15:23:18.171Z"
+    },
+    {
+      "from": "-1475080967",
+      "to": "-1475080967",
+      "choice": "Derecha",
+      "ts": "2026-08-23T15:23:18.735Z"
+    },
+    {
+      "from": "-1475080967",
+      "to": "-2082319251",
+      "choice": "Continuar",
+      "ts": "2026-08-23T15:23:19.303Z"
+    },
+    {
+      "from": "-1665332590",
+      "to": "-1171462325",
+      "choice": "Intensa",
+      "ts": "2026-08-23T15:23:39.741Z"
+    },
+    {
+      "from": "-1171462325",
+      "to": "144104539",
+      "choice": "Comenzar carrera",
+      "ts": "2026-08-23T15:23:40.292Z"
+    },
+    {
+      "from": "144104539",
+      "to": "144104539",
+      "choice": "España",
+      "ts": "2026-08-23T15:23:40.840Z"
+    },
+    {
+      "from": "144104539",
+      "to": "-1332156526",
+      "choice": "Continuar",
+      "ts": "2026-08-23T15:23:41.511Z"
+    },
+    {
+      "from": "-1332156526",
+      "to": "535084904",
+      "choice": "LAMINE",
+      "ts": "2026-08-23T15:23:43.613Z"
+    },
+    {
+      "from": "535084904",
+      "to": "535084904",
+      "choice": "Izquierda",
+      "ts": "2026-08-23T15:23:44.113Z"
+    },
+    {
+      "from": "535084904",
+      "to": "-2082319251",
+      "choice": "Continuar",
+      "ts": "2026-08-23T15:23:44.615Z"
+    },
+    {
+      "from": "836781543",
+      "to": "-1339425090",
+      "choice": "Exprés",
+      "ts": "2026-08-23T15:24:00.542Z"
+    },
+    {
+      "from": "-1339425090",
+      "to": "144104539",
+      "choice": "Comenzar carrera",
+      "ts": "2026-08-23T15:24:01.097Z"
+    },
+    {
+      "from": "144104539",
+      "to": "144104539",
+      "choice": "Brasil",
+      "ts": "2026-08-23T15:24:01.624Z"
+    },
+    {
+      "from": "144104539",
+      "to": "-1332156526",
+      "choice": "Continuar",
+      "ts": "2026-08-23T15:24:02.282Z"
+    },
+    {
+      "from": "-1332156526",
+      "to": "285399732",
+      "choice": "NEYMAR",
+      "ts": "2026-08-23T15:24:04.369Z"
+    },
+    {
+      "from": "285399732",
+      "to": "285399732",
+      "choice": "Derecha",
+      "ts": "2026-08-23T15:24:04.886Z"
+    },
+    {
+      "from": "285399732",
+      "to": "-2082319251",
+      "choice": "Continuar",
+      "ts": "2026-08-23T15:24:05.455Z"
+    }
+  ],
+  "assets": [
+    "https://media.copero.com.ar/flags/4x3/ar.svg",
+    "https://media.copero.com.ar/flags/4x3/gb.svg",
+    "https://media.copero.com.ar/flags/4x3/br.svg",
+    "https://media.copero.com.ar/minigames/career-simulator/header2.jpg",
+    "https://copero.com.ar/cafecito-dark.svg",
+    "https://media.copero.com.ar/flags/4x3/de.svg",
+    "https://media.copero.com.ar/flags/4x3/be.svg",
+    "https://media.copero.com.ar/flags/4x3/bo.svg",
+    "https://media.copero.com.ar/flags/4x3/ca.svg",
+    "https://media.copero.com.ar/flags/4x3/cl.svg",
+    "https://media.copero.com.ar/flags/4x3/co.svg",
+    "https://media.copero.com.ar/flags/4x3/hr.svg",
+    "https://media.copero.com.ar/flags/4x3/ec.svg",
+    "https://media.copero.com.ar/flags/4x3/es.svg",
+    "https://media.copero.com.ar/flags/4x3/us.svg",
+    "https://media.copero.com.ar/flags/4x3/fr.svg",
+    "https://media.copero.com.ar/flags/4x3/gb-eng.svg",
+    "https://media.copero.com.ar/flags/4x3/it.svg",
+    "https://media.copero.com.ar/flags/4x3/mx.svg",
+    "https://media.copero.com.ar/flags/4x3/nl.svg",
+    "https://media.copero.com.ar/flags/4x3/py.svg",
+    "https://media.copero.com.ar/flags/4x3/pe.svg",
+    "https://media.copero.com.ar/flags/4x3/pt.svg",
+    "https://media.copero.com.ar/flags/4x3/ru.svg",
+    "https://media.copero.com.ar/flags/4x3/tr.svg",
+    "https://media.copero.com.ar/flags/4x3/uy.svg",
+    "https://media.copero.com.ar/flags/4x3/ve.svg"
+  ],
+  "textCorpusSample": [
+    "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nAplicación de deportes\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nAplicación de deportes\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nIdentidad\nAPELLIDO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nIdentidad\nAPELLIDO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nIdentidad\nCALVO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nIdentidad\nCALVO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\nDecisiones cada 2 temporadas, una experiencia equilibrada.\n\nComenzar carrera\nVolver a Juegos\nVer más\nEquipos de fútbol\nstats\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\n\nMINIJUEGOS COPERO\n\nES\nEN\nPT\nConstruí tu carrera futbolística\n\nElegí tu origen, tomá decisiones clave y dejá que el destino te lleve a una trayectoria única de títulos, estadísticas y momentos decisivos.\n\nIntensa\nNormal\nExprés\n\n1 decisión por temporada, inmersión profunda.\n\nComenzar carrera\nVolver a Juegos\nVer más\nEquipos de fútbol\nstats\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nNacionalidad\nAlemania\nArgentina\nBélgica\nBolivia\nBrasil\nCanadá\nChile\nColombia\nCroacia\nEcuador\nEspaña\nEstados Unidos\nFrancia\nInglaterra\nItalia\nMéxico\nPaíses Bajos\nParaguay\nPerú\nPortugal\nRusia\nTurquía\nUruguay\nVenezuela\nVER MÁS\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nIdentidad\nAPELLIDO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nIdentidad\nAPELLIDO\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nIdentidad\nLAMINE\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nIdentidad\nLAMINE\n10\nAPELLIDO\nNÚMERO\nPIERNA HÁBIL\nIzquierda\nDerecha\nVolver\nContinuar\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar",
+    "copero\nPosición\nEI\nDC\nED\nMI\nMCO\nMD\nLI\nMC\nLD\nMCD\nDFC\nPOR\nVolver\nConfirmar identidad\nX / Twitter\nInstagram\nInvitanos un cafecito\nLEGAL Y CONTACTO\nSobre nosotros\nPrivacidad\nCookies\nTérminos\nBases Prode Mundial\nContacto\n\n© 2026 Copero\n\nConfigurar cookies\nCookies y privacidad\n\nUsamos cookies para mejorar tu experiencia. Podés aceptar o rechazar las opcionales. Cookies · Privacidad\n\nRechazar\nAceptar"
+  ]
+}
