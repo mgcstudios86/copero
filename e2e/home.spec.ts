@@ -55,26 +55,24 @@ test.describe('Copero — smoke home (web)', () => {
   });
 
   test('flujo completo home → categoria → ronda → fin', async ({ page }, testInfo) => {
-    // 10 rondas + carga inicial: margen amplio para runner self-hosted.
-    test.setTimeout(120_000);
-
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await page.getByTestId('btn-play').click();
-    await page.waitForURL(/\/categoria/, { timeout: 15_000 });
+    await page.waitForURL(/\/categoria/);
     await page.getByTestId('cat-futbol').click();
-    await page.waitForURL(/\/ronda/, { timeout: 15_000 });
-    await expect(page.getByTestId('ronda-screen')).toBeVisible({ timeout: 15_000 });
+    await page.waitForURL(/\/ronda/, { timeout: 10_000 });
+    await expect(page.getByTestId('ronda-screen')).toBeVisible();
+    await expect(page.getByTestId('current-word')).toBeVisible();
 
     // Avanza 10 rondas con ¡Acertó! para llegar a /fin.
-    // Espera la palabra antes de cada click (puede mostrar "Cargando palabra…").
     for (let i = 0; i < 10; i++) {
-      await page.getByTestId('current-word').waitFor({ state: 'visible', timeout: 15_000 });
+      // Espera a que la palabra esté lista (puede aparecer "Cargando palabra…").
+      await page.getByTestId('current-word').waitFor({ state: 'visible', timeout: 5_000 });
       await page.getByTestId('btn-correct').click();
-      // Pequeño delay interno del advance (setTimeout 350ms) + render de la próxima ronda.
-      await page.waitForTimeout(800);
+      // Pequeño delay interno del advance (setTimeout 350ms) + render.
+      await page.waitForTimeout(600);
     }
 
-    await page.waitForURL(/\/fin/, { timeout: 15_000 });
+    await page.waitForURL(/\/fin/, { timeout: 10_000 });
     await expect(page.getByTestId('fin-screen')).toBeVisible();
     await expect(page.getByTestId('final-score')).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath('fin-screen.png'), fullPage: true });
