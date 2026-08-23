@@ -8,7 +8,10 @@ import { useGameStore } from '@/shared/store/gameStore';
 export default function Home() {
   const router = useRouter();
   const bestStreak = useGameStore((s) => s.bestStreak);
-  const score = useGameStore((s) => s.score);
+  // Antes mostrábamos `score` como "Mejor puntaje", pero `score` es la ronda
+  // actual y vuelve a 0 al iniciar una nueva partida. Eso era engañoso.
+  // Mostramos `highScore`, que persiste entre sesiones.
+  const highScore = useGameStore((s) => s.highScore);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -22,12 +25,12 @@ export default function Home() {
           </Text>
         </View>
 
-        {(score > 0 || bestStreak > 0) && (
+        {(highScore > 0 || bestStreak > 0) && (
           <Card style={styles.statsCard}>
             <Text style={styles.statsTitle}>Tus marcas</Text>
             <View style={styles.statsRow}>
               <View style={styles.stat}>
-                <Text style={styles.statValue}>{score}</Text>
+                <Text style={styles.statValue}>{highScore}</Text>
                 <Text style={styles.statLabel}>Mejor puntaje</Text>
               </View>
               <View style={styles.stat}>

@@ -46,5 +46,6 @@ export type GameSnapshot = {
   streak: number;
   bestStreak: number;
   timerMsRemaining: number;
+  roundDurationMs: number;
   rounds: Round[];
 };

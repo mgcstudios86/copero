@@ -47,6 +47,7 @@ export const initialSnapshot = (): GameSnapshot => ({
   streak: 0,
   bestStreak: 0,
   timerMsRemaining: DEFAULT_ROUND_DURATION_MS,
+  roundDurationMs: DEFAULT_ROUND_DURATION_MS,
   rounds: [],
 });
 
@@ -86,6 +87,7 @@ export const step = (
         streak: 0,
         bestStreak: 0,
         timerMsRemaining: roundDurationMs,
+        roundDurationMs,
         rounds: [],
       };
     }
@@ -95,7 +97,7 @@ export const step = (
         return state;
       }
       const { outcome, remainingMs } = action;
-      const totalMs = DEFAULT_ROUND_DURATION_MS;
+      const totalMs = state.roundDurationMs;
       const pointsAwarded = computePoints({
         outcome,
         remainingMs,
@@ -136,7 +138,7 @@ export const step = (
         status: 'playing',
         round: state.round + 1,
         currentWord: nextWord,
-        timerMsRemaining: DEFAULT_ROUND_DURATION_MS,
+        timerMsRemaining: state.roundDurationMs,
       };
     }
 

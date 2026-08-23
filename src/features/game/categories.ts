@@ -30,7 +30,7 @@ export const CATEGORIES_META: readonly CategoryMeta[] = [
   {
     id: 'comida',
     label: 'Comida',
-    emoji: '�',
+    emoji: '🍕',
     description: 'Platos, bebidas y sabores.',
   },
   {
