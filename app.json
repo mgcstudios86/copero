@@ -8,7 +8,7 @@
     "description": "Ideologia Futbolistica",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mgcstudios.copero"
