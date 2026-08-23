@@ -93,7 +93,7 @@ jobs:
           if ! command -v infisical >/dev/null 2>&1; then
             curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
           fi
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
       - name: Cargar secretos (Infisical path=/copero env=preview)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
@@ -136,7 +136,7 @@ jobs:
           if ! command -v infisical >/dev/null 2>&1; then
             curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
           fi
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
       - name: Cargar secretos (Infisical path=/copero env=preview)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
