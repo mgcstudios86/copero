@@ -1,0 +1,92 @@
+<!doctype html>
+<!-- Mockup: Question screen — barra de arquetipo arriba, palabra central, 4 opciones. -->
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Pregunta — Copero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Poppins:wght@600;700&display=swap" />
+<style>
+  :root {
+    --bg: #FAF7F2;
+    --surface: #FFFFFF;
+    --text: #16201A;
+    --text-muted: #4A5750;
+    --primary: #1F6F4A;
+    --accent: #C73E2A;
+    --focus: #2563EB;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: grid; place-items: center;
+  }
+  main {
+    width: min(420px, 92vw);
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 24px;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .archetype {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(31,111,74,0.10);
+    color: var(--primary);
+    font-weight: 600; font-family: 'Poppins', sans-serif;
+    padding: 6px 12px; border-radius: 999px;
+  }
+  .archetype .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--primary); }
+  .timer { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 20px; }
+  h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 36px;
+    text-align: center;
+    margin: 16px 0 32px;
+    letter-spacing: 0.02em;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .opt {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    background: #F4EFE7;
+    color: var(--text);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 18px 12px;
+    font-size: 16px;
+    text-align: center;
+    min-height: 64px;
+    cursor: pointer;
+  }
+  .opt:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .opt.correct { background: rgba(31,111,74,0.15); border-color: var(--primary); color: var(--primary); }
+  .opt.wrong { background: rgba(199,62,42,0.12); border-color: var(--accent); color: var(--accent); }
+  footer { text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 16px; }
+</style>
+</head>
+<body>
+  <main role="main" aria-labelledby="q-title">
+    <header>
+      <span class="archetype" aria-label="Arquetipo actual: explorador">
+        <span class="dot" aria-hidden="true"></span> Explorador
+      </span>
+      <span class="timer" aria-label="Tiempo restante 18 segundos">00:18</span>
+    </header>
+    <h1 id="q-title">COPERO</h1>
+    <div class="grid" role="group" aria-label="Opciones de respuesta">
+      <button class="opt" type="button">Recipiente</button>
+      <button class="opt correct" type="button" aria-pressed="true">Juego de mesa</button>
+      <button class="opt" type="button">Embarcacion</button>
+      <button class="opt" type="button">Copa grande</button>
+    </div>
+    <footer>Pulsa una opcion. Enter para confirmar.</footer>
+  </main>
+</body>
+</html>
