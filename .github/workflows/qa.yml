@@ -39,11 +39,14 @@ jobs:
   playwright-web:
     name: Playwright (web, headless)
     runs-on: [self-hosted, copero-ci, Linux]
-    # MGC-380: 15min era insuficiente. En runner Linux self-hosted,
-    # npm ci tarda ~8min y Playwright con retries puede sumar otros
-    # 6-10min (5 tests × 30s timeout × 2 retries). 30min cubre
-    # comfortable sin disparar timeout-facturable.
-    timeout-minutes: 30
+    # MGC-380: 15min insuficiente; bump a 30min.
+    # MGC-444: 30min insufficient cuando el runner self-hosted tiene
+    # errores intermitentes de red al subir logs a
+    # results-receiver.actions.githubusercontent.com (ResponseEnded).
+    # El backoff/retry de upload come el budget y la suite no termina.
+    # 60min cubre npm ci ~8min + tests con reintentos + margen para
+    # reintentos de upload de logs.
+    timeout-minutes: 60
     env:
       INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
     steps:
