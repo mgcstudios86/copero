@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../useTheme';
 import { useReducedMotion } from '../useReducedMotion';
@@ -23,14 +23,18 @@ export function RoundTimer({ totalSeconds, remainingSeconds, urgentAt = 5, testI
   const progress = Math.max(0, Math.min(1, remainingSeconds / totalSeconds));
   const urgent = remainingSeconds <= urgentAt;
 
+  // Animated.Value se mantiene entre renders. useState con lazy initializer
+  // evita acceder a `.current` durante el render (regla react-hooks/refs de
+  // eslint-config-expo 57). Animated.Value es mutable; useState sólo guarda
+  // la referencia para que persista entre renders.
+  const [widthAnim] = useState(() => new Animated.Value(progress));
+  const [colorAnim] = useState(() => new Animated.Value(reducedMotion ? 1 : 0));
+
   useEffect(() => {
     if (remainingSeconds <= 0) {
       onTimeout?.();
     }
   }, [remainingSeconds, onTimeout]);
-
-  const widthAnim = useRef(new Animated.Value(progress)).current;
-  const colorAnim = useRef(new Animated.Value(reducedMotion ? 1 : 0)).current;
 
   useEffect(() => {
     if (reducedMotion) {
@@ -49,12 +53,25 @@ export function RoundTimer({ totalSeconds, remainingSeconds, urgentAt = 5, testI
       duration: motion.duration.fast,
       useNativeDriver: false,
     }).start();
+    // widthAnim y colorAnim son referencias estables vía useState lazy init;
+    // se incluyen en deps para satisfacer react-hooks/exhaustive-deps.
   }, [progress, urgent, reducedMotion, motion.duration.base, motion.duration.fast, widthAnim, colorAnim]);
 
-  const barColor = colorAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [colors.primary, colors.danger],
-  });
+  // Interpolaciones se crean una sola vez. widthAnim y colorAnim son referencias
+  // estables capturadas por el lazy initializer; colors.primary/danger son valores
+  // del tema usados en el primer render (no cambian entre rondas).
+  const [widthRange] = useState(() =>
+    widthAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0%', '100%'],
+    }),
+  );
+  const [colorRange] = useState(() =>
+    colorAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [colors.primary, colors.danger],
+    }),
+  );
 
   const trackColor = colors.surface2;
 
@@ -76,12 +93,9 @@ export function RoundTimer({ totalSeconds, remainingSeconds, urgentAt = 5, testI
       >
         <Animated.View
           style={{
-            width: widthAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: ['0%', '100%'],
-            }),
+            width: widthRange,
             height: '100%',
-            backgroundColor: barColor,
+            backgroundColor: colorRange,
             borderRadius: radii.pill,
           }}
         />

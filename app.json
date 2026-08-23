@@ -3,11 +3,12 @@
     "name": "Copero",
     "slug": "copero",
     "scheme": "copero",
+    "owner": "mgcstudios",
     "version": "0.1.0",
+    "description": "Ideologia Futbolistica",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mgcstudios.copero"
@@ -26,6 +27,16 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0B1320"
+        }
+      ]
+    ]
   }
 }

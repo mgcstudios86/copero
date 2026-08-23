@@ -5,11 +5,24 @@
       "distribution": "internal"
     },
     "preview": {
+      "distribution": "internal"
+    },
+    "preview-ios-sim": {
       "distribution": "internal",
-      "simulator": true
+      "ios": {
+        "simulator": true
+      }
     },
     "production": {
       "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./secrets/play-store-service-account.json",
+        "track": "internal"
+      }
     }
   }
 }

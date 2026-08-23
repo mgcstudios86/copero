@@ -97,8 +97,11 @@ jobs:
             curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
           fi
       - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
-      - name: Cargar EXPO_TOKEN desde Infisical (path=/copero env=prod)
-        id: load_expo_token
+      # Patch SDK 57 expo-modules-core 57.0.12 executeSync→runSync bug (MGC-366).
+      # Se ejecuta aparte porque npm ci arriba usa --ignore-scripts.
+      - name: Patch expo-modules-core (worklets executeSync → runSync)
+        run: node scripts/patch-expo-modules-core.js
+      - name: Cargar secretos (Infisical path=/copero env=prod)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
@@ -148,6 +151,10 @@ jobs:
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
           JAVA_HOME: /opt/homebrew/opt/openjdk@17
+          # SDK 57 expo-modules-core 57.0.12 declara peer dep ^0.10.0 para worklets,
+          # pero su C++ (WorkletJSCallInvoker.cpp) llama executeSync que requiere 0.12+.
+          # Bug interno SDK 57. Skip el check de version de doctor hasta que se arregle upstream.
+          EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
         run: |
           if [[ ! -d "${JAVA_HOME}" ]]; then
             echo "WARN: JAVA_HOME=${JAVA_HOME} no existe; usando default del runner" >&2
@@ -156,7 +163,7 @@ jobs:
           eas build --local --platform android --profile preview --non-interactive
 
   preview-ios:
-    name: preview ios (eas build --local)
+    name: preview ios (eas build --local, simulator)
     runs-on: [self-hosted, copero-ci, Linux]
     needs: changes
     if: needs.changes.outputs.ios == 'true' || needs.changes.outputs.core == 'true'
@@ -174,8 +181,11 @@ jobs:
             curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
           fi
       - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
-      - name: Cargar EXPO_TOKEN desde Infisical (path=/copero env=prod)
-        id: load_expo_token
+      # Patch SDK 57 expo-modules-core 57.0.12 executeSync→runSync bug (MGC-366).
+      # Se ejecuta aparte porque npm ci arriba usa --ignore-scripts.
+      - name: Patch expo-modules-core (worklets executeSync → runSync)
+        run: node scripts/patch-expo-modules-core.js
+      - name: Cargar secretos (Infisical path=/copero env=prod)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
@@ -218,8 +228,13 @@ jobs:
           else
             eas init --non-interactive --account mgcstudios || true
           fi
-      - name: eas build --local (ios, profile=preview)
+      - name: eas build --local (ios, profile=preview-ios-sim)
+        # CI preview usa simulator: no requiere distribution cert ni provisioning profile.
+        # El profile 'preview' (internal distribution) exige credenciales iOS no disponibles
+        # en modo no-interactive en la cuenta mgcstudios (ver MGC-360).
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
+          # SDK 57 expo-modules-core 57.0.12 peer dep bug; ver comentario en preview-android.
+          EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
         run: |
-          eas build --local --platform ios --profile preview --non-interactive
+          eas build --local --platform ios --profile preview-ios-sim --non-interactive
