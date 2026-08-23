@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 256" role="img" aria-label="Camiseta espalda de Francia con dorsal 10">
+  <title>Francia — camiseta titular (espalda)</title>
+  <desc>Apellido APELLIDO, dorsal 10, color dorsal #FFFFFF (contraste verificado AA).</desc>
+  <defs>
+    <clipPath id="body-clip"><path d="M40 24 L72 18 Q96 8 120 18 L152 24 L172 56 L160 96 L160 232 Q160 240 152 240 L40 240 Q32 240 32 232 L32 96 L20 56 Z"/></clipPath>
+  </defs>
+  <g clip-path="url(#body-clip)">
+    <rect x="0" y="0" width="192" height="256" fill="#002654"/>
+    <rect x="0" y="180" width="192" height="14" fill="#FFFFFF" opacity="0.85"/>
+  </g>
+  <path d="M40 24 L72 18 Q96 8 120 18 L152 24 L172 56 L160 96 L160 232 Q160 240 152 240 L40 240 Q32 240 32 232 L32 96 L20 56 Z" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="2"/>
+  <path d="M80 18 L112 18 L112 26 L80 26 Z" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="2"/>
+  <text x="96" y="98" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="14" font-weight="700" fill="#FFFFFF" letter-spacing="2">APELLIDO</text>
+  <text x="96" y="180" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="76" font-weight="700" fill="#FFFFFF">10</text>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 256" role="img" aria-label="Camiseta frontal de Italia">
+  <title>Italia — camiseta titular (frente)</title>
+  <desc>Patrón azzurri, dorsal en color #FFFFFF (contraste verificado AA).</desc>
+  <defs>
+    <clipPath id="body-clip"><path d="M40 24 L72 18 Q96 8 120 18 L152 24 L172 56 L160 96 L160 232 Q160 240 152 240 L40 240 Q32 240 32 232 L32 96 L20 56 Z"/></clipPath>
+  </defs>
+  <g clip-path="url(#body-clip)">
+      <rect x="0" y="0" width="192" height="256" fill="#0066B3"/>
+    </g>
+  <path d="M40 24 L72 18 Q96 8 120 18 L152 24 L172 56 L160 96 L160 232 Q160 240 152 240 L40 240 Q32 240 32 232 L32 96 L20 56 Z" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="2"/>
+  <path d="M80 18 Q96 36 112 18" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="2"/>
+  <text x="96" y="120" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" letter-spacing="1.5">COPERO</text>
+  <text x="96" y="140" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="10" font-weight="500" fill="#FFFFFF" opacity="0.75">GLI AZZURRI</text>
+</svg>

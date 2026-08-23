@@ -188,3 +188,39 @@ export const elevation = {
   md: 4,
   lg: 12,
 } as const;
+
+/**
+ * Paleta por país — simulador-carrera (MGC-465).
+ * Documentación canónica: `design/simulador-carrera/assets/tokens-pais.md`.
+ * Contraste dorsal/jersey verificado AA WCAG 2.x (todos ≥ 4.5:1).
+ * 12 países top + slot `unknown` para códigos fuera del set.
+ */
+export type CountryPalette = {
+  name: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  dorsal: string;
+  pattern: 'vertical-thin' | 'canarinho' | 'block' | 'azzurri' | 'three-lions' | 'celeste' | 'three-stripes';
+  label: string;
+};
+
+export const countryPalette: Record<string, CountryPalette> = {
+  AR: { name: 'Argentina',  primary: '#75AADB', secondary: '#FFFFFF', accent: '#1A3A5C', dorsal: '#0B1F36', pattern: 'vertical-thin', label: 'ALBICELESTE' },
+  BR: { name: 'Brasil',     primary: '#FFDF00', secondary: '#009C3B', accent: '#002776', dorsal: '#0B2A52', pattern: 'canarinho',     label: 'CANARINHO' },
+  ES: { name: 'España',     primary: '#AA151B', secondary: '#F1BF00', accent: '#FFFFFF', dorsal: '#FFFFFF', pattern: 'block',         label: 'LA ROJA' },
+  FR: { name: 'Francia',    primary: '#002654', secondary: '#FFFFFF', accent: '#ED2939', dorsal: '#FFFFFF', pattern: 'block',         label: 'LES BLEUS' },
+  IT: { name: 'Italia',     primary: '#0066B3', secondary: '#FFFFFF', accent: '#FFFFFF', dorsal: '#FFFFFF', pattern: 'azzurri',       label: 'GLI AZZURRI' },
+  EN: { name: 'Inglaterra', primary: '#FFFFFF', secondary: '#CE1124', accent: '#1A1A1A', dorsal: '#7A0A18', pattern: 'three-lions',   label: 'THREE LIONS' },
+  UY: { name: 'Uruguay',    primary: '#5EB5E2', secondary: '#FFFFFF', accent: '#1A1A4D', dorsal: '#0E0E3A', pattern: 'celeste',       label: 'CELESTE' },
+  CL: { name: 'Chile',      primary: '#D52B1E', secondary: '#FFFFFF', accent: '#0033A0', dorsal: '#FFFFFF', pattern: 'block',         label: 'LA ROJA' },
+  CO: { name: 'Colombia',   primary: '#FCD116', secondary: '#003893', accent: '#CE1126', dorsal: '#0A1F4A', pattern: 'block',         label: 'TRICOLOR' },
+  MX: { name: 'México',     primary: '#006847', secondary: '#FFFFFF', accent: '#CE1126', dorsal: '#FFFFFF', pattern: 'block',         label: 'TRICOLOR' },
+  DE: { name: 'Alemania',   primary: '#FFFFFF', secondary: '#1A1A1A', accent: '#DD0000', dorsal: '#0A0A0A', pattern: 'three-stripes', label: 'DIE MANNSCHAFT' },
+  PT: { name: 'Portugal',   primary: '#DA291C', secondary: '#006633', accent: '#FFD200', dorsal: '#FFFFFF', pattern: 'block',         label: 'SELEÇÃO' },
+  unknown: { name: 'Sin equipo', primary: '#3A4047', secondary: '#2A2F35', accent: '#F0EAE0', dorsal: '#F0EAE0', pattern: 'block', label: 'SIN EQUIPO' },
+};
+
+export function getCountryPalette(code: string): CountryPalette {
+  return countryPalette[code] ?? countryPalette.unknown;
+}

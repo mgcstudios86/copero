@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>MGC-465 — Visual fidelity preview</title>
+<style>
+  :root { --bg: #0E1411; --surface: #16201A; --text: #F0EAE0; --muted: #B8C2BC; --border: #2A3A33; }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.4 'Space Grotesk', system-ui, sans-serif; margin: 0; padding: 24px; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  p.lede { color: var(--muted); margin: 0 0 24px; }
+  h2 { margin: 32px 0 12px; font-size: 16px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+  .tile img { width: 96px; height: 128px; display: block; margin: 0 auto 8px; }
+  .tile .code { font-size: 12px; font-weight: 700; color: var(--text); }
+  .tile .name { font-size: 11px; color: var(--muted); }
+  .shield-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .shield-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .shield-tile img { width: 96px; height: 96px; }
+  .pitch { background: repeating-linear-gradient(0deg, #1A6B3F, #1A6B3F 40px, #166034 40px, #166034 80px); padding: 24px; border-radius: 12px; }
+</style>
+</head>
+<body>
+  <h1>MGC-465 — Visual fidelity assets</h1>
+  <p class="lede">Jerseys por país (12 + unknown) y escudos de club (3). Contrastes verificados AA WCAG 2.x.</p>
+
+  <h2>Jerseys — frente</h2>
+  <div class="grid">
+    <div class="tile"><img src="../jerseys/ar-front.svg" alt=""><div class="code">AR</div><div class="name">Argentina</div></div>
+    <div class="tile"><img src="../jerseys/br-front.svg" alt=""><div class="code">BR</div><div class="name">Brasil</div></div>
+    <div class="tile"><img src="../jerseys/es-front.svg" alt=""><div class="code">ES</div><div class="name">España</div></div>
+    <div class="tile"><img src="../jerseys/fr-front.svg" alt=""><div class="code">FR</div><div class="name">Francia</div></div>
+    <div class="tile"><img src="../jerseys/it-front.svg" alt=""><div class="code">IT</div><div class="name">Italia</div></div>
+    <div class="tile"><img src="../jerseys/en-front.svg" alt=""><div class="code">EN</div><div class="name">Inglaterra</div></div>
+    <div class="tile"><img src="../jerseys/uy-front.svg" alt=""><div class="code">UY</div><div class="name">Uruguay</div></div>
+    <div class="tile"><img src="../jerseys/cl-front.svg" alt=""><div class="code">CL</div><div class="name">Chile</div></div>
+    <div class="tile"><img src="../jerseys/co-front.svg" alt=""><div class="code">CO</div><div class="name">Colombia</div></div>
+    <div class="tile"><img src="../jerseys/mx-front.svg" alt=""><div class="code">MX</div><div class="name">México</div></div>
+    <div class="tile"><img src="../jerseys/de-front.svg" alt=""><div class="code">DE</div><div class="name">Alemania</div></div>
+    <div class="tile"><img src="../jerseys/pt-front.svg" alt=""><div class="code">PT</div><div class="name">Portugal</div></div>
+    <div class="tile"><img src="../jerseys/unknown-front.svg" alt=""><div class="code">??</div><div class="name">Sin match</div></div>
+  </div>
+
+  <h2>Jerseys — espalda (dorsal + apellido)</h2>
+  <div class="pitch">
+    <div class="grid">
+      <div class="tile"><img src="../jerseys/ar-back.svg" alt=""><div class="code">AR</div><div class="name">Messi · 10</div></div>
+      <div class="tile"><img src="../jerseys/br-back.svg" alt=""><div class="code">BR</div><div class="name">Neymar · 10</div></div>
+      <div class="tile"><img src="../jerseys/es-back.svg" alt=""><div class="code">ES</div><div class="name">Pedri · 8</div></div>
+      <div class="tile"><img src="../jerseys/fr-back.svg" alt=""><div class="code">FR</div><div class="name">Mbappé · 10</div></div>
+      <div class="tile"><img src="../jerseys/it-back.svg" alt=""><div class="code">IT</div><div class="name">Barella · 6</div></div>
+      <div class="tile"><img src="../jerseys/en-back.svg" alt=""><div class="code">EN</div><div class="name">Bellingham · 10</div></div>
+      <div class="tile"><img src="../jerseys/uy-back.svg" alt=""><div class="code">UY</div><div class="name">Suárez · 9</div></div>
+      <div class="tile"><img src="../jerseys/cl-back.svg" alt=""><div class="code">CL</div><div class="name">Sánchez · 7</div></div>
+      <div class="tile"><img src="../jerseys/co-back.svg" alt=""><div class="code">CO</div><div class="name">Díaz · 7</div></div>
+      <div class="tile"><img src="../jerseys/mx-back.svg" alt=""><div class="code">MX</div><div class="name">Lozano · 22</div></div>
+      <div class="tile"><img src="../jerseys/de-back.svg" alt=""><div class="code">DE</div><div class="name">Müller · 13</div></div>
+      <div class="tile"><img src="../jerseys/pt-back.svg" alt=""><div class="code">PT</div><div class="name">Ronaldo · 7</div></div>
+      <div class="tile"><img src="../jerseys/unknown-back.svg" alt=""><div class="code">??</div><div class="name">Sin match</div></div>
+    </div>
+  </div>
+
+  <h2>Escudos de club (96×96, fondo transparente)</h2>
+  <div class="shield-row">
+    <div class="shield-tile"><img src="../shields/vel.svg" alt="Escudo Vélez"><div class="code">VEL · Vélez</div></div>
+    <div class="shield-tile"><img src="../shields/tmp.svg" alt="Escudo Temperley"><div class="code">TMP · Temperley</div></div>
+    <div class="shield-tile"><img src="../shields/mor.svg" alt="Escudo Morón"><div class="code">MOR · Morón</div></div>
+  </div>
+</body>
+</html>
