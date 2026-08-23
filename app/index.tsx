@@ -12,7 +12,7 @@ export default function Home() {
   const bestStreak = useGameStore((s) => s.bestStreak);
   // Antes mostrábamos `score` como "Mejor puntaje", pero `score` es la ronda
   // actual y vuelve a 0 al iniciar una nueva partida. Eso era engañoso.
-  // Mostramos `highScore`, que persiste entre sesiones.
+  // Mostramos `highScore`, que persiste entre sesiones. (MGC-317)
   const highScore = useGameStore((s) => s.highScore);
 
   const hasStats = highScore > 0 || bestStreak > 0;
