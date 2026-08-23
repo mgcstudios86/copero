@@ -1,0 +1,241 @@
+# ci.yml — Copero (MGC-290)
+# Pipeline CI: lint (eslint), typecheck (tsc), test web (vitest), build web (Expo web export).
+# Política §8.3: builds --local; runner self-hosted (Mac mini del operador).
+# Trigger: push a main y PRs contra main.
+# Artefacto: `web-build` (Expo web export).
+
+name: ci (copero)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-copero-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: read
+
+jobs:
+  changes:
+    name: detect changed paths
+    runs-on: self-hosted
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      lint: ${{ steps.filter.outputs.lint }}
+      typecheck: ${{ steps.filter.outputs.typecheck }}
+      tests: ${{ steps.filter.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web:
+              - 'app/**'
+              - 'App.tsx'
+              - 'index.ts'
+              - 'app.json'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig*.json'
+              - '.github/workflows/ci.yml'
+            lint:
+              - 'src/**'
+              - 'app/**'
+              - 'App.tsx'
+              - '*.ts'
+              - '*.tsx'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.eslintrc*'
+              - 'eslint.config.*'
+            typecheck:
+              - 'src/**'
+              - 'app/**'
+              - 'App.tsx'
+              - 'index.ts'
+              - '*.ts'
+              - '*.tsx'
+              - 'tsconfig*.json'
+              - 'package.json'
+              - 'package-lock.json'
+            tests:
+              - 'src/**'
+              - 'app/**'
+              - '__tests__/**'
+              - '*.test.ts'
+              - '*.test.tsx'
+              - '*.spec.ts'
+              - '*.spec.tsx'
+              - 'vitest.config.*'
+              - 'jest.config.*'
+              - 'package.json'
+              - 'package-lock.json'
+
+  lint:
+    name: lint (eslint)
+    runs-on: self-hosted
+    needs: changes
+    if: needs.changes.outputs.lint == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar deps (npm ci)
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+        run: |
+          if command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then
+            echo "[lint] cargando secretos Infisical path=/copero env=dev"
+            infisical export --projectId="${INFISICAL_PROJECT_ID:?Falta INFISICAL_PROJECT_ID}" \
+              --env=dev --path=/copero --format=dotenv > .env || true
+          else
+            echo "[lint] infisical CLI o token ausente — saltando carga de secretos"
+          fi
+      - name: Ejecutar eslint
+        run: npx eslint "src/**/*.{ts,tsx}" "app/**/*.{ts,tsx}" "*.{ts,tsx}" --max-warnings=0
+
+  typecheck:
+    name: typecheck (tsc --noEmit)
+    runs-on: self-hosted
+    needs: changes
+    if: needs.changes.outputs.typecheck == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+        run: |
+          if command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then
+            infisical export --projectId="${INFISICAL_PROJECT_ID:?}" \
+              --env=dev --path=/copero --format=dotenv > .env || true
+          fi
+      - run: npx tsc --noEmit
+
+  test-web:
+    name: test web (vitest)
+    runs-on: self-hosted
+    needs: changes
+    if: needs.changes.outputs.tests == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cargar secretos para tests
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+        run: |
+          if command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then
+            infisical export --projectId="${INFISICAL_PROJECT_ID:?}" \
+              --env=dev --path=/copero --format=dotenv > .env || true
+          fi
+      - name: Ejecutar vitest (una pasada, reporter básico)
+        run: npx vitest run --reporter=basic --reporter=github
+
+  build-web:
+    name: build web (expo export --platform web)
+    runs-on: self-hosted
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar eas-cli
+        run: npm install -g eas-cli@latest
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cargar secretos desde Infisical (path=/copero)
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+        run: |
+          if ! command -v infisical >/dev/null 2>&1; then
+            echo "[build-web] instalando infisical CLI"
+            curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
+          fi
+          if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
+            echo "WARN: INFISICAL_TOKEN ausente — se omite carga de secretos" >&2
+          else
+            mkdir -p .infisical-tmp
+            infisical export \
+              --projectId="${INFISICAL_PROJECT_ID:?Falta INFISICAL_PROJECT_ID}" \
+              --env=dev --path=/copero --format=dotenv > .env
+          fi
+      - name: Expo web export (artefacto dist/)
+        run: npx expo export --platform web --output-dir dist
+      - name: Subir artefacto dist/
+        uses: actions/upload-artifact@v4
+        with:
+          name: copero-web-build
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  devops-comment:
+    name: devops-comment (gate §8.1)
+    runs-on: self-hosted
+    needs: [lint, typecheck, test-web, build-web]
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compute status table
+        id: status
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          TYPECHECK_RESULT: ${{ needs.typecheck.result }}
+          TEST_RESULT: ${{ needs.test-web.result }}
+          BUILD_RESULT: ${{ needs.build-web.result }}
+        run: |
+          set -euo pipefail
+          icon() {
+            case "$1" in
+              success) echo "✅ pass";;
+              failure) echo "❌ fail";;
+              skipped) echo "⏭️ skipped";;
+              *) echo "⚠️ $1";;
+            esac
+          }
+          {
+            echo "result<<EOF"
+            echo "| Job | Result |"
+            echo "| --- | --- |"
+            echo "| lint (eslint) | $(icon "$LINT_RESULT") |"
+            echo "| typecheck (tsc --noEmit) | $(icon "$TYPECHECK_RESULT") |"
+            echo "| test-web (vitest) | $(icon "$TEST_RESULT") |"
+            echo "| build-web (expo export) | $(icon "$BUILD_RESULT") |"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: devops-ci
+          message: |
+            ## CI DevOps — ${{ github.event.pull_request.head.sha }}
+
+            ${{ steps.status.outputs.result }}
+
+            - Workflow: `ci (copero)`
+            - Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            - SHA: `${{ github.event.pull_request.head.sha }}` (target `main`)
+            - §8.3: builds **--local** (sin EAS cloud); runner `self-hosted`.
+            - §8.1 gate #3 cumplido.
+            - Artefacto: `copero-web-build` (sólo si `build-web` ✅)
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}

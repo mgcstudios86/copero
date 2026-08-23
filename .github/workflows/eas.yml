@@ -1,0 +1,157 @@
+# eas.yml — Copero (MGC-290)
+# Preview builds cuando se pushea a feature branches (cualquier rama que NO sea main).
+# Política §8.3: builds --local. Plataforma Android + iOS.
+# El runner self-hosted del Mac mini tiene Xcode + Android Studio + eas CLI.
+#
+# El job decide plataforma según qué paths cambiaron (paths-filter):
+#   - 'app.json' / 'package.json' / 'eas.json' cambiados → ambas plataformas
+#   - sólo Android: 'android/**' → android
+#   - sólo iOS:     'ios/**'     → ios
+#   - default (App.tsx, src/**, etc.) → ambas plataformas
+
+name: eas-preview (copero)
+
+on:
+  push:
+    branches:
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+      - 'refactor/**'
+      - 'perf/**'
+      - 'docs/**'
+      - 'test/**'
+      - 'build/**'
+      # NOTE: 'main' queda fuera; deploy main va por deploy.yml cuando exista.
+  pull_request:
+    branches:
+      - 'feat/**'
+      - 'fix/**'
+  workflow_dispatch:
+
+concurrency:
+  group: eas-preview-copero-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  changes:
+    name: detect changed paths
+    runs-on: self-hosted
+    outputs:
+      android: ${{ steps.filter.outputs.android }}
+      ios: ${{ steps.filter.outputs.ios }}
+      core: ${{ steps.filter.outputs.core }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            android:
+              - 'android/**'
+              - 'app.json'
+              - 'package.json'
+              - 'eas.json'
+            ios:
+              - 'ios/**'
+              - 'app.json'
+              - 'package.json'
+              - 'eas.json'
+            core:
+              - 'App.tsx'
+              - 'src/**'
+              - 'app/**'
+              - 'index.ts'
+              - '*.ts'
+              - '*.tsx'
+              - 'app.json'
+              - 'package.json'
+              - 'eas.json'
+              - 'tsconfig*.json'
+
+  preview-android:
+    name: preview android (eas build --local)
+    runs-on: self-hosted
+    needs: changes
+    if: needs.changes.outputs.android == 'true' || needs.changes.outputs.core == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar eas-cli + infisical CLI
+        run: |
+          npm install -g eas-cli@latest
+          if ! command -v infisical >/dev/null 2>&1; then
+            curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
+          fi
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cargar secretos (Infisical path=/copero env=preview)
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
+            echo "ERROR: INFISICAL_TOKEN ausente. Configurar en GitHub repo secrets." >&2
+            exit 1
+          fi
+          mkdir -p .infisical-tmp
+          infisical export \
+            --projectId="${INFISICAL_PROJECT_ID:?Falta INFISICAL_PROJECT_ID}" \
+            --env=preview --path=/copero --format=dotenv > .env
+      - name: eas build --local (android, profile=preview)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          JAVA_HOME: /opt/homebrew/opt/openjdk@17
+        run: |
+          if [[ ! -d "${JAVA_HOME}" ]]; then
+            echo "WARN: JAVA_HOME=${JAVA_HOME} no existe; usando default del runner" >&2
+            unset JAVA_HOME
+          fi
+          eas build --local --platform android --profile preview --non-interactive
+
+  preview-ios:
+    name: preview ios (eas build --local)
+    runs-on: self-hosted
+    needs: changes
+    if: needs.changes.outputs.ios == 'true' || needs.changes.outputs.core == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar eas-cli + infisical CLI
+        run: |
+          npm install -g eas-cli@latest
+          if ! command -v infisical >/dev/null 2>&1; then
+            curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
+          fi
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Cargar secretos (Infisical path=/copero env=preview)
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
+            echo "ERROR: INFISICAL_TOKEN ausente. Configurar en GitHub repo secrets." >&2
+            exit 1
+          fi
+          mkdir -p .infisical-tmp
+          infisical export \
+            --projectId="${INFISICAL_PROJECT_ID:?Falta INFISICAL_PROJECT_ID}" \
+            --env=preview --path=/copero --format=dotenv > .env
+      - name: eas build --local (ios, profile=preview)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas build --local --platform ios --profile preview --non-interactive

@@ -1,0 +1,38 @@
+# Node / Expo
+node_modules/
+.expo/
+dist/
+npm-debug.*
+yarn-error.*
+yarn.lock
+*.log
+
+# Local env (lo carga Infisical)
+.env
+.env.local
+.env.*.local
+
+# Secrets / credentials
+credentials/
+*.p8
+*.p12
+*.jks
+*.keystore
+keystore.properties
+
+# EAS build output local
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Misc
+coverage/
+.cache/
