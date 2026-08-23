@@ -52,3 +52,4 @@ keystore.properties
 
 # Tests
 coverage/
+e2e/

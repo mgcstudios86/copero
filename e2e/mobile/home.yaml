@@ -1,0 +1,11 @@
+appId: host.exp.exponent
+# Maestro flow — Copero home (Expo Go scheme).
+# MGC-302 scaffold. Cuando MGC-291 mergee el MVP este flow crece con AC reales
+# (tap Jugar, swipe categorías, modal de resultados, etc).
+---
+- launchApp:
+    clearState: true
+- takeScreenshot: home-baseline.png
+- assertVisible:
+    text: '.*Copero.*'
+    optional: true   # opcional mientras MGC-291 no mergee

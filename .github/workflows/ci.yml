@@ -96,13 +96,16 @@ jobs:
       - name: Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ vars.INFISICAL_PROJECT_ID }}
         run: |
-          if command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then
+          if command -v infisical >/dev/null 2>&1 \
+            && [[ -n "${INFISICAL_TOKEN:-}" ]] \
+            && [[ -n "${INFISICAL_PROJECT_ID:-}" ]]; then
             echo "[lint] cargando secretos Infisical path=/copero env=dev"
-            infisical export --projectId="${INFISICAL_PROJECT_ID:?Falta INFISICAL_PROJECT_ID}" \
+            infisical export --projectId="${INFISICAL_PROJECT_ID}" \
               --env=dev --path=/copero --format=dotenv > .env || true
           else
-            echo "[lint] infisical CLI o token ausente — saltando carga de secretos"
+            echo "[lint] infisical CLI, token o projectId ausente — saltando carga de secretos"
           fi
       - name: Ejecutar eslint
         run: npx eslint "src/**/*.{ts,tsx}" --max-warnings=0 --no-error-on-unmatched-pattern
@@ -121,10 +124,15 @@ jobs:
       - name: Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ vars.INFISICAL_PROJECT_ID }}
         run: |
-          if command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then
-            infisical export --projectId="${INFISICAL_PROJECT_ID:?}" \
+          if command -v infisical >/dev/null 2>&1 \
+            && [[ -n "${INFISICAL_TOKEN:-}" ]] \
+            && [[ -n "${INFISICAL_PROJECT_ID:-}" ]]; then
+            infisical export --projectId="${INFISICAL_PROJECT_ID}" \
               --env=dev --path=/copero --format=dotenv > .env || true
+          else
+            echo "[typecheck] infisical CLI, token o projectId ausente — saltando carga de secretos"
           fi
       - run: npx tsc --noEmit
 
@@ -142,10 +150,15 @@ jobs:
       - name: Cargar secretos para tests
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ vars.INFISICAL_PROJECT_ID }}
         run: |
-          if command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then
-            infisical export --projectId="${INFISICAL_PROJECT_ID:?}" \
+          if command -v infisical >/dev/null 2>&1 \
+            && [[ -n "${INFISICAL_TOKEN:-}" ]] \
+            && [[ -n "${INFISICAL_PROJECT_ID:-}" ]]; then
+            infisical export --projectId="${INFISICAL_PROJECT_ID}" \
               --env=dev --path=/copero --format=dotenv > .env || true
+          else
+            echo "[test-web] infisical CLI, token o projectId ausente — saltando carga de secretos"
           fi
       - name: Ejecutar vitest (una pasada, reporter básico)
         run: npx vitest run --reporter=basic
@@ -166,6 +179,7 @@ jobs:
       - name: Cargar secretos desde Infisical (path=/copero)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ vars.INFISICAL_PROJECT_ID }}
         run: |
           if ! command -v infisical >/dev/null 2>&1; then
             echo "[build-web] instalando infisical CLI"
@@ -173,10 +187,12 @@ jobs:
           fi
           if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
             echo "WARN: INFISICAL_TOKEN ausente — se omite carga de secretos" >&2
+          elif [[ -z "${INFISICAL_PROJECT_ID:-}" ]]; then
+            echo "WARN: INFISICAL_PROJECT_ID ausente — se omite carga de secretos" >&2
           else
             mkdir -p .infisical-tmp
             infisical export \
-              --projectId="${INFISICAL_PROJECT_ID:?Falta INFISICAL_PROJECT_ID}" \
+              --projectId="${INFISICAL_PROJECT_ID}" \
               --env=dev --path=/copero --format=dotenv > .env
           fi
       - name: Expo web export (artefacto dist/)

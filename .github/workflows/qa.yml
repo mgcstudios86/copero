@@ -1,0 +1,74 @@
+name: qa
+
+# QA E2E — Copero
+# MGC-302: scaffold Playwright headless contra bundle Expo web.
+# No corre Maestro mobile (hardware persistente — QA agent owns ZY22G728HN).
+# Trigger: PR contra main + push a main + manual dispatch.
+# Secrets inyectados por DevOps vía Infisical — placeholders abajo.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'e2e/**'
+      - '.github/workflows/qa.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'app/**'
+      - 'src/**'
+      - 'App.tsx'
+      - 'index.ts'
+      - 'app.json'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  playwright-web:
+    name: Playwright (web, headless)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci --include=dev
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build Expo web bundle
+        run: npm run build:web
+        env:
+          # Placeholders — DevOps inyecta valores reales vía Infisical.
+          # Si vacío: el build igual corre; algunos SDKs nativos pueden fallar en web.
+          INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID: ${{ secrets.INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID || '' }}
+          INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY || '' }}
+
+      - name: Run Playwright
+        run: npm run test:e2e:web
+        env:
+          CI: 'true'
+          EXPO_WEB_BASE_URL: 'http://localhost:8081'
+          INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID: ${{ secrets.INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID || '' }}
+          INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY || '' }}
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/.results
+            playwright-report
+          if-no-files-found: ignore
+          retention-days: 7
