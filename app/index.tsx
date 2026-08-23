@@ -49,7 +49,17 @@ export default function Home() {
               style={({ pressed }) => [styles.playCta, pressed && { opacity: 0.85 }]}
               onPress={() => router.push('/categoria')}
             >
-              <Text style={styles.playCtaLabel}>Jugar</Text>
+              <Text style={styles.playCtaLabel}>Jugar (palabras)</Text>
+            </Pressable>
+          </Link>
+          <Link href="/compass" asChild>
+            <Pressable
+              accessibilityRole="button"
+              testID="btn-compass"
+              style={({ pressed }) => [styles.playCtaSecondary, pressed && { opacity: 0.85 }]}
+              onPress={() => router.push('/compass')}
+            >
+              <Text style={styles.playCtaSecondaryLabel}>Ideología Futbolística</Text>
             </Pressable>
           </Link>
         </View>
@@ -130,6 +140,22 @@ const styles = StyleSheet.create({
     color: colors.primaryFg,
     fontSize: 18,
     fontWeight: '800',
+  },
+  playCtaSecondary: {
+    backgroundColor: colors.bgElev,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.sm,
+  },
+  playCtaSecondaryLabel: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '700',
   },
   howTitle: {
     color: colors.text,

@@ -22,6 +22,7 @@ export default function RootLayout() {
           <Stack.Screen name="categoria" options={{ title: 'Elegí categoría' }} />
           <Stack.Screen name="ronda" options={{ title: 'Ronda', headerBackVisible: false }} />
           <Stack.Screen name="fin" options={{ title: 'Fin del copero', headerBackVisible: false }} />
+          <Stack.Screen name="compass" options={{ title: 'Ideología Futbolística', headerBackVisible: true }} />
         </Stack>
         <Banner />
       </View>
