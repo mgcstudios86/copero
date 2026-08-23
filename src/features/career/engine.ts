@@ -90,7 +90,12 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
       return {
         ...state,
         stage: 'clubStart',
-        profile: { ...state.profile, club: action.club },
+        profile: {
+          ...state.profile,
+          club: action.club,
+          clubPresupuesto: action.club.presupuesto,
+          clubInteres: true,
+        },
       };
     case 'decide': {
       const seed = state.profile.week * 1009 + state.profile.season * 31 + seedFromString(action.strategyId);

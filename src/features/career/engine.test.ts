@@ -3,6 +3,8 @@ import { step, initialSnapshot, initialProfile, isIdentityComplete } from './eng
 import { POSITIONS } from './positions';
 import { ACADEMY_CLUBS } from './clubs';
 import { NATIONALITIES, NATIONALITIES_BY_CODE } from './nationalities';
+import { recommendStrategy } from './simulation';
+import { STRATEGIES } from './strategy';
 
 describe('career engine', () => {
   it('initialSnapshot arranca en identity con profile defaults', () => {
@@ -51,6 +53,26 @@ describe('career engine', () => {
     s = step(s, { type: 'acceptClub', club: ACADEMY_CLUBS[0] });
     expect(s.stage).toBe('clubStart');
     expect(s.profile.club?.id).toBe(ACADEMY_CLUBS[0].id);
+  });
+
+  it('acceptClub propaga clubPresupuesto y activa clubInteres (MGC-455)', () => {
+    let s = initialSnapshot();
+    s = step(s, { type: 'openAcademy' });
+    s = step(s, { type: 'acceptClub', club: ACADEMY_CLUBS[0] });
+    expect(s.profile.clubPresupuesto).toBe(ACADEMY_CLUBS[0].presupuesto);
+    expect(s.profile.clubPresupuesto).toBe(8); // Vélez Sarsfield
+    expect(s.profile.clubInteres).toBe(true);
+
+    // T1 condition ahora se cumple (strategy.ts:177).
+    expect(STRATEGIES.T1.condition?.(s.profile)).toBe(true);
+
+    // recommendStrategy respeta week % 3 === 0 → MATCH_STRATEGIES[0] (M1).
+    const withMatchWeek = { ...s, profile: { ...s.profile, week: 6 } };
+    expect(recommendStrategy(withMatchWeek.profile)).toBe('M1');
+
+    // Y en semana normal sigue ofreciendo weekly strategies.
+    const withTrainWeek = { ...s, profile: { ...s.profile, week: 5 } };
+    expect(recommendStrategy(withTrainWeek.profile)).toMatch(/^E\d$/);
   });
 
   it('reset vuelve al estado inicial', () => {
