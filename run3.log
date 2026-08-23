@@ -1,0 +1,918 @@
+detect changed paths	Set up job	﻿2026-08-23T01:32:50.8560820Z Current runner version: '2.336.0'
+detect changed paths	Set up job	2026-08-23T01:32:50.8564730Z Runner name: 'mac-mini-pipeline-runner'
+detect changed paths	Set up job	2026-08-23T01:32:50.8565090Z Runner group name: 'default'
+detect changed paths	Set up job	2026-08-23T01:32:50.8565510Z Machine name: '192'
+detect changed paths	Set up job	2026-08-23T01:32:50.8567030Z ##[group]GITHUB_TOKEN Permissions
+detect changed paths	Set up job	2026-08-23T01:32:50.8567930Z Checks: read
+detect changed paths	Set up job	2026-08-23T01:32:50.8568170Z Contents: read
+detect changed paths	Set up job	2026-08-23T01:32:50.8568420Z Metadata: read
+detect changed paths	Set up job	2026-08-23T01:32:50.8568690Z PullRequests: write
+detect changed paths	Set up job	2026-08-23T01:32:50.8568950Z ##[endgroup]
+detect changed paths	Set up job	2026-08-23T01:32:50.8569760Z Secret source: Actions
+detect changed paths	Set up job	2026-08-23T01:32:50.8570230Z Prepare workflow directory
+detect changed paths	Set up job	2026-08-23T01:32:50.9160810Z Prepare all required actions
+detect changed paths	Set up job	2026-08-23T01:32:50.9184720Z Getting action download info
+detect changed paths	Set up job	2026-08-23T01:32:51.6648820Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+detect changed paths	Set up job	2026-08-23T01:32:52.4303900Z Download action repository 'dorny/paths-filter@v3' (SHA:0e4a8c6effa4802afeda77dc8d303f8176d7dfad)
+detect changed paths	Set up job	2026-08-23T01:32:53.0707020Z Complete job name: detect changed paths
+detect changed paths	Run actions/checkout@v4	﻿2026-08-23T01:32:53.1012940Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1017230Z ##[group]Run actions/checkout@v4
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1017600Z with:
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1017860Z   fetch-depth: 0
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1018130Z   repository: mgcstudios/copero
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1020130Z   token: ***
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1020370Z   ssh-strict: true
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1020600Z   ssh-user: git
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1020860Z   persist-credentials: true
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1021140Z   clean: true
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1021410Z   sparse-checkout-cone-mode: true
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1021720Z   fetch-tags: false
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1021980Z   show-progress: true
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1022250Z   lfs: false
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1022520Z   submodules: false
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1022820Z   set-safe-directory: true
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1023120Z   allow-unsafe-pr-checkout: false
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.1023490Z ##[endgroup]
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.2926610Z Syncing repository: mgcstudios/copero
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.2927620Z ##[group]Getting Git version info
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.2928140Z Working directory is '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero'
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.2928860Z [command]/usr/bin/git version
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.2998370Z git version 2.50.1 (Apple Git-155)
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.3006230Z ##[endgroup]
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.3011180Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/fa669acd-b3f8-4e82-9352-1c487b7327d1/.gitconfig'
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.3015440Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/fa669acd-b3f8-4e82-9352-1c487b7327d1' before making global git config changes
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.3016390Z Adding repository directory to the temporary git global config as a safe directory
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.3017280Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.4942100Z [command]/usr/bin/git config --local --get remote.origin.url
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5017600Z https://github.com/mgcstudios/copero
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5027400Z ##[group]Removing previously created refs, to avoid conflicts
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5028540Z [command]/usr/bin/git rev-parse --symbolic-full-name --verify --quiet HEAD
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5106590Z refs/heads/main
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5110830Z [command]/usr/bin/git checkout --detach
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5232550Z HEAD is now at 2e6193d fix(ci): include=dev en npm ci (npm 11 omite devDeps por default)
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5326610Z [command]/usr/bin/git branch --delete --force main
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5420400Z Deleted branch main (was 2e6193d).
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5538110Z ##[endgroup]
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.5539040Z [command]/usr/bin/git submodule status
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.6212400Z ##[group]Cleaning the repository
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:53.6213380Z [command]/usr/bin/git clean -ffdx
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.8984720Z Removing node_modules/
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.8990140Z [command]/usr/bin/git reset --hard HEAD
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9092270Z HEAD is now at 2e6193d fix(ci): include=dev en npm ci (npm 11 omite devDeps por default)
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9094890Z ##[endgroup]
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9096350Z ##[group]Disabling automatic garbage collection
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9098070Z [command]/usr/bin/git config --local gc.auto 0
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9168790Z ##[endgroup]
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9169040Z ##[group]Setting up auth
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9171820Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9237780Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9759240Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:55.9832450Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:56.0350660Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:56.0418150Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:56.1001510Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:56.1830090Z ##[endgroup]
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:56.1830380Z ##[group]Fetching the repository
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:56.1836700Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules --unshallow origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2328010Z From https://github.com/mgcstudios/copero
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2328620Z    2e6193d..7a22e4a  main       -> origin/main
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2414870Z [command]/usr/bin/git branch --list --remote origin/main
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2534500Z   origin/main
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2540440Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2632590Z 7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2635200Z ##[endgroup]
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2635530Z ##[group]Determining the checkout info
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2635810Z ##[endgroup]
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2637930Z [command]/usr/bin/git sparse-checkout disable
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2754060Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2841390Z ##[group]Checking out the ref
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2843200Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2948460Z Previous HEAD position was 2e6193d fix(ci): include=dev en npm ci (npm 11 omite devDeps por default)
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2968550Z Switched to a new branch 'main'
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2971660Z branch 'main' set up to track 'origin/main'.
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.2974630Z ##[endgroup]
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.3060580Z [command]/usr/bin/git log -1 --format=%H
+detect changed paths	Run actions/checkout@v4	2026-08-23T01:32:57.3131850Z 7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b
+detect changed paths	Run dorny/paths-filter@v3	﻿2026-08-23T01:32:57.3248680Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3249380Z ##[group]Run dorny/paths-filter@v3
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3249500Z with:
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3250350Z   filters: web:
+detect changed paths	Run dorny/paths-filter@v3	  - 'app/**'
+detect changed paths	Run dorny/paths-filter@v3	  - 'App.tsx'
+detect changed paths	Run dorny/paths-filter@v3	  - 'index.ts'
+detect changed paths	Run dorny/paths-filter@v3	  - 'app.json'
+detect changed paths	Run dorny/paths-filter@v3	  - 'package.json'
+detect changed paths	Run dorny/paths-filter@v3	  - 'package-lock.json'
+detect changed paths	Run dorny/paths-filter@v3	  - 'tsconfig*.json'
+detect changed paths	Run dorny/paths-filter@v3	  - '.github/workflows/ci.yml'
+detect changed paths	Run dorny/paths-filter@v3	lint:
+detect changed paths	Run dorny/paths-filter@v3	  - 'src/**'
+detect changed paths	Run dorny/paths-filter@v3	  - 'app/**'
+detect changed paths	Run dorny/paths-filter@v3	  - 'App.tsx'
+detect changed paths	Run dorny/paths-filter@v3	  - '*.ts'
+detect changed paths	Run dorny/paths-filter@v3	  - '*.tsx'
+detect changed paths	Run dorny/paths-filter@v3	  - 'package.json'
+detect changed paths	Run dorny/paths-filter@v3	  - 'package-lock.json'
+detect changed paths	Run dorny/paths-filter@v3	  - '.eslintrc*'
+detect changed paths	Run dorny/paths-filter@v3	  - 'eslint.config.*'
+detect changed paths	Run dorny/paths-filter@v3	typecheck:
+detect changed paths	Run dorny/paths-filter@v3	  - 'src/**'
+detect changed paths	Run dorny/paths-filter@v3	  - 'app/**'
+detect changed paths	Run dorny/paths-filter@v3	  - 'App.tsx'
+detect changed paths	Run dorny/paths-filter@v3	  - 'index.ts'
+detect changed paths	Run dorny/paths-filter@v3	  - '*.ts'
+detect changed paths	Run dorny/paths-filter@v3	  - '*.tsx'
+detect changed paths	Run dorny/paths-filter@v3	  - 'tsconfig*.json'
+detect changed paths	Run dorny/paths-filter@v3	  - 'package.json'
+detect changed paths	Run dorny/paths-filter@v3	  - 'package-lock.json'
+detect changed paths	Run dorny/paths-filter@v3	tests:
+detect changed paths	Run dorny/paths-filter@v3	  - 'src/**'
+detect changed paths	Run dorny/paths-filter@v3	  - 'app/**'
+detect changed paths	Run dorny/paths-filter@v3	  - '__tests__/**'
+detect changed paths	Run dorny/paths-filter@v3	  - '*.test.ts'
+detect changed paths	Run dorny/paths-filter@v3	  - '*.test.tsx'
+detect changed paths	Run dorny/paths-filter@v3	  - '*.spec.ts'
+detect changed paths	Run dorny/paths-filter@v3	  - '*.spec.tsx'
+detect changed paths	Run dorny/paths-filter@v3	  - 'vitest.config.*'
+detect changed paths	Run dorny/paths-filter@v3	  - 'jest.config.*'
+detect changed paths	Run dorny/paths-filter@v3	  - 'package.json'
+detect changed paths	Run dorny/paths-filter@v3	  - 'package-lock.json'
+detect changed paths	Run dorny/paths-filter@v3	
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3252410Z   token: ***
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3252520Z   list-files: none
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3252610Z   initial-fetch-depth: 100
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3252740Z   predicate-quantifier: some
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3252850Z ##[endgroup]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3859020Z ##[group]Get current git ref
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3871910Z [command]/usr/bin/git branch --show-current
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3952100Z main
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3958430Z ##[endgroup]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3958710Z Changes will be detected between 2e6193dc5ae109f7a9cca55ba4e02454e209ad39 and main
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3959940Z ##[group]Ensuring 2e6193dc5ae109f7a9cca55ba4e02454e209ad39 is fetched from origin
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.3962300Z [command]/usr/bin/git cat-file -e 2e6193dc5ae109f7a9cca55ba4e02454e209ad39^{commit}
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4034360Z ##[endgroup]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4034710Z ##[group]Ensuring main is fetched from origin
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4036580Z [command]/usr/bin/git show-ref main
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4101950Z 7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b refs/heads/main
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4102470Z 7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b refs/remotes/origin/main
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4105670Z ##[endgroup]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4105960Z ##[group]Change detection 2e6193dc5ae109f7a9cca55ba4e02454e209ad39..main
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4107860Z [command]/usr/bin/git diff --no-renames --name-status -z 2e6193dc5ae109f7a9cca55ba4e02454e209ad39..refs/remotes/origin/main
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4179390Z M^@package-lock.json^@M^@package.json^@A^@run2.log^@M^@vitest.config.ts^@
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4179740Z ##[endgroup]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4179870Z Detected 4 changed files
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4185120Z Results:
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4185360Z ##[group]Filter web = true
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4185490Z Matching files:
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4185600Z package-lock.json [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4185750Z package.json [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4188900Z ##[endgroup]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4189130Z ##[group]Filter lint = true
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4189260Z Matching files:
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4189390Z package-lock.json [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4189520Z package.json [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4189650Z vitest.config.ts [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4189900Z ##[endgroup]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4190690Z ##[group]Filter typecheck = true
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4190820Z Matching files:
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4190950Z package-lock.json [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4191150Z package.json [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4191330Z vitest.config.ts [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4191550Z ##[endgroup]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4191730Z ##[group]Filter tests = true
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4191850Z Matching files:
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4191960Z package-lock.json [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4192100Z package.json [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4192220Z vitest.config.ts [modified]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4192430Z ##[endgroup]
+detect changed paths	Run dorny/paths-filter@v3	2026-08-23T01:32:57.4192560Z Changes output set to ["web","lint","typecheck","tests"]
+detect changed paths	Post Run actions/checkout@v4	﻿2026-08-23T01:32:57.4284380Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.4285000Z Post job cleanup.
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.4851450Z [command]/usr/bin/git version
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.4929420Z git version 2.50.1 (Apple Git-155)
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.4941360Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/1b5e67a6-4080-4286-b862-f8f1704cf62c/.gitconfig'
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.4945770Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/1b5e67a6-4080-4286-b862-f8f1704cf62c' before making global git config changes
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.4946260Z Adding repository directory to the temporary git global config as a safe directory
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.4948420Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.5579550Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.5651790Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.6163390Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.6226790Z http.https://github.com/.extraheader
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.6231180Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.6297880Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.6806080Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+detect changed paths	Post Run actions/checkout@v4	2026-08-23T01:32:57.6874950Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+detect changed paths	Complete job	﻿2026-08-23T01:32:57.7455370Z Evaluate and set job outputs
+detect changed paths	Complete job	2026-08-23T01:32:57.7458790Z Set output 'web'
+detect changed paths	Complete job	2026-08-23T01:32:57.7459440Z Set output 'lint'
+detect changed paths	Complete job	2026-08-23T01:32:57.7459610Z Set output 'typecheck'
+detect changed paths	Complete job	2026-08-23T01:32:57.7459760Z Set output 'tests'
+detect changed paths	Complete job	2026-08-23T01:32:57.7460000Z Cleaning up orphan processes
+detect changed paths	Complete job	2026-08-23T01:32:58.0679730Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, dorny/paths-filter@v3. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+typecheck (tsc --noEmit)	Set up job	﻿2026-08-23T01:33:06.9440910Z Current runner version: '2.336.0'
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9444480Z Runner name: 'mac-mini-pipeline-runner'
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9444820Z Runner group name: 'default'
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9445240Z Machine name: '192'
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9446610Z ##[group]GITHUB_TOKEN Permissions
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9447450Z Checks: read
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9447730Z Contents: read
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9447980Z Metadata: read
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9448320Z PullRequests: write
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9448610Z ##[endgroup]
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9449420Z Secret source: Actions
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9449830Z Prepare workflow directory
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9762760Z Prepare all required actions
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:06.9784580Z Getting action download info
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:07.6941250Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:08.3421550Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+typecheck (tsc --noEmit)	Set up job	2026-08-23T01:33:09.1769190Z Complete job name: typecheck (tsc --noEmit)
+typecheck (tsc --noEmit)	Run actions/checkout@v4	﻿2026-08-23T01:33:09.2085120Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2089530Z ##[group]Run actions/checkout@v4
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2089870Z with:
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2090110Z   repository: mgcstudios/copero
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2092120Z   token: ***
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2092380Z   ssh-strict: true
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2092630Z   ssh-user: git
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2092900Z   persist-credentials: true
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2093180Z   clean: true
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2093450Z   sparse-checkout-cone-mode: true
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2093750Z   fetch-depth: 1
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2094010Z   fetch-tags: false
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2094270Z   show-progress: true
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2094510Z   lfs: false
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2094770Z   submodules: false
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2095050Z   set-safe-directory: true
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2095350Z   allow-unsafe-pr-checkout: false
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2095730Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2806640Z Syncing repository: mgcstudios/copero
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2807800Z ##[group]Getting Git version info
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2808330Z Working directory is '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero'
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2825420Z [command]/usr/bin/git version
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2853860Z git version 2.50.1 (Apple Git-155)
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2861400Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2865000Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/56f7b789-b211-4749-9d6c-55571072add0/.gitconfig'
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2870900Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/56f7b789-b211-4749-9d6c-55571072add0' before making global git config changes
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2871920Z Adding repository directory to the temporary git global config as a safe directory
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.2872700Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.3753440Z [command]/usr/bin/git config --local --get remote.origin.url
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.3822650Z https://github.com/mgcstudios/copero
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.3827920Z ##[group]Removing previously created refs, to avoid conflicts
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.3829640Z [command]/usr/bin/git rev-parse --symbolic-full-name --verify --quiet HEAD
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.3896250Z refs/heads/main
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.3900090Z [command]/usr/bin/git checkout --detach
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.4007460Z HEAD is now at 7a22e4a fix(deps): react-dom, react-native-web, @expo/metro-runtime para web export
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.4092700Z [command]/usr/bin/git branch --delete --force main
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.4170640Z Deleted branch main (was 7a22e4a).
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.4251660Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.4253130Z [command]/usr/bin/git submodule status
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.4836830Z ##[group]Cleaning the repository
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.4837400Z [command]/usr/bin/git clean -ffdx
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.4912470Z [command]/usr/bin/git reset --hard HEAD
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5001460Z HEAD is now at 7a22e4a fix(deps): react-dom, react-native-web, @expo/metro-runtime para web export
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5003410Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5005400Z ##[group]Disabling automatic garbage collection
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5006620Z [command]/usr/bin/git config --local gc.auto 0
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5083720Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5084250Z ##[group]Setting up auth
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5086450Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5156230Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5718050Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.5784270Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.6362280Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.6428720Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.6997720Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.7072490Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.7073530Z ##[group]Fetching the repository
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:09.7078870Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b:refs/remotes/origin/main
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.3888320Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.3889290Z ##[group]Determining the checkout info
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.3890370Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.3891940Z [command]/usr/bin/git sparse-checkout disable
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.4022560Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.4116360Z ##[group]Checking out the ref
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.4117850Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.4233230Z Switched to a new branch 'main'
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.4237050Z branch 'main' set up to track 'origin/main'.
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.4240480Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.4329780Z [command]/usr/bin/git log -1 --format=%H
+typecheck (tsc --noEmit)	Run actions/checkout@v4	2026-08-23T01:33:10.4404320Z 7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	﻿2026-08-23T01:33:10.4567320Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.4569680Z ##[group]Run actions/setup-node@v4
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.4570120Z with:
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.4570470Z   node-version: 20
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.4570850Z   always-auth: false
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.4571210Z   check-latest: false
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.4575440Z   token: ***
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.4575780Z ##[endgroup]
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.5551390Z Found in cache @ /Users/matiasgonzalocalvo/actions-runner-impostor/_work/_tool/node/20.20.2/arm64
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.5553070Z (node:24552) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.5554380Z (Use `node --trace-deprecation ...` to show where the warning was created)
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.5555510Z ##[group]Environment details
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.7198360Z node: v20.20.2
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.7199340Z npm: 10.8.2
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.7199730Z yarn: 
+typecheck (tsc --noEmit)	Run actions/setup-node@v4	2026-08-23T01:33:10.7200500Z ##[endgroup]
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	﻿2026-08-23T01:33:10.7269140Z ##[group]Run npm ci --include=dev --ignore-scripts --no-audit --no-fund
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:10.7270050Z ^[[36;1mnpm ci --include=dev --ignore-scripts --no-audit --no-fund^[[0m
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:10.7280990Z shell: /opt/homebrew/bin/bash -e {0}
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:10.7281520Z ##[endgroup]
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:12.0854360Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:12.1351510Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:12.1404210Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:12.1806520Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:12.1819280Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:12.4500320Z npm warn deprecated uuid@7.0.3: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:13.0767600Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:13.0771390Z npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:14.0368530Z 
+typecheck (tsc --noEmit)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:14.0368930Z added 796 packages in 3s
+typecheck (tsc --noEmit)	Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)	﻿2026-08-23T01:33:14.0580690Z ##[group]Run if command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then
+typecheck (tsc --noEmit)	Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)	2026-08-23T01:33:14.0581020Z ^[[36;1mif command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then^[[0m
+typecheck (tsc --noEmit)	Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)	2026-08-23T01:33:14.0581280Z ^[[36;1m  infisical export --projectId="${INFISICAL_PROJECT_ID:?}" \^[[0m
+typecheck (tsc --noEmit)	Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)	2026-08-23T01:33:14.0581500Z ^[[36;1m    --env=dev --path=/copero --format=dotenv > .env || true^[[0m
+typecheck (tsc --noEmit)	Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)	2026-08-23T01:33:14.0581670Z ^[[36;1mfi^[[0m
+typecheck (tsc --noEmit)	Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)	2026-08-23T01:33:14.0590440Z shell: /opt/homebrew/bin/bash -e {0}
+typecheck (tsc --noEmit)	Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)	2026-08-23T01:33:14.0590590Z env:
+typecheck (tsc --noEmit)	Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)	2026-08-23T01:33:14.0590690Z   INFISICAL_TOKEN: 
+typecheck (tsc --noEmit)	Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)	2026-08-23T01:33:14.0590820Z ##[endgroup]
+typecheck (tsc --noEmit)	Run npx tsc --noEmit	﻿2026-08-23T01:33:14.0848370Z ##[group]Run npx tsc --noEmit
+typecheck (tsc --noEmit)	Run npx tsc --noEmit	2026-08-23T01:33:14.0848550Z ^[[36;1mnpx tsc --noEmit^[[0m
+typecheck (tsc --noEmit)	Run npx tsc --noEmit	2026-08-23T01:33:14.0856340Z shell: /opt/homebrew/bin/bash -e {0}
+typecheck (tsc --noEmit)	Run npx tsc --noEmit	2026-08-23T01:33:14.0856480Z ##[endgroup]
+typecheck (tsc --noEmit)	Post Run actions/setup-node@v4	﻿2026-08-23T01:33:15.2950760Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+typecheck (tsc --noEmit)	Post Run actions/setup-node@v4	2026-08-23T01:33:15.2951450Z Post job cleanup.
+typecheck (tsc --noEmit)	Post Run actions/setup-node@v4	2026-08-23T01:33:15.3715420Z (node:24626) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+typecheck (tsc --noEmit)	Post Run actions/setup-node@v4	2026-08-23T01:33:15.3716010Z (Use `node --trace-deprecation ...` to show where the warning was created)
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	﻿2026-08-23T01:33:15.3800910Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.3801560Z Post job cleanup.
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.4364510Z [command]/usr/bin/git version
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.4448430Z git version 2.50.1 (Apple Git-155)
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.4460010Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/cd34a784-19c3-4ab8-8574-184e770f32f8/.gitconfig'
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.4464020Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/cd34a784-19c3-4ab8-8574-184e770f32f8' before making global git config changes
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.4464620Z Adding repository directory to the temporary git global config as a safe directory
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.4466050Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.5494250Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.5594380Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.6237740Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.6309810Z http.https://github.com/.extraheader
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.6313560Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.6390910Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.6975580Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+typecheck (tsc --noEmit)	Post Run actions/checkout@v4	2026-08-23T01:33:15.7054430Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+typecheck (tsc --noEmit)	Complete job	﻿2026-08-23T01:33:15.7698430Z Cleaning up orphan processes
+typecheck (tsc --noEmit)	Complete job	2026-08-23T01:33:16.0599980Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+lint (eslint)	Set up job	﻿2026-08-23T01:34:11.1142580Z Current runner version: '2.336.0'
+lint (eslint)	Set up job	2026-08-23T01:34:11.1145940Z Runner name: 'mac-mini-pipeline-runner'
+lint (eslint)	Set up job	2026-08-23T01:34:11.1146310Z Runner group name: 'default'
+lint (eslint)	Set up job	2026-08-23T01:34:11.1146720Z Machine name: '192'
+lint (eslint)	Set up job	2026-08-23T01:34:11.1148200Z ##[group]GITHUB_TOKEN Permissions
+lint (eslint)	Set up job	2026-08-23T01:34:11.1149060Z Checks: read
+lint (eslint)	Set up job	2026-08-23T01:34:11.1149300Z Contents: read
+lint (eslint)	Set up job	2026-08-23T01:34:11.1149550Z Metadata: read
+lint (eslint)	Set up job	2026-08-23T01:34:11.1149790Z PullRequests: write
+lint (eslint)	Set up job	2026-08-23T01:34:11.1150040Z ##[endgroup]
+lint (eslint)	Set up job	2026-08-23T01:34:11.1150840Z Secret source: Actions
+lint (eslint)	Set up job	2026-08-23T01:34:11.1151310Z Prepare workflow directory
+lint (eslint)	Set up job	2026-08-23T01:34:11.1604030Z Prepare all required actions
+lint (eslint)	Set up job	2026-08-23T01:34:11.1628530Z Getting action download info
+lint (eslint)	Set up job	2026-08-23T01:34:11.8856700Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+lint (eslint)	Set up job	2026-08-23T01:34:12.6327280Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+lint (eslint)	Set up job	2026-08-23T01:34:13.9329520Z Complete job name: lint (eslint)
+lint (eslint)	Run actions/checkout@v4	﻿2026-08-23T01:34:13.9811280Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9817360Z ##[group]Run actions/checkout@v4
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9817910Z with:
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9818320Z   repository: mgcstudios/copero
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9823090Z   token: ***
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9823510Z   ssh-strict: true
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9823910Z   ssh-user: git
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9824320Z   persist-credentials: true
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9824760Z   clean: true
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9825180Z   sparse-checkout-cone-mode: true
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9825660Z   fetch-depth: 1
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9826050Z   fetch-tags: false
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9826510Z   show-progress: true
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9826920Z   lfs: false
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9827350Z   submodules: false
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9827840Z   set-safe-directory: true
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9828360Z   allow-unsafe-pr-checkout: false
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:13.9829020Z ##[endgroup]
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0655420Z Syncing repository: mgcstudios/copero
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0656740Z ##[group]Getting Git version info
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0657570Z Working directory is '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero'
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0658730Z [command]/usr/bin/git version
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0702260Z git version 2.50.1 (Apple Git-155)
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0711810Z ##[endgroup]
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0716140Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/c7bdf8d6-515d-40c3-89af-7e24e24be042/.gitconfig'
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0718900Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/c7bdf8d6-515d-40c3-89af-7e24e24be042' before making global git config changes
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0720460Z Adding repository directory to the temporary git global config as a safe directory
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.0721740Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.1265840Z [command]/usr/bin/git config --local --get remote.origin.url
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.1350960Z https://github.com/mgcstudios/copero
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.1357140Z ##[group]Removing previously created refs, to avoid conflicts
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.1358730Z [command]/usr/bin/git rev-parse --symbolic-full-name --verify --quiet HEAD
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.1461960Z refs/heads/main
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.1467520Z [command]/usr/bin/git checkout --detach
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.1596380Z HEAD is now at 7a22e4a fix(deps): react-dom, react-native-web, @expo/metro-runtime para web export
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.1754030Z [command]/usr/bin/git branch --delete --force main
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.1890650Z Deleted branch main (was 7a22e4a).
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.2042640Z ##[endgroup]
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.2044540Z [command]/usr/bin/git submodule status
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.3046980Z ##[group]Cleaning the repository
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:14.3048130Z [command]/usr/bin/git clean -ffdx
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7493200Z Removing .expo/
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7493570Z Removing dist/
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7493800Z Removing node_modules/
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7498270Z [command]/usr/bin/git reset --hard HEAD
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7601480Z HEAD is now at 7a22e4a fix(deps): react-dom, react-native-web, @expo/metro-runtime para web export
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7603710Z ##[endgroup]
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7605450Z ##[group]Disabling automatic garbage collection
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7607470Z [command]/usr/bin/git config --local gc.auto 0
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7686920Z ##[endgroup]
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7687240Z ##[group]Setting up auth
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7691250Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.7768110Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.8319510Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.8393910Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.8930480Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.9001930Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.9567320Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.9645170Z ##[endgroup]
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.9645520Z ##[group]Fetching the repository
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:16.9651720Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b:refs/remotes/origin/main
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.6733110Z ##[endgroup]
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.6733740Z ##[group]Determining the checkout info
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.6734480Z ##[endgroup]
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.6738410Z [command]/usr/bin/git sparse-checkout disable
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.6844190Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.6931550Z ##[group]Checking out the ref
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.6932790Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.7048720Z Switched to a new branch 'main'
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.7052620Z branch 'main' set up to track 'origin/main'.
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.7056510Z ##[endgroup]
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.7148820Z [command]/usr/bin/git log -1 --format=%H
+lint (eslint)	Run actions/checkout@v4	2026-08-23T01:34:17.7232470Z 7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b
+lint (eslint)	Run actions/setup-node@v4	﻿2026-08-23T01:34:17.7394010Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.7394920Z ##[group]Run actions/setup-node@v4
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.7395090Z with:
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.7395210Z   node-version: 20
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.7395350Z   always-auth: false
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.7395480Z   check-latest: false
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.7397420Z   token: ***
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.7397850Z ##[endgroup]
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.8397560Z Found in cache @ /Users/matiasgonzalocalvo/actions-runner-impostor/_work/_tool/node/20.20.2/arm64
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.8399690Z (node:36449) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.8400060Z (Use `node --trace-deprecation ...` to show where the warning was created)
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.8400810Z ##[group]Environment details
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.9026830Z node: v20.20.2
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.9027130Z npm: 10.8.2
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.9070850Z yarn: 
+lint (eslint)	Run actions/setup-node@v4	2026-08-23T01:34:17.9071310Z ##[endgroup]
+lint (eslint)	Instalar deps (npm ci)	﻿2026-08-23T01:34:17.9140610Z ##[group]Run npm ci --include=dev --ignore-scripts --no-audit --no-fund
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:17.9140920Z ^[[36;1mnpm ci --include=dev --ignore-scripts --no-audit --no-fund^[[0m
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:17.9152260Z shell: /opt/homebrew/bin/bash -e {0}
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:17.9152440Z ##[endgroup]
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:19.2957180Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:19.3432620Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:19.3485260Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:19.3863510Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:19.3873660Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:19.6771190Z npm warn deprecated uuid@7.0.3: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:20.2364200Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:20.2369510Z npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:21.1563880Z 
+lint (eslint)	Instalar deps (npm ci)	2026-08-23T01:34:21.1564250Z added 796 packages in 3s
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	﻿2026-08-23T01:34:21.1997890Z ##[group]Run if command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.1998240Z ^[[36;1mif command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then^[[0m
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.1998510Z ^[[36;1m  echo "[lint] cargando secretos Infisical path=/copero env=dev"^[[0m
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.1998820Z ^[[36;1m  infisical export --projectId="${INFISICAL_PROJECT_ID:?Falta INFISICAL_PROJECT_ID}" \^[[0m
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.1999090Z ^[[36;1m    --env=dev --path=/copero --format=dotenv > .env || true^[[0m
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.1999280Z ^[[36;1melse^[[0m
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.1999440Z ^[[36;1m  echo "[lint] infisical CLI o token ausente — saltando carga de secretos"^[[0m
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.1999640Z ^[[36;1mfi^[[0m
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.2007940Z shell: /opt/homebrew/bin/bash -e {0}
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.2008070Z env:
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.2008170Z   INFISICAL_TOKEN: 
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.2008290Z ##[endgroup]
+lint (eslint)	Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)	2026-08-23T01:34:21.2239480Z [lint] infisical CLI o token ausente — saltando carga de secretos
+lint (eslint)	Ejecutar eslint	﻿2026-08-23T01:34:21.2259470Z ##[group]Run npx eslint "src/**/*.{ts,tsx}" "app/**/*.{ts,tsx}" "*.{ts,tsx}" --max-warnings=0
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:21.2259790Z ^[[36;1mnpx eslint "src/**/*.{ts,tsx}" "app/**/*.{ts,tsx}" "*.{ts,tsx}" --max-warnings=0^[[0m
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:21.2267600Z shell: /opt/homebrew/bin/bash -e {0}
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:21.2267740Z ##[endgroup]
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:22.7315950Z 
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:22.7317400Z Oops! Something went wrong! :(
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:22.7317840Z 
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:22.7318020Z ESLint: 8.57.1
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:22.7318200Z 
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:22.7318520Z No files matching the pattern "app/**/*.{ts,tsx}" were found.
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:22.7319120Z Please check for typing mistakes in the pattern.
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:22.7319420Z 
+lint (eslint)	Ejecutar eslint	2026-08-23T01:34:22.7501000Z ##[error]Process completed with exit code 2.
+lint (eslint)	Post Run actions/checkout@v4	﻿2026-08-23T01:34:22.7632150Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:22.7635740Z Post job cleanup.
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:22.8523120Z [command]/usr/bin/git version
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:22.8618840Z git version 2.50.1 (Apple Git-155)
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:22.8631870Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/a65ad91b-e900-499c-9273-ab965cf59bf3/.gitconfig'
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:22.8637180Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/a65ad91b-e900-499c-9273-ab965cf59bf3' before making global git config changes
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:22.8637790Z Adding repository directory to the temporary git global config as a safe directory
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:22.8641310Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:23.2046280Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:23.2134830Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:23.2696450Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:23.2767910Z http.https://github.com/.extraheader
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:23.2772520Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:23.2847910Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:23.3377270Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint (eslint)	Post Run actions/checkout@v4	2026-08-23T01:34:23.3443190Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint (eslint)	Complete job	﻿2026-08-23T01:34:23.4026170Z Cleaning up orphan processes
+lint (eslint)	Complete job	2026-08-23T01:34:23.5598270Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build web (expo export --platform web)	Set up job	﻿2026-08-23T01:33:25.6349800Z Current runner version: '2.336.0'
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6353180Z Runner name: 'mac-mini-pipeline-runner'
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6353520Z Runner group name: 'default'
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6353910Z Machine name: '192'
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6355330Z ##[group]GITHUB_TOKEN Permissions
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6356190Z Checks: read
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6356460Z Contents: read
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6356720Z Metadata: read
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6356980Z PullRequests: write
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6357240Z ##[endgroup]
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6358110Z Secret source: Actions
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6358530Z Prepare workflow directory
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6777440Z Prepare all required actions
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:25.6802040Z Getting action download info
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:26.4497240Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:27.1284720Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:27.9409190Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+build web (expo export --platform web)	Set up job	2026-08-23T01:33:28.8428000Z Complete job name: build web (expo export --platform web)
+build web (expo export --platform web)	Run actions/checkout@v4	﻿2026-08-23T01:33:28.8785650Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8790710Z ##[group]Run actions/checkout@v4
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8791200Z with:
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8791550Z   repository: mgcstudios/copero
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8795830Z   token: ***
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8796180Z   ssh-strict: true
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8796530Z   ssh-user: git
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8796910Z   persist-credentials: true
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8797310Z   clean: true
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8797680Z   sparse-checkout-cone-mode: true
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8798080Z   fetch-depth: 1
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8798440Z   fetch-tags: false
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8798820Z   show-progress: true
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8799200Z   lfs: false
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8799550Z   submodules: false
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8799950Z   set-safe-directory: true
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8800400Z   allow-unsafe-pr-checkout: false
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.8800910Z ##[endgroup]
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9480380Z Syncing repository: mgcstudios/copero
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9481540Z ##[group]Getting Git version info
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9482250Z Working directory is '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero'
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9483250Z [command]/usr/bin/git version
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9535340Z git version 2.50.1 (Apple Git-155)
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9542000Z ##[endgroup]
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9546210Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/07449553-3c9d-403c-8f0a-3a36b475a253/.gitconfig'
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9550990Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/07449553-3c9d-403c-8f0a-3a36b475a253' before making global git config changes
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9552660Z Adding repository directory to the temporary git global config as a safe directory
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:28.9553870Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0060060Z [command]/usr/bin/git config --local --get remote.origin.url
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0134600Z https://github.com/mgcstudios/copero
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0139850Z ##[group]Removing previously created refs, to avoid conflicts
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0141380Z [command]/usr/bin/git rev-parse --symbolic-full-name --verify --quiet HEAD
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0216830Z refs/heads/main
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0220980Z [command]/usr/bin/git checkout --detach
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0323490Z HEAD is now at 7a22e4a fix(deps): react-dom, react-native-web, @expo/metro-runtime para web export
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0429310Z [command]/usr/bin/git branch --delete --force main
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0520370Z Deleted branch main (was 7a22e4a).
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0641820Z ##[endgroup]
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.0642380Z [command]/usr/bin/git submodule status
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.1425190Z ##[group]Cleaning the repository
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:29.1425930Z [command]/usr/bin/git clean -ffdx
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.3964400Z Removing node_modules/
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4025930Z [command]/usr/bin/git reset --hard HEAD
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4108110Z HEAD is now at 7a22e4a fix(deps): react-dom, react-native-web, @expo/metro-runtime para web export
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4113280Z ##[endgroup]
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4113560Z ##[group]Disabling automatic garbage collection
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4114190Z [command]/usr/bin/git config --local gc.auto 0
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4214040Z ##[endgroup]
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4214320Z ##[group]Setting up auth
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4217610Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4305370Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.4917240Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.5022640Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.5867400Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.5993320Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.6676040Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.6761810Z ##[endgroup]
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.6762160Z ##[group]Fetching the repository
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:31.6770230Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b:refs/remotes/origin/main
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.3902160Z ##[endgroup]
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.3903000Z ##[group]Determining the checkout info
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.3903660Z ##[endgroup]
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.3906070Z [command]/usr/bin/git sparse-checkout disable
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.4034560Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.4130140Z ##[group]Checking out the ref
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.4132550Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.4275720Z Switched to a new branch 'main'
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.4281460Z branch 'main' set up to track 'origin/main'.
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.4286320Z ##[endgroup]
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.4389520Z [command]/usr/bin/git log -1 --format=%H
+build web (expo export --platform web)	Run actions/checkout@v4	2026-08-23T01:33:32.4473980Z 7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b
+build web (expo export --platform web)	Run actions/setup-node@v4	﻿2026-08-23T01:33:32.4638240Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.4639150Z ##[group]Run actions/setup-node@v4
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.4639300Z with:
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.4639430Z   node-version: 20
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.4639570Z   always-auth: false
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.4639670Z   check-latest: false
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.4641210Z   token: ***
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.4641330Z ##[endgroup]
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.5606890Z Found in cache @ /Users/matiasgonzalocalvo/actions-runner-impostor/_work/_tool/node/20.20.2/arm64
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.5610840Z (node:25598) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.5612400Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.5613230Z ##[group]Environment details
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.6246210Z node: v20.20.2
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.6246430Z npm: 10.8.2
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.6246570Z yarn: 
+build web (expo export --platform web)	Run actions/setup-node@v4	2026-08-23T01:33:32.6246900Z ##[endgroup]
+build web (expo export --platform web)	Instalar eas-cli	﻿2026-08-23T01:33:32.6320290Z ##[group]Run npm install -g eas-cli@latest
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:32.6320590Z ^[[36;1mnpm install -g eas-cli@latest^[[0m
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:32.6331490Z shell: /opt/homebrew/bin/bash -e {0}
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:32.6331660Z ##[endgroup]
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.5596710Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.5661750Z npm warn deprecated rimraf@2.4.5: Rimraf versions prior to v4 are no longer supported
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.5667750Z npm warn deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.6081860Z npm warn deprecated glob@6.0.4: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.7881920Z npm warn deprecated uuid@7.0.3: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.8315390Z npm warn deprecated uuid@8.3.2: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.8317440Z npm warn deprecated uuid@8.3.2: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.8375190Z npm warn deprecated uuid@9.0.1: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.8582010Z npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.8583270Z npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:49.8584370Z npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:52.3980350Z 
+build web (expo export --platform web)	Instalar eas-cli	2026-08-23T01:33:52.4081290Z changed 518 packages in 20s
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	﻿2026-08-23T01:33:52.4165130Z ##[group]Run npm ci --include=dev --ignore-scripts --no-audit --no-fund
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:52.4165440Z ^[[36;1mnpm ci --include=dev --ignore-scripts --no-audit --no-fund^[[0m
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:52.4174320Z shell: /opt/homebrew/bin/bash -e {0}
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:52.4174470Z ##[endgroup]
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:53.7521400Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:53.7983010Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:53.8026700Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:53.8591000Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:53.8720860Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:54.1921970Z npm warn deprecated uuid@7.0.3: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:54.7160230Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:54.7168520Z npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:55.6659520Z 
+build web (expo export --platform web)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:33:55.6659880Z added 796 packages in 3s
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	﻿2026-08-23T01:33:55.6862140Z ##[group]Run if ! command -v infisical >/dev/null 2>&1; then
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6862410Z ^[[36;1mif ! command -v infisical >/dev/null 2>&1; then^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6862600Z ^[[36;1m  echo "[build-web] instalando infisical CLI"^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6862960Z ^[[36;1m  curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6863260Z ^[[36;1mfi^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6863390Z ^[[36;1mif [[ -z "${INFISICAL_TOKEN:-}" ]]; then^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6863600Z ^[[36;1m  echo "WARN: INFISICAL_TOKEN ausente — se omite carga de secretos" >&2^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6863790Z ^[[36;1melse^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6874340Z ^[[36;1m  mkdir -p .infisical-tmp^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6874510Z ^[[36;1m  infisical export \^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6874710Z ^[[36;1m    --projectId="${INFISICAL_PROJECT_ID:?Falta INFISICAL_PROJECT_ID}" \^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6874970Z ^[[36;1m    --env=dev --path=/copero --format=dotenv > .env^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6875150Z ^[[36;1mfi^[[0m
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6883690Z shell: /opt/homebrew/bin/bash -e {0}
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6883830Z env:
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6883920Z   INFISICAL_TOKEN: 
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.6884040Z ##[endgroup]
+build web (expo export --platform web)	Cargar secretos desde Infisical (path=/copero)	2026-08-23T01:33:55.7112820Z WARN: INFISICAL_TOKEN ausente — se omite carga de secretos
+build web (expo export --platform web)	Expo web export (artefacto dist/)	﻿2026-08-23T01:33:55.7133700Z ##[group]Run npx expo export --platform web --output-dir dist
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:55.7133920Z ^[[36;1mnpx expo export --platform web --output-dir dist^[[0m
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:55.7141630Z shell: /opt/homebrew/bin/bash -e {0}
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:55.7141760Z ##[endgroup]
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:56.7949370Z Starting Metro Bundler
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:56.7949580Z 
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.0823900Z Web Bundled 2179ms index.ts (184 modules)
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.3962470Z 
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.3967700Z › web bundles (1):
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.4223120Z _expo/static/js/web/index-9ef198da1317ba26c5a1ed5e7415e81b.js (333KB)
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.4223330Z 
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.4223610Z › Files (3):
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.4228040Z favicon.ico (15KB)
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.4228630Z index.html (1.2KB)
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.4228780Z metadata.json (49B)
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.4250070Z 
+build web (expo export --platform web)	Expo web export (artefacto dist/)	2026-08-23T01:33:59.4251750Z Exported: dist
+build web (expo export --platform web)	Subir artefacto dist/	﻿2026-08-23T01:33:59.4414310Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4414950Z ##[group]Run actions/upload-artifact@v4
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4415090Z with:
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4415190Z   name: copero-web-build
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4415300Z   path: dist/
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4415400Z   if-no-files-found: error
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4415520Z   retention-days: 14
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4418650Z   compression-level: 6
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4418780Z   overwrite: false
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4418880Z   include-hidden-files: false
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.4419010Z ##[endgroup]
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.6479000Z (node:31326) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.6479490Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.6508140Z With the provided path, there will be 4 files uploaded
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.6510010Z Artifact name is valid!
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:33:59.6510170Z Root directory input is valid!
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:34:00.3157600Z Beginning upload of artifact content to blob storage
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:34:00.3537650Z (node:31326) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:34:01.3135710Z Uploaded bytes 102078
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:34:01.4817140Z Finished uploading artifact content to blob storage!
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:34:01.4818340Z SHA256 digest of uploaded artifact zip is 038324a2ee97765cf25dcbb47ddeda662918fa2eeb7f89a759e99e198aae0b36
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:34:01.4820110Z Finalizing artifact upload
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:34:02.1316720Z Artifact copero-web-build.zip successfully finalized. Artifact ID 9485406592
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:34:02.1318250Z Artifact copero-web-build has been successfully uploaded! Final size is 102078 bytes. Artifact ID is 9485406592
+build web (expo export --platform web)	Subir artefacto dist/	2026-08-23T01:34:02.1334560Z Artifact download URL: https://github.com/mgcstudios/copero/actions/runs/32610617366/artifacts/9485406592
+build web (expo export --platform web)	Post Run actions/setup-node@v4	﻿2026-08-23T01:34:02.1934860Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build web (expo export --platform web)	Post Run actions/setup-node@v4	2026-08-23T01:34:02.1935940Z Post job cleanup.
+build web (expo export --platform web)	Post Run actions/setup-node@v4	2026-08-23T01:34:02.3044630Z (node:31349) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+build web (expo export --platform web)	Post Run actions/setup-node@v4	2026-08-23T01:34:02.3045260Z (Use `node --trace-deprecation ...` to show where the warning was created)
+build web (expo export --platform web)	Post Run actions/checkout@v4	﻿2026-08-23T01:34:02.3108110Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.3108730Z Post job cleanup.
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.3715450Z [command]/usr/bin/git version
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.3804890Z git version 2.50.1 (Apple Git-155)
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.3816620Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/5332b391-235d-4937-b977-d53efa3f35e4/.gitconfig'
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.3820640Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/5332b391-235d-4937-b977-d53efa3f35e4' before making global git config changes
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.3821170Z Adding repository directory to the temporary git global config as a safe directory
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.3822830Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.4752050Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.4826780Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.5384800Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.5454390Z http.https://github.com/.extraheader
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.5458800Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.5528570Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.6066040Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+build web (expo export --platform web)	Post Run actions/checkout@v4	2026-08-23T01:34:02.6142290Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+build web (expo export --platform web)	Complete job	﻿2026-08-23T01:34:02.6735010Z Cleaning up orphan processes
+build web (expo export --platform web)	Complete job	2026-08-23T01:34:03.0593300Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+test web (vitest)	Set up job	﻿2026-08-23T01:34:31.8163990Z Current runner version: '2.336.0'
+test web (vitest)	Set up job	2026-08-23T01:34:31.8167610Z Runner name: 'mac-mini-pipeline-runner'
+test web (vitest)	Set up job	2026-08-23T01:34:31.8167980Z Runner group name: 'default'
+test web (vitest)	Set up job	2026-08-23T01:34:31.8168380Z Machine name: '192'
+test web (vitest)	Set up job	2026-08-23T01:34:31.8169800Z ##[group]GITHUB_TOKEN Permissions
+test web (vitest)	Set up job	2026-08-23T01:34:31.8170650Z Checks: read
+test web (vitest)	Set up job	2026-08-23T01:34:31.8170910Z Contents: read
+test web (vitest)	Set up job	2026-08-23T01:34:31.8171190Z Metadata: read
+test web (vitest)	Set up job	2026-08-23T01:34:31.8171450Z PullRequests: write
+test web (vitest)	Set up job	2026-08-23T01:34:31.8171760Z ##[endgroup]
+test web (vitest)	Set up job	2026-08-23T01:34:31.8172890Z Secret source: Actions
+test web (vitest)	Set up job	2026-08-23T01:34:31.8173320Z Prepare workflow directory
+test web (vitest)	Set up job	2026-08-23T01:34:31.8552890Z Prepare all required actions
+test web (vitest)	Set up job	2026-08-23T01:34:31.8579620Z Getting action download info
+test web (vitest)	Set up job	2026-08-23T01:34:32.5638560Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+test web (vitest)	Set up job	2026-08-23T01:34:33.2278460Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+test web (vitest)	Set up job	2026-08-23T01:34:34.5209080Z Complete job name: test web (vitest)
+test web (vitest)	Run actions/checkout@v4	﻿2026-08-23T01:34:34.5518090Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5522470Z ##[group]Run actions/checkout@v4
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5522820Z with:
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5523060Z   repository: mgcstudios/copero
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5524840Z   token: ***
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5525070Z   ssh-strict: true
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5525310Z   ssh-user: git
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5525550Z   persist-credentials: true
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5525800Z   clean: true
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5526040Z   sparse-checkout-cone-mode: true
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5526320Z   fetch-depth: 1
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5526560Z   fetch-tags: false
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5526800Z   show-progress: true
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5527040Z   lfs: false
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5527290Z   submodules: false
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5527560Z   set-safe-directory: true
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5527830Z   allow-unsafe-pr-checkout: false
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.5528170Z ##[endgroup]
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6162730Z Syncing repository: mgcstudios/copero
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6163660Z ##[group]Getting Git version info
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6180090Z Working directory is '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero'
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6180820Z [command]/usr/bin/git version
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6218080Z git version 2.50.1 (Apple Git-155)
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6225470Z ##[endgroup]
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6229990Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/13eb138a-979f-44af-a90b-d5b54cbaa125/.gitconfig'
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6234550Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/13eb138a-979f-44af-a90b-d5b54cbaa125' before making global git config changes
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6235460Z Adding repository directory to the temporary git global config as a safe directory
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6236540Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6770540Z [command]/usr/bin/git config --local --get remote.origin.url
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6843580Z https://github.com/mgcstudios/copero
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6849900Z ##[group]Removing previously created refs, to avoid conflicts
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6851660Z [command]/usr/bin/git rev-parse --symbolic-full-name --verify --quiet HEAD
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6926950Z refs/heads/main
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.6931360Z [command]/usr/bin/git checkout --detach
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.7018990Z HEAD is now at 7a22e4a fix(deps): react-dom, react-native-web, @expo/metro-runtime para web export
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.7101020Z [command]/usr/bin/git branch --delete --force main
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.7174750Z Deleted branch main (was 7a22e4a).
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.7252930Z ##[endgroup]
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.7253670Z [command]/usr/bin/git submodule status
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.7793260Z ##[group]Cleaning the repository
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:34.7794510Z [command]/usr/bin/git clean -ffdx
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.0969230Z Removing node_modules/
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.0975240Z [command]/usr/bin/git reset --hard HEAD
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1069690Z HEAD is now at 7a22e4a fix(deps): react-dom, react-native-web, @expo/metro-runtime para web export
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1072230Z ##[endgroup]
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1073790Z ##[group]Disabling automatic garbage collection
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1077380Z [command]/usr/bin/git config --local gc.auto 0
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1152740Z ##[endgroup]
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1153040Z ##[group]Setting up auth
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1155940Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1227360Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1765040Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.1835270Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.2366580Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.2442530Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.3039120Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.3143800Z ##[endgroup]
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.3144110Z ##[group]Fetching the repository
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:37.3151970Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b:refs/remotes/origin/main
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0203260Z ##[endgroup]
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0204030Z ##[group]Determining the checkout info
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0204630Z ##[endgroup]
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0207360Z [command]/usr/bin/git sparse-checkout disable
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0338480Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0428640Z ##[group]Checking out the ref
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0429860Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0593440Z Switched to a new branch 'main'
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0597820Z branch 'main' set up to track 'origin/main'.
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0600620Z ##[endgroup]
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0722320Z [command]/usr/bin/git log -1 --format=%H
+test web (vitest)	Run actions/checkout@v4	2026-08-23T01:34:38.0819900Z 7a22e4a7629d8f2afe9a7e2badda4b81f1fbfc3b
+test web (vitest)	Run actions/setup-node@v4	﻿2026-08-23T01:34:38.0956200Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.0956980Z ##[group]Run actions/setup-node@v4
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.0957120Z with:
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.0957210Z   node-version: 20
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.0957340Z   always-auth: false
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.0957450Z   check-latest: false
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.0958590Z   token: ***
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.0958700Z ##[endgroup]
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.1822680Z Found in cache @ /Users/matiasgonzalocalvo/actions-runner-impostor/_work/_tool/node/20.20.2/arm64
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.1824690Z (node:44369) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.1825110Z (Use `node --trace-deprecation ...` to show where the warning was created)
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.1825680Z ##[group]Environment details
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.2453020Z node: v20.20.2
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.2453260Z npm: 10.8.2
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.2453380Z yarn: 
+test web (vitest)	Run actions/setup-node@v4	2026-08-23T01:34:38.2453720Z ##[endgroup]
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	﻿2026-08-23T01:34:38.2524900Z ##[group]Run npm ci --include=dev --ignore-scripts --no-audit --no-fund
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:38.2525300Z ^[[36;1mnpm ci --include=dev --ignore-scripts --no-audit --no-fund^[[0m
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:38.2537650Z shell: /opt/homebrew/bin/bash -e {0}
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:38.2537850Z ##[endgroup]
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:39.6245460Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:39.6807740Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:39.6921440Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:39.7742840Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:39.7780120Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:40.0791150Z npm warn deprecated uuid@7.0.3: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:40.6760660Z npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:40.6768550Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:41.5574870Z 
+test web (vitest)	Run npm ci --include=dev --ignore-scripts --no-audit --no-fund	2026-08-23T01:34:41.5575170Z added 796 packages in 3s
+test web (vitest)	Cargar secretos para tests	﻿2026-08-23T01:34:41.5737850Z ##[group]Run if command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then
+test web (vitest)	Cargar secretos para tests	2026-08-23T01:34:41.5738220Z ^[[36;1mif command -v infisical >/dev/null 2>&1 && [[ -n "${INFISICAL_TOKEN:-}" ]]; then^[[0m
+test web (vitest)	Cargar secretos para tests	2026-08-23T01:34:41.5738530Z ^[[36;1m  infisical export --projectId="${INFISICAL_PROJECT_ID:?}" \^[[0m
+test web (vitest)	Cargar secretos para tests	2026-08-23T01:34:41.5738810Z ^[[36;1m    --env=dev --path=/copero --format=dotenv > .env || true^[[0m
+test web (vitest)	Cargar secretos para tests	2026-08-23T01:34:41.5739020Z ^[[36;1mfi^[[0m
+test web (vitest)	Cargar secretos para tests	2026-08-23T01:34:41.5747440Z shell: /opt/homebrew/bin/bash -e {0}
+test web (vitest)	Cargar secretos para tests	2026-08-23T01:34:41.5747580Z env:
+test web (vitest)	Cargar secretos para tests	2026-08-23T01:34:41.5747700Z   INFISICAL_TOKEN: 
+test web (vitest)	Cargar secretos para tests	2026-08-23T01:34:41.5747810Z ##[endgroup]
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	﻿2026-08-23T01:34:41.5919140Z ##[group]Run npx vitest run --reporter=basic --reporter=github
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:41.5919390Z ^[[36;1mnpx vitest run --reporter=basic --reporter=github^[[0m
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:41.5928200Z shell: /opt/homebrew/bin/bash -e {0}
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:41.5928360Z ##[endgroup]
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3643310Z ^[[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.^[[39m
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3783410Z 
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3784670Z ^[[31m⎯⎯⎯⎯⎯⎯⎯^[[1m^[[7m Startup Error ^[[27m^[[22m⎯⎯⎯⎯⎯⎯⎯⎯^[[39m
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3818090Z Error: Failed to load custom Reporter from github
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3820030Z     at loadCustomReporterModule (file:///Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero/node_modules/vitest/dist/chunks/cli-api.DqsSTaIi.js:5151:11)
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3821320Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3822520Z     at async file:///Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero/node_modules/vitest/dist/chunks/cli-api.DqsSTaIi.js:5179:34
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3823560Z     at async Promise.all (index 1)
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3824560Z     at async Vitest.setServer (file:///Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero/node_modules/vitest/dist/chunks/cli-api.DqsSTaIi.js:10494:140)
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3827020Z     at async handler (file:///Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero/node_modules/vitest/dist/chunks/cli-api.DqsSTaIi.js:11421:11)
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3828540Z     at async _createServer (file:///Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:63337:20)
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3829550Z     at async createViteServer (file:///Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero/node_modules/vitest/dist/chunks/cli-api.DqsSTaIi.js:9842:18)
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3830260Z     at async createVitest (file:///Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero/node_modules/vitest/dist/chunks/cli-api.DqsSTaIi.js:11461:18)
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3830980Z     at async prepareVitest (file:///Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero/node_modules/vitest/dist/chunks/cli-api.DqsSTaIi.js:11884:15) {
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3831500Z   [cause]: Error: Failed to load url github (resolved id: github). Does the file exist?
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3832050Z       at loadAndTransform (file:///Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17)
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3832540Z       at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3832780Z     code: 'ERR_LOAD_URL'
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3833630Z   }
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3833830Z }
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3833900Z 
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3833900Z 
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3833910Z 
+test web (vitest)	Ejecutar vitest (una pasada, reporter básico)	2026-08-23T01:34:43.3901250Z ##[error]Process completed with exit code 1.
+test web (vitest)	Post Run actions/checkout@v4	﻿2026-08-23T01:34:43.4041820Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.4042560Z Post job cleanup.
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.4721140Z [command]/usr/bin/git version
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.4823180Z git version 2.50.1 (Apple Git-155)
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.4841690Z Copying '/Users/matiasgonzalocalvo/.gitconfig' to '/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/aa6e9147-3585-4f6e-b51c-ff15a5602046/.gitconfig'
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.4848550Z Temporarily overriding HOME='/Users/matiasgonzalocalvo/actions-runner-impostor/_work/_temp/aa6e9147-3585-4f6e-b51c-ff15a5602046' before making global git config changes
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.4849420Z Adding repository directory to the temporary git global config as a safe directory
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.4853550Z [command]/usr/bin/git config --global --add safe.directory /Users/matiasgonzalocalvo/actions-runner-impostor/_work/copero/copero
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.5577720Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.5703890Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.6543320Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.6636030Z http.https://github.com/.extraheader
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.6643740Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.6728470Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.7418890Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test web (vitest)	Post Run actions/checkout@v4	2026-08-23T01:34:43.7506840Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test web (vitest)	Complete job	﻿2026-08-23T01:34:43.8214030Z Cleaning up orphan processes
+test web (vitest)	Complete job	2026-08-23T01:34:43.9666430Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
