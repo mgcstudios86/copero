@@ -108,8 +108,11 @@ jobs:
           INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID: ${{ secrets.INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID || '' }}
           INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY || '' }}
 
-      - name: Upload Playwright report on failure
-        if: failure()
+      # MGC-293 AC: "Reporte de cobertura subido como artefacto".
+      # Subimos SIEMPRE (no solo on-failure) para tener histórico de runs
+      # verdes y screenshots de baseline. retention 14d.
+      - name: Upload Playwright report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
@@ -117,4 +120,4 @@ jobs:
             e2e/.results
             playwright-report
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 14
