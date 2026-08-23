@@ -110,27 +110,41 @@ export default function IdentityScreen() {
               borderWidth: 2,
               borderColor: colors.borderStrong,
             }}
+            testID="jersey-preview"
           >
+            {/*
+              Texto fijo #0A120E (equivale a colors.textStrong en modo claro).
+              No usamos `colors.textStrong` porque en modo oscuro es #FFFFFF y
+              vuelve a fallar WCAG sobre los 4 GROUP_COLOR. Hardcodeamos el
+              token oscuro para garantizar AA en ambos modos:
+                - attack (#E96A56)   ratio 5.92
+                - midfield (#4FBE82) ratio 8.31
+                - defense (#93C5FD)  ratio 10.7
+                - goalkeeper (#FBBF24) ratio 11.5
+              Verifica: app/simulador-carrera/identity.tsx (MGC-462).
+            */}
             <Text
               style={{
-                color: '#FFFFFF',
+                color: '#0A120E',
                 fontSize: 64,
                 fontFamily: fontFamily.display,
                 fontWeight: fontWeight.bold,
               }}
               numberOfLines={1}
               accessibilityLabel={`Número ${profile.number}`}
+              testID="jersey-number"
             >
               {profile.number || '—'}
             </Text>
             <Text
               style={{
-                color: '#FFFFFF',
+                color: '#0A120E',
                 fontSize: fontSize.md,
                 fontWeight: fontWeight.semibold,
                 marginTop: 4,
               }}
               numberOfLines={1}
+              testID="jersey-name"
             >
               {profile.name || 'Tu nombre'}
             </Text>
