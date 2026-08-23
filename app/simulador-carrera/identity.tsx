@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { Suspense, lazy, useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -10,12 +10,19 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
-import { Button, JerseyPreview } from '@/design/components';
+import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { POSITIONS, GROUP_COLOR } from '@/features/career/positions';
 import { NATIONALITIES } from '@/features/career/nationalities';
 import { isIdentityComplete } from '@/features/career/engine';
 import type { Foot } from '@/types/career';
+
+// Lazy-load JerseyPreview (MGC-482): separa el SVG patterns (~10 KB)
+// del chunk inicial de /identity. Mejora LCP sin cambiar UX
+// (placeholder mientras carga).
+const JerseyPreview = lazy(() =>
+  import('@/design/components/JerseyPreview').then((m) => ({ default: m.JerseyPreview })),
+);
 
 export default function IdentityScreen() {
   const router = useRouter();
@@ -100,14 +107,25 @@ export default function IdentityScreen() {
           </Text>
           {/* JerseyPreview renderiza SVG del país con dorsal + apellido.
               Contraste dorsal/jersey verificado AA WCAG por MGC-465.
-              Mantiene testID="jersey-preview" + hijos "jersey-number" / "jersey-name". */}
-          <JerseyPreview
-            countryCode={profile.nationalityCode}
-            number={profile.number}
-            name={profile.name}
-            size="md"
-            testID="jersey-preview"
-          />
+              Lazy-loaded (MGC-482) para code-split fuera del chunk inicial.
+              Placeholder mantiene dimensiones fijas para evitar CLS. */}
+          <Suspense
+            fallback={
+              <View
+                testID="jersey-preview-fallback"
+                accessibilityElementsHidden
+                style={{ width: 160, height: 200, borderRadius: 18, backgroundColor: colors.surface2 }}
+              />
+            }
+          >
+            <JerseyPreview
+              countryCode={profile.nationalityCode}
+              number={profile.number}
+              name={profile.name}
+              size="md"
+              testID="jersey-preview"
+            />
+          </Suspense>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
             {profile.position} · OVR 50
           </Text>

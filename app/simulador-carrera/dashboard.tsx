@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,8 +7,16 @@ import { Button } from '@/design/components';
 import { copy, copyHelpers } from '@/design/copy/es-AR/simulador-carrera';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
-import { recommendStrategy } from '@/features/career/simulation';
-import { strategyCopy } from '@/features/career/strategy';
+
+// Lazy-load del bloque "Estrategia recomendada" (MGC-482).
+// Separa `recommendStrategy` + `strategy` (~10 KB) del chunk inicial
+// de /dashboard. Se renderiza sólo si el motor devuelve una estrategia
+// aplicable al perfil actual.
+const RecommendedStrategy = lazy(() =>
+  import('@/features/career/components/RecommendedStrategy').then((m) => ({
+    default: m.RecommendedStrategy,
+  })),
+);
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -32,7 +40,10 @@ export default function DashboardScreen() {
     };
   });
 
-  const recommended = recommendStrategy(profile);
+  // Lazy-load del bloque "Estrategia recomendada" (MGC-482):
+  // el cálculo `recommendStrategy(profile)` + `strategyCopy` corre dentro
+  // del chunk diferido; el inicial sólo importa la firma del componente.
+  // Ver <RecommendedStrategy> abajo.
 
   const onAcademyPress = () => {
     openAcademy();
@@ -266,31 +277,9 @@ export default function DashboardScreen() {
         </Section>
 
         {/* Recommended strategy (motor → UI sin hardcodeo) */}
-        {recommended ? (
-          <Section title={copy.resolve('dashboard_suggested_h2')}>
-            <View
-              style={{
-                borderRadius: radii.lg,
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-                padding: spacing[4],
-                gap: spacing[2],
-              }}
-              testID="dashboard-recommended"
-            >
-              <Text style={{ color: colors.textStrong, fontWeight: fontWeight.semibold }}>
-                {copy.resolve(strategyCopy(recommended).title)}
-              </Text>
-              <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
-                {(() => {
-                  const body = strategyCopy(recommended).body;
-                  return body ? copy.resolve(body) : '';
-                })()}
-              </Text>
-            </View>
-          </Section>
-        ) : null}
+        <Suspense fallback={null}>
+          <RecommendedStrategy profile={profile} testID="dashboard-recommended" />
+        </Suspense>
 
         <Button
           label={copy.resolve('dashboard_cta_match')}
