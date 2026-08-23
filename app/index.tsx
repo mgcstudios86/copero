@@ -1,170 +1,126 @@
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card } from '@/features/ui';
-import { colors, radii, spacing } from '@/features/ui/theme';
+import { useTheme } from '@/design';
+import { Button, ScoreBoard } from '@/design/components';
 import { useGameStore } from '@/shared/store/gameStore';
 
 export default function Home() {
   const router = useRouter();
+  const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
   const bestStreak = useGameStore((s) => s.bestStreak);
   // Antes mostrábamos `score` como "Mejor puntaje", pero `score` es la ronda
   // actual y vuelve a 0 al iniciar una nueva partida. Eso era engañoso.
   // Mostramos `highScore`, que persiste entre sesiones.
   const highScore = useGameStore((s) => s.highScore);
 
+  const hasStats = highScore > 0 || bestStreak > 0;
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.container} testID="home-screen">
-        <View style={styles.hero}>
-          <Text style={styles.eyebrow}>COPERO</Text>
-          <Text style={styles.title}>Juego de palabras</Text>
-          <Text style={styles.subtitle}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={[styles.container, { gap: spacing[4] }]}
+        testID="home-screen"
+      >
+        <View style={{ paddingTop: spacing[5], gap: spacing[2] }}>
+          <Text
+            style={{
+              color: colors.primary,
+              letterSpacing: 4,
+              fontSize: fontSize.sm,
+              fontWeight: fontWeight.bold,
+            }}
+            accessibilityRole="header"
+          >
+            COPERO
+          </Text>
+          <Text
+            style={{
+              color: colors.textStrong,
+              fontSize: fontSize['3xl'],
+              fontFamily: fontFamily.display,
+              fontWeight: fontWeight.bold,
+              lineHeight: fontSize['3xl'] * lineHeight.tight,
+            }}
+            accessibilityRole="header"
+          >
+            Juego de palabras
+          </Text>
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: fontSize.base,
+              lineHeight: fontSize.base * lineHeight.base,
+            }}
+          >
             Adiviná la palabra antes de que se acabe el tiempo. Sumá puntos, hacé
             racha y competí con tu mejor marca.
           </Text>
         </View>
 
-        {(highScore > 0 || bestStreak > 0) && (
-          <Card style={styles.statsCard}>
-            <Text style={styles.statsTitle}>Tus marcas</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.stat}>
-                <Text style={styles.statValue}>{highScore}</Text>
-                <Text style={styles.statLabel}>Mejor puntaje</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={styles.statValue}>🔥 {bestStreak}</Text>
-                <Text style={styles.statLabel}>Mejor racha</Text>
-              </View>
-            </View>
-          </Card>
-        )}
+        {hasStats ? (
+          <ScoreBoard score={highScore} bestStreak={bestStreak} />
+        ) : null}
 
-        <View style={styles.cta}>
-          <Link href="/categoria" asChild>
-            <Pressable
-              accessibilityRole="button"
-              testID="btn-play"
-              style={({ pressed }) => [styles.playCta, pressed && { opacity: 0.85 }]}
-              onPress={() => router.push('/categoria')}
-            >
-              <Text style={styles.playCtaLabel}>Jugar (palabras)</Text>
-            </Pressable>
-          </Link>
-          <Link href="/compass" asChild>
-            <Pressable
-              accessibilityRole="button"
-              testID="btn-compass"
-              style={({ pressed }) => [styles.playCtaSecondary, pressed && { opacity: 0.85 }]}
-              onPress={() => router.push('/compass')}
-            >
-              <Text style={styles.playCtaSecondaryLabel}>Ideología Futbolística</Text>
-            </Pressable>
-          </Link>
+        <View style={{ gap: spacing[3] }}>
+          <Button
+            label="Jugar (palabras)"
+            onPress={() => router.push('/categoria')}
+            variant="primary"
+            size="lg"
+            fullWidth
+            testID="btn-play"
+          />
+          <Button
+            label="Ideología Futbolística"
+            onPress={() => router.push('/compass')}
+            variant="secondary"
+            size="lg"
+            fullWidth
+            testID="btn-compass"
+            accessibilityHint="Abre el modo trivia de decisiones rápidas"
+          />
         </View>
 
-        <Card>
-          <Text style={styles.howTitle}>Cómo se juega</Text>
-          <Text style={styles.howText}>
+        <View
+          style={{
+            backgroundColor: colors.surface,
+            borderRadius: radii.lg,
+            padding: spacing[4],
+            borderWidth: 1,
+            borderColor: colors.border,
+            gap: spacing[2],
+          }}
+        >
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: fontSize.base,
+              fontWeight: fontWeight.semibold,
+            }}
+          >
+            Cómo se juega
+          </Text>
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: fontSize.sm,
+              lineHeight: fontSize.sm * lineHeight.base,
+            }}
+          >
             1. Elegí una categoría.{'\n'}
             2. Cada ronda tiene 30 segundos para hacer adivinar la palabra.{'\n'}
             3. Tu compañero debe acertar: sí vale puntos, no consume el tiempo.{'\n'}
             4. 10 rondas. Puntaje final y mejor racha quedan guardados.
           </Text>
-        </Card>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
-  container: {
-    padding: spacing.lg,
-    gap: spacing.lg,
-  },
-  hero: {
-    paddingTop: spacing.xl,
-  },
-  eyebrow: {
-    color: colors.accent,
-    letterSpacing: 4,
-    fontWeight: '800',
-    marginBottom: spacing.sm,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 36,
-    fontWeight: '900',
-  },
-  subtitle: {
-    color: colors.textDim,
-    fontSize: 16,
-    marginTop: spacing.sm,
-    lineHeight: 22,
-  },
-  statsCard: {},
-  statsTitle: {
-    color: colors.muted,
-    fontSize: 12,
-    letterSpacing: 2,
-    marginBottom: spacing.sm,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: spacing.lg,
-  },
-  stat: { flex: 1 },
-  statValue: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  statLabel: {
-    color: colors.muted,
-    fontSize: 12,
-  },
-  cta: {
-    marginVertical: spacing.md,
-  },
-  playCta: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  playCtaLabel: {
-    color: colors.primaryFg,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  playCtaSecondary: {
-    backgroundColor: colors.bgElev,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginTop: spacing.sm,
-  },
-  playCtaSecondaryLabel: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  howTitle: {
-    color: colors.text,
-    fontWeight: '700',
-    fontSize: 16,
-    marginBottom: spacing.sm,
-  },
-  howText: {
-    color: colors.textDim,
-    lineHeight: 22,
-  },
+  safe: { flex: 1 },
+  container: { padding: 16 },
 });

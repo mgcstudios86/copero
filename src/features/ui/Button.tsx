@@ -1,71 +1,47 @@
-import { Pressable, Text, StyleSheet, ViewStyle } from 'react-native';
-import { colors, radii, spacing } from '@/features/ui/theme';
+/**
+ * Compat shim — `Button` re-exporta el componente del design system (MGC-297).
+ * Callers legados del compass (MGC-321 C1) pueden seguir importando desde
+ * `@/features/ui`. La API acepta `variant: primary | secondary | ghost` y los
+ * mapea al sistema nuevo.
+ */
+import { View } from 'react-native';
+import { Button as DSButton } from '@/design/components/Button';
+import type { ButtonVariant } from '@/design/components/Button';
+import type { ViewStyle } from 'react-native';
+
+type LegacyVariant = 'primary' | 'secondary' | 'ghost';
 
 type Props = {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: LegacyVariant;
   disabled?: boolean;
   style?: ViewStyle;
   testID?: string;
+  accessibilityHint?: string;
 };
 
-export const Button = ({ label, onPress, variant = 'primary', disabled, style, testID }: Props) => {
-  return (
-    <Pressable
+const mapVariant = (v: LegacyVariant | undefined): ButtonVariant => {
+  switch (v) {
+    case 'ghost':
+      return 'ghost';
+    case 'secondary':
+      return 'secondary';
+    case 'primary':
+    default:
+      return 'primary';
+  }
+};
+
+export const Button = ({ label, onPress, variant, disabled, style, testID, accessibilityHint }: Props) => (
+  <View style={style}>
+    <DSButton
+      label={label}
       onPress={onPress}
+      variant={mapVariant(variant)}
       disabled={disabled}
-      accessibilityRole="button"
       testID={testID}
-      style={({ pressed }) => [
-        styles.base,
-        styles[variant],
-        disabled && styles.disabled,
-        pressed && !disabled && styles.pressed,
-        style,
-      ]}
-    >
-      <Text style={[styles.label, styles[`${variant}Label` as const]]}>{label}</Text>
-    </Pressable>
-  );
-};
-
-const styles = StyleSheet.create({
-  base: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primary: {
-    backgroundColor: colors.primary,
-  },
-  secondary: {
-    backgroundColor: colors.bgElev,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  primaryLabel: {
-    color: colors.primaryFg,
-  },
-  secondaryLabel: {
-    color: colors.text,
-  },
-  ghostLabel: {
-    color: colors.textDim,
-  },
-});
+      accessibilityHint={accessibilityHint}
+    />
+  </View>
+);

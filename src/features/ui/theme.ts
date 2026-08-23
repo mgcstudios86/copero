@@ -1,21 +1,33 @@
 /**
- * Tokens visuales compartidos.
- * Mantenerlo plano: cualquier primitiva UI lee de acá.
+ * Compat shim — re-exports tokens desde `@/design` (MGC-297) para callers
+ * legados del compass (MGC-321 C1) que importaban desde `@/features/ui/theme`.
+ * Conserva nombres planos (`colors`, `radii`, `spacing`) y mapea claves legacy
+ * (`bgElev`, `muted`, `textDim`, `card`, `accent`, `primary`, `primaryFg`,
+ * `danger`, `warning`) al `ColorScale` del design system.
+ *
+ * Para código nuevo, usar `useTheme()` o los tokens de `@/design` directamente.
  */
-export const colors = {
-  bg: '#0f172a',
-  bgElev: '#1e293b',
-  card: '#1e293b',
-  border: '#334155',
-  primary: '#052e16',
-  primaryFg: '#4ade80',
-  accent: '#4ade80',
-  danger: '#ef4444',
-  warning: '#f59e0b',
-  muted: '#94a3b8',
-  text: '#f1f5f9',
-  textDim: '#cbd5e1',
-} as const;
+import { palette } from '@/design/tokens';
+import type { ColorScale } from '@/design/tokens';
+
+const baseDark = palette.dark;
+
+export const colors: ColorScale & {
+  bgElev: string;
+  card: string;
+  primaryFg: string;
+  muted: string;
+  textDim: string;
+  accent: string;
+} = {
+  ...baseDark,
+  bgElev: baseDark.surface2,
+  card: baseDark.surface,
+  primaryFg: baseDark.textOnPrimary,
+  muted: baseDark.textMuted,
+  textDim: baseDark.textMuted,
+  accent: baseDark.accent,
+};
 
 export const radii = {
   sm: 6,

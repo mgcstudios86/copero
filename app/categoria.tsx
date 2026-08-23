@@ -1,12 +1,13 @@
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii, spacing } from '@/features/ui/theme';
+import { useTheme } from '@/design';
 import { CATEGORIES_META } from '@/features/game/categories';
 import { useGameStore } from '@/shared/store/gameStore';
 
 export default function Categoria() {
   const router = useRouter();
+  const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
   const startGame = useGameStore((s) => s.startGame);
 
   const onPick = (id: typeof CATEGORIES_META[number]['id']) => {
@@ -15,13 +16,31 @@ export default function Categoria() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.container} testID="categoria-screen">
-        <Text style={styles.title}>Elegí una categoría</Text>
-        <Text style={styles.subtitle}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top']}>
+      <ScrollView
+        contentContainerStyle={{ padding: spacing[4], gap: spacing[4] }}
+        testID="categoria-screen"
+      >
+        <Text
+          style={{
+            color: colors.textStrong,
+            fontSize: fontSize['2xl'],
+            fontFamily: 'System',
+            fontWeight: fontWeight.bold,
+          }}
+          accessibilityRole="header"
+        >
+          Elegí una categoría
+        </Text>
+        <Text
+          style={{
+            color: colors.textMuted,
+            fontSize: fontSize.sm,
+          }}
+        >
           Cada categoría tiene palabras distintas. Jugá 10 rondas de 30 segundos.
         </Text>
-        <View style={styles.grid}>
+        <View style={{ gap: spacing[3] }}>
           {CATEGORIES_META.map((c) => (
             <Pressable
               key={c.id}
@@ -29,11 +48,35 @@ export default function Categoria() {
               accessibilityRole="button"
               accessibilityLabel={`Elegir ${c.label}`}
               testID={`cat-${c.id}`}
-              style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: colors.surface,
+                  borderRadius: radii.lg,
+                  padding: spacing[4],
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing[3],
+                },
+                pressed && { opacity: 0.85 },
+              ]}
             >
-              <Text style={styles.emoji}>{c.emoji}</Text>
-              <Text style={styles.tileTitle}>{c.label}</Text>
-              <Text style={styles.tileDesc}>{c.description}</Text>
+              <Text style={{ fontSize: 36 }}>{c.emoji}</Text>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontWeight: fontWeight.semibold,
+                    fontSize: fontSize.md,
+                  }}
+                >
+                  {c.label}
+                </Text>
+                <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
+                  {c.description}
+                </Text>
+              </View>
             </Pressable>
           ))}
         </View>
@@ -41,46 +84,3 @@ export default function Categoria() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
-  container: {
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: '900',
-  },
-  subtitle: {
-    color: colors.textDim,
-    fontSize: 14,
-    marginBottom: spacing.sm,
-  },
-  grid: {
-    gap: spacing.md,
-  },
-  tile: {
-    backgroundColor: colors.card,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  tilePressed: { opacity: 0.85 },
-  emoji: { fontSize: 36 },
-  tileTitle: {
-    color: colors.text,
-    fontWeight: '800',
-    fontSize: 18,
-  },
-  tileDesc: {
-    color: colors.muted,
-    fontSize: 12,
-    flex: 1,
-  },
-});

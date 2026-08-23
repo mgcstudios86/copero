@@ -1,13 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Card, Timer, ScoreBadge } from '@/features/ui';
-import { colors, spacing } from '@/features/ui/theme';
+import { useTheme } from '@/design';
+import { Button, RoundTimer, ScoreBoard, WordCard } from '@/design/components';
 import { useGameStore } from '@/shared/store/gameStore';
+import { DEFAULT_ROUND_DURATION_MS } from '@/features/game/engine';
 
 export default function Ronda() {
   const router = useRouter();
+  const { colors, spacing, fontSize, fontWeight } = useTheme();
   const status = useGameStore((s) => s.status);
   const round = useGameStore((s) => s.round);
   const totalRounds = useGameStore((s) => s.totalRounds);
@@ -18,7 +20,19 @@ export default function Ronda() {
   const resolve = useGameStore((s) => s.resolveRound);
   const next = useGameStore((s) => s.nextRound);
 
-  // Cuando entramos a /fin disparamos intersticial (lo gestiona adsStore allí).
+  // useRef para el id del setTimeout; cleanup evita navegar tras unmount
+  // (ej: usuario back-press durante la ventana de 350ms).
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (advanceTimerRef.current !== null) {
+        clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = null;
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (status === 'gameEnd') {
       router.replace('/fin');
@@ -36,41 +50,80 @@ export default function Ronda() {
   };
 
   const handleTimeout = () => {
+    if (advanceTimerRef.current !== null) {
+      // ya hay un advance en curso; no duplicar
+      return;
+    }
     resolve('timeout', 0);
     advance();
   };
 
   const advance = () => {
-    // Pequeño delay para que el usuario vea la palabra antes de cambiar
-    setTimeout(() => next(), 350);
+    if (advanceTimerRef.current !== null) {
+      clearTimeout(advanceTimerRef.current);
+    }
+    advanceTimerRef.current = setTimeout(() => {
+      advanceTimerRef.current = null;
+      next();
+    }, 350);
   };
 
   if (!word) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>Cargando palabra…</Text>
+          <Text style={{ color: colors.textMuted, fontSize: fontSize.base }}>
+            Cargando palabra…
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.container} testID="ronda-screen">
-        <ScoreBadge score={score} streak={streak} round={round} totalRounds={totalRounds} />
+    <SafeAreaView
+      style={[styles.safe, { backgroundColor: colors.bg }]}
+      edges={['top']}
+    >
+      <View
+        style={[styles.container, { padding: spacing[4], gap: spacing[4] }]}
+        testID="ronda-screen"
+      >
+        <ScoreBoard
+          score={score}
+          bestStreak={streak}
+          roundIndex={round}
+          totalRounds={totalRounds}
+        />
 
-        <Timer onTimeout={handleTimeout} testID="round-timer" />
+        <RoundTimer
+          totalSeconds={Math.ceil(DEFAULT_ROUND_DURATION_MS / 1000)}
+          remainingSeconds={Math.ceil(remaining / 1000)}
+          urgentAt={5}
+          testID="round-timer"
+          onTimeout={handleTimeout}
+        />
 
-        <Card style={styles.wordCard}>
-          <Text style={styles.wordEyebrow}>ADIVINÁ</Text>
-          <Text style={styles.word} testID="current-word">{word.text.toUpperCase()}</Text>
-          {word.hint && <Text style={styles.hint}>Pista: {word.hint}</Text>}
-        </Card>
+        <WordCard word={word.text} category="Adiviná" hint={word.hint} />
 
-        <View style={styles.actions}>
-          <Button label="¡Acertó!" onPress={handleCorrect} testID="btn-correct" />
-          <Button label="Pasar" onPress={handleSkip} variant="secondary" testID="btn-skip" />
+        <View style={{ gap: spacing[3] }}>
+          <Button
+            label="¡Acerté!"
+            onPress={handleCorrect}
+            variant="primary"
+            size="lg"
+            fullWidth
+            testID="btn-correct"
+          />
+          <Button
+            label="Pasar"
+            onPress={handleSkip}
+            variant="secondary"
+            size="lg"
+            fullWidth
+            testID="btn-skip"
+            accessibilityHint="Salta la palabra actual sin sumar puntos"
+          />
         </View>
       </View>
     </SafeAreaView>
@@ -78,45 +131,7 @@ export default function Ronda() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
-  container: {
-    flex: 1,
-    padding: spacing.lg,
-    gap: spacing.lg,
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    color: colors.muted,
-    fontSize: 16,
-  },
-  wordCard: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-  },
-  wordEyebrow: {
-    color: colors.muted,
-    letterSpacing: 4,
-    fontSize: 12,
-  },
-  word: {
-    color: colors.text,
-    fontSize: 48,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
-  hint: {
-    color: colors.textDim,
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-  actions: {
-    gap: spacing.sm,
-  },
+  safe: { flex: 1 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1 },
 });

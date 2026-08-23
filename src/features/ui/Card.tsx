@@ -1,5 +1,10 @@
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { colors, radii, spacing } from '@/features/ui/theme';
+/**
+ * Compat shim — `Card` envuelve un `View` con tokens del design system (MGC-297)
+ * para mantener la API legacy del compass (MGC-321 C1).
+ */
+import { View, StyleSheet } from 'react-native';
+import { colors, radii, spacing } from './theme';
+import type { ViewStyle } from 'react-native';
 
 type Props = {
   children: React.ReactNode;
@@ -15,7 +20,7 @@ export const Card = ({ children, style, testID }: Props) => (
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.lg,
     borderWidth: 1,
