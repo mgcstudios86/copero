@@ -2,19 +2,32 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_ADMOB_ENABLED": "false",
+        "EXPO_PUBLIC_ADMOB_APP_ID_BANNER": "ca-app-pub-3940256099942544/6300978111",
+        "EXPO_PUBLIC_ADMOB_APP_ID_INTERSTITIAL": "ca-app-pub-3940256099942544/1033173712"
+      }
     },
     "preview": {
       "distribution": "internal"
     },
     "preview-ios-sim": {
       "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_ADMOB_ENABLED": "false",
+        "EXPO_PUBLIC_ADMOB_APP_ID_BANNER": "ca-app-pub-3940256099942544/6300978111",
+        "EXPO_PUBLIC_ADMOB_APP_ID_INTERSTITIAL": "ca-app-pub-3940256099942544/1033173712"
+      },
       "ios": {
         "simulator": true
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "production"
     }
   },
   "submit": {

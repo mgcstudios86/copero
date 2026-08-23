@@ -142,10 +142,14 @@ jobs:
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
+          # EAS CLI 21+ requiere projectId en eas.json top-level o app.config.js extra.eas.
+          # Si eas.json NO tiene projectId, linkeamos con --id (fix MGC-412).
           if grep -q '"projectId"' eas.json; then
             echo "eas.json ya tiene projectId; skip init"
           else
-            eas init --non-interactive --account mgcstudios || true
+            eas init --id 27354a3b-2ab8-46c1-8ed2-2d5448b0e71a --non-interactive || {
+              echo "WARN: eas init fallo, intentando continuar con extra.eas.projectId"
+            }
           fi
       - name: eas build --local (android, profile=preview)
         env:
@@ -223,10 +227,14 @@ jobs:
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
+          # EAS CLI 21+ requiere projectId en eas.json top-level o app.config.js extra.eas.
+          # Si eas.json NO tiene projectId, linkeamos con --id (fix MGC-412).
           if grep -q '"projectId"' eas.json; then
             echo "eas.json ya tiene projectId; skip init"
           else
-            eas init --non-interactive --account mgcstudios || true
+            eas init --id 27354a3b-2ab8-46c1-8ed2-2d5448b0e71a --non-interactive || {
+              echo "WARN: eas init fallo, intentando continuar con extra.eas.projectId"
+            }
           fi
       - name: eas build --local (ios, profile=preview-ios-sim)
         # CI preview usa simulator: no requiere distribution cert ni provisioning profile.
