@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button, ScoreBoard } from '@/design/components';
 import { useGameStore } from '@/shared/store/gameStore';
+import { useCareerStore } from '@/shared/store/careerStore';
 
 export default function Home() {
   const router = useRouter();
@@ -14,8 +15,11 @@ export default function Home() {
   // actual y vuelve a 0 al iniciar una nueva partida. Eso era engañoso.
   // Mostramos `highScore`, que persiste entre sesiones. (MGC-317)
   const highScore = useGameStore((s) => s.highScore);
+  const careerStage = useCareerStore((s) => s.stage);
+  const careerProfileName = useCareerStore((s) => s.profile.name);
 
   const hasStats = highScore > 0 || bestStreak > 0;
+  const hasCareer = careerStage !== 'identity' && careerProfileName.length > 0;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['top']}>
@@ -80,6 +84,21 @@ export default function Home() {
             fullWidth
             testID="btn-compass"
             accessibilityHint="Abre el modo trivia de decisiones rápidas"
+          />
+          <Button
+            label={hasCareer ? 'Continuar carrera' : 'Simulador de carrera'}
+            onPress={() =>
+              router.push(
+                careerStage === 'identity'
+                  ? '/simulador-carrera/identity'
+                  : '/simulador-carrera/dashboard',
+              )
+            }
+            variant="secondary"
+            size="lg"
+            fullWidth
+            testID="btn-career"
+            accessibilityHint="Abre el simulador de carrera"
           />
         </View>
 

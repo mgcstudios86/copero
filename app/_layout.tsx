@@ -26,6 +26,7 @@ function ThemedShell() {
           name="compass"
           options={{ title: 'Ideología Futbolística', headerBackVisible: true }}
         />
+        <Stack.Screen name="simulador-carrera" options={{ headerShown: false }} />
       </Stack>
       <Banner />
     </View>
