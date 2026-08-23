@@ -84,6 +84,7 @@ export default function IdentityScreen() {
 
         {/* Jersey preview */}
         <View
+          testID="jersey-preview"
           style={{
             backgroundColor: colors.surface,
             borderRadius: radii.lg,
@@ -325,7 +326,7 @@ export default function IdentityScreen() {
                 >
                   <Text
                     style={{
-                      color: active ? '#FFFFFF' : colors.text,
+                      color: active ? '#0A120E' : colors.text,
                       fontSize: fontSize.xs,
                       fontWeight: fontWeight.bold,
                     }}
