@@ -14,3 +14,5 @@ export { Header, HeaderBackButton } from './Header';
 export type { HeaderProps } from './Header';
 export { Ticker } from './Ticker';
 export type { TickerProps, TickerMatch } from './Ticker';
+export { HeroCard } from './HeroCard';
+export type { HeroCardProps } from './HeroCard';

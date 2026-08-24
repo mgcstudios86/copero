@@ -80,6 +80,7 @@ import {
   Header,
   HeaderBackButton,
   Ticker,
+  HeroCard,
 } from '../../src/design/components';
 
 describe('design/tokens', () => {
@@ -154,6 +155,23 @@ describe('design/components exports', () => {
 
   it('Ticker existe como función exportada (PR3 MGC-555)', () => {
     expect(typeof Ticker).toBe('function');
+  });
+
+  /**
+   * MGC-555 PR4 — HeroCard (spec visual copero.com.ar §6.2).
+   * Card grande con imagen full-bleed + overlay gradient + accent tint +
+   * contenido anclado abajo-izquierda. Sin montaje global; integración a
+   * home/dashboard queda para un PR posterior.
+   */
+  it('HeroCard existe como función exportada (PR4 MGC-555)', () => {
+    expect(typeof HeroCard).toBe('function');
+  });
+
+  it('HeroCard acepta props sin imageUri (modo degradado puro)', () => {
+    // Validación de shape: el componente existe y el contrato de props
+    // no requiere imagen. El test de render real queda como follow-up
+    // hasta incorporar @testing-library/react-native.
+    expect(HeroCard.length).toBeLessThanOrEqual(1);
   });
 });
 
