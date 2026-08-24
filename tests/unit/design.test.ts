@@ -169,4 +169,24 @@ describe('design/ThemeProvider', () => {
     expect(fontWeight.bold).toBe('700');
     expect(fontFamily.display).toBe('Poppins');
   });
+
+  /**
+   * MGC-555 PR2 — Cambio de default.
+   * El `colors()` switch debe resolver `mode === 'copero'` cuando el sistema
+   * reporta dark. Es el contrato que desbloquea `body.bg = #09090B` en el
+   * bundle prod (gate del spec visual parity MGC-553).
+   *
+   * El mock react-native fija `Appearance.getColorScheme() => 'light'`
+   * (ver arriba), así que para forzar dark hay que tocar el helper interno
+   * que `resolveMode` consume. Lo cubrimos vía `colors(mode)` directo:
+   * el cambio relevante es que el ThemeProvider delega en `colors('copero')`
+   * cuando system dark, y `colors('copero')` debe devolver `palette.copero`
+   * (bg #09090B), no `palette.dark` (bg #0E1411).
+   */
+  it('colors("copero") devuelve palette.copero con bg #09090B (MGC-555 PR2 default)', () => {
+    const coperoColors = colors('copero');
+    expect(coperoColors.bg).toBe('#09090B');
+    expect(coperoColors.accent).toBe('#A855F7');
+    expect(coperoColors).not.toBe(palette.dark);
+  });
 });

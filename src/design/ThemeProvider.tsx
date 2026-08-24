@@ -62,12 +62,29 @@ const defaultValue: ThemeContextValue = {
 
 export const ThemeContext = createContext<ThemeContextValue>(defaultValue);
 
+/**
+ * Resuelve el `ThemeMode` activo a partir de la preferencia del usuario y
+ * el `Appearance` del SO.
+ *
+ * MGC-555 PR2 — Cambio de default:
+ *   - `preference: 'system'` + system dark → `'copero'` (alineado con la
+ *     identidad visual `copero.com.ar`/`design/copero-ar-visual-spec.md` §3.1).
+ *     Antes resolvía a `'dark'` (identidad forest propia), que es la que
+ *     renderizaba `body.bg = #0E1411` en el bundle prod.
+ *   - `'light'` se mantiene para system light.
+ *   - Preferencia explícita (`'light' | 'dark' | 'copero'`) gana siempre —
+ *     la pantalla de settings puede forzar `dark` legacy si fuera necesario.
+ *
+ * El modo `'dark'` propio **sigue disponible** vía `setMode('dark')` y
+ * desde `palette.dark` (contrato C1/C2 intacto). Solo cambia el default
+ * automático cuando el usuario no expresó preferencia.
+ */
 const resolveMode = (
   preference: ThemeMode | 'system',
   system: ColorSchemeName | null,
 ): ThemeMode => {
   if (preference === 'system') {
-    return system === 'dark' ? 'dark' : 'light';
+    return system === 'dark' ? 'copero' : 'light';
   }
   return preference;
 };
