@@ -1,0 +1,125 @@
+# deploy-ios-production.yml — Copero (MGC-294, MGC-316)
+# Workflow manual para build iOS production y submit opcional a App Store Connect.
+# Trigger: workflow_dispatch (DevOps dispara desde gh CLI / web UI).
+#
+# Política §8.3: builds --local. Este workflow usa `eas build` (cloud) para
+# iOS production porque el runner macOS self-hosted (copero-ci-runner-02)
+# no tiene Apple Distribution cert (.p12) ni provisioning profile en el
+# keychain local. EAS Build cloud firma el IPA via ASC API (.p8) que ya está
+# cargado en Infisical. Excepción documentada en MGC-497 / MGC-294.
+#
+# Runner: [self-hosted, copero-ci, macOS] (copero-ci-runner-02, ARM64).
+# Sin cache: 'npm' en setup-node@v4 (MGC-359).
+
+name: deploy-ios-production (copero)
+
+on:
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: "Submit to App Store Connect after build"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+concurrency:
+  group: deploy-ios-production-copero
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: build iOS production (cloud, ASC API signing)
+    runs-on: [self-hosted, copero-ci, macOS]
+    timeout-minutes: 90
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify eas.json production profile
+        run: |
+          python3 -c "
+          import json
+          with open('eas.json') as f:
+              cfg = json.load(f)
+          assert cfg['submit']['production']['ios']['ascAppId'] == '6804506917', 'ascAppId mismatch'
+          assert cfg['submit']['production']['ios']['appleTeamId'] == '5M4NR9267P', 'appleTeamId mismatch'
+          print('eas.json submit.production.ios OK')
+          "
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install eas-cli
+        run: npm install -g eas-cli@latest
+
+      - name: Load EXPO_TOKEN from Infisical (fallback to GH secret)
+        run: |
+          set -euo pipefail
+          if [ -z "${EXPO_TOKEN:-}" ]; then
+            EXP="$(infisical export --env=prod --path=/copero | grep ^EXPO_TOKEN= | cut -d= -f2-)"
+            if [ -z "$EXP" ]; then echo "FATAL: EXPO_TOKEN missing"; exit 1; fi
+            echo "EXPO_TOKEN=$EXP" >> "$GITHUB_ENV"
+            echo "Loaded EXPO_TOKEN from Infisical (length: ${#EXP})"
+          else
+            echo "EXPO_TOKEN from GH secret (length: ${#EXPO_TOKEN})"
+          fi
+
+      - name: Build iOS production (cloud, signed via ASC API)
+        env:
+          CI: "1"
+        run: |
+          set -euo pipefail
+          echo "Starting eas build production iOS at $(date -u +%FT%TZ)"
+          # Cloud build. EAS firma vía ASC API key (.p8) cargado por la org mgcstudios86.
+          eas build \
+            --profile production \
+            --platform ios \
+            --non-interactive \
+            --wait \
+            --json \
+            > /tmp/eas-build.json 2> /tmp/eas-build.log
+          BUILD_ID="$(python3 -c "import json; d=json.load(open('/tmp/eas-build.json')); print(d.get('id') or d.get('buildId') or '')")"
+          BUILD_VERSION="$(python3 -c "import json; d=json.load(open('/tmp/eas-build.json')); print(d.get('metadata',{}).get('appVersion') or '')")"
+          echo "BUILD_ID=$BUILD_ID" > /tmp/build-meta.txt
+          echo "BUILD_VERSION=$BUILD_VERSION" >> /tmp/build-meta.txt
+          echo "Build finished at $(date -u +%FT%TZ)"
+          echo "EAS Build ID: $BUILD_ID"
+          echo "App version: $BUILD_VERSION"
+          cat /tmp/build-meta.txt
+
+      - name: Submit to App Store Connect (track=production)
+        if: ${{ inputs.submit == 'true' }}
+        env:
+          CI: "1"
+        run: |
+          set -euo pipefail
+          BUILD_ID="$(grep ^BUILD_ID= /tmp/build-meta.txt | cut -d= -f2)"
+          if [ -z "$BUILD_ID" ]; then echo "FATAL: BUILD_ID empty"; exit 1; fi
+          eas submit \
+            --profile production \
+            --platform ios \
+            --id "$BUILD_ID" \
+            --non-interactive \
+            --wait
+          echo "Submission finished at $(date -u +%FT%TZ)"
+
+      - name: Upload build log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: copero-ios-production-build-log
+          path: |
+            /tmp/eas-build.json
+            /tmp/eas-build.log
+            /tmp/build-meta.txt
