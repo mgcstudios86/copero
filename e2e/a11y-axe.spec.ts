@@ -8,7 +8,11 @@ import AxeBuilder from '@axe-core/playwright';
  *
  * Las rutas son client-side (Expo Router SPA). Por eso esperamos
  * a `home-screen` y luego navegamos con clicks en vez de `goto`
- * directo a /categoria (404 en static export).
+ * directo a /simulador-carrera/identity (404 en static export).
+ *
+ * MGC-505: el home expone sólo el CTA `btn-career` que lleva al
+ * simulador de carrera (identity o dashboard). El viejo juego
+ * "Juego de palabras" ya no se linkea desde el home.
  *
  * Visita cada ruta principal y corre WCAG 2.1 AA + best-practices.
  * Falla si encuentra critical o serious.
@@ -53,16 +57,17 @@ test.describe('Copero — axe-core scan (web)', () => {
     console.log(`[axe /] ${total} violations totales (sin critical/serious)`);
   });
 
-  test('axe /categoria: 0 critical/serious', async ({ page }, testInfo) => {
+  test('axe /simulador-carrera/identity: 0 critical/serious', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     await page.goto('/', { waitUntil: 'load' });
     await page.waitForSelector('[data-testid="home-screen"]', { timeout: 10_000 });
-    await page.locator('[data-testid="btn-play"]').click();
-    await page.waitForURL('**/categoria', { timeout: 10_000 });
-    const { total, blockers } = await scanRoute(page, 'categoria-screen');
-    await page.screenshot({ path: testInfo.outputPath('axe-categoria.png'), fullPage: true });
-    expect(blockers.length, 'critical/serious en categoria').toBe(0);
+    // MGC-505: home → btn-career → /simulador-carrera/identity
+    await page.locator('[data-testid="btn-career"]').click();
+    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
+    const { total, blockers } = await scanRoute(page, 'identity-screen');
+    await page.screenshot({ path: testInfo.outputPath('axe-identity.png'), fullPage: true });
+    expect(blockers.length, 'critical/serious en identity').toBe(0);
     // eslint-disable-next-line no-console
-    console.log(`[axe /categoria] ${total} violations totales (sin critical/serious)`);
+    console.log(`[axe /identity] ${total} violations totales (sin critical/serious)`);
   });
 });
