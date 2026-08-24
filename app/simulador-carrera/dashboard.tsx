@@ -18,6 +18,14 @@ const RecommendedStrategy = lazy(() =>
   })),
 );
 
+// Lazy-load del JerseyPreview (MGC-532): separa el SVG patterns (~10 KB)
+// del chunk inicial de /dashboard. El testid canónico `jersey-preview`
+// (MGC-466) lo esperan los specs e2e como hero del jugador post-navigate
+// desde el home. Render placeholder mientras el chunk resuelve.
+const JerseyPreview = lazy(() =>
+  import('@/design/components/JerseyPreview').then((m) => ({ default: m.JerseyPreview })),
+);
+
 export default function DashboardScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
@@ -56,6 +64,40 @@ export default function DashboardScreen() {
         contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4] }]}
         testID="dashboard-screen"
       >
+        {/* Jersey hero (MGC-532): lazy-loaded para code-split fuera del chunk
+            inicial de /dashboard. Mismo testid canónico que identity.tsx para
+            que los specs e2e post-navigate home→dashboard encuentren el hero
+            del jugador. Placeholder mantiene dimensiones fijas (evita CLS). */}
+        <View
+          style={{
+            alignItems: 'center',
+            paddingVertical: spacing[3],
+          }}
+        >
+          <Suspense
+            fallback={
+              <View
+                testID="jersey-preview-fallback"
+                accessibilityElementsHidden
+                style={{
+                  width: 160,
+                  height: 200,
+                  borderRadius: 18,
+                  backgroundColor: colors.surface2,
+                }}
+              />
+            }
+          >
+            <JerseyPreview
+              countryCode={profile.nationalityCode}
+              number={profile.number}
+              name={profile.name}
+              size="md"
+              testID="jersey-preview"
+            />
+          </Suspense>
+        </View>
+
         {/* Player card */}
         <View
           style={{

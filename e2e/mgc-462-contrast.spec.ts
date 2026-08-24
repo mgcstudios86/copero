@@ -50,7 +50,9 @@ test.describe('MGC-462 — axe contrast /simulador-carrera/identity', () => {
   }, testInfo) => {
     test.setTimeout(120_000);
 
-    await page.goto('http://127.0.0.1:8082/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+    // MGC-522: usar baseURL del config (EXPO_WEB_PORT default 8081 en CI)
+    // en lugar de hardcodear :8082. Otros specs navegan con '/' relativo.
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await page.waitForSelector('[data-testid="home-screen"]', { timeout: 10_000 });
     await page.getByTestId('btn-career').click();
     await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
