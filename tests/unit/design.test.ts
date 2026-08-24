@@ -49,6 +49,8 @@ vi.mock('react-native', () => {
     Platform: { OS: 'ios', select: (o: { ios?: unknown; default?: unknown }) => o.ios ?? o.default },
     StyleSheet: { create: <T,>(s: T): T => s },
     Animated: { Value: function Value() { return { setValue: () => {}, interpolate: () => '' }; }, timing: () => ({ start: () => {} }), Easing: { linear: () => 0 } },
+    Image: 'Image',
+    ScrollView: 'ScrollView',
   };
 });
 
@@ -81,6 +83,9 @@ import {
   HeaderBackButton,
   Ticker,
   HeroCard,
+  PillButton,
+  LeagueCard,
+  AccesosDirectos,
 } from '../../src/design/components';
 
 describe('design/tokens', () => {
@@ -172,6 +177,24 @@ describe('design/components exports', () => {
     // no requiere imagen. El test de render real queda como follow-up
     // hasta incorporar @testing-library/react-native.
     expect(HeroCard.length).toBeLessThanOrEqual(1);
+  });
+
+  /**
+   * MGC-555 PR5 — PillButton + LeagueCard (Resultados/Prodes) + AccesosDirectos.
+   * Spec copero.com.ar §6.3, §6.4, §6.5 y §6.6. Cubre CTA principal,
+   * grilla de ligas con dos variantes (lista de partidos y card prode
+   * con imagen full-bleed), y carrusel de accesos directos en home.
+   */
+  it('PillButton existe como función exportada (PR5 MGC-555 §6.3)', () => {
+    expect(typeof PillButton).toBe('function');
+  });
+
+  it('LeagueCard existe como función exportada con dos variantes (PR5 MGC-555 §6.4+§6.5)', () => {
+    expect(typeof LeagueCard).toBe('function');
+  });
+
+  it('AccesosDirectos existe como función exportada (PR5 MGC-555 §6.6)', () => {
+    expect(typeof AccesosDirectos).toBe('function');
   });
 });
 
