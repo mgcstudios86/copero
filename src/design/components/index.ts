@@ -10,3 +10,7 @@ export { JerseyPreview } from './JerseyPreview';
 export type { JerseyPreviewProps, JerseyPreviewSize } from './JerseyPreview';
 export { ClubCrest } from './ClubCrest';
 export type { ClubCrestProps, ClubCrestClub } from './ClubCrest';
+export { Header, HeaderBackButton } from './Header';
+export type { HeaderProps } from './Header';
+export { Ticker } from './Ticker';
+export type { TickerProps, TickerMatch } from './Ticker';

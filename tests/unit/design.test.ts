@@ -77,6 +77,9 @@ import {
   RoundTimer,
   ScoreBoard,
   WordCard,
+  Header,
+  HeaderBackButton,
+  Ticker,
 } from '../../src/design/components';
 
 describe('design/tokens', () => {
@@ -135,6 +138,22 @@ describe('design/components exports', () => {
     expect(typeof WordCard).toBe('function');
     expect(typeof BannerAd).toBe('function');
     expect(typeof InterstitialOverlay).toBe('function');
+  });
+
+  /**
+   * MGC-555 PR3 — Header + Ticker (spec visual copero.com.ar §6.1 + §6.4).
+   * Componentes nuevos del tercer PR de la serie de rediseño.
+   */
+  it('Header existe como función exportada (PR3 MGC-555)', () => {
+    expect(typeof Header).toBe('function');
+  });
+
+  it('HeaderBackButton existe como función exportada (PR3 MGC-555)', () => {
+    expect(typeof HeaderBackButton).toBe('function');
+  });
+
+  it('Ticker existe como función exportada (PR3 MGC-555)', () => {
+    expect(typeof Ticker).toBe('function');
   });
 });
 
