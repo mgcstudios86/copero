@@ -3,101 +3,81 @@ import { test, expect } from '@playwright/test';
 /**
  * MGC-339 — a11y cross-platform: keyboard-only happy path en web.
  *
- * AC: "Teclado puro juega una ronda completa en web".
+ * AC: "Teclado puro navega el simulador de carrera en web".
  *
- * Flujo (todo con Tab/Enter, sin click ni touch):
- *  1. /  → Tab hasta btn-play → Enter → /categoria
- *  2. /categoria → Tab hasta cat-{id} → Enter → /ronda
- *  3. /ronda → btn-correct (Enter) → repite N rondas hasta /fin
- *  4. /fin → btn-play-again → /categoria (verifica reset)
+ * Flujo (todo con Tab/Enter, sin click ni touch) sobre el home
+ * rediseñado MGC-505 (un solo CTA `btn-career`):
+ *  1. /  → Tab hasta btn-career → Enter → /simulador-carrera/identity
+ *  2. /simulador-carrera/identity → Tab al input-name → tipeo nombre
+ *     → Tab al primer pos-{id} → Enter → Tab nationality → escribir → Enter
+ *     → Tab btn-identity-continue → Enter → /simulador-carrera/dashboard
+ *  3. /dashboard → dashboard-jersey visible + btn-dashboard-academy focuseable
  *
  * Sin mouse. Sin .click(). Sin .tap(). Sólo .press() y .keyboard.press().
+ *
+ * MGC-505: el viejo juego "Juego de palabras" /categoria-/ronda-/fin fue
+ * removido del home. Este spec cubre el único flujo accesible desde el
+ * landing post-rediseño.
  */
-test.describe('Copero — keyboard-only happy path (web)', () => {
-  test('teclado puro completa una ronda sin ayuda', async ({ page }, testInfo) => {
+test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
+  test('teclado puro navega home → identity → dashboard sin mouse', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
 
-    // 1) Home
+    // 1) HOME — Tab hasta el CTA btn-career.
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-testid="home-screen"]', { timeout: 15_000 });
-    // Captura evidencia
     await page.screenshot({ path: testInfo.outputPath('kbd-1-home.png'), fullPage: true });
 
-    // Foco inicial en body; saltar al primer control focuseable.
     await page.keyboard.press('Tab');
-    // Avanzar foco hasta el botón Jugar (testID="btn-play" en Button → Pressable).
-    // No asumimos cuántos Tab's hacen falta: iteramos hasta encontrarlo.
-    const btnPlay = page.locator('[data-testid="btn-play"]');
-    await expect(btnPlay).toBeVisible();
-    for (let i = 0; i < 25; i += 1) {
-      const isFocused = await btnPlay.evaluate(
+    const btnCareer = page.locator('[data-testid="btn-career"]');
+    await expect(btnCareer).toBeVisible();
+    for (let i = 0; i < 40; i += 1) {
+      const isFocused = await btnCareer.evaluate(
         (el) => el === document.activeElement || el.contains(document.activeElement),
       );
       if (isFocused) break;
       await page.keyboard.press('Tab');
     }
     await page.keyboard.press('Enter');
-    await page.waitForURL('**/categoria', { timeout: 10_000 });
-    await page.waitForSelector('[data-testid="categoria-screen"]', { timeout: 10_000 });
-    await page.screenshot({ path: testInfo.outputPath('kbd-2-categoria.png'), fullPage: true });
+    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
+    await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
+    await page.screenshot({ path: testInfo.outputPath('kbd-2-identity.png'), fullPage: true });
 
-    // 2) Categoría: elegir la primera opción
-    const firstCat = page.locator('[data-testid^="cat-"]').first();
-    await expect(firstCat).toBeVisible();
-    for (let i = 0; i < 30; i += 1) {
-      const isFocused = await firstCat.evaluate(
-        (el) => el === document.activeElement || el.contains(document.activeElement),
-      );
-      if (isFocused) break;
-      await page.keyboard.press('Tab');
-    }
+    // 2) IDENTITY — input-name por teclado, luego posición, nacionalidad y continue.
+    const inputName = page.locator('[data-testid="input-name"]');
+    await inputName.focus();
+    await page.keyboard.type('Mateo Romero');
+    // El estado canónico requiere nationality + position. Por teclado puro
+    // completamos nationality primero (más predecible que el field map pos-{id}).
+    const inputNat = page.locator('[data-testid="input-nationality-search"]');
+    await inputNat.focus();
+    await page.keyboard.type('arg');
+    // Seleccionar Argentina del dropdown (botón con el texto).
+    const argentinaButton = page.getByRole('button', { name: /Argentina/i }).first();
+    await expect(argentinaButton).toBeVisible();
+    await argentinaButton.focus();
     await page.keyboard.press('Enter');
-    await page.waitForURL('**/ronda', { timeout: 10_000 });
-    await page.waitForSelector('[data-testid="ronda-screen"]', { timeout: 10_000 });
-    await page.screenshot({ path: testInfo.outputPath('kbd-3-ronda.png'), fullPage: true });
-
-    // 3) Ronda: jugar 10 rondas apretando "¡Acerté!" con Enter
-    //    (también válido: el botón default tiene onPress → handleCorrect → advance
-    //    350ms → nextRound; lo único que necesitamos es esperar el cambio de
-    //    palabra o la navegación a /fin).
-    const btnCorrect = page.locator('[data-testid="btn-correct"]');
-    await expect(btnCorrect).toBeVisible();
-    await btnCorrect.focus();
-
-    let roundsPlayed = 0;
-    const maxAttempts = 30; // 10 rondas * 3 reintentos (worst case timer race)
-    for (let i = 0; i < maxAttempts; i += 1) {
-      const currentUrl = page.url();
-      if (currentUrl.endsWith('/fin')) break;
-      // Foco al botón correcto antes de presionar Enter
-      const focused = await btnCorrect.evaluate(
-        (el) => el === document.activeElement || el.contains(document.activeElement),
-      );
-      if (!focused) await btnCorrect.focus();
-      await page.keyboard.press('Enter');
-      roundsPlayed += 1;
-      // Esperar un poco para que el advance (350ms) cambie la palabra o navegue
-      await page.waitForTimeout(450);
-    }
-
-    // 4) /fin: debe estar visible con score final
-    await page.waitForURL('**/fin', { timeout: 15_000 });
-    await page.waitForSelector('[data-testid="fin-screen"]', { timeout: 10_000 });
-    await page.waitForSelector('[data-testid="final-score"]', { timeout: 5_000 });
-    await page.screenshot({ path: testInfo.outputPath('kbd-4-fin.png'), fullPage: true });
-
-    const finalScoreText = await page.locator('[data-testid="final-score"]').innerText();
-    const finalScore = Number.parseInt(finalScoreText, 10);
-    expect(roundsPlayed, 'debe haber jugado al menos 1 ronda').toBeGreaterThanOrEqual(1);
-    expect(roundsPlayed, 'no debe jugar más rondas que el máximo (10)').toBeLessThanOrEqual(10);
-    expect(Number.isFinite(finalScore), 'final-score debe ser numérico').toBe(true);
-
-    // 5) "Jugar de nuevo" → /categoria (teclado)
-    const btnPlayAgain = page.locator('[data-testid="btn-play-again"]');
-    await expect(btnPlayAgain).toBeVisible();
-    await btnPlayAgain.focus();
+    // Posición: el primer pos-{id} del field map (ST por orden).
+    const firstPos = page.locator('[data-testid^="pos-"]').first();
+    await firstPos.focus();
     await page.keyboard.press('Enter');
-    await page.waitForURL('**/categoria', { timeout: 10_000 });
-    await page.screenshot({ path: testInfo.outputPath('kbd-5-reset.png'), fullPage: true });
+    // Continue (debe estar habilitado con los 3 campos completos).
+    const btnContinue = page.locator('[data-testid="btn-identity-continue"]');
+    await btnContinue.focus();
+    await page.keyboard.press('Enter');
+    await page.waitForURL('**/simulador-carrera/dashboard', { timeout: 15_000 });
+    await page.waitForSelector('[data-testid="dashboard-screen"]', { timeout: 10_000 });
+    await page.screenshot({ path: testInfo.outputPath('kbd-3-dashboard.png'), fullPage: true });
+
+    // 3) DASHBOARD — Jersey visible + Academy focuseable.
+    await expect(page.locator('[data-testid="jersey-preview"]')).toBeVisible();
+    const btnAcademy = page.locator('[data-testid="btn-dashboard-academy"]');
+    await expect(btnAcademy).toBeVisible();
+    // Validar que el botón es focuseable por teclado.
+    await btnAcademy.focus();
+    const isAcademyFocused = await btnAcademy.evaluate(
+      (el) => el === document.activeElement || el.contains(document.activeElement),
+    );
+    expect(isAcademyFocused, 'btn-dashboard-academy debe ser focuseable por teclado').toBe(true);
   });
 });
