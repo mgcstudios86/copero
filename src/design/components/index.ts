@@ -14,5 +14,13 @@ export { Header, HeaderBackButton } from './Header';
 export type { HeaderProps } from './Header';
 export { Ticker } from './Ticker';
 export type { TickerProps, TickerMatch } from './Ticker';
+export { PillButton } from './PillButton';
+export type { PillButtonProps, PillButtonVariant } from './PillButton';
+export { LeagueCard, AccesosDirectos } from './LeagueCard';
+export type {
+  LeagueCardProps,
+  LeagueMatch,
+  AccesoDirectoItem,
+} from './LeagueCard';
 export { HeroCard } from './HeroCard';
 export type { HeroCardProps } from './HeroCard';
