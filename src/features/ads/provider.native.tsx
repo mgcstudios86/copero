@@ -25,6 +25,12 @@ const resolveConstants = (): ExpoConstantsLike | null => {
 };
 const ConstantsRef: ExpoConstantsLike | null = resolveConstants();
 
+// `dialog` role en Android con TalkBack lanza
+// `JSApplicationIllegalArgumentException: Invalid accessibility role value: dialog`
+// en ViewManagersPropertyCache. Omitimos en Android; iOS sigue con `dialog`.
+const DIALOG_ROLE: AccessibilityRole =
+  Platform.OS === 'android' ? 'none' : ('dialog' as AccessibilityRole);
+
 /**
  * Provider nativo de AdMob (MGC-323 / C3).
  *
@@ -41,7 +47,6 @@ const ConstantsRef: ExpoConstantsLike | null = resolveConstants();
  * (ver docs/ads.md §3)
  */
 
-const DIALOG_ROLE = 'dialog' as AccessibilityRole;
 const BANNER_HEIGHT = 60;
 
 type AdMobConfig = {
@@ -208,6 +213,7 @@ export const Interstitial = ({ open, onClose }: InterstitialProps) => {
     <View
       testID="ad-interstitial-native"
       accessibilityRole={DIALOG_ROLE}
+      accessibilityViewIsModal={Platform.OS === 'android'}
       style={[styles.interstitialWrap, { backgroundColor: colors.overlay }]}
     >
       <View

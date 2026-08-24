@@ -1,14 +1,18 @@
 import React from 'react';
-import { Modal, Pressable, Text, View, AccessibilityRole } from 'react-native';
+import { Modal, Platform, Pressable, Text, View, AccessibilityRole } from 'react-native';
 import { useTheme } from '../useTheme';
 import { useReducedMotion } from '../useReducedMotion';
 
 /**
- * `dialog` no figura en `AccessibilityRole` del RN pinned pero es rol ARIA
- * estándar para modales; lo respetan screen readers modernos. Cast explícito
- * para no romper tsc.
+ * `dialog` es un rol ARIA estándar pero NO está en la enum `AccessibilityRole`
+ * de React Native: pasarlo a un View nativo lanza
+ * `JSApplicationIllegalArgumentException: Invalid accessibility role value: dialog`
+ * en Android con TalkBack (MGC-500). En Android usamos `none` + el flag
+ * `accessibilityViewIsModal` para mantener el comportamiento modal a nivel
+ * accesibilidad sin que TalkBack crashee.
  */
-const DIALOG_ROLE = 'dialog' as AccessibilityRole;
+const MODAL_ROLE: AccessibilityRole =
+  Platform.OS === 'android' ? 'none' : ('dialog' as AccessibilityRole);
 
 type Props = {
   visible: boolean;
@@ -61,7 +65,8 @@ export function InterstitialOverlay({
         }}
       >
         <View
-          accessibilityRole={DIALOG_ROLE}
+          accessibilityRole={MODAL_ROLE}
+          accessibilityViewIsModal
           accessibilityLabel={title}
           style={{
             backgroundColor: colors.surface,
