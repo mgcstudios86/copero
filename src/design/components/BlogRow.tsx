@@ -3,20 +3,31 @@ import { Pressable, Text, View, ViewStyle } from 'react-native';
 import { useTheme } from '../useTheme';
 
 /**
- * BlogRow — MGC-555 PR6.
+ * BlogRow — MGC-555 PR6 + MGC-605 followups.
  *
  * Item de lista vertical según spec copero.com.ar §6.7
  * (`design/copero-ar-visual-spec.md`). Fila con:
  * - Padding vertical 16px.
  * - Border-bottom 1px `colors.border` (entre filas).
- * - Título Inter 15px weight 600 blanco, máximo 2 líneas (line-clamp).
+ * - Título Inter 15px weight 600, máximo 2 líneas (line-clamp).
  * - Tag chips debajo: badge pequeño bg `colors.accent`, texto 11px
  *   `colors.textMuted` uppercase + icono del deporte.
  * - Meta alineada derecha: "Hace N sem" + nombre autor (12px textMuted).
  * - Divider horizontal completo entre filas.
  *
+ * MGC-605:
+ *  - H2: Título usa `colors.textStrong` (no literal #FFFFFF) — en light
+ *    theme `surface` es #FFFFFF y el título caía invisible. Lección
+ *    MGC-577 + MGC-579 (texto sobre fondo plano del theme, no sobre
+ *    overlay/imagen como en HeroCard).
+ *  - H6: Sin `onPress` la fila es `accessible` con `accessibilityLabel`
+ *    combinado título + meta + tags. Antes `accessible: false` la hacía
+ *    invisible para screen readers aunque la fila visible seguía ahí.
+ *
  * A11y:
  * - Fila navegable si se pasa `onPress`, `accessibilityRole="button"`.
+ * - Sin `onPress` la fila sigue siendo accesible (`text`) con label
+ *   combinado título + meta + tags.
  * - `accessibilityLabel` combina título + meta + tags para lectura completa.
  */
 
@@ -67,7 +78,14 @@ export function BlogRow({
         accessibilityRole: 'button' as const,
         accessibilityLabel: accessibilityLabel ?? a11yDefault,
       }
-    : { accessible: false };
+    : {
+        // H6 (MGC-605): sin onPress la fila sigue siendo accesible como
+        // texto. Antes `accessible: false` la dejaba invisible para
+        // TalkBack/VoiceOver aunque la fila visible seguía renderizando.
+        accessible: true,
+        accessibilityRole: 'text' as const,
+        accessibilityLabel: accessibilityLabel ?? a11yDefault,
+      };
 
   return (
     <Pressable
@@ -89,7 +107,11 @@ export function BlogRow({
           <Text
             numberOfLines={2}
             style={{
-              color: '#FFFFFF',
+              // H2 (MGC-605): colors.textStrong reemplaza el #FFFFFF
+              // literal. En light `surface = #FFFFFF` y el título caía
+              // invisible. Lección MGC-577 + MGC-579: literal blanco sólo
+              // sobre overlay/imagen (HeroCard), nunca sobre surface plano.
+              color: colors.textStrong,
               fontFamily: fontFamily.body,
               fontSize: 15,
               fontWeight: fontWeight.semibold,
