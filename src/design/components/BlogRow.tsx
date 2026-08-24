@@ -48,7 +48,7 @@ export function BlogRow({
   testID = 'copero-blog-row',
   accessibilityLabel,
 }: BlogRowProps) {
-  const { colors, spacing, fontSize, fontWeight, fontFamily, radii, borderWidth } = useTheme();
+  const { colors, spacing, fontSize, fontWeight, fontFamily, borderWidth } = useTheme();
 
   const a11yDefault = [title, relativeTime, author, tags.map((t) => t.label).join(', ')]
     .filter(Boolean)
@@ -149,7 +149,7 @@ export function BlogRow({
 }
 
 function TagChip({ tag, testID }: { tag: BlogRowTag; testID: string }) {
-  const { colors, spacing, fontSize, fontWeight, fontFamily, radii } = useTheme();
+  const { colors, spacing, fontWeight, fontFamily, radii } = useTheme();
   return (
     <View
       testID={testID}
