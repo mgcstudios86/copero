@@ -46,6 +46,10 @@ yarn-error.*
 credentials/
 secrets/
 keystore.properties
+# MGC-336: ./secrets/play-store-service-account.json (referenciado en
+# eas.json submit.production.android.serviceAccountKeyPath) y archivos
+# adyacentes. NUNCA commitear credenciales de App Store / Play Store.
+/secrets/
 
 # IDE
 .vscode/
