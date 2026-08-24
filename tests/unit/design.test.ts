@@ -167,6 +167,6 @@ describe('design/ThemeProvider', () => {
   it('tokens expone lineHeight y fontWeight como as const', () => {
     expect(lineHeight.tight).toBe(1.1);
     expect(fontWeight.bold).toBe('700');
-    expect(fontFamily.display).toBe('SpaceGrotesk');
+    expect(fontFamily.display).toBe('Poppins');
   });
 });

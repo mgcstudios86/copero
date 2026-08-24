@@ -18,6 +18,8 @@
     "postinstall": "node scripts/patch-expo-modules-core.js"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/poppins": "^0.4.1",
     "@expo/metro-runtime": "~57.0.0",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "expo": "~57.0.15",
@@ -50,7 +52,7 @@
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import": "^2.32.0",
     "typescript": "~6.0.3",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.9"
   },
   "overrides": {
     "react-native-worklets": "0.10.4",

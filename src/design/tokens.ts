@@ -5,7 +5,12 @@
  * radius en px, motion en ms.
  *
  * Identidad propia — no usa assets ni tipografías del original copero.com.ar.
- * Tipografías open source: Space Grotesk (display) · DM Sans (body) · JetBrains Mono (mono).
+ *
+ * MGC-555 PR1 — Migración parcial a copero.com.ar spec visual
+ * (MGC-554). Se agrega `palette.copero` (dark zinc-950 + accent heredado
+ * de `palette.dark`), se reemplaza `fontFamily` por Inter/Poppins y se
+ * preserva la paleta light existente para no romper el contrato C1/C2.
+ * Tipografías open source: Inter (body) · Poppins (headings) · JetBrains Mono (mono).
  */
 
 export type ColorScale = {
@@ -99,9 +104,47 @@ export const palette = {
   } as ColorScale,
 } as const;
 
-export type ThemeMode = 'light' | 'dark';
+export type ThemeMode = 'light' | 'dark' | 'copero';
 
-export const colors = (mode: ThemeMode): ColorScale => palette[mode];
+/**
+ * `palette.copero` — dark-first alineado con `design/copero-ar-visual-spec.md`
+ * §3.1 (roles semánticos del theme dark activo de copero.com.ar). Coexiste con
+ * `palette.dark` (identidad propia verde forest) sin romper el contrato C1.
+ */
+const coperoPalette: ColorScale = {
+  bg: '#09090B',           // zinc-950
+  surface: '#101012',      // zinc-900 (cards)
+  surface2: '#131316',     // popover / overlays
+  overlay: 'rgba(0,0,0,0.85)',
+  text: '#FAFAFA',         // foreground
+  textStrong: '#FFFFFF',
+  textMuted: '#A1A1AA',    // zinc-400
+  textOnPrimary: '#09090B',
+  textOnAccent: '#FFFFFF',
+  border: '#1C1C20',
+  borderStrong: '#27272A',
+  primary: '#FAFAFA',      // pill blanco
+  primaryHover: '#E4E4E7',
+  primarySoft: '#16161A',
+  accent: '#A855F7',       // purple-500 (default archetype accent)
+  accentHover: '#C084FC',
+  accentSoft: '#3B0764',
+  focus: '#D4D4D8',        // zinc-300
+  focusSoft: '#3F3F46',
+  success: '#10B981',      // emerald-500
+  successSoft: '#064E3B',
+  warning: '#EAB308',      // yellow-500
+  warningSoft: '#713F12',
+  danger: '#EF4444',       // red-500
+  dangerSoft: '#7F1D1D',
+  info: '#06B6D4',         // cyan-500
+  infoSoft: '#164E63',
+};
+
+export const colors = (mode: ThemeMode): ColorScale => {
+  if (mode === 'copero') return coperoPalette;
+  return palette[mode];
+};
 
 export const radii = {
   sm: 4,
@@ -153,9 +196,20 @@ export const fontWeight = {
   bold: '700',
 } as const;
 
+/**
+ * Familias tipográficas — MGC-555 PR1.
+ * Spec copero.com.ar §4: Inter (body / UI), Poppins (headings / números),
+ * JetBrains Mono (code / datos). Se mantienen los `fontFamilyKey` previos
+ * (`display`, `body`, `mono`) para no romper consumidores C1/C2; cambia
+ * el valor de las dos primeras familias.
+ *
+ * En web, las fuentes se cargan vía `<link>` de Google Fonts en
+ * `app/_layout.tsx` (preconnect + display=swap). En nativo, se cargan
+ * con `expo-font` (`Font.loadAsync`) antes del primer render.
+ */
 export const fontFamily = {
-  display: 'SpaceGrotesk',
-  body: 'DMSans',
+  display: 'Poppins',
+  body: 'Inter',
   mono: 'JetBrainsMono',
 } as const;
 
