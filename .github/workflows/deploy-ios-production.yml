@@ -1,4 +1,4 @@
-# deploy-ios-production.yml — Copero (MGC-294, MGC-316, MGC-503)
+# deploy-ios-production.yml — Copero (MGC-294, MGC-316, MGC-503, MGC-504)
 # Workflow manual para build iOS production y submit opcional a App Store Connect.
 # Trigger: workflow_dispatch (DevOps dispara desde gh CLI / web UI).
 #
@@ -13,6 +13,15 @@
 # Step `npm ci` requerido: run 32677245778 fallaba con
 # "Failed to resolve plugin for module expo-router ... Do you have node modules installed?"
 # porque EAS cloud sube el proyecto sin node_modules. Solucionado en MGC-503.
+#
+# EXPO_ASC_* env vars requeridos: run 32677609285 fallaba con
+# "Distribution Certificate is not validated for non-interactive builds.
+#  Failed to set up credentials. Credentials are not set up."
+# porque EAS sin credenciales cacheadas intenta setup interactivo. Cargamos
+# APPLE_ASC_API_KEY (.p8) / KEY_ID / ISSUER_ID desde /mgcstudios/appstore y los
+# exportamos como EXPO_ASC_API_KEY_PATH / KEY_ID / ISSUER_ID. EAS auto-genera
+# el Distribution Certificate + provisioning profile sin modo interactivo.
+# Solucionado en MGC-504.
 
 name: deploy-ios-production (copero)
 
@@ -87,6 +96,33 @@ jobs:
             echo "EXPO_TOKEN from GH secret (length: ${#EXPO_TOKEN})"
           fi
 
+      - name: Load ASC API credentials from Infisical (/mgcstudios/appstore)
+        # MGC-294 fix: eas build --non-interactive requiere EXPO_ASC_* env vars
+        # para que EAS auto-genere el Distribution Certificate + provisioning
+        # profile sin modo interactivo. Carga .p8 desde /mgcstudios/appstore.
+        run: |
+          set -euo pipefail
+          ASC_DIR="$(infisical export --env=prod --path=/mgcstudios/appstore)"
+          KEY_ID="$(printf '%s\n' "$ASC_DIR" | sed -n 's/^APPLE_ASC_API_KEY_ID=//p' | head -1)"
+          ISSUER_ID="$(printf '%s\n' "$ASC_DIR" | sed -n 's/^APPLE_ASC_API_ISSUER_ID=//p' | head -1)"
+          P8="$(printf '%s\n' "$ASC_DIR" | sed -n '/^APPLE_ASC_API_KEY=$/,/^[^ ]/p' | sed '/^$/d')"
+          if [ -z "$KEY_ID" ] || [ -z "$ISSUER_ID" ] || [ -z "$P8" ]; then
+            echo "FATAL: ASC API secrets missing in /mgcstudios/appstore"; exit 1
+          fi
+          printf '%s\n' "$P8" > /tmp/copero-asc.p8
+          chmod 600 /tmp/copero-asc.p8
+          if ! head -1 /tmp/copero-asc.p8 | grep -q 'BEGIN PRIVATE KEY'; then
+            echo "FATAL: /tmp/copero-asc.p8 does not look like a .p8"; exit 1
+          fi
+          {
+            echo "EXPO_ASC_API_KEY_PATH=/tmp/copero-asc.p8"
+            echo "EXPO_ASC_KEY_ID=$KEY_ID"
+            echo "EXPO_ASC_ISSUER_ID=$ISSUER_ID"
+            echo "EXPO_APPLE_TEAM_ID=5M4NR9267P"
+            echo "EXPO_APPLE_TEAM_TYPE=COMPANY_OR_ORGANIZATION"
+          } >> "$GITHUB_ENV"
+          echo "ASC API credentials loaded: key_id=${KEY_ID}, issuer=${ISSUER_ID}, .p8=$(wc -c </tmp/copero-asc.p8) bytes"
+
       - name: Build iOS production (cloud, signed via ASC API)
         env:
           CI: "1"
@@ -94,6 +130,7 @@ jobs:
           set -euo pipefail
           echo "Starting eas build production iOS at $(date -u +%FT%TZ)"
           # Cloud build. EAS firma vía ASC API key (.p8) cargado por la org mgcstudios86.
+          # Variables EXPO_ASC_* las aporta el step anterior para evitar el modo interactivo.
           eas build \
             --profile production \
             --platform ios \
