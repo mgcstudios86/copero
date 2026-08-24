@@ -69,10 +69,67 @@ test.describe('Copero — smoke home (web) — MGC-505', () => {
   });
 
   test('flujo home → dashboard muestra hero del jugador', async ({ page }, testInfo) => {
+    // MGC-523: seed del careerStore vía localStorage para evitar el race
+    // inicial `/identity` (regex greedy `\/simulador-carrera\/` matcheaba
+    // `/identity` antes de que el test pudiera aterrizar en `/dashboard`).
+    // Con stage='dashboard' + name seteado, `btn-career` empuja directo
+    // a `/simulador-carrera/dashboard` y el waitForURL anclado no ambiguo.
+    await page.addInitScript(() => {
+      const seed = {
+        state: {
+          stage: 'dashboard',
+          profile: {
+            name: 'Test Jugador',
+            number: 9,
+            position: 'ST',
+            nationalityCode: 'AR',
+            preferredFoot: 'right',
+            age: 17,
+            club: {
+              id: 'river',
+              name: 'River Plate',
+              league: 'Liga Profesional',
+              crestColor: '#FFFFFF',
+              crestAccent: '#D9001B',
+              presupuesto: 50,
+            },
+            value: 5,
+            ovr: 62,
+            stats: { apps: 0, goals: 0, ast: 0 },
+            attrs: { tecnico: 60, fisico: 60, mental: 60, portero: 50 },
+            career: {
+              presupuesto: 0,
+              moral: 70,
+              fisico: 80,
+              confianza: 60,
+              racha: 0,
+              lesion: { kind: 'ninguna', fechasOut: 0 },
+              reputation: {
+                prensa: 'neutral',
+                hinchada: 'aceptado',
+                vestuario: 'integrado',
+                seleccionConvocado: false,
+              },
+            },
+            week: 1,
+            season: 1,
+            clubPresupuesto: 50,
+            clubInteres: true,
+          },
+        },
+        version: 0,
+      };
+      window.localStorage.setItem('copero-career', JSON.stringify(seed));
+    });
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.getByTestId('btn-career').click();
-    await page.waitForURL(/\/simulador-carrera\//);
+    // Regex anclado al final: matchea `/simulador-carrera/dashboard` exacto,
+    // NO matchea `/simulador-carrera/identity` (MGC-523).
+    await page.waitForURL(/\/simulador-carrera\/dashboard$/, { timeout: 10_000 });
     // Dashboard expone el JerseyPreview con testID canónico (MGC-466).
+    // El Stack fade del _layout puede tardar en pintar; pequeño settle
+    // antes del assert evita el race contra la animación fade.
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId('jersey-preview')).toBeVisible();
     await expect(page.getByTestId('btn-dashboard-academy')).toBeVisible();
