@@ -24,12 +24,20 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      sha:
+        description: "SHA explicito para grupo de concurrency unico (evita cancel-in-progress con push a main)"
+        required: false
+        type: string
 
 # MGC-380: serializar runs para no saturar el runner self-hosted copero-ci
 # (un solo runner Linux en VPS mgcstudios-01). cancel-in-progress:true
 # cancela runs previos cuando llega uno nuevo (PR actualizado).
+# MGC-600: workflow_dispatch con input `sha` recibe grupo unico (qa-copero-<sha>)
+# independiente del push a main (qa-copero-refs/heads/main). Permite QA smoke sobre
+# SHA arbitrario sin que un merge subsecuente a main lo cancele.
 concurrency:
-  group: qa-copero-${{ github.event.pull_request.number || github.ref }}
+  group: qa-copero-${{ github.event.pull_request.number || (github.event_name == 'workflow_dispatch' && inputs.sha) || github.ref }}
   cancel-in-progress: true
 
 permissions:
