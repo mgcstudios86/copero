@@ -22,5 +22,7 @@ export type {
   LeagueMatch,
   AccesoDirectoItem,
 } from './LeagueCard';
+export { Footer } from './Footer';
+export type { FooterProps, FooterLink, FooterSocial } from './Footer';
 export { HeroCard } from './HeroCard';
 export type { HeroCardProps } from './HeroCard';

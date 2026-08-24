@@ -86,6 +86,7 @@ import {
   PillButton,
   LeagueCard,
   AccesosDirectos,
+  Footer,
 } from '../../src/design/components';
 
 describe('design/tokens', () => {
@@ -195,6 +196,16 @@ describe('design/components exports', () => {
 
   it('AccesosDirectos existe como función exportada (PR5 MGC-555 §6.6)', () => {
     expect(typeof AccesosDirectos).toBe('function');
+  });
+
+  /**
+   * MGC-555 PR7 — Footer (spec visual copero.com.ar §6.8).
+   * 4 columnas desktop / 1 columna mobile: logo+social, secciones,
+   * destacado, legal+contacto. Hairline divider arriba y bottom row
+   * con copyright + cookies + theme toggle.
+   */
+  it('Footer existe como función exportada (PR7 MGC-555 §6.8)', () => {
+    expect(typeof Footer).toBe('function');
   });
 });
 
