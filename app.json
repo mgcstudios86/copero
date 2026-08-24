@@ -9,6 +9,12 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B1320"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mgcstudios.copero",
