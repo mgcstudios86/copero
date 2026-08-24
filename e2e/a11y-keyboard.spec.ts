@@ -69,8 +69,9 @@ test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
     await page.waitForSelector('[data-testid="dashboard-screen"]', { timeout: 10_000 });
     await page.screenshot({ path: testInfo.outputPath('kbd-3-dashboard.png'), fullPage: true });
 
-    // 3) DASHBOARD — Jersey visible + Academy focuseable.
-    await expect(page.locator('[data-testid="jersey-preview"]')).toBeVisible();
+    // 3) DASHBOARD — Academy focuseable. (`jersey-preview` solo existe en
+    // identity.tsx; la animación `fade` del Stack desmonta identity al
+    // navegar a dashboard, así que ese locator ya no aplica acá.)
     const btnAcademy = page.locator('[data-testid="btn-dashboard-academy"]');
     await expect(btnAcademy).toBeVisible();
     // Validar que el botón es focuseable por teclado.
