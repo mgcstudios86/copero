@@ -87,6 +87,7 @@ import {
   LeagueCard,
   AccesosDirectos,
   Footer,
+  BlogRow,
 } from '../../src/design/components';
 
 describe('design/tokens', () => {
@@ -206,6 +207,15 @@ describe('design/components exports', () => {
    */
   it('Footer existe como función exportada (PR7 MGC-555 §6.8)', () => {
     expect(typeof Footer).toBe('function');
+  });
+
+  /**
+   * MGC-555 PR6 — BlogRow (spec visual copero.com.ar §6.7).
+   * Item de lista vertical con título Inter 15px weight 600 + tags chips
+   * + meta relativa derecha.
+   */
+  it('BlogRow existe como función exportada (PR6 MGC-555 §6.7)', () => {
+    expect(typeof BlogRow).toBe('function');
   });
 });
 
