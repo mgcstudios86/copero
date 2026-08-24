@@ -11,7 +11,10 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mgcstudios.copero"
+      "bundleIdentifier": "com.mgcstudios.copero",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.mgcstudios.copero",

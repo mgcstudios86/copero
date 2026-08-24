@@ -41,5 +41,8 @@
         "appleTeamId": "5M4NR9267P"
       }
     }
+  },
+  "cli": {
+    "appVersionSource": "remote"
   }
 }
