@@ -1,0 +1,84 @@
+{
+  "fetchTime": "2026-08-24T14:10Z",
+  "lhVersion": "13.x",
+  "throttling": "simulate slow-4G (Moto G Power)",
+  "target": "perf >= 0.90 AND a11y = 1.00",
+  "gate": "FAIL perf / PASS a11y",
+  "bundle_entry_prod": "index-d8fd5227d6733a344b52b8dcd00ef1a4.js",
+  "identity": {
+    "runs": [
+      {
+        "perf": 82,
+        "a11y": 100,
+        "lcp_s": 4.07,
+        "fcp_s": 1.73,
+        "tbt_ms": 173,
+        "cls": 0.0097,
+        "si_s": 3.63,
+        "transferKB": 473.3
+      },
+      {
+        "perf": 84,
+        "a11y": 100,
+        "lcp_s": 4.0,
+        "fcp_s": 1.75,
+        "tbt_ms": 95,
+        "cls": 0.0097,
+        "si_s": 3.76,
+        "transferKB": 473.2
+      },
+      {
+        "perf": 85,
+        "a11y": 100,
+        "lcp_s": 4.0,
+        "fcp_s": 1.7,
+        "tbt_ms": 144,
+        "cls": 0.0097,
+        "si_s": 2.19,
+        "transferKB": 473.2
+      }
+    ],
+    "median_perf": 84,
+    "median_a11y": 100,
+    "median_lcp_s": 4.0,
+    "median_transferKB": 473.2
+  },
+  "dashboard": {
+    "runs": [
+      {
+        "perf": 84,
+        "a11y": 100,
+        "lcp_s": 4.03,
+        "fcp_s": 1.68,
+        "tbt_ms": 184,
+        "cls": 0.0097,
+        "si_s": 2.51,
+        "transferKB": 473.2
+      },
+      {
+        "perf": 82,
+        "a11y": 100,
+        "lcp_s": 4.06,
+        "fcp_s": 1.74,
+        "tbt_ms": 166,
+        "cls": 0.0097,
+        "si_s": 3.84,
+        "transferKB": 473.2
+      },
+      {
+        "perf": 84,
+        "a11y": 100,
+        "lcp_s": 3.99,
+        "fcp_s": 1.66,
+        "tbt_ms": 163,
+        "cls": 0.0097,
+        "si_s": 2.54,
+        "transferKB": 473.2
+      }
+    ],
+    "median_perf": 84,
+    "median_a11y": 100,
+    "median_lcp_s": 4.03,
+    "median_transferKB": 473.2
+  }
+}

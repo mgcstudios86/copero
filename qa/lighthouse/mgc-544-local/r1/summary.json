@@ -1,0 +1,97 @@
+{
+  "fetchTime": "2026-08-24T14:22Z",
+  "lhVersion": "13.x",
+  "throttling": "simulate slow-4G (Moto G Power)",
+  "target": "perf >= 0.90 AND a11y = 1.00",
+  "gate": "PASS perf (>= 90) / axe run separately",
+  "bundle_entry_local": "index-862682bbc56d2a6c78815591f90ae0f2.js",
+  "baseline": "qa/lighthouse/mgc-482-prod/r4/summary.json",
+  "baseline_median": {
+    "identity_perf": 84,
+    "identity_lcp_s": 4.0,
+    "identity_tbt_ms": 144,
+    "identity_transferKB": 473.2,
+    "dashboard_perf": 84,
+    "dashboard_lcp_s": 4.03
+  },
+  "identity": {
+    "runs": [
+      {
+        "perf": 95,
+        "lcp_s": 2.79,
+        "fcp_s": 0.6,
+        "tbt_ms": 120,
+        "cls": 0.009720534629404616,
+        "si_s": 1.16,
+        "transferKB": 333.3
+      },
+      {
+        "perf": 96,
+        "lcp_s": 2.7,
+        "fcp_s": 0.6,
+        "tbt_ms": 95,
+        "cls": 0.009720534629404616,
+        "si_s": 0.6,
+        "transferKB": 333.3
+      },
+      {
+        "perf": 96,
+        "lcp_s": 2.7,
+        "fcp_s": 0.6,
+        "tbt_ms": 94,
+        "cls": 0.009720534629404616,
+        "si_s": 0.6,
+        "transferKB": 333.3
+      }
+    ],
+    "median_perf": 96,
+    "median_lcp_s": 2.7,
+    "median_tbt_ms": 95,
+    "median_transferKB": 333.3,
+    "median_fcp_s": 0.6
+  },
+  "dashboard": {
+    "runs": [
+      {
+        "perf": 96,
+        "lcp_s": 2.7,
+        "fcp_s": 0.6,
+        "tbt_ms": 98,
+        "cls": 0.009720534629404616,
+        "si_s": 0.6,
+        "transferKB": 333.3
+      },
+      {
+        "perf": 96,
+        "lcp_s": 2.69,
+        "fcp_s": 0.6,
+        "tbt_ms": 91,
+        "cls": 0.009720534629404616,
+        "si_s": 0.6,
+        "transferKB": 333.3
+      },
+      {
+        "perf": 96,
+        "lcp_s": 2.7,
+        "fcp_s": 0.6,
+        "tbt_ms": 102,
+        "cls": 0.009720534629404616,
+        "si_s": 0.6,
+        "transferKB": 333.3
+      }
+    ],
+    "median_perf": 96,
+    "median_lcp_s": 2.7,
+    "median_tbt_ms": 98,
+    "median_transferKB": 333.3,
+    "median_fcp_s": 0.6
+  },
+  "delta_vs_baseline": {
+    "identity_perf_delta": 12,
+    "identity_lcp_delta": -1.2999999999999998,
+    "identity_tbt_delta": -49,
+    "identity_fcp_delta": -1.1,
+    "dashboard_perf_delta": 12,
+    "dashboard_lcp_delta": -1.33
+  }
+}

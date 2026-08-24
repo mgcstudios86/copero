@@ -14,7 +14,7 @@ import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { POSITIONS, GROUP_COLOR } from '@/features/career/positions';
 import { NATIONALITIES } from '@/features/career/nationalities';
-import { isIdentityComplete } from '@/features/career/engine';
+import { isIdentityComplete } from '@/features/career/identity-state';
 import type { Foot } from '@/types/career';
 
 // Lazy-load JerseyPreview (MGC-482): separa el SVG patterns (~10 KB)

@@ -1,0 +1,12 @@
+{
+  "https://copero.mgcstudios.app/simulador-carrera/identity": {
+    "violations": [],
+    "incomplete": 2,
+    "passes": 22
+  },
+  "https://copero.mgcstudios.app/simulador-carrera/dashboard": {
+    "violations": [],
+    "incomplete": 1,
+    "passes": 18
+  }
+}

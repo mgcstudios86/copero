@@ -197,6 +197,8 @@ jobs:
           fi
       - name: Expo web export (artefacto dist/)
         run: npm run build:web
+      - name: Pre-comprimir assets a gzip level 9 (MGC-538)
+        run: node scripts/precompress-assets.mjs dist
       - name: Subir artefacto dist/
         uses: actions/upload-artifact@v4
         with:
