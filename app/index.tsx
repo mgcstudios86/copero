@@ -64,20 +64,22 @@ export default function Home() {
             borderColor: colors.border,
           }}
         >
-          {/* Banner brand */}
+          {/* Banner brand — MGC-556: usa `colors.accent` (purple #A855F7 en
+              copero) en lugar de `colors.primary` (#FAFAFA white pill) para
+              matchear la paleta copero.com.ar §6.2 (hero con tinte de acento). */}
           <View
             style={{
               paddingVertical: spacing[6],
               paddingHorizontal: spacing[5],
               gap: spacing[2],
-              backgroundColor: colors.primary,
+              backgroundColor: colors.accent,
             }}
             accessibilityElementsHidden
             importantForAccessibility="no"
           >
             <Text
               style={{
-                color: colors.textOnPrimary,
+                color: colors.textOnAccent,
                 letterSpacing: 4,
                 fontSize: fontSize.sm,
                 fontWeight: fontWeight.bold,
@@ -88,7 +90,7 @@ export default function Home() {
             </Text>
             <Text
               style={{
-                color: colors.textOnPrimary,
+                color: colors.textOnAccent,
                 fontSize: fontSize['4xl'],
                 fontFamily: fontFamily.display,
                 fontWeight: fontWeight.bold,
@@ -100,7 +102,7 @@ export default function Home() {
             </Text>
             <Text
               style={{
-                color: colors.textOnPrimary,
+                color: colors.textOnAccent,
                 fontSize: fontSize.base,
                 lineHeight: fontSize.base * lineHeight.base,
                 opacity: 0.9,
@@ -232,10 +234,11 @@ export default function Home() {
         <View style={{ gap: spacing[3] }}>
           <Text
             style={{
-              color: colors.primary,
+              color: colors.textMuted,
               letterSpacing: 3,
               fontSize: fontSize.xs,
               fontWeight: fontWeight.bold,
+              fontFamily: fontFamily.display,
             }}
             accessibilityRole="header"
           >
@@ -276,6 +279,7 @@ export default function Home() {
               color: colors.text,
               fontSize: fontSize.md,
               fontWeight: fontWeight.bold,
+              fontFamily: fontFamily.display,
             }}
             accessibilityRole="header"
           >

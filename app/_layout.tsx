@@ -1,7 +1,8 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { View, StyleSheet } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
 import {
   Inter_400Regular,
@@ -31,6 +32,19 @@ import { ThemeProvider, useTheme } from '@/design';
 
 function ThemedShell() {
   const { colors, mode } = useTheme();
+
+  // MGC-556 — copia el `colors.bg` al `<body>` y `<html>` en web para que
+  // `getComputedStyle(document.body).backgroundColor` matchee `palette.copero.bg`
+  // (#09090B). RN-Web renderiza el theme en un `<div>` interno; el `<body>`
+  // propiamente queda transparente y la captura muestra el negro default del
+  // user-agent. Inyectar el color en ambos elementos resuelve el delta visual.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const target = colors.bg;
+    document.documentElement.style.backgroundColor = target;
+    document.body.style.backgroundColor = target;
+  }, [colors.bg]);
+
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar style={mode === 'dark' || mode === 'copero' ? 'light' : 'dark'} />
@@ -75,7 +89,16 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
+      {/*
+        MGC-555 PR2 + MGC-556 — `initialPreference="copero"` fija el theme
+        copero (dark zinc-950 + accent purple #A855F7) como default para
+        toda la app. La spec visual (MGC-554) replica copero.com.ar que es
+        dark-only; el simulador-carrera debe mantener esa identidad
+        independientemente de `prefers-color-scheme` del sistema. Sin esto,
+        el Playwright parity spec captura el banner con `colors.primary`
+        forest-green (#1F6F4A) cuando el sistema reporta light.
+      */}
+      <ThemeProvider initialPreference="copero">
         <ThemedShell />
       </ThemeProvider>
     </SafeAreaProvider>
