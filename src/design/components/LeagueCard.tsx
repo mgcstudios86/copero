@@ -1,7 +1,29 @@
 import React from 'react';
-import { Pressable, ScrollView, Text, View, ViewStyle, Image, Platform } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  ViewStyle,
+  Image,
+  Platform,
+  useWindowDimensions,
+} from 'react-native';
 import { useTheme } from '../useTheme';
 import { PillButton } from './PillButton';
+
+/** Spec §6.6: cards 200×140 desktop / 140×100 mobile. Breakpoint 600px. */
+const MOBILE_BREAKPOINT = 600;
+
+/** Spec §6.5/§6.6: degradado bottom-up para overlay oscuro (ref §6.2 HeroCard). */
+const GRADIENT_STOPS = [
+  'rgba(0,0,0,0)',
+  'rgba(0,0,0,0.05)',
+  'rgba(0,0,0,0.20)',
+  'rgba(0,0,0,0.45)',
+  'rgba(0,0,0,0.70)',
+  'rgba(0,0,0,0.85)',
+];
 
 /**
  * LeagueCard — MGC-555 PR5.
@@ -40,24 +62,28 @@ export type LeagueMatch = {
   awayCrestUrl?: string;
 };
 
+type CommonProps = {
+  testID?: string;
+  /** Override del label para TalkBack/VoiceOver. Si falta, deriva del contenido. */
+  accessibilityLabel?: string;
+};
+
 export type LeagueCardProps =
-  | ({
+  | (CommonProps & {
       variant: 'resultados';
       leagueName: string;
       leagueLogoUrl?: string;
       matches: LeagueMatch[];
       onMatchPress?: (match: LeagueMatch) => void;
       onHeaderPress?: () => void;
-      testID?: string;
-    } & { accessibilityLabel?: string })
-  | ({
+    })
+  | (CommonProps & {
       variant: 'prodes';
       title: string;
       imageUrl: string;
       participants: number;
       onPress?: () => void;
-      testID?: string;
-    } & { accessibilityLabel?: string });
+    });
 
 export function LeagueCard(props: LeagueCardProps) {
   if (props.variant === 'prodes') {
@@ -263,31 +289,34 @@ function LeagueCardProdes({
     ...(Platform.OS === 'web' ? { position: 'relative' as const } : null),
   };
 
-  const content = (
-    <View>
-      {onPress ? (
-        <PillButton
-          label="Jugar ahora"
-          onPress={onPress}
-          testID={`${testID}-cta`}
-        />
-      ) : null}
-    </View>
-  );
+  // Fix #5 (a11y nested Pressable): la card entera NO es Pressable cuando
+  // hay CTA propio. TalkBack/VoiceOver leerían dos botones anidados. La
+  // card entera queda como "summary" informativa y el PillButton es el
+  // único botón accesible.
+  const hasCta = typeof onPress === 'function';
+  const a11yLabel = accessibilityLabel ?? `${title}, ${participants} participantes`;
 
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={!onPress}
-      accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={accessibilityLabel ?? `${title}, ${participants} participantes`}
-      testID={testID}
-      style={({ pressed }) => ({
-        ...containerStyle,
-        opacity: pressed ? 0.95 : 1,
-      })}
-    >
+  const body = (
+    <>
       <ProdesImage imageUrl={imageUrl} testID={`${testID}-image`} />
+      {/* Fix #3 (gradient overlay): capas de rgba decreciente en lugar de un
+          backgroundColor plano — replica el degradado de HeroCard §6.2. */}
+      {GRADIENT_STOPS.map((color, idx) => (
+        <View
+          key={`grad-${idx}`}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            backgroundColor: color,
+          }}
+        />
+      ))}
       <View
         style={{
           ...(Platform.OS === 'web' ? { position: 'absolute' as const } : null),
@@ -297,7 +326,6 @@ function LeagueCardProdes({
           padding: spacing[4],
           justifyContent: 'flex-end',
           minHeight: '100%',
-          backgroundColor: colors.overlay,
         }}
       >
         <View
@@ -309,8 +337,8 @@ function LeagueCardProdes({
             backgroundColor: colors.success,
             marginBottom: spacing[2],
           }}
-          accessible
-          accessibilityLabel="Disponible"
+          accessibilityElementsHidden
+          importantForAccessibility="no"
         >
           <Text
             style={{
@@ -326,6 +354,8 @@ function LeagueCardProdes({
           </Text>
         </View>
         <Text
+          accessibilityElementsHidden
+          importantForAccessibility="no"
           style={{
             color: '#FFFFFF',
             fontFamily: fontFamily.display,
@@ -339,6 +369,8 @@ function LeagueCardProdes({
           {title}
         </Text>
         <View
+          accessibilityElementsHidden
+          importantForAccessibility="no"
           style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -348,10 +380,11 @@ function LeagueCardProdes({
           <Text
             accessible={false}
             style={{
-              color: colors.textMuted,
+              color: '#FFFFFF',
               fontFamily: fontFamily.body,
               fontSize: fontSize.xs,
               marginRight: spacing[1],
+              opacity: 0.85,
             }}
           >
             ⚲
@@ -362,14 +395,49 @@ function LeagueCardProdes({
               fontFamily: fontFamily.body,
               fontSize: fontSize.xs,
               fontWeight: fontWeight.regular,
+              opacity: 0.85,
             }}
           >
             {participants} participantes
           </Text>
         </View>
-        {content}
+        {hasCta ? (
+          <PillButton
+            label="Jugar ahora"
+            onPress={onPress!}
+            testID={`${testID}-cta`}
+          />
+        ) : null}
       </View>
-    </Pressable>
+    </>
+  );
+
+  // Sin CTA: card informativa (role summary). Con CTA: card NO interactiva,
+  // el PillButton adentro es el único botón accesible.
+  if (hasCta) {
+    return (
+      <View
+        accessible
+        accessibilityRole="summary"
+        accessibilityLabel={a11yLabel}
+        testID={testID}
+        style={containerStyle}
+      >
+        {body}
+      </View>
+    );
+  }
+
+  return (
+    <View
+      accessible
+      accessibilityRole="summary"
+      accessibilityLabel={a11yLabel}
+      testID={testID}
+      style={containerStyle}
+    >
+      {body}
+    </View>
   );
 }
 
@@ -507,6 +575,12 @@ export function AccesosDirectos({
   );
 }
 
+/** Hook util para mobile breakpoint — centraliza la regla §6.6 (140×100). */
+export function useIsMobileCard(): boolean {
+  const { width } = useWindowDimensions();
+  return width < MOBILE_BREAKPOINT;
+}
+
 function AccesoDirectoCard({
   item,
   colors,
@@ -524,6 +598,11 @@ function AccesoDirectoCard({
   spacing: ReturnType<typeof useTheme>['spacing'];
   radii: ReturnType<typeof useTheme>['radii'];
 }) {
+  // Fix #1 (mobile breakpoint): spec §6.6 — 200×140 desktop, 140×100 mobile.
+  const isMobile = useIsMobileCard();
+  const cardWidth = isMobile ? 140 : 200;
+  const cardHeight = isMobile ? 100 : 140;
+
   return (
     <Pressable
       onPress={item.onPress}
@@ -533,8 +612,8 @@ function AccesoDirectoCard({
       testID={`copero-acceso-directo-${item.id}`}
       style={({ pressed }) => ({
         marginRight: spacing[3],
-        width: 200,
-        height: 140,
+        width: cardWidth,
+        height: cardHeight,
         borderRadius: radii.md,
         overflow: 'hidden',
         backgroundColor: colors.surface2,
@@ -552,6 +631,23 @@ function AccesoDirectoCard({
         }}
         resizeMode="cover"
       />
+      {/* Fix #3 (gradient overlay): capas de rgba en lugar de backgroundColor plano. */}
+      {GRADIENT_STOPS.map((color, idx) => (
+        <View
+          key={`grad-${idx}`}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            backgroundColor: color,
+          }}
+        />
+      ))}
       <View
         style={{
           ...(Platform.OS === 'web' ? { position: 'absolute' as const } : null),
@@ -560,7 +656,6 @@ function AccesoDirectoCard({
           bottom: 0,
           paddingHorizontal: spacing[2],
           paddingVertical: spacing[2],
-          backgroundColor: colors.overlay,
           alignItems: 'center',
           justifyContent: 'flex-end',
         }}

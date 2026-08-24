@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, Text, ViewStyle, Platform } from 'react-native';
 import { useTheme } from '../useTheme';
 
@@ -50,7 +50,9 @@ export function PillButton({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing[5],
+    // Fix #2: spec §6.3 — padding `12px 20px`. spacing[3]=12, spacing[4]=16.
+    // 20px no está tokenizado, va literal (consistente con borders/lift).
+    paddingHorizontal: 20,
     paddingVertical: spacing[3],
     borderRadius: radii.pill,
     backgroundColor: isGhost ? 'transparent' : colors.primary,
@@ -67,6 +69,11 @@ export function PillButton({
       : null),
   };
 
+  // Fix #4 (arrow micro-translation): trackea hover/pressed para mover la
+  // flecha translateX(2px). En native, hover ≈ pressed; en web hover es
+  // estado separado via onHoverIn/Out. Combinado: flecha se mueve en ambos.
+  const [hovered, setHovered] = useState(false);
+
   return (
     <Pressable
       onPress={onPress}
@@ -76,12 +83,11 @@ export function PillButton({
       accessibilityState={{ disabled }}
       testID={testID}
       hitSlop={spacing[2]}
+      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
+      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
       style={({ pressed }) => ({
         ...containerStyle,
-        // Hover/pressed state — micro-translación de la flecha y opacidad
-        // del contenedor. En web, hover lo maneja el user-agent y se combina
-        // con el translate que aplicamos al arrow span.
-        transform: pressed ? [{ translateX: 0 }] : undefined,
+        transform: pressed || hovered ? [{ translateX: 2 }] : undefined,
       })}
     >
       <PillButtonLabel
@@ -97,6 +103,7 @@ export function PillButton({
         fontSize={fontSize}
         fontFamily={fontFamily}
         isGhost={isGhost}
+        translate={hovered}
       />
     </Pressable>
   );
@@ -137,11 +144,14 @@ function PillButtonArrow({
   fontSize,
   fontFamily,
   isGhost,
+  translate,
 }: {
   colors: ReturnType<typeof useTheme>['colors'];
   fontSize: ReturnType<typeof useTheme>['fontSize'];
   fontFamily: ReturnType<typeof useTheme>['fontFamily'];
   isGhost: boolean;
+  /** Hover/pressed — aplica translateX(2px) según §6.3. */
+  translate: boolean;
 }) {
   return (
     <Text
@@ -151,10 +161,14 @@ function PillButtonArrow({
         fontFamily: fontFamily.body,
         fontSize: fontSize.sm,
         lineHeight: fontSize.sm,
-        // Spec §6.3: flecha 10-12px line-height, translateX(2px) en hover.
-        // En native, hover = press; en web el user-agent hace el resto.
+        // Fix #4: flecha 10-12px line-height, translateX(2px) en hover.
+        // En web, el contenedor Pressable hace el transform en onHoverIn;
+        // acá dejamos la transición CSS para que el motion sea smooth.
         ...(Platform.OS === 'web'
-          ? ({ transition: 'transform 160ms ease', transform: 'translateX(0)' } as const)
+          ? ({
+              transition: 'transform 160ms ease',
+              transform: translate ? 'translateX(2px)' : 'translateX(0)',
+            } as const)
           : null),
       }}
     >
