@@ -1,4 +1,4 @@
-# deploy-ios-production.yml — Copero (MGC-294, MGC-316)
+# deploy-ios-production.yml — Copero (MGC-294, MGC-316, MGC-503)
 # Workflow manual para build iOS production y submit opcional a App Store Connect.
 # Trigger: workflow_dispatch (DevOps dispara desde gh CLI / web UI).
 #
@@ -10,6 +10,9 @@
 #
 # Runner: [self-hosted, copero-ci, macOS] (copero-ci-runner-02, ARM64).
 # Sin cache: 'npm' en setup-node@v4 (MGC-359).
+# Step `npm ci` requerido: run 32677245778 fallaba con
+# "Failed to resolve plugin for module expo-router ... Do you have node modules installed?"
+# porque EAS cloud sube el proyecto sin node_modules. Solucionado en MGC-503.
 
 name: deploy-ios-production (copero)
 
@@ -59,6 +62,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Install dependencies (npm ci)
+        run: |
+          set -euo pipefail
+          if [ ! -f package-lock.json ]; then
+            echo "FATAL: package-lock.json missing — generate with 'npm i' first"; exit 1
+          fi
+          npm ci
+          echo "node_modules installed at $(date -u +%FT%TZ)"
 
       - name: Install eas-cli
         run: npm install -g eas-cli@latest
