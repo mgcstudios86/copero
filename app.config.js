@@ -80,6 +80,11 @@ module.exports = ({ config } = {}) => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.mgcstudios.copero',
+    infoPlist: {
+      // Export compliance: Copero no usa encriptación no-exempt (solo HTTPS estándar).
+      // Evita self-classification anual ante Apple BIS.
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     package: 'com.mgcstudios.copero',
