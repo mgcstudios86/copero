@@ -22,19 +22,16 @@ const AD_DOMAINS = [
   'adservice.google',
 ];
 
-test.beforeEach(async ({ context, page }) => {
+test.beforeEach(async ({ context }) => {
   await context.route('**/*', (route) => {
     const url = route.request().url();
     if (AD_DOMAINS.some((d) => url.includes(d))) return route.abort();
     return route.continue();
   });
-  // Auto-acepta Alert.alert del clubStart (handler en page directa, no en context.on('page')
-  // que solo dispara para tabs/popups nuevos — el page inicial ya existe antes de beforeEach).
-  page.on('dialog', async (dialog) => {
-    // eslint-disable-next-line no-console
-    console.log(`[dialog auto-accept] ${dialog.type()}: ${dialog.message().slice(0, 60)}`);
-    await dialog.accept();
-  });
+  // MGC-620: NO registrar handler global de 'dialog' aquí — generaba race con el
+  // page.once() del test #3 (ambos consumen el mismo Alert del clubStart, el
+  // segundo lanza "Cannot accept dialog which is already handled"). Cada test
+  // que dispara Alert registra su propio handler antes del click.
 });
 
 async function completeIdentity(page: any, name: string) {
@@ -102,14 +99,14 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
       fullPage: true,
     });
     const firstClub = page.locator('[data-testid^="club-"]').first();
-    // Race-safe: registrar once() justo antes del click para que no se dispare antes.
-    const dialogPromise = page.once('dialog', async (dialog) => {
+    // MGC-620: handler único (sin race con beforeEach). page.once() se registra
+    // antes del click; click espera al listener registrado vía Playwright.
+    page.once('dialog', async (dialog) => {
       // eslint-disable-next-line no-console
       console.log(`[dialog clubStart] ${dialog.type()}: ${dialog.message().slice(0, 60)}`);
       await dialog.accept();
     });
     await firstClub.click();
-    await dialogPromise.catch(() => {/* already accepted by beforeEach handler */});
     // router.replace('/simulador-carrera/dashboard') triggereado tras aceptar Alert
     await page.waitForURL(/\/simulador-carrera\/dashboard/, { timeout: 15_000 });
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 10_000 });
