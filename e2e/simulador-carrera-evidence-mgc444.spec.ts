@@ -157,7 +157,10 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
   test('5) persistencia: reload conserva profile (zustand persist)', async ({ page }, testInfo) => {
     test.setTimeout(60_000);
     await completeIdentity(page, 'Mateo Romero Persistente');
-    await expect(page.getByText('Mateo Romero Persistente')).toBeVisible();
+    // MGC-532: el nombre aparece en 4 lugares (home-jersey kept-alive + jersey
+    // preview dashboard + h1 player card + aria-label dorsal). Usar el heading
+    // del player card como anchor estable para evitar strict-mode violation.
+    await expect(page.getByRole('heading', { name: 'Mateo Romero Persistente' })).toBeVisible();
     // Validar que zustand persist guardó el storage antes de recargar
     const lsState = await page.evaluate(() => localStorage.getItem('copero-career'));
     // eslint-disable-next-line no-console
@@ -166,7 +169,7 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
     // Reload full — dashboard debe sobrevivir porque el store está persistido
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText('Mateo Romero Persistente')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: 'Mateo Romero Persistente' })).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
       path: testInfo.outputPath('mgc444-08-persistence-after-reload.png'),
       fullPage: true,
