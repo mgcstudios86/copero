@@ -46,7 +46,12 @@ jobs:
     # El backoff/retry de upload come el budget y la suite no termina.
     # 60min cubre npm ci ~8min + tests con reintentos + margen para
     # reintentos de upload de logs.
-    timeout-minutes: 60
+    # MGC-444 (re-ejecución): 60min sigue insuficiente con simulador-carrera
+    # specs (mgc452/461/462) que disparan retries=2 sobre el runner self-hosted
+    # con swap-thrash. Run 32678661082 disparó ~46min, cayó por timeout al
+    # terminar retries del último spec visual. 90min cubre npm ci + 5 specs
+    # pesados con 2 retries + margen para upload de logs a GitHub.
+    timeout-minutes: 90
     env:
       INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
     steps:
