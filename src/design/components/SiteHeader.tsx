@@ -87,6 +87,10 @@ export function SiteHeader({
     borderBottomColor: colors.border,
     gap: spacing[4],
     position: 'relative',
+    zIndex: 10,
+    // Aisla al header (y al drawer mobile) en su propio stacking context
+    // para que el hero subtree de home-screen no lo tape por orden de pintado.
+    ...(Platform.OS === 'web' ? ({ isolation: 'isolate' } as const) : null),
     ...(Platform.OS === 'web'
       ? ({
           display: 'flex',
@@ -288,6 +292,10 @@ export function SiteHeader({
             borderBottomWidth: borderWidth.hairline,
             borderBottomColor: colors.border,
             gap: spacing[1],
+            // Defensa redundante al `isolation: 'isolate'` del header: asegura
+            // que el drawer quede por encima del hero de home-screen incluso
+            // si un ancestro pierde el stacking context.
+            zIndex: 20,
             ...(Platform.OS === 'web' ? ({ display: 'flex' } as const) : null),
           }}
         >
