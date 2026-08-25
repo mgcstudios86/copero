@@ -115,6 +115,10 @@ export function HomepageCareerStarter(): React.ReactElement {
   const isWide = width >= 720;
   const formColumnStyle = isWide ? { flex: 3 } : { flex: 1 };
   const previewColumnStyle = isWide ? { flex: 2 } : { flex: 1 };
+  // MGC-666 hallazgo #4: en viewports <380 px Apellido y Dorsal colapsaban a
+  // 60.5 px de ancho (50/50 dentro de un form angosto). ADR-0015 §3 declara
+  // stack <380 px; agregamos el breakpoint explícito al row compartido.
+  const isNarrow = width < 380;
 
   const handleSubmit = () => {
     setName(lastName.trim().slice(0, NAME_MAX_LENGTH));
@@ -195,8 +199,8 @@ export function HomepageCareerStarter(): React.ReactElement {
           testID="career-form"
         >
           {/* Apellido + Dorsal */}
-          <View style={{ flexDirection: 'row', gap: spacing[3] }}>
-            <FormField label="Apellido" flex={3}>
+          <View style={{ flexDirection: isNarrow ? 'column' : 'row', gap: spacing[3] }}>
+            <FormField label="Apellido" flex={isNarrow ? 0 : 3}>
               <TextInput
                 value={lastName}
                 maxLength={NAME_MAX_LENGTH}
@@ -213,7 +217,7 @@ export function HomepageCareerStarter(): React.ReactElement {
                 ]}
               />
             </FormField>
-            <FormField label="Dorsal" flex={1}>
+            <FormField label="Dorsal" flex={isNarrow ? 0 : 1}>
               <TextInput
                 value={String(preferredNumber)}
                 keyboardType="number-pad"
@@ -544,16 +548,27 @@ function SegmentedField<T extends string>({
       >
         {options.map((opt) => {
           const selected = opt.value === value;
+          // MGC-666 hallazgo #1: role="radio" exige aria-checked. Cuando el
+          // segmento usa role="tab" mantenemos `selected` (atributo ARIA
+          // correcto para tabs). axe-core r2 fallaba aria-required-attr.
+          const a11yState = vertical ? { selected, checked: selected } : { selected };
           return (
             <Pressable
               key={opt.value}
               onPress={() => onChange(opt.value)}
               accessibilityRole={vertical ? 'radio' : 'tab'}
-              accessibilityState={{ selected }}
+              accessibilityState={a11yState}
               accessibilityLabel={opt.label}
               testID={`${testID}-${opt.value}`}
               style={{
-                flex: vertical ? 0 : 1,
+                // MGC-666 hallazgo #3: `flex: vertical ? 0 : 1` colapsaba los
+                // ítems del Modo Draft a 0 ancho en columna → el label y la
+                // descripción se desbordaban y se superponían. Forzamos
+                // `flex: 1` con `width: '100%'` para que cada opción ocupe
+                // todo el ancho del contenedor padre en vertical, y el gap
+                // del padre separe las filas.
+                flex: 1,
+                width: '100%',
                 paddingVertical: spacing[2],
                 paddingHorizontal: spacing[3],
                 borderRadius: radii.sm,
@@ -575,7 +590,13 @@ function SegmentedField<T extends string>({
               {opt.description ? (
                 <Text
                   style={{
-                    color: selected ? colors.textOnPrimary : colors.textMuted,
+                    // MGC-666 hallazgo #2: axe-core r2 detectó 1 nodo de
+                    // contraste insuficiente en mobile 390 sobre el description
+                    // text cuando el segmento no estaba seleccionado (textMuted
+                    // sobre surface2 cae justo en el borde de AA en light).
+                    // Subimos a text (más oscuro en light, más claro en dark)
+                    // para garantizar WCAG AA 4.5:1 en los tres modos.
+                    color: selected ? colors.textOnPrimary : colors.text,
                     fontSize: fontSize.xs,
                     textAlign: 'center',
                   }}
