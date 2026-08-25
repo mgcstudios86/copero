@@ -86,6 +86,7 @@ export function SiteHeader({
     borderBottomWidth: borderWidth.hairline,
     borderBottomColor: colors.border,
     gap: spacing[4],
+    position: 'relative',
     ...(Platform.OS === 'web'
       ? ({
           display: 'flex',
@@ -287,7 +288,7 @@ export function SiteHeader({
             borderBottomWidth: borderWidth.hairline,
             borderBottomColor: colors.border,
             gap: spacing[1],
-            ...(Platform.OS === 'web' ? ({ display: 'flex', position: 'absolute' } as const) : null),
+            ...(Platform.OS === 'web' ? ({ display: 'flex' } as const) : null),
           }}
         >
           {NAV_ITEMS.map((item) => (
@@ -300,10 +301,10 @@ export function SiteHeader({
             >
               <Pressable
                 onPress={closeMenu}
-                style={({ pressed }) => [
-                  navLinkStyle,
-                  pressed ? { backgroundColor: colors.surface2 } : null,
-                ]}
+                style={({ pressed }) => ({
+                  ...navLinkStyle,
+                  ...(pressed ? { backgroundColor: colors.surface2 } : null),
+                })}
               >
                 <Text style={navLinkText}>{t(`nav.${item.key}`)}</Text>
               </Pressable>
@@ -316,7 +317,7 @@ export function SiteHeader({
             accessibilityLabel={t('nav.play')}
             onPress={closeMenu}
           >
-            <View style={[playStyle, { marginTop: spacing[2], alignSelf: 'flex-start' }]}>
+            <View style={{ ...playStyle, marginTop: spacing[2], alignSelf: 'flex-start' }}>
               <Text style={playText}>{t('nav.play')}</Text>
             </View>
           </Link>
