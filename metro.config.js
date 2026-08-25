@@ -71,4 +71,57 @@ if (config.web) {
 // splitChunks real y aplique el threshold de pre-carga correcto.
 config._coperoSplitChunks = true;
 
+// MGC-743 — Metro no incluye `woff2` en `assetExts` por defecto (la lista
+// viene de metro-config/src/defaults/defaults.js e incluye ttf/otf pero
+// no woff2). Sin esta entrada, `require('../assets/fonts/woff2/X.woff2')`
+// falla con "Unable to resolve module".
+const woffExtensions = ['woff', 'woff2'];
+config.resolver.assetExts = Array.from(
+  new Set([...(config.resolver.assetExts ?? []), ...woffExtensions]),
+);
+
+// MGC-743 — `app/_layout.web.tsx` corre sólo en web, pero expo-router hace
+// `require.context('./app')` para descubrir rutas y Metro copia al bundle
+// web los 8 TTFs referenciados estáticamente por `_layout.native.tsx`,
+// ~1.9 MB de peso muerto que no se referencia en el JS chunk web.
+//
+// La build nativa (APK/IPA) sí necesita los TTFs bundleados: en native,
+// los `require('./X.ttf')` de `@expo-google-fonts/inter/{400Regular,...}`
+// se resuelven como asset IDs y terminan embebidos en el binario vía el
+// asset registry de RN. Por eso gateamos el block por `platform === 'web'`.
+//
+// API: Expo envuelve Metro's `resolveRequest` con la firma
+// `(context, moduleName, platform)` (ver
+// `@expo/cli/build/src/start/server/metro/withMetroResolvers.js`). El
+// context expone `originModulePath` (el archivo que hace el `require`).
+// Devolver `{ type: 'empty' }` resuelve el modulo a un placeholder vacío
+// sin copiar el asset a dist/assets/.
+//
+// Los requires de TTF viven en `node_modules/@expo-google-fonts/{inter,
+// poppins}/<weight>/index.js` que sólo se ejecuta en builds nativas, pero
+// Metro los escanea estáticamente al construir el module graph del bundle
+// web. Filtramos por (originModulePath, moduleName.endswith('.ttf')) para
+// identificar específicamente esos assets.
+const ttfInGoogleFonts = /node_modules\/@expo-google-fonts\/(?:inter|poppins)\//;
+const previousResolveRequest = config.resolver.resolveRequest;
+config.resolver.resolveRequest = function customFontBlockResolver(
+  context,
+  moduleName,
+  platform,
+) {
+  const isFontRequire =
+    typeof moduleName === 'string' && moduleName.endsWith('.ttf');
+  const isFromGoogleFonts =
+    context &&
+    typeof context.originModulePath === 'string' &&
+    ttfInGoogleFonts.test(context.originModulePath);
+  if (platform === 'web' && isFontRequire && isFromGoogleFonts) {
+    return { type: 'empty' };
+  }
+  if (typeof previousResolveRequest === 'function') {
+    return previousResolveRequest.call(this, context, moduleName, platform);
+  }
+  return context.resolveRequest(context, moduleName, platform);
+};
+
 module.exports = config;
