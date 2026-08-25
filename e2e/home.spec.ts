@@ -35,14 +35,35 @@ test.beforeEach(async ({ context }) => {
 });
 
 test.describe('Copero — smoke home (web) — MGC-505', () => {
-  test('home renderiza con hero Convertite en Leyenda y CTA carrera', async ({ page }, testInfo) => {
+  test('home renderiza con hero multi-línea + tag-list + CTA carrera', async ({ page }, testInfo) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await expect(page.getByTestId('home-screen')).toBeVisible();
-    await expect(page.getByText(/Convertite en leyenda/i)).toBeVisible();
+    // MGC-654 P0 #3 — H1 multi-línea reemplaza "Convertite en leyenda".
+    await expect(page.getByText(/COPERO JUEGO/i)).toBeVisible();
+    await expect(page.getByText(/CREA TU PROPIA CARRERA DE FÚTBOL/i)).toBeVisible();
+    // MGC-654 P0 #2 — tag-list 4 chips con accessibilityRole text.
+    await expect(page.getByTestId('home-tag-list')).toBeVisible();
+    await expect(page.getByText(/Juego online/i)).toBeVisible();
+    await expect(page.getByText(/Draft 8 atributos/i)).toBeVisible();
+    await expect(page.getByText(/Modo carrera/i)).toBeVisible();
+    await expect(page.getByText(/Guardado local/i)).toBeVisible();
+    // CTA principal + CTA secundario ghost (MGC-654 P0 #4).
     await expect(page.getByTestId('btn-career')).toBeVisible();
+    await expect(page.getByTestId('btn-how-to-play')).toBeVisible();
     await expect(page.getByTestId('ad-banner-web')).toBeVisible();
     await expect(page.getByText(/PUBLICIDAD/i)).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath('home-baseline.png'), fullPage: true });
+  });
+
+  test('CTA ghost Ver cómo se juega scrollea a #how-to-play', async ({ page }, testInfo) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await expect(page.getByTestId('home-screen')).toBeVisible();
+    // Verifica que la sección objetivo tiene nativeID/how-to-play (MGC-654 P0 #4).
+    await expect(page.locator('#how-to-play')).toHaveCount(1);
+    // Click produce scrollIntoView; assert que la sección queda visible después.
+    await page.getByTestId('btn-how-to-play').click();
+    await expect(page.locator('#how-to-play')).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath('home-how-to-play.png'), fullPage: true });
   });
 
   test('home NO expone otros juegos (Jugar/Compass)', async ({ page }) => {

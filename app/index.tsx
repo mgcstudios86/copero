@@ -1,5 +1,13 @@
 import React, { Suspense, lazy } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -35,6 +43,13 @@ const JerseyPreview = lazy(() =>
 export default function Home() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
+  // MGC-654: H1 multi-línea responsivo. Móvil (≤600) usa 2xl (30px) para que
+  // "CREA TU PROPIA CARRERA DE FÚTBOL" quepa en 2 wraps cómodos sin overflow;
+  // desktop usa 3xl (36px) con padding generoso. Sin esto, 4xl fijo revienta
+  // el viewport mobile y rompe la promesa SEO del H1 multi-línea del audit.
+  const { width: viewportWidth } = useWindowDimensions();
+  const isCompact = viewportWidth < 600;
+  const h1Size = isCompact ? fontSize['2xl'] : fontSize['3xl'];
   const highScore = useGameStore((s) => s.highScore);
   const bestStreak = useGameStore((s) => s.bestStreak);
   const careerStage = useCareerStore((s) => s.stage);
@@ -48,6 +63,23 @@ export default function Home() {
   const hasCareer = careerStage !== 'identity' && careerProfileName.length > 0;
   const nat = hasCareer ? NATIONALITIES_BY_CODE[careerProfileNationality || ''] : null;
   const countryCode = careerProfileNationality || 'AR';
+
+  // MGC-654: scroll-into-view del anchor #how-to-play. Web usa scrollIntoView
+  // (smooth, browser-native); native anuncia la sección con AccessibilityInfo
+  // porque hash anchors no tienen equivalente cross-platform sin un ref +
+  // measureLayout. El usuario en mobile scrollea manualmente; el announce le
+  // confirma que la acción se registró (TalkBack/VoiceOver feedback).
+  const scrollToHowToPlay = () => {
+    if (Platform.OS === 'web') {
+      if (typeof document !== 'undefined') {
+        document
+          .getElementById('how-to-play')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      return;
+    }
+    AccessibilityInfo.announceForAccessibility('Sección Cómo se juega');
+  };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['top']}>
@@ -89,17 +121,25 @@ export default function Home() {
             >
               COPERO · SIMULADOR DE CARRERA
             </Text>
+            {/* MGC-654 P0 #3 — H1 multi-línea. Reemplaza "Convertite en leyenda"
+                por el SEO title del referente kiya0908. El `\n` fuerza el salto
+                entre "COPERO JUEGO:" y el resto en ambos viewports; fontSize
+                responsivo (2xl mobile / 3xl desktop) mantiene jerarquía sin
+                overflow. numberOfLines={3} protege contra wraps accidentales
+                en viewports ultra-anchos. */}
             <Text
+              accessibilityRole="header"
+              numberOfLines={3}
               style={{
                 color: colors.textOnAccent,
-                fontSize: fontSize['4xl'],
+                fontSize: h1Size,
                 fontFamily: fontFamily.display,
                 fontWeight: fontWeight.bold,
-                lineHeight: fontSize['4xl'] * lineHeight.tight,
+                lineHeight: h1Size * lineHeight.tight,
+                letterSpacing: -0.5,
               }}
-              accessibilityRole="header"
             >
-              Convertite en leyenda
+              {'COPERO JUEGO:\nCREA TU PROPIA CARRERA DE FÚTBOL'}
             </Text>
             <Text
               style={{
@@ -111,6 +151,28 @@ export default function Home() {
             >
               Tomá decisiones, asumí consecuencias y construí tu carrera futbolística paso a paso.
             </Text>
+
+            {/* MGC-654 P0 #2 — Tag-list con 4 chips. Wrapper con role="text" +
+                label combinado (MGC-501 TalkBack pattern: cada chip se oculta
+                al a11y individual y el grupo expone la lista como una sola
+                unidad semántica). Chips semitransparentes para no competir
+                con el CTA verde primario que viene después. */}
+            <View
+              testID="home-tag-list"
+              accessibilityRole="text"
+              accessibilityLabel="Características del juego: juego online, draft de ocho atributos, modo carrera, guardado local"
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                gap: spacing[2],
+                marginTop: spacing[3],
+              }}
+            >
+              <TagPill label="Juego online" />
+              <TagPill label="Draft 8 atributos" />
+              <TagPill label="Modo carrera" />
+              <TagPill label="Guardado local" />
+            </View>
           </View>
 
           {/* Visual centerpiece: camiseta + OVR (estilo kiya0908 CareerCard) */}
@@ -235,8 +297,22 @@ export default function Home() {
           accessibilityHint="Abre el simulador de carrera"
         />
 
+        {/* ── CTA secundario (MGC-654 P0 #4) ────────────────────────────
+            Ghost variant sobre `colors.bg` lee en `colors.text` (sigue
+            cumpliendo AA porque Button ghost usa texto del theme, no literal).
+            Ancla a #how-to-play via scrollIntoView; en native es no-op. */}
+        <Button
+          label="Ver cómo se juega"
+          onPress={scrollToHowToPlay}
+          variant="ghost"
+          size="md"
+          fullWidth
+          testID="btn-how-to-play"
+          accessibilityHint="Salta a la sección Cómo se juega"
+        />
+
         {/* ── Cómo se juega (3 pasos numerados, kiya0908 IntroPhase) ─── */}
-        <View style={{ gap: spacing[3] }}>
+        <View nativeID="how-to-play" style={{ gap: spacing[3] }}>
           <Text
             style={{
               color: colors.textMuted,
@@ -560,6 +636,47 @@ function DraftModePreview() {
           {modeLabel}
         </Text>
       </View>
+    </View>
+  );
+}
+
+/**
+ * TagPill — MGC-654 P0 #2.
+ *
+ * Chip estático (no interactivo) para el tag-list del hero. Diferencia
+ * intencional respecto a `CategoryChip`:
+ *   - Sin `onPress` ni `selected` — aquí los tags son descriptivos, no filtros.
+ *   - `accessibilityElementsHidden` para que TalkBack/VoiceOver NO los lea
+ *     individualmente; el wrapper `<View accessibilityRole="text">` del
+ *     tag-list expone la lista completa como una unidad (MGC-501).
+ *   - Fondo translúcido blanco sobre `colors.accent` (purple) para legibilidad
+ *     AA sin competir visualmente con el CTA verde primario.
+ */
+function TagPill({ label }: { label: string }) {
+  const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no"
+      style={{
+        paddingVertical: spacing[2],
+        paddingHorizontal: spacing[4],
+        borderRadius: radii.pill,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.35)',
+        backgroundColor: 'rgba(0, 0, 0, 0.10)',
+      }}
+    >
+      <Text
+        style={{
+          color: colors.textOnAccent,
+          fontSize: fontSize.sm,
+          fontWeight: fontWeight.semibold,
+          letterSpacing: 0.3,
+        }}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
