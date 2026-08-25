@@ -1,0 +1,52 @@
+{
+  "url": "https://copero.mgcstudios.app/",
+  "status": 200,
+  "title": "Copero",
+  "viewport": "desktop-1440",
+  "navLinks": [],
+  "headings": [
+    {
+      "level": "H1",
+      "text": "Convertite en leyenda"
+    },
+    {
+      "level": "H1",
+      "text": "CÓMO SE JUEGA"
+    },
+    {
+      "level": "H1",
+      "text": "Definí tu identidad"
+    },
+    {
+      "level": "H1",
+      "text": "Pasá por la academia"
+    },
+    {
+      "level": "H1",
+      "text": "Viví tu carrera"
+    },
+    {
+      "level": "H1",
+      "text": "Preguntas frecuentes"
+    }
+  ],
+  "buttons": [
+    {
+      "tag": "BUTTON",
+      "text": "Empezar carrera",
+      "ariaLabel": "Empezar carrera"
+    }
+  ],
+  "inputs": [],
+  "sections": [],
+  "images": [],
+  "footerText": "",
+  "langSwitcher": [],
+  "smallCaps": [],
+  "bodyTextLength": 1211,
+  "bodyTextSample": "COPERO · SIMULADOR DE CARRERA\nConvertite en leyenda\nTomá decisiones, asumí consecuencias y construí tu carrera futbolística paso a paso.\nTU JUGADOR\n—\nOVR —\nDefiní tu identidad para empezar\nMEJOR PUNTAJE\n—\nMEJOR RACHA\n—\nOVR ACTUAL\n—\nEmpezar carrera\nCÓMO SE JUEGA\n1\nDefiní tu identidad\nNombre, dorsal, posición y selección. Tu jugador arranca con 16 años y OVR 50.\n2\nPasá por la academia\nElegí 8 atributos en rondas. Cuanto mejor tu draft, mejor tu techo de OVR.\n3\nViví tu carrera\nSemana a semana: entrenamientos, partidos, ofertas, lesiones y prensa. Tus decisiones cambian todo.\nPreguntas frecuentes\n¿Cuánto dura una carrera?\nUna carrera larga arranca a los 16 y termina cuando tu jugador se retira (cerca de los 35). Cada año trae pretemporada, temporada y ofertas.\n¿Puedo cambiar de club?\nSí. Cada ventana de transferencias recibís ofertas de otros clubes según tu OVR, edad y reputación. También podés rechazar y quedarte.\n¿Qué pasa cuando me retiro?\nTu carrera entra en el resumen final: trofeos, estadísticas, clubs y selección. Después podés empezar una nueva.\n¿Se guarda mi progreso?\nSí, localmente en el dispositivo. Tu carrera persiste entre sesiones mientras no limpies los datos de la app.\nPUBLICIDAD",
+  "doctype": "html",
+  "htmlLang": "en",
+  "metaViewport": "width=device-width, initial-scale=1, shrink-to-fit=no",
+  "metaDesc": null
+}

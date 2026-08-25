@@ -1,0 +1,228 @@
+{
+  "url": "https://www.aliexpress.com/p/popular-landing/aliexpress.html?_immersiveMode=true&aff_plateform=aff_default_page&isdl=y&aff_short_key=_c3iY7qHn",
+  "status": 200,
+  "title": "",
+  "viewport": "desktop-1440",
+  "navLinks": [],
+  "headings": [],
+  "buttons": [],
+  "inputs": [
+    {
+      "tag": "INPUT",
+      "type": "text",
+      "name": "searchWords",
+      "id": "search-words",
+      "placeholder": "Fishing Rod",
+      "ariaLabel": "You can type an item name or keyword to search.",
+      "label": ""
+    },
+    {
+      "tag": "INPUT",
+      "type": "button",
+      "name": null,
+      "id": null,
+      "placeholder": null,
+      "ariaLabel": "You can click this button to search.",
+      "label": ""
+    }
+  ],
+  "sections": [
+    {
+      "tag": "SECTION",
+      "cls": "section-left",
+      "firstHeading": "",
+      "childCount": 2
+    },
+    {
+      "tag": "SECTION",
+      "cls": "section-right",
+      "firstHeading": "",
+      "childCount": 2
+    }
+  ],
+  "images": [
+    {
+      "alt": "Search by image",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/Sf683a50b80cc4690a747a857f150abc8p/48x48.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S56f620747c114ebb9e55afebe5483163B.jpg"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S15342eeadb49441ea8398a08fabbfe7cC.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S594e2961ae0a427a860024ce6b18c01ep.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S6e471c1f893e411db07aac77ef4e4ad0Y.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/Sa55d5a84cdf34fa8b7ec2693df5ad6add.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S23ee336b483a4938ab17033e20572e64e.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S551d160c46484a9698dee20ed7cda576N.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/Sfe27f53b0c9b46919a4d1b615550172f6.jpeg_220x220q75.jpeg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S5c3261cf46fb47aa8c7f3abbdd792574S.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/Sfd3278c1e6c84d07adccf055406a4b7f1.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S8719d974c6d44ba099d851634cdb930a4.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S6d35988cb2af4cc090d51ee76d237d74X.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/Sd0cdca38760c4c32ace3fd86577624b8f.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S7bd181078d3f4d68be037a59a40ff060n.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S12579d6aec4a461693e715319072c5a1j.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S6063964cd2f24694a8927163866cebe8B.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S2037a1b0e6874319907183a4196f4ab8y.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S747ffbcc234040cf9d52757afaf4eecay.png_220x220.png_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/Af3d72c404e9a420e9511359bfc335417V.png_220x220.png_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S5c3261cf46fb47aa8c7f3abbdd792574S.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S71fb49b7fb494949a58a5a19bf743359j.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    },
+    {
+      "alt": null,
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S7db4477ec27343cb9297933530ad88acU.jpg_220x220q75.jpg_.avif"
+    },
+    {
+      "alt": "",
+      "src": "https://ae-pic-a1.aliexpress-media.com/kf/S1887a285b60743859ac7bdbfca5e0896Z/154x64.png"
+    }
+  ],
+  "footerText": "Ayuda Atención al cliente, Litigios e informes, Política de devoluciones y reembolsos, Informar de una infracción DPI, Información DSA/OSA , Cumplimiento de la integridad , Centro de Transparencia, Entrada de quejas sin iniciar sesión, Retiradas, Política de devoluciones Páginas multilingües de AliExpress Pусский, Português, Español, Français, Deutsch, Italiano, Nederlands, Türk, 日本語, 한국어, ภาษาไทย, اللغة العربي, עברית, Polish Buscar por categoría Todos los populares , Producto, Promoción, Precio",
+  "langSwitcher": [
+    {
+      "cls": "ship-to--menuItem--WdBDsYl ship-to--newMenuItem--2Rw-XvE",
+      "text": "EN/ USD"
+    },
+    {
+      "cls": "sf-MultiLanguageSite col-lg-30 col-md-30 col-sm-60",
+      "text": "Páginas multilingües de AliExpress Pусский, Português, Españ"
+    }
+  ],
+  "smallCaps": [
+    {
+      "cls": "instagram",
+      "text": "instagram"
+    }
+  ],
+  "bodyTextLength": 7737,
+  "bodyTextSample": "AliExpress\nDownload the AliExpress app\nEN/\nUSD\nWelcome\nSign in / Register\n0\nCart\nFacial Hair Removal for Women, Mini Hair Remover, Electric Razor Shaver Portable Bikini Epilator for Lips, Chin, Armpit, Peach\n(1000+)\n$2.99\nSave $4.66\nFree returns\n2026 Retro Pistol Metal Signs Military Style Indoor Outdoor Wall Decor For Man Cave Cafe Bar Garden\n(165)\n$4.50\nSave $6.07\nFree returns\n2026 New Business Men's Jeans Casual Straight Stretch Fashion Classic Blue Black Work Denim Pant Trousers Male Clothing\n(5000+)\n$9.80\nSave $13.74\nFree returns\nLuxury Stainless Steel Men Calendar Quartz Watch Fashion Mens Business Watches for Man Clock Reloj Hombre\n(10000+)\n$2.63\nSave $3.48\nFree returns\nHot Blind Box Mystery Kawaii Cat Paw Mochi Squishy, Simulated Food Fidget Toy, Cute Squeeze Foot Toy Antistress Stress-Relief\n(700+)\n$3.21\nSave $3.93\nFree returns\nPortable Handheld Mini Fan 5 Speed Adjust Type c Rechargeable Fan Digital Display Desktop Fan Outdoor\n(10000+)\n$3.81\nSave $5.05\nFree returns\nLaundry Detergent Spring Meadow He Deep Cleaning Concentrated Pods 8 Pacs - 6oz for Everyday Use\n(383)\n$4.11\nSave $8.87\nFree shipping\nT9 Vintage Men's Electric Hair Clipper Beard Trimmer/Rechargeable Hair Cutting Machine With Nose Hair Trimmer Kit Boyfriend Gift\n(10000+)\n$2.44\nSave $4.08\nFree returns\n100/50Pcs Titanium Coated Drill Bits HSS High Speed Steel Set Tool Quality Power Tools 1/1.5/2/2.5/3mm\n(10000+)\n$3.25\nSave $6.62\nFree returns\nTOPK 4Inch USB Mini Portable Fan for Camping,3 Speeds Quiet Desk Table Personal Fan,360°Adjustment Standing Fans for Room Home\n(10000+)\n$5.18\nSave $6.58\nFree returns\nJBi Boombox 1/2/3 Speaker Handle Protector | Non-Slip Grip, Durable Textile Material,Compatible with JBi Boombox 1/2/3 Speakers\n(5000+)\n$2.13\nSave $2.72\nFree returns\n2PCS/SET Cute Alien Cat Plush Keychain Kawaii Fluffy Cat Doll Pendant Backpack Ornament Soft Stuffed Animal Keyring Girls Gift\n(1000+)\n$2.94\nSave $3.59\nFree returns\nSquishy Butter Stick Fidget Toy Sticky Butter Stick Slow Rebound Stress Ball Squeeze Toy Anti-stress Sensory Toy for Adults\n(10000+)\n$2.85\nSave $2.96\nFree returns\nHigh-Pressure Car Washing Water Gun, External Cleaning Of RV, Foam Kettle Cleaning, Garden Water Hose Nozzle, Garden Shower,\n(10000+)\n$6.77\nSave $10.16\nFree returns\nStainless Steel Keychain Folding Knife Outdoor Carrying Knife Mirror Sharp Pocket Knife Fruit Knife Folding Knife\n(2000+)\n$2.91\nSave $5.90\nFree returns\n1/2/3 Pairs of Universal Fashion Glasses, Square-Framed Glasses, Fashionable Campus Style, Clear Black Frame, Back to School\n(10000+)\n$2.20\nSave $2.70\nFree returns\nJean Paul Gaultier Le Beau Le Parfum Intense for Men - Long Lasting Woody Amber Men's Cologne Eau De Parfum with Coconut Wood, Tonka Bean & Sandalwood - Designer Fragrance Spray\n(600+)\n$14.35\nSave $26.96\nFree shipping\nRare Beauty Soft Pinch Liquid Blush Silky Smoothly Long Lasting Plump Makeup Hope Love Virtue Happy Wonder Worth Face Cosmetics\n(3000+)\n$3.41\nSave $4.53\nFree returns\nInvisible Push Up Bra for Women Backless Strapless Bra Seamless Front Closure Bralette Underwear Silicone Self-Adhesive Bra Pad\n(10000+)\n$1.79\nSave $2.88\nFree returns\n9000Pa Wireless Car Vacuum Cleaner USB Charging 1200mAh Portable Cleaning Appliance Mini Wet and Dry Vacuum Cleaner Household\n(10000+)\n$5.27\nSave $5.49\nFree returns\nToocki 100W Type C to USB C Cable PD 3.0 Quick Charge 4.0 Fast Charging Type C to Type C for iPhone 15 Macbook Samsung Xiaomi\n(10000+)\n$1.94\nSave $2.33\nFree returns\nThe 2026 Upgraded E88PRO MAX Foldable Drone Features Dual Cameras, Extra Batteries, an 8K Screen for Remote Control, and One-click Return-to-home Functionality. Suitable for Beginners, It's an Ideal Independence Day or Holiday Gift.\n(483)\n$14.38\nSave $26.67\nFree shipping\nWalking sticks Aluminum Alloy Climbing Cane Four-section Telescopic Folding Climbing and Hiking Cane Trekking Poles Elderly Cane\n(91)\n$6.89\nSave $7.16\nFree returns\nNew hot 5.5cm Halloween themed creative decompression, kneading, squeezing, and venting toy\n$4.49\nSave $5.38",
+  "doctype": "html",
+  "htmlLang": "",
+  "metaViewport": "width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no",
+  "metaDesc": null
+}
