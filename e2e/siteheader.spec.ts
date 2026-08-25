@@ -222,7 +222,7 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
     for (const label of ES_LINKS) {
       await expect(mobileNav.getByRole('link', { name: label })).toBeVisible();
     }
-    await expect(mobileNav.getByRole('link', { name: 'Jugar' })).toBeVisible();
+    await expect(mobileNav.getByRole('link', { name: 'Jugar', exact: true })).toBeVisible();
 
     await page.screenshot({
       path: testInfo.outputPath('siteheader-mobile-open-390.png'),
