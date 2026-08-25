@@ -26,8 +26,12 @@ import { useTheme } from '../useTheme';
  * `es-AR` (idioma del sitio). Retrofit a i18n cuando MGC-653 PR mergee.
  *
  * A11y:
- * - `<footer>` nativo (`accessibilityRole="contentinfo"` — cast explícito
- *   porque RN 0.86.2 no lo exporta; mismo patrón que Footer.tsx).
+ * - Contenedor `<footer>` con `accessibilityLabel` + `accessibilityHint`
+ *   localized (RN 0.86.2 YA NO acepta `accessibilityRole="contentinfo"` —
+ *   lanza IllegalArgumentException; ticket MGC-726). Antes se casteaba
+ *   `'contentinfo' as AccessibilityRole`, pero `ReactAccessibilityDelegate.kt:511`
+ *   ahora rechaza el valor. Reemplazamos por landmark semántico vía
+ *   label/hint + agrupamiento por swipe de TalkBack/VoiceOver.
  * - `<nav>` con `accessibilityRole="navigation"` + label localizado
  *   (también casteado).
  * - Cada link: `accessibilityRole="link"` + label explícito.
@@ -38,7 +42,6 @@ import { useTheme } from '../useTheme';
  * no genere layout shift al cargar fuentes (Inter ya está bundleada en
  * MGC-555 PR1, pero el primer render del web bundle puede tardar).
  */
-const CONTENTINFO_ROLE = 'contentinfo' as AccessibilityRole;
 const NAVIGATION_ROLE = 'navigation' as AccessibilityRole;
 
 const FOOTER_LINKS = [
@@ -59,7 +62,8 @@ export function SiteFooter({ testID = 'copero-site-footer' }: SiteFooterProps) {
   return (
     <View
       testID={testID}
-      accessibilityRole={CONTENTINFO_ROLE}
+      accessibilityLabel="Pie de página del sitio"
+      accessibilityHint="Información legal y enlaces de navegación secundarios"
       style={{
         backgroundColor: colors.bg,
         borderTopWidth: borderWidth.hairline,
