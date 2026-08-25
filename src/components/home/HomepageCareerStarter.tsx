@@ -543,6 +543,11 @@ function SegmentedField<T extends string>({
           borderRadius: radii.md,
           padding: spacing[1],
           gap: spacing[1],
+          // MGC-803 AC3: en viewports <380 px el career-preview solapaba el
+          // segundo ítem del segmento (Purista) ~50 px. elevation + zIndex
+          // garantiza que el Pressable del segmento quede sobre cualquier
+          // overlay móvil (Android respeta elevation; web/iOS zIndex).
+          ...(vertical ? { zIndex: 1, elevation: 1 } : null),
         }}
         accessibilityRole="tablist"
       >
