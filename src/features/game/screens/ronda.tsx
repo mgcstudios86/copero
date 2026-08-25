@@ -9,7 +9,7 @@ import { DEFAULT_ROUND_DURATION_MS } from '@/features/game/engine';
 
 export default function Ronda() {
   const router = useRouter();
-  const { colors, spacing, fontSize, fontWeight } = useTheme();
+  const { colors, spacing, fontSize } = useTheme();
   const status = useGameStore((s) => s.status);
   const round = useGameStore((s) => s.round);
   const totalRounds = useGameStore((s) => s.totalRounds);

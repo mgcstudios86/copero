@@ -11,7 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
-import { useGameStore } from '@/shared/store/gameStore';
+// MGC-782: stats del juego vienen del store persistente sin engine. Antes
+// `useGameStore` arrastraba el FSM al entry chunk del home (~25-40 KB gz).
+import { useGameStatsStore } from '@/shared/store/gameStatsStore';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { useDraftModeStore } from '@/shared/store/draftModeStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
@@ -33,6 +35,27 @@ const HomepageCareerStarter = lazy(() =>
 // el browser lo solicita). Fallback con dimensiones fijas evita CLS.
 const JerseyPreview = lazy(() =>
   import('@/design/components/JerseyPreview').then((m) => ({ default: m.JerseyPreview })),
+);
+
+// MGC-782: tres secciones del fold (cómo se juega, comparador, FAQ) viven
+// ahora en archivos separados y se cargan como chunks asincrónicos. Estiman
+// -15 a -30 KB gz del entry chunk cada uno. Fallback null: como están
+// debajo del fold, el Suspense vacío no genera CLS perceptible — el
+// viewport ya pintó el hero antes de que el usuario llegue a scroll.
+const HowToPlaySteps = lazy(() =>
+  import('@/components/home/HowToPlaySteps').then((m) => ({
+    default: m.HowToPlaySteps,
+  })),
+);
+const ComparadorClassicPurist = lazy(() =>
+  import('@/components/home/ComparadorClassicPurist').then((m) => ({
+    default: m.ComparadorClassicPurist,
+  })),
+);
+const FAQList = lazy(() =>
+  import('@/components/home/FAQList').then((m) => ({
+    default: m.FAQList,
+  })),
 );
 
 /**
@@ -63,8 +86,8 @@ export default function Home() {
   const { width: viewportWidth } = useWindowDimensions();
   const isCompact = viewportWidth < 600;
   const h1Size = isCompact ? fontSize['2xl'] : fontSize['3xl'];
-  const highScore = useGameStore((s) => s.highScore);
-  const bestStreak = useGameStore((s) => s.bestStreak);
+  const highScore = useGameStatsStore((s) => s.highScore);
+  const bestStreak = useGameStatsStore((s) => s.bestStreak);
   const careerStage = useCareerStore((s) => s.stage);
   const careerProfileName = useCareerStore((s) => s.profile.name);
   const careerProfileNumber = useCareerStore((s) => s.profile.number);
@@ -333,169 +356,26 @@ export default function Home() {
           accessibilityHint="Salta a la sección Cómo se juega"
         />
 
-        {/* ── Cómo se juega (4 pasos numerados, kiya0908 IntroPhase) ─── */}
-        {/* MGC-658: 3→4 pasos. Layout responsive con `flexBasis: '48%'` por
-            step: en viewports ≥ 480 px queda 2×2; en mobile angosto colapsa
-            a una columna sin media queries. WCAG AA: cada step expone
-            `accessibilityLabel` con número + título + body (StepCard abajo).
-            `nativeID` mantiene compat con el anchor scrollIntoView + testID
-            para Playwright (MGC-654 P0 #4). */}
-        <View
-          testID="how-to-play"
-          nativeID="how-to-play"
-          style={{ gap: spacing[3] }}
-        >
-          <Text
-            style={{
-              color: colors.textMuted,
-              letterSpacing: 3,
-              fontSize: fontSize.xs,
-              fontWeight: fontWeight.bold,
-              fontFamily: fontFamily.display,
-            }}
-            accessibilityRole="header"
-          >
-            CÓMO SE JUEGA
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3] }}>
-            <StepCard
-              number="1"
-              title="Crea tu jugador"
-              body="Nombre, dorsal, posición y selección. Tu jugador arranca con 16 años y OVR 50."
-            />
-            <StepCard
-              number="2"
-              title="Completa el draft de 8 atributos"
-              body="Elegí 8 estadísticas en rondas. Cuanto mejor tu draft, mejor tu techo de OVR."
-            />
-            <StepCard
-              number="3"
-              title="Elegí dónde empieza tu carrera"
-              body="Fichá por un club inicial según tu posición. Empezás en inferiores o primera división."
-            />
-            <StepCard
-              number="4"
-              title="Vive temporadas, fichajes y decisiones"
-              body="Semana a semana: entrenamientos, partidos, ofertas, lesiones y prensa. Tus decisiones cambian todo."
-            />
-          </View>
-        </View>
+        {/* ── Cómo se juega (lazy-load MGC-782) ──────────────────────── */}
+        {/* Sección extraída a `src/components/home/HowToPlaySteps.tsx`. Ver
+            bloque arriba. Anchor scrollIntoView + testID preservados. */}
+        <Suspense fallback={null}>
+          <HowToPlaySteps />
+        </Suspense>
 
-        {/* ── Comparador Classic vs Purist (MGC-658 P1 #7) ────────────── */}
-        {/* Bloque descriptivo: NO interactivo. La elección real del modo se
-            mantiene en /simulador-carrera/identity (decisión MGC-646 §3.3
-            Opción B). Aquí se comparan ambos modos para bajar la barrera
-            de entrada antes del primer partido. WCAG AA: cada columna
-            expone `accessibilityLabel` consolidado. */}
-        <View
-          testID="draft-mode-comparator"
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radii.lg,
-            padding: spacing[4],
-            borderWidth: 1,
-            borderColor: colors.border,
-            gap: spacing[3],
-          }}
-        >
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: fontSize.md,
-              fontWeight: fontWeight.bold,
-              fontFamily: fontFamily.display,
-            }}
-            accessibilityRole="header"
-          >
-            Modos de draft: Classic y Purist
-          </Text>
-          <Text
-            style={{
-              color: colors.textMuted,
-              fontSize: fontSize.sm,
-              lineHeight: fontSize.sm * 1.4,
-            }}
-          >
-            Antes del primer partido elegís cómo querés que sea el draft de 8
-            atributos. Dos modos, mismo techo de OVR, distinta dificultad.
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3] }}>
-            <CompareCard
-              eyebrow="MODO CLASSIC"
-              title="Ideal para arrancar"
-              bullets={[
-                '8 rondas con palabras y plantillas de apoyo.',
-                'Cada acierto sube un atributo fijo.',
-                'Ritmo tranquilo, menos riesgo de lesión mental.',
-              ]}
-              footer="Recomendado si es tu primera carrera."
-              testID="compare-classic"
-            />
-            <CompareCard
-              eyebrow="MODO PURIST"
-              title="Para los que saben"
-              bullets={[
-                '8 rondas con letras crudas, sin plantillas.',
-                'Cada acierto da más OVR pero sin red.',
-                'Ritmo rápido: más lesiones, más premios.',
-              ]}
-              footer="Recomendado para carreras con replay."
-              testID="compare-purist"
-            />
-          </View>
-        </View>
+        {/* ── Comparador Classic vs Purist (lazy-load MGC-782) ────────── */}
+        {/* Bloque descriptivo NO interactivo extraído a
+            `src/components/home/ComparadorClassicPurist.tsx`. La elección
+            real del modo se mantiene en /simulador-carrera/identity. */}
+        <Suspense fallback={null}>
+          <ComparadorClassicPurist />
+        </Suspense>
 
-        {/* ── FAQ (kiya0908 IntroPhase faqs) ──────────────────────────── */}
-        {/* MGC-658 P1 #8: +2 items (`internet` + `costo`). Resto del
-            contenido preservado 1:1 contra MGC-605. WCAG AA: cada item
-            expone `accessibilityLabel` con pregunta + respuesta combinada. */}
-        <View
-          testID="faq"
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radii.lg,
-            padding: spacing[4],
-            borderWidth: 1,
-            borderColor: colors.border,
-            gap: spacing[3],
-          }}
-        >
-          <Text
-            style={{
-              color: colors.text,
-              fontSize: fontSize.md,
-              fontWeight: fontWeight.bold,
-              fontFamily: fontFamily.display,
-            }}
-            accessibilityRole="header"
-          >
-            Preguntas frecuentes
-          </Text>
-          <FaqItem
-            q="¿Cuánto dura una carrera?"
-            a="Una carrera larga arranca a los 16 y termina cuando tu jugador se retira (cerca de los 35). Cada año trae pretemporada, temporada y ofertas."
-          />
-          <FaqItem
-            q="¿Puedo cambiar de club?"
-            a="Sí. Cada ventana de transferencias recibís ofertas de otros clubes según tu OVR, edad y reputación. También podés rechazar y quedarte."
-          />
-          <FaqItem
-            q="¿Qué pasa cuando me retiro?"
-            a="Tu carrera entra en el resumen final: trofeos, estadísticas, clubs y selección. Después podés empezar una nueva."
-          />
-          <FaqItem
-            q="¿Se guarda mi progreso?"
-            a="Sí, localmente en el dispositivo. Tu carrera persiste entre sesiones mientras no limpies los datos de la app."
-          />
-          <FaqItem
-            q="¿Necesito internet para jugar?"
-            a="No. La carrera corre 100% en tu dispositivo y se guarda localmente. Sólo necesitás conexión si activás sincronización opcional en la nube."
-          />
-          <FaqItem
-            q="¿Cuánto cuesta Copero?"
-            a="La app es gratis, sin suscripción y sin compras dentro del juego. Hay un anuncio interstitial entre temporadas que financia el desarrollo."
-          />
-        </View>
+        {/* ── FAQ (lazy-load MGC-782) ─────────────────────────────────── */}
+        {/* 6 items extraídos a `src/components/home/FAQList.tsx`. */}
+        <Suspense fallback={null}>
+          <FAQList />
+        </Suspense>
 
         {/* ── Hint de dorsal si hay carrera ──────────────────────────── */}
         {hasCareer ? (
@@ -551,88 +431,6 @@ function MiniStat({
         }}
       >
         {value}
-      </Text>
-    </View>
-  );
-}
-
-function StepCard({ number, title, body }: { number: string; title: string; body: string }) {
-  const { colors, radii, spacing, fontSize, fontWeight, fontFamily } = useTheme();
-  return (
-    <View
-      style={{
-        // MGC-658: 4 pasos en layout 2×2 con `flexBasis: '48%'`. En mobile
-        // angosto (`minWidth: 200` no entra en 1 fila) colapsa a 1 columna
-        // sin media queries. Antes era `flex: 1` para 3 pasos en 1 fila.
-        flexBasis: '48%',
-        flexGrow: 1,
-        minWidth: 200,
-        backgroundColor: colors.surface,
-        borderRadius: radii.lg,
-        padding: spacing[4],
-        borderWidth: 1,
-        borderColor: colors.border,
-        gap: spacing[2],
-      }}
-      accessible
-      accessibilityLabel={`Paso ${number}: ${title}. ${body}`}
-    >
-      <Text
-        style={{
-          color: colors.primary,
-          fontSize: fontSize['3xl'],
-          fontFamily: fontFamily.display,
-          fontWeight: fontWeight.bold,
-          lineHeight: fontSize['3xl'] * 1,
-        }}
-      >
-        {number}
-      </Text>
-      <Text
-        style={{
-          color: colors.textStrong,
-          fontSize: fontSize.sm,
-          fontWeight: fontWeight.bold,
-          fontFamily: fontFamily.display,
-        }}
-        accessibilityRole="header"
-      >
-        {title}
-      </Text>
-      <Text
-        style={{
-          color: colors.textMuted,
-          fontSize: fontSize.xs,
-          lineHeight: fontSize.xs * 1.4,
-        }}
-      >
-        {body}
-      </Text>
-    </View>
-  );
-}
-
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const { colors, spacing, fontSize, fontWeight } = useTheme();
-  return (
-    <View style={{ gap: spacing[1] }} accessible accessibilityLabel={`${q} ${a}`}>
-      <Text
-        style={{
-          color: colors.textStrong,
-          fontSize: fontSize.sm,
-          fontWeight: fontWeight.semibold,
-        }}
-      >
-        {q}
-      </Text>
-      <Text
-        style={{
-          color: colors.textMuted,
-          fontSize: fontSize.sm,
-          lineHeight: fontSize.sm * 1.4,
-        }}
-      >
-        {a}
       </Text>
     </View>
   );
@@ -813,94 +611,6 @@ function TagPill({ label }: { label: string }) {
         }}
       >
         {label}
-      </Text>
-    </View>
-  );
-}
-
-/**
- * CompareCard — columna del comparador Classic vs Purist (MGC-658).
- *
- * Renderiza una tarjeta con eyebrow, título, bullets y footer.
- * `flexBasis: '48%'` en el padre hace que en desktop se vea 2-up
- * y en mobile (< 480 px) colapse a una columna. WCAG AA: el View
- * raíz combina título + bullets + footer en un único
- * `accessibilityLabel` para lectores de pantalla.
- */
-function CompareCard({
-  eyebrow,
-  title,
-  bullets,
-  footer,
-  testID,
-}: {
-  eyebrow: string;
-  title: string;
-  bullets: string[];
-  footer: string;
-  testID?: string;
-}) {
-  const { colors, radii, spacing, fontSize, fontWeight, fontFamily } = useTheme();
-  return (
-    <View
-      testID={testID}
-      style={{
-        flexBasis: '48%',
-        flexGrow: 1,
-        minWidth: 220,
-        backgroundColor: colors.surface2,
-        borderRadius: radii.md,
-        padding: spacing[4],
-        borderWidth: 1,
-        borderColor: colors.border,
-        gap: spacing[2],
-      }}
-      accessible
-      accessibilityLabel={`${eyebrow}: ${title}. ${bullets.join(' ')} ${footer}`}
-    >
-      <Text
-        style={{
-          color: colors.primary,
-          letterSpacing: 2,
-          fontSize: fontSize.xs,
-          fontWeight: fontWeight.bold,
-          fontFamily: fontFamily.display,
-        }}
-      >
-        {eyebrow}
-      </Text>
-      <Text
-        style={{
-          color: colors.textStrong,
-          fontSize: fontSize.md,
-          fontWeight: fontWeight.bold,
-          fontFamily: fontFamily.display,
-        }}
-        accessibilityRole="header"
-      >
-        {title}
-      </Text>
-      {bullets.map((line, idx) => (
-        <Text
-          key={`${eyebrow}-${idx}`}
-          style={{
-            color: colors.text,
-            fontSize: fontSize.sm,
-            lineHeight: fontSize.sm * 1.4,
-          }}
-        >
-          · {line}
-        </Text>
-      ))}
-      <Text
-        style={{
-          color: colors.textMuted,
-          fontSize: fontSize.xs,
-          letterSpacing: 0.5,
-          marginTop: spacing[1],
-        }}
-      >
-        {footer}
       </Text>
     </View>
   );

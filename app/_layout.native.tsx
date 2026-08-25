@@ -68,10 +68,27 @@ function ThemedShell() {
         }}
       >
         <Stack.Screen name="index" />
-        <Stack.Screen name="categoria" />
-        <Stack.Screen name="ronda" />
-        <Stack.Screen name="fin" />
-        <Stack.Screen name="compass" />
+        {/* MGC-782 code-split — ver comentario en app/_layout.tsx */}
+        <Stack.Screen
+          name="categoria"
+          // @ts-expect-error Expo Router 57 typings omiten getComponent.
+          getComponent={() => import('@/features/game/screens/categoria').then((m) => m.default)}
+        />
+        <Stack.Screen
+          name="ronda"
+          // @ts-expect-error Expo Router 57 typings omiten getComponent.
+          getComponent={() => import('@/features/game/screens/ronda').then((m) => m.default)}
+        />
+        <Stack.Screen
+          name="fin"
+          // @ts-expect-error Expo Router 57 typings omiten getComponent.
+          getComponent={() => import('@/features/game/screens/fin').then((m) => m.default)}
+        />
+        <Stack.Screen
+          name="compass"
+          // @ts-expect-error Expo Router 57 typings omiten getComponent.
+          getComponent={() => import('@/features/game/screens/compass').then((m) => m.default)}
+        />
         <Stack.Screen name="simulador-carrera" />
       </Stack>
       {/*

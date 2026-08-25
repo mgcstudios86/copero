@@ -22,6 +22,7 @@ export default function Fin() {
 
   useEffect(() => {
     requestInterstitial();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount: muestra el ad apenas se carga la pantalla /fin. La cascada de un render extra al primer paint no impacta LCP (fin está lejos del fold del home).
     setInterstitialOpen(true);
   }, [requestInterstitial]);
 
