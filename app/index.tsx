@@ -6,6 +6,7 @@ import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { useGameStore } from '@/shared/store/gameStore';
 import { useCareerStore } from '@/shared/store/careerStore';
+import { useDraftModeStore } from '@/shared/store/draftModeStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
 
 // Lazy-load JerseyPreview para mantener el chunk inicial del home liviano
@@ -181,6 +182,10 @@ export default function Home() {
                   }`
                 : 'Definí tu identidad para empezar'}
             </Text>
+
+            {/* MGC-664 — Draft track preview (MGC-656 spec): 8 markers + hint
+                + modo badge reactivo al store compartido con MGC-655. */}
+            <DraftModePreview />
           </View>
 
           {/* Mini-stats footer (Mejor puntaje / Mejor racha / OVR) */}
@@ -435,6 +440,126 @@ function FaqItem({ q, a }: { q: string; a: string }) {
       >
         {a}
       </Text>
+    </View>
+  );
+}
+
+/**
+ * DraftModePreview — MGC-664 (spec MGC-656).
+ *
+ * Bloque preview-only que muestra:
+ *   1. 8 markers (cuadrícula 23% cada uno, aspectRatio 1:1) con el primero
+ *      activo. Marca el "track" de los 8 atributos del draft (MGC-655).
+ *   2. Hint copy literal: 'El siguiente paso es el draft de ocho atributos
+ *      con leyendas.' (AC del ticket).
+ *   3. Badge dinámico que refleja el `draftMode` actual del store
+ *      compartido (MGC-655 lo conecta vía setDraftMode).
+ *
+ * Accesibilidad:
+ *   - Contenedor con `accessibilityRole='text'` y label consolidado que
+ *     combina markers + hint + modo (MGC-501 TalkBack pattern).
+ *   - Markers individuales con `accessibilityElementsHidden` para evitar
+ *     lectura repetitiva (8 anuncios consecutivos).
+ *   - Badge con su propio `accessibilityLabel` para foco específico.
+ *
+ * Visualmente:
+ *   - Markers usan `colors.surface2` sobre `colors.surface` (cumple AA).
+ *   - Badge usa `colors.primary` + `colors.textOnPrimary` (validado MGC-462).
+ *   - Sin CLS: aspectRatio 1:1 + width fijo 23% garantiza dimensiones
+ *     estables cuando el form setea el modo.
+ */
+function DraftModePreview() {
+  const { colors, radii, spacing, fontSize, fontWeight, fontFamily } = useTheme();
+  const draftMode = useDraftModeStore((s) => s.draftMode);
+  const isClassic = draftMode === 'classic';
+  const modeLabel = isClassic ? 'MODO CLASSIC' : 'MODO PURIST';
+
+  return (
+    <View
+      testID="home-draft-preview"
+      accessibilityRole="text"
+      accessibilityLabel={
+        'Draft de ocho atributos con leyendas. ' +
+        modeLabel +
+        '. El siguiente paso es el draft de ocho atributos con leyendas.'
+      }
+      style={{ alignSelf: 'stretch', gap: spacing[2] }}
+    >
+      <View
+        testID="home-draft-track"
+        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] }}
+      >
+        {Array.from({ length: 8 }, (_, idx) => {
+          const isActive = idx === 0;
+          return (
+            <View
+              key={'marker-' + (idx + 1)}
+              testID={'home-draft-marker-' + (idx + 1)}
+              style={{
+                width: '23%',
+                aspectRatio: 1,
+                minWidth: 28,
+                borderRadius: radii.sm,
+                borderWidth: 1,
+                borderColor: isActive ? colors.primary : colors.border,
+                backgroundColor: isActive ? colors.primary : colors.surface2,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            >
+              <Text
+                style={{
+                  color: isActive ? colors.textOnPrimary : colors.textMuted,
+                  fontSize: fontSize.xs,
+                  fontWeight: fontWeight.bold,
+                  fontFamily: fontFamily.mono,
+                }}
+              >
+                {idx + 1}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+      <Text
+        testID="home-draft-hint"
+        style={{
+          color: colors.textMuted,
+          fontSize: fontSize.xs,
+          textAlign: 'center',
+          lineHeight: fontSize.xs * 1.4,
+        }}
+      >
+        El siguiente paso es el draft de ocho atributos con leyendas.
+      </Text>
+      <View
+        testID="home-draft-badge"
+        accessibilityRole="text"
+        accessibilityLabel={'Modo de draft seleccionado: ' + modeLabel + '.'}
+        style={{
+          alignSelf: 'center',
+          paddingHorizontal: spacing[3],
+          paddingVertical: spacing[1],
+          borderRadius: radii.pill,
+          borderWidth: 1,
+          borderColor: colors.primary,
+          backgroundColor: colors.primary,
+        }}
+      >
+        <Text
+          style={{
+            color: colors.textOnPrimary,
+            fontSize: fontSize.xs,
+            fontWeight: fontWeight.bold,
+            fontFamily: fontFamily.display,
+            letterSpacing: 2,
+          }}
+        >
+          {modeLabel}
+        </Text>
+      </View>
     </View>
   );
 }
