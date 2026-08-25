@@ -7,21 +7,12 @@ import { Button, ClubCrest } from '@/design/components';
 import { copy } from '@/design/copy/es-AR/simulador-carrera';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { ACADEMY_CLUBS } from '@/features/career/clubs';
-import { POSITION_LABEL } from '@/features/career/positions';
 import type { Club } from '@/types/career';
-
-/** Mapea presupuesto del club al copyId de la card tier (copy-matrix.md §3). */
-function tierCopyId(club: Club): string {
-  if (club.presupuesto >= 5) return 'academy_card_top';
-  if (club.presupuesto >= 2) return 'academy_card_medium';
-  return 'academy_card_low';
-}
 
 export default function AcademyScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
 
-  const profile = useCareerStore((s) => s.profile);
   const acceptClub = useCareerStore((s) => s.acceptClub);
 
   const onPickClub = (club: Club) => {

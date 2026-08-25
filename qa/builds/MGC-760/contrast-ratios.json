@@ -1,0 +1,15 @@
+{
+  "heroBgEffective": "rgb(126, 34, 206)",
+  "chip": {
+    "bgEffective": "rgb(113, 31, 185)",
+    "fg": "rgb(255, 255, 255)",
+    "ratio": 8.08,
+    "passAA": true
+  },
+  "banner": {
+    "bgEffective": "rgb(126, 34, 206)",
+    "fg": "rgb(255, 255, 255)",
+    "ratio": 6.98,
+    "passAA": true
+  }
+}

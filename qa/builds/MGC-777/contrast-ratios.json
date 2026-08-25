@@ -1,0 +1,37 @@
+{
+  "banner": "#7E22CE",
+  "pillComposedBg": "#BF91E7",
+  "textOnPrimaryCopero": "#09090B",
+  "pillRatios": [
+    {
+      "index": 0,
+      "label": "Juego online",
+      "color": "rgb(9, 9, 11)",
+      "pillComposedBg": "#BF91E7",
+      "pillComposedBgHex": "#BF91E7"
+    },
+    {
+      "index": 1,
+      "label": "Draft 8 atributos",
+      "color": "rgb(9, 9, 11)",
+      "pillComposedBg": "#BF91E7",
+      "pillComposedBgHex": "#BF91E7"
+    },
+    {
+      "index": 2,
+      "label": "Modo carrera",
+      "color": "rgb(9, 9, 11)",
+      "pillComposedBg": "#BF91E7",
+      "pillComposedBgHex": "#BF91E7"
+    },
+    {
+      "index": 3,
+      "label": "Guardado local",
+      "color": "rgb(9, 9, 11)",
+      "pillComposedBg": "#BF91E7",
+      "pillComposedBgHex": "#BF91E7"
+    }
+  ],
+  "ratioDarkOnComposed": 7.98,
+  "passesWCAG_AA": true
+}

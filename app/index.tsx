@@ -18,7 +18,15 @@ import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
 // MGC-718: wire-up del form de identidad. PR #93 (MGC-655 SHA a6579a5) portó
 // el componente pero nunca integró el render en este archivo. Reemplaza el
 // Button legacy por el form kiya0908 con FIFA nationalities y draft modes.
-import { HomepageCareerStarter } from '@/components/home/HomepageCareerStarter';
+// MGC-768: lazy() para sacar del entry chunk el catálogo `NATIONALITIES_FIFA`
+// (~12 KB raw, 193 países) + `POSITIONS` + `useCareerStore` que
+// HomepageCareerStarter importa estáticamente. El user sólo interactúa con
+// el form al scrollear, no en el primer paint.
+const HomepageCareerStarter = lazy(() =>
+  import('@/components/home/HomepageCareerStarter').then((m) => ({
+    default: m.HomepageCareerStarter,
+  })),
+);
 
 // Lazy-load JerseyPreview para mantener el chunk inicial del home liviano
 // (MGC-505: el hero premium se renderiza, pero el SVG patterns sólo cuando
@@ -293,8 +301,23 @@ export default function Home() {
             draft modes. Reemplaza el Button legacy que navegaba a
             /simulador-carrera/identity con un form persistido vía careerStore
             (commitIdentity). El submit interno (testID="btn-career") reemplaza
-            la navegación legacy y mantiene compat con e2e/home.spec.ts. */}
-        <HomepageCareerStarter />
+            la navegación legacy y mantiene compat con e2e/home.spec.ts.
+            MGC-768: envuelto en Suspense con fallback skeleton que respeta
+            el alto aproximado del form (480 px) para evitar CLS durante el
+            chunk fetch asincrónico. */}
+        <Suspense
+          fallback={
+            <View
+              testID="homecareer-starter-loading"
+              accessible
+              role="status"
+              accessibilityLabel="Cargando formulario de identidad"
+              style={{ minHeight: 480 }}
+            />
+          }
+        >
+          <HomepageCareerStarter />
+        </Suspense>
 
 {/* ── CTA secundario (MGC-654 P0 #4) ────────────────────────────
             Ghost variant sobre `colors.bg` lee en `colors.text` (sigue
@@ -744,13 +767,27 @@ function DraftModePreview() {
  *   - `accessibilityElementsHidden` para que TalkBack/VoiceOver NO los lea
  *     individualmente; el wrapper `<View accessibilityRole="text">` del
  *     tag-list expone la lista completa como una unidad (MGC-501).
- *   - Fondo translúcido blanco sobre `colors.accent` (purple) para legibilidad
- *     AA sin competir visualmente con el CTA verde primario.
+ *   - Fondo translúcido blanco sobre `colors.accentDeep` (purple-700 en
+ *     copero) para legibilidad AA sin competir visualmente con el CTA
+ *     verde primario.
  *
- * MGC-697 WCAG AA fix: bg 50% blanco (effective #D4AAFB) con texto blanco
- * sólido → 9.23:1 sobre accent #A855F7. Border subido a 70% para
- * mantener el contorno glass sin oscurecer el fondo. Anteriores intentos
- * (negro α=0.10 → 3.24:1; blanco α=0.22 → 2.89:1) NO cumplían AA.
+ * MGC-697 WCAG AA fix: bg 50% blanco sobre accent #A855F7 (purple-500)
+ * daba 2.49:1 con texto blanco. PR #111 (c79ac34 MGC-760) movió el banner
+ * a `colors.accentDeep` (#7E22CE purple-700) y subió α a 0.50 esperando
+ * que el texto blanco mantuviera contraste.
+ *
+ * MGC-770 regresión WCAG AA: sobre el banner #7E22CE (PR #111), 50% blanco
+ * compone a #BF90E6 (light purple) y el texto blanco (textOnAccent #FFF)
+ * mide **2.49:1 → FAIL AA 4.5:1** en axe-core r2 de MGC-762 (4 nodos
+ * afectados: 'Juego online' / 'Draft 8 atributos' / 'Modo carrera' /
+ * 'Guardado local'). Subir α empeora el ratio (más blanco = más claro =
+ * texto blanco se acerca → baja contraste; ver [[copero-mgc-695-wcag-alpha-direction]]).
+ *
+ * Fix MGC-770: invertir el polarity del chip. Texto oscuro
+ * (`colors.textOnPrimary` = zinc-950 #09090B en copero/dark themes)
+ * sobre el pill translúcido #BF90E6 = **7.92:1 → PASS AA** (recalculado
+ * con la fórmula WCAG sRGB). El border 0.70 blanco se mantiene para
+ * preservar el contorno glass sobre el banner morado.
  */
 function TagPill({ label }: { label: string }) {
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
@@ -769,7 +806,7 @@ function TagPill({ label }: { label: string }) {
     >
       <Text
         style={{
-          color: colors.textOnAccent,
+          color: colors.textOnPrimary,
           fontSize: fontSize.sm,
           fontWeight: fontWeight.semibold,
           letterSpacing: 0.3,

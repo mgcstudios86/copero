@@ -33,33 +33,116 @@ config.resolver.platforms = ['ios', 'android', 'native', 'web'];
 // El wrap se hace DESPUES de que `getDefaultConfig` registra el
 // customSerializer para preservar la lógica de source maps / debug ids
 // que Expo agrega.
+//
+// MGC-762: `withExpoSerializers` (en
+// node_modules/@expo/metro-config/build/serializer/withExpoSerializers.js)
+// reemplaza `config.serializer.customSerializer` con `expoSerializer`,
+// que cuando es una export-invocación llama a `unwrapOriginalSerializer`
+// para detectar el chain previo — busca la propiedad
+// `__originalSerializer` en la función.
+//
+// Además, `expo export --platform web` invoca el path
+// `createDefaultExportCustomSerializer` → `getBaseJSBundle`, que produce
+// un único archivo independientemente del flag `splitChunks`. Para que
+// el split se materialice en disco tenemos que derivar al path de
+// chunking `graphToSerialAssetsAsync` nosotros mismos: partir el bundle
+// en chunks async (entry + cada `import()` dinámico de las screens
+// lazy-wrapped en `app/simulador-carrera/*.tsx`) y escribir cada chunk
+// a `dist/_expo/static/js/web/<hash>.js`. La cadena `splitChunks` de
+// Metro + lazy wrappers MGC-544 ya detecta los `import()` async;
+// sólo necesitamos serializar y escribir.
+const path = require('path');
+const fs = require('fs');
 const originalCustomSerializer =
   config.serializer && config.serializer.customSerializer;
 
 if (typeof originalCustomSerializer === 'function') {
-  config.serializer.customSerializer = async function splitChunksSerializer(
+  const { graphToSerialAssetsAsync } = require('@expo/metro-config/build/serializer/serializeChunks');
+  const splitChunksSerializer = async function splitChunksSerializer(
     entryPoint,
     preModules,
     graph,
     options,
   ) {
     const platform = options && options.platform;
-    const splitChunksEnabled = platform === 'web';
-    const wrappedOptions = {
-      ...options,
-      serializerOptions: {
-        ...(options && options.serializerOptions),
-        splitChunks: splitChunksEnabled,
-      },
-    };
+    // MGC-724: splitChunks SOLO en web. Native (ios/android) necesita
+    // bundle monolítico por el bug `__d` no definido de Hermes al
+    // startup con chunks async (repro ZY22G728HN Android 15).
+    if (platform !== 'web') {
+      return originalCustomSerializer.call(
+        this,
+        entryPoint,
+        preModules,
+        graph,
+        options,
+      );
+    }
+
+    // Web: derivar al chunking path que parte async imports en archivos
+    // separados. `graphToSerialAssetsAsync` calcula los chunks desde el
+    // grafo (detecta `import()` async), los serializa y devuelve un
+    // array de artifacts `{ filename, source, type }`. Filtramos los
+    // JS bundles y los escribimos a la misma carpeta donde
+    // `expo export --platform web` espera los chunks.
+    try {
+      const { artifacts } = await graphToSerialAssetsAsync(
+        config,
+        {
+          ...(options && options.serializerOptions),
+          splitChunks: true,
+          exporting: true,
+        },
+        entryPoint,
+        preModules,
+        graph,
+        options,
+      );
+
+      const outDir = path.join(
+        config.projectRoot || process.cwd(),
+        'dist',
+        '_expo',
+        'static',
+        'js',
+        'web',
+      );
+      fs.mkdirSync(outDir, { recursive: true });
+
+      const jsArtifacts = artifacts.filter((a) => a.type === 'js');
+      const entryArtifact =
+        jsArtifacts.find((a) => a.filename && a.filename.includes('index')) ||
+        jsArtifacts[0];
+      const otherArtifacts = jsArtifacts.filter((a) => a !== entryArtifact);
+
+      if (entryArtifact) {
+        const filePath = path.join(outDir, entryArtifact.filename);
+        fs.writeFileSync(filePath, entryArtifact.source);
+      }
+      for (const a of otherArtifacts) {
+        const filePath = path.join(outDir, a.filename);
+        fs.writeFileSync(filePath, a.source);
+      }
+
+      if (entryArtifact) {
+        return { code: entryArtifact.source, map: null };
+      }
+    } catch (err) {
+      console.warn('[splitChunks] falling back to monolithic:', err.message);
+    }
+
+    // Fallback: bundle monolítico (lo que hacía MGC-544 antes de este
+    // fix, pero ahora con el `__originalSerializer` correcto).
     return originalCustomSerializer.call(
       this,
       entryPoint,
       preModules,
       graph,
-      wrappedOptions,
+      options,
     );
   };
+  // Clave para que `unwrapOriginalSerializer()` encuentre el chain:
+  splitChunksSerializer.__originalSerializer = originalCustomSerializer;
+  config.serializer.customSerializer = splitChunksSerializer;
 }
 
 if (config.web) {

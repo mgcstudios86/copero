@@ -1,0 +1,69 @@
+{
+  "url": "http://localhost:8742",
+  "timestamp": "2026-08-25T17:19:46.410Z",
+  "totalViolations": 1,
+  "colorContrastViolations": 0,
+  "criticalOrSerious": 1,
+  "passAA": true,
+  "violations": [
+    {
+      "id": "aria-required-attr",
+      "impact": "critical",
+      "tags": [
+        "cat.aria",
+        "wcag2a",
+        "wcag412",
+        "EN-301-549",
+        "EN-9.4.1.2"
+      ],
+      "description": "Ensure elements with ARIA roles have all required ARIA attributes",
+      "help": "Required ARIA attributes must be provided",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.10/aria-required-attr?application=axeAPI",
+      "nodes": [
+        {
+          "any": [
+            {
+              "id": "aria-required-attr",
+              "data": [
+                "aria-checked"
+              ],
+              "relatedNodes": [],
+              "impact": "critical",
+              "message": "Required ARIA attribute not present: aria-checked"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": "critical",
+          "html": "<div aria-label=\"Clásico\" role=\"radio\" tabindex=\"0\" class=\"css-g5y9jx r-1loqt21 r-1otgn73\" data-testid=\"segment-draft-mode-classic\" style=\"flex: 0 1 0%; padding: 8px 12px; border-radius: 4px; background-color: rgb(250, 250, 250); align-items: center; justify-content: center; gap: 4px;\">",
+          "target": [
+            "div[aria-label=\"Clásico\"]"
+          ],
+          "failureSummary": "Fix any of the following:\n  Required ARIA attribute not present: aria-checked"
+        },
+        {
+          "any": [
+            {
+              "id": "aria-required-attr",
+              "data": [
+                "aria-checked"
+              ],
+              "relatedNodes": [],
+              "impact": "critical",
+              "message": "Required ARIA attribute not present: aria-checked"
+            }
+          ],
+          "all": [],
+          "none": [],
+          "impact": "critical",
+          "html": "<div aria-label=\"Purista\" role=\"radio\" tabindex=\"0\" class=\"css-g5y9jx r-1loqt21 r-1otgn73\" data-testid=\"segment-draft-mode-purist\" style=\"flex: 0 1 0%; padding: 8px 12px; border-radius: 4px; background-color: rgba(0, 0, 0, 0); align-items: center; justify-content: center; gap: 4px;\">",
+          "target": [
+            "div[aria-label=\"Purista\"]"
+          ],
+          "failureSummary": "Fix any of the following:\n  Required ARIA attribute not present: aria-checked"
+        }
+      ]
+    }
+  ],
+  "passes": 18
+}
