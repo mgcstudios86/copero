@@ -20,7 +20,7 @@
 // - `position` → `setPosition`.
 // - `draftMode` (classic | purist) → NO persistido (mismo motivo).
 //
-// Layout responsive (ADR-0012 §3):
+// Layout responsive (ADR-0015 §3):
 // - Desktop ≥720px: 2-col grid (form 60% / preview 40%).
 // - Tablet 380-720px: 2-col 50/50.
 // - Mobile <380px: stack vertical, preview debajo del form.
@@ -111,7 +111,7 @@ export function HomepageCareerStarter(): React.ReactElement {
   const selectedCountry = NATIONALITIES_FIFA.find((c) => c.code === nationalityFifa);
   const displayName = lastName.trim() ? lastName.trim() : NAME_FALLBACK;
 
-  // Layout responsive (ADR-0012 §3).
+  // Layout responsive (ADR-0015 §3).
   const isWide = width >= 720;
   const formColumnStyle = isWide ? { flex: 3 } : { flex: 1 };
   const previewColumnStyle = isWide ? { flex: 2 } : { flex: 1 };
@@ -124,7 +124,7 @@ export function HomepageCareerStarter(): React.ReactElement {
     setPreferredFoot(preferredFoot);
     commitIdentity();
     // heritage + draftMode: se conservan en este componente sólo como state local
-    // (el motor mgcstudios actual no los consume; ver ADR-0012 §2).
+    // (el motor mgcstudios actual no los consume; ver ADR-0015 §2).
     router.push(stage === 'identity' ? '/simulador-carrera/dashboard' : '/simulador-carrera/dashboard');
   };
 
@@ -619,7 +619,7 @@ function Picker({
         testID={testID}
         onPress={() => {
           // Simplificado: ciclar valores (en producción se abriría el picker
-          // nativo del sistema; ver ADR-0012 §4 sobre deps).
+          // nativo del sistema; ver ADR-0015 §4 sobre deps).
           const idx = options.findIndex((o) => o.value === value);
           const next = options[(idx + 1) % options.length];
           onChange(next.value);

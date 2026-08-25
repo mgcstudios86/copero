@@ -1,4 +1,4 @@
-# ADR-0012 — Form identidad home: layout responsive + heritage/draftMode como state local
+# ADR-0015 — Form identidad home: layout responsive + heritage/draftMode como state local
 
 - **Status**: accepted
 - **Date**: 2026-08-25

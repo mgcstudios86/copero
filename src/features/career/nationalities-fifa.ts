@@ -7,7 +7,7 @@
 // + alfabético de los ~220 países FIFA.
 //
 // Uso: el form del home consume `NATIONALITIES_FIFA` con `PRIORITY_FIFA_CODES`
-// arriba y el resto alfabético abajo (ADR-0012 §2). El archivo pesa ~3.5 KB
+// arriba y el resto alfabético abajo (ADR-0015 §2). El archivo pesa ~3.5 KB
 // raw, aceptable para el chunk inicial del home (verificado post-build).
 
 import type { Nationality } from '@/types/career';
