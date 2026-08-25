@@ -544,20 +544,20 @@ function SegmentedField<T extends string>({
           padding: spacing[1],
           gap: spacing[1],
         }}
-        accessibilityRole={vertical ? 'radiogroup' : 'tablist'}
+        accessibilityRole="tablist"
       >
         {options.map((opt) => {
           const selected = opt.value === value;
-          // MGC-666 hallazgo #1: role="radio" exige aria-checked. Cuando el
-          // segmento usa role="tab" mantenemos `selected` (atributo ARIA
-          // correcto para tabs). axe-core r2 fallaba aria-required-attr.
-          const a11yState = vertical ? { selected, checked: selected } : { selected };
+          // MGC-800 fix: role=tab siempre (no vertical/horizontal). react-native-web
+          // no traduce accessibilityState.checked a aria-checked en el DOM, lo que
+          // rompía axe-core aria-required-attr en role=radio vertical. axe-core
+          // acepta tab + accessibilityState.selected (aria-selected).
           return (
             <Pressable
               key={opt.value}
               onPress={() => onChange(opt.value)}
-              accessibilityRole={vertical ? 'radio' : 'tab'}
-              accessibilityState={a11yState}
+              accessibilityRole="tab"
+              accessibilityState={{ selected }}
               accessibilityLabel={opt.label}
               testID={`${testID}-${opt.value}`}
               style={{
