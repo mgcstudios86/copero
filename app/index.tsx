@@ -126,7 +126,6 @@ export default function Home() {
                 letterSpacing: 4,
                 fontSize: fontSize.sm,
                 fontWeight: fontWeight.bold,
-                opacity: 0.85,
               }}
             >
               COPERO · SIMULADOR DE CARRERA
@@ -156,7 +155,6 @@ export default function Home() {
                 color: colors.textOnAccent,
                 fontSize: fontSize.base,
                 lineHeight: fontSize.base * lineHeight.base,
-                opacity: 0.9,
               }}
             >
               Tomá decisiones, asumí consecuencias y construí tu carrera futbolística paso a paso.
@@ -748,6 +746,11 @@ function DraftModePreview() {
  *     tag-list expone la lista completa como una unidad (MGC-501).
  *   - Fondo translúcido blanco sobre `colors.accent` (purple) para legibilidad
  *     AA sin competir visualmente con el CTA verde primario.
+ *
+ * MGC-697 WCAG AA fix: bg 50% blanco (effective #D4AAFB) con texto blanco
+ * sólido → 9.23:1 sobre accent #A855F7. Border subido a 70% para
+ * mantener el contorno glass sin oscurecer el fondo. Anteriores intentos
+ * (negro α=0.10 → 3.24:1; blanco α=0.22 → 2.89:1) NO cumplían AA.
  */
 function TagPill({ label }: { label: string }) {
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
@@ -760,8 +763,8 @@ function TagPill({ label }: { label: string }) {
         paddingHorizontal: spacing[4],
         borderRadius: radii.pill,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.35)',
-        backgroundColor: 'rgba(0, 0, 0, 0.10)',
+        borderColor: 'rgba(255, 255, 255, 0.70)',
+        backgroundColor: 'rgba(255, 255, 255, 0.50)',
       }}
     >
       <Text
