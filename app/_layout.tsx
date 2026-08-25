@@ -20,6 +20,7 @@ import { Banner } from '@/features/ads';
 import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
+import { SiteFooter } from '@/design/components/SiteFooter';
 
 /**
  * MGC-555 PR1 — carga tipográfica.
@@ -72,6 +73,14 @@ function ThemedShell() {
         <Stack.Screen name="compass" />
         <Stack.Screen name="simulador-carrera" />
       </Stack>
+      {/*
+        MGC-657 — SiteFooter global. Renderiza debajo del Stack (debajo del
+        contenido de cualquier screen) con copyright dinámico del año actual
+        Privacy · Terms · Contacto · GitHub. Replica `site-footer` de
+        kiya0908/copero (Gap P1 MGC-646 audit). Hairline divider arriba lo
+        separa visualmente del contenido.
+      */}
+      <SiteFooter />
       <Banner />
     </View>
   );
