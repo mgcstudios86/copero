@@ -87,6 +87,7 @@ export function LanguageSwitcher({ testID = 'copero-language-switcher' }: Langua
             accessibilityRole="tab"
             accessibilityLabel={LOCALE_LABEL[option]}
             accessibilityState={{ selected }}
+            {...(Platform.OS === 'web' ? ({ 'aria-selected': selected } as const) : null)}
             hitSlop={6}
             onPress={() => setLocale(option)}
             style={({ pressed }) => [

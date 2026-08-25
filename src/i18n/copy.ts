@@ -37,6 +37,8 @@ export type Copy = {
     play: string;
     primary: string;
     languageLabel: string;
+    menuOpen: string;
+    menuClose: string;
   };
 };
 
@@ -54,6 +56,8 @@ export const COPY: Record<Locale, Copy> = {
       play: 'Jugar',
       primary: 'Navegación principal',
       languageLabel: 'Cambiar idioma',
+      menuOpen: 'Abrir menú',
+      menuClose: 'Cerrar menú',
     },
   },
   en: {
@@ -69,6 +73,8 @@ export const COPY: Record<Locale, Copy> = {
       play: 'Play',
       primary: 'Primary navigation',
       languageLabel: 'Change language',
+      menuOpen: 'Open menu',
+      menuClose: 'Close menu',
     },
   },
   'zh-CN': {
@@ -84,6 +90,8 @@ export const COPY: Record<Locale, Copy> = {
       play: '开始游戏',
       primary: '主导航',
       languageLabel: '切换语言',
+      menuOpen: '打开菜单',
+      menuClose: '关闭菜单',
     },
   },
 };

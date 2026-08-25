@@ -56,7 +56,7 @@ const NAV_ITEMS = [
 ] as const;
 
 export type SiteHeaderProps = {
-  /** Ruta del CTA Jugar. Default "/" (home). */
+  /** Ruta del CTA Jugar. Default "/simulador-carrera". */
   playHref?: string;
   /** Si false, oculta el LanguageSwitcher (default true). */
   showLanguageSwitcher?: boolean;
@@ -64,7 +64,7 @@ export type SiteHeaderProps = {
 };
 
 export function SiteHeader({
-  playHref = '/',
+  playHref = '/simulador-carrera',
   showLanguageSwitcher = true,
   testID = 'copero-site-header',
 }: SiteHeaderProps) {
@@ -233,8 +233,15 @@ export function SiteHeader({
         )}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('nav.primary')}
+          accessibilityLabel={menuOpen ? t('nav.menuClose') : t('nav.menuOpen')}
           accessibilityState={{ expanded: menuOpen }}
+          {...(Platform.OS === 'web'
+            ? ({
+                'aria-expanded': menuOpen,
+                'aria-haspopup': 'menu' as const,
+                'aria-controls': `${testID}-mobile-nav`,
+              } as const)
+            : null)}
           hitSlop={spacing[2]}
           testID={`${testID}-toggle`}
           onPress={() => setMenuOpen((open) => !open)}
@@ -267,6 +274,7 @@ export function SiteHeader({
         <View
           testID={`${testID}-mobile-nav`}
           accessibilityLabel={t('nav.primary')}
+          nativeID={`${testID}-mobile-nav`}
           style={{
             position: 'absolute',
             top: '100%',
