@@ -25,9 +25,13 @@
 // - Tablet 380-720px: 2-col 50/50.
 // - Mobile <380px: stack vertical, preview debajo del form.
 //
-// Accesibilidad:
+// Accesibilidad (MGC-822):
 // - Cada campo tiene `accessibilityLabel` y `accessibilityHint`.
-// - Segmentados usan `aria-pressed` vía `accessibilityState.selected`.
+// - Segmentados usan `accessibilityRole="tab"` + `accessibilityState.selected`
+//   y pasan `aria-selected` como prop HTML directo en el Pressable. RN-Web
+//   reenvía `aria-*` al DOM (cumple axe aria-required-attr en 1440 y 390);
+//   native los ignora sin side-effects. Evita la dependencia del mapeo
+//   `accessibilityState` → `aria-*` que RN-Web no hace consistentemente.
 // - axe WCAG AA verificado en CI runner copero-ci.
 // - Microcopy "Gratis · Sin cuenta · Guardado local en este navegador" abajo.
 
@@ -575,6 +579,9 @@ function SegmentedField<T extends string>({
           // no traduce accessibilityState.checked a aria-checked en el DOM, lo que
           // rompía axe-core aria-required-attr en role=radio vertical. axe-core
           // acepta tab + accessibilityState.selected (aria-selected).
+          // MGC-822: pasamos `aria-selected` como prop HTML directo —
+          // RN-Web lo reenvía al DOM (cumple axe aria-selected); en native
+          // es ignorado sin side-effects.
           return (
             <Pressable
               key={opt.value}
@@ -582,6 +589,7 @@ function SegmentedField<T extends string>({
               accessibilityRole="tab"
               accessibilityState={{ selected }}
               accessibilityLabel={opt.label}
+              aria-selected={selected}
               testID={`${testID}-${opt.value}`}
               style={{
                 // MGC-666 hallazgo #3: `flex: vertical ? 0 : 1` colapsaba los
