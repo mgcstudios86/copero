@@ -15,6 +15,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  * quedan como follow-up hasta incorporar `@testing-library/react-native`.
  */
 
+// Mock expo-router para que el `Link` que usa SiteHeader (MGC-653) no intente
+// resolver el paquete real (ESM/TS que Node no parsea en CJS). El import tree
+// de `src/design/components` carga SiteHeader aunque el test directo no lo
+// ejercite — este stub evita el SyntaxError "Unexpected token 'typeof'" en CI.
+vi.mock('expo-router', () => ({
+  Link: 'Link',
+  Stack: 'Stack',
+  useRouter: () => ({ push: () => {}, back: () => {}, replace: () => {} }),
+  useLocalSearchParams: () => ({}),
+  useSearchParams: () => ({}),
+  usePathname: () => '/',
+  Redirect: 'Redirect',
+  Slot: 'Slot',
+}));
+
 // Mock react-native con un subset mínimo para que ThemeProvider pueda correr
 // en el entorno `node` de vitest sin un DOM real.
 vi.mock('react-native', () => {

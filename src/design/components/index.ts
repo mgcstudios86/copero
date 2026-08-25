@@ -28,4 +28,8 @@ export { BlogRow } from './BlogRow';
 export type { BlogRowProps, BlogRowTag } from './BlogRow';
 export { HeroCard } from './HeroCard';
 export type { HeroCardProps } from './HeroCard';
+export { SiteHeader } from './SiteHeader';
+export type { SiteHeaderProps } from './SiteHeader';
+export { LanguageSwitcher } from './LanguageSwitcher';
+export type { LanguageSwitcherProps } from './LanguageSwitcher';
 

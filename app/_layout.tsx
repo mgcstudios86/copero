@@ -18,6 +18,8 @@ import {
 } from '@expo-google-fonts/poppins';
 import { Banner } from '@/features/ads';
 import { ThemeProvider, useTheme } from '@/design';
+import { SiteHeader } from '@/design/components/SiteHeader';
+import { LocaleProvider } from '@/i18n/locale-context';
 
 /**
  * MGC-555 PR1 — carga tipográfica.
@@ -48,23 +50,27 @@ function ThemedShell() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar style={mode === 'dark' || mode === 'copero' ? 'light' : 'dark'} />
+      {/*
+        MGC-653 — SiteHeader global con 7 nav links + LanguageSwitcher +
+        CTA "Jugar" verde. Reemplaza el header built-in de expo-router
+        (todas las `Stack.Screen` debajo quedan con `headerShown: false`).
+        El header chrome vive acá; las pantallas ya no deben montar su
+        propio `<Header>`.
+      */}
+      <SiteHeader />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: colors.surface },
-          headerTintColor: colors.text,
+          headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
           animation: 'fade',
         }}
       >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="categoria" options={{ title: 'Elegí categoría' }} />
-        <Stack.Screen name="ronda" options={{ title: 'Ronda', headerBackVisible: false }} />
-        <Stack.Screen name="fin" options={{ title: 'Fin del copero', headerBackVisible: false }} />
-        <Stack.Screen
-          name="compass"
-          options={{ title: 'Ideología Futbolística', headerBackVisible: true }}
-        />
-        <Stack.Screen name="simulador-carrera" options={{ headerShown: false }} />
+        <Stack.Screen name="index" />
+        <Stack.Screen name="categoria" />
+        <Stack.Screen name="ronda" />
+        <Stack.Screen name="fin" />
+        <Stack.Screen name="compass" />
+        <Stack.Screen name="simulador-carrera" />
       </Stack>
       <Banner />
     </View>
@@ -99,7 +105,9 @@ export default function RootLayout() {
         forest-green (#1F6F4A) cuando el sistema reporta light.
       */}
       <ThemeProvider initialPreference="copero">
-        <ThemedShell />
+        <LocaleProvider>
+          <ThemedShell />
+        </LocaleProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
