@@ -8,7 +8,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
@@ -16,6 +15,10 @@ import { useGameStore } from '@/shared/store/gameStore';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { useDraftModeStore } from '@/shared/store/draftModeStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
+// MGC-718: wire-up del form de identidad. PR #93 (MGC-655 SHA a6579a5) portó
+// el componente pero nunca integró el render en este archivo. Reemplaza el
+// Button legacy por el form kiya0908 con FIFA nationalities y draft modes.
+import { HomepageCareerStarter } from '@/components/home/HomepageCareerStarter';
 
 // Lazy-load JerseyPreview para mantener el chunk inicial del home liviano
 // (MGC-505: el hero premium se renderiza, pero el SVG patterns sólo cuando
@@ -44,7 +47,6 @@ const JerseyPreview = lazy(() =>
  * - WCAG AA target ≥ 4.5:1 sobre `colors.surface` y `colors.bg`.
  */
 export default function Home() {
-  const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
   // MGC-654: H1 multi-línea responsivo. Móvil (≤600) usa 2xl (30px) para que
   // "CREA TU PROPIA CARRERA DE FÚTBOL" quepa en 2 wraps cómodos sin overflow;
@@ -288,22 +290,13 @@ export default function Home() {
           </View>
         </View>
 
-        {/* ── CTA principal ───────────────────────────────────────────── */}
-        <Button
-          label={hasCareer ? 'Continuar carrera' : 'Empezar carrera'}
-          onPress={() =>
-            router.push(
-              careerStage === 'identity'
-                ? '/simulador-carrera/identity'
-                : '/simulador-carrera/dashboard',
-            )
-          }
-          variant="primary"
-          size="lg"
-          fullWidth
-          testID="btn-career"
-          accessibilityHint="Abre el simulador de carrera"
-        />
+        {/* ── CTA principal: form de identidad (MGC-718) ───────────────
+            MGC-655 portó HomepageCareerStarter.tsx con FIFA nationalities y
+            draft modes. Reemplaza el Button legacy que navegaba a
+            /simulador-carrera/identity con un form persistido vía careerStore
+            (commitIdentity). El submit interno (testID="btn-career") reemplaza
+            la navegación legacy y mantiene compat con e2e/home.spec.ts. */}
+        <HomepageCareerStarter />
 
 {/* ── CTA secundario (MGC-654 P0 #4) ────────────────────────────
             Ghost variant sobre `colors.bg` lee en `colors.text` (sigue

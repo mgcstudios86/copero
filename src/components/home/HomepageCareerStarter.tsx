@@ -329,14 +329,17 @@ export function HomepageCareerStarter(): React.ReactElement {
             vertical
           />
 
-          {/* Submit */}
+          {/* Submit — MGC-718: testID="btn-career" preserva compat con
+              e2e/home.spec.ts, simulador-carrera.spec.ts, a11y-keyboard.spec.ts
+              y el resto de specs que apuntaban al Button legacy. El label
+              "Empezar carrera" sigue siendo literal para no cambiar UX. */}
           <Button
             label="Empezar carrera"
             onPress={handleSubmit}
             variant="primary"
             size="lg"
             fullWidth
-            testID="btn-start-career"
+            testID="btn-career"
             accessibilityHint="Guarda tu identidad y abre el simulador de carrera"
           />
           <Text
