@@ -181,6 +181,11 @@ export function HomepageCareerStarter(): React.ReactElement {
           flexDirection: isWide ? 'row' : 'column',
           gap: spacing[4],
           alignItems: 'stretch',
+          // MGC-815 AC3: isolation:isolate crea un stacking context local para
+          // que los zIndex de Form/Preview se comparen sólo entre ellos y no
+          // contra ancestros (ScrollView, root). Garantiza hit-test correcto
+          // del segmento Purista en viewports <380 px.
+          isolation: 'isolate',
         }}
       >
         {/* Form */}
@@ -194,6 +199,13 @@ export function HomepageCareerStarter(): React.ReactElement {
               borderWidth: 1,
               borderColor: colors.border,
               gap: spacing[3],
+              // MGC-815 AC3: en viewports <380 px el career-preview (más tarde
+              // en DOM) interceptaba el segmento Purista. Elevamos Form a
+              // zIndex 2 con position:relative explícito para que el segmento
+              // vertical Modo draft gane hit-test sobre el preview.
+              position: 'relative',
+              zIndex: 2,
+              elevation: 2,
             },
           ]}
           testID="career-form"
@@ -371,6 +383,12 @@ export function HomepageCareerStarter(): React.ReactElement {
               borderColor: colors.border,
               alignItems: 'center',
               gap: spacing[3],
+              // MGC-815 AC3: explícitamente zIndex:1 con position:relative
+              // para que Form (zIndex:2) gane en hit-test sin que preview
+              // herede un valor implícito superior por source order.
+              position: 'relative',
+              zIndex: 1,
+              elevation: 1,
               minHeight: 280,
               justifyContent: 'center',
             },
