@@ -29,15 +29,18 @@ const JerseyPreview = lazy(() =>
  *
  * Iteración kiya0908/copero (HomepageCareerStarter + IntroPhase):
  * - Premium visual card con camiseta grande + OVR (estilo Career Result Card).
- * - Sección "Cómo se juega" con 3 pasos numerados (1, 2, 3) al estilo
- *   `intro.how.steps` del repo de referencia.
- * - FAQ con preguntas frecuentes para SEO + bajar fricción de entrada.
+ * - Sección "Cómo se juega" con 4 pasos numerados (1–4) al estilo
+ *   `intro.how.steps` del repo de referencia (MGC-658: 3 → 4).
+ * - Comparador Classic vs Purist (MGC-658): bloque descriptivo, no
+ *   interactivo. La elección real del modo vive en
+ *   /simulador-carrera/identity (decisión MGC-646 §3.3 Opción B).
+ * - FAQ con 6 items (MGC-658: +2 sobre `internet` y `costo`).
  * - Mantiene: solo Convertite en Leyenda visible (sin CTAs de otros juegos),
  *   deep-links preservados, WCAG AA, contraste sobre `colors.primary`.
  *
  * Accesibilidad:
  * - `accessibilityRole="header"` en banner h1, section h2, step h3.
- * - `accessibilityLabel` descriptivo en cada stat, step y FAQ item.
+ * - `accessibilityLabel` descriptivo en cada stat, step, compare-card y FAQ item.
  * - WCAG AA target ≥ 4.5:1 sobre `colors.surface` y `colors.bg`.
  */
 export default function Home() {
@@ -99,13 +102,18 @@ export default function Home() {
         >
           {/* Banner brand — MGC-556: usa `colors.accent` (purple #A855F7 en
               copero) en lugar de `colors.primary` (#FAFAFA white pill) para
-              matchear la paleta copero.com.ar §6.2 (hero con tinte de acento). */}
+              matchear la paleta copero.com.ar §6.2 (hero con tinte de acento).
+              MGC-658 (axe QA WCAG AA): el banner sostiene texto blanco y debe
+              pasar 4.5:1. `colors.accent` (#A855F7 purple-500) da 4.05:1 con
+              blanco — falla AA. `colors.accentDeep` (purple-700 #7E22CE en
+              copero) da 6.36:1 → PASS. La identidad morada se mantiene; sólo
+              se intensifica el tono para superficies que cargan texto. */}
           <View
             style={{
               paddingVertical: spacing[6],
               paddingHorizontal: spacing[5],
               gap: spacing[2],
-              backgroundColor: colors.accent,
+              backgroundColor: colors.accentDeep,
             }}
             accessibilityElementsHidden
             importantForAccessibility="no"
@@ -297,7 +305,7 @@ export default function Home() {
           accessibilityHint="Abre el simulador de carrera"
         />
 
-        {/* ── CTA secundario (MGC-654 P0 #4) ────────────────────────────
+{/* ── CTA secundario (MGC-654 P0 #4) ────────────────────────────
             Ghost variant sobre `colors.bg` lee en `colors.text` (sigue
             cumpliendo AA porque Button ghost usa texto del theme, no literal).
             Ancla a #how-to-play via scrollIntoView; en native es no-op. */}
@@ -311,8 +319,18 @@ export default function Home() {
           accessibilityHint="Salta a la sección Cómo se juega"
         />
 
-        {/* ── Cómo se juega (3 pasos numerados, kiya0908 IntroPhase) ─── */}
-        <View nativeID="how-to-play" style={{ gap: spacing[3] }}>
+        {/* ── Cómo se juega (4 pasos numerados, kiya0908 IntroPhase) ─── */}
+        {/* MGC-658: 3→4 pasos. Layout responsive con `flexBasis: '48%'` por
+            step: en viewports ≥ 480 px queda 2×2; en mobile angosto colapsa
+            a una columna sin media queries. WCAG AA: cada step expone
+            `accessibilityLabel` con número + título + body (StepCard abajo).
+            `nativeID` mantiene compat con el anchor scrollIntoView + testID
+            para Playwright (MGC-654 P0 #4). */}
+        <View
+          testID="how-to-play"
+          nativeID="how-to-play"
+          style={{ gap: spacing[3] }}
+        >
           <Text
             style={{
               color: colors.textMuted,
@@ -325,27 +343,100 @@ export default function Home() {
           >
             CÓMO SE JUEGA
           </Text>
-          <View style={{ flexDirection: 'row', gap: spacing[3] }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3] }}>
             <StepCard
               number="1"
-              title="Definí tu identidad"
+              title="Crea tu jugador"
               body="Nombre, dorsal, posición y selección. Tu jugador arranca con 16 años y OVR 50."
             />
             <StepCard
               number="2"
-              title="Pasá por la academia"
-              body="Elegí 8 atributos en rondas. Cuanto mejor tu draft, mejor tu techo de OVR."
+              title="Completa el draft de 8 atributos"
+              body="Elegí 8 estadísticas en rondas. Cuanto mejor tu draft, mejor tu techo de OVR."
             />
             <StepCard
               number="3"
-              title="Viví tu carrera"
+              title="Elegí dónde empieza tu carrera"
+              body="Fichá por un club inicial según tu posición. Empezás en inferiores o primera división."
+            />
+            <StepCard
+              number="4"
+              title="Vive temporadas, fichajes y decisiones"
               body="Semana a semana: entrenamientos, partidos, ofertas, lesiones y prensa. Tus decisiones cambian todo."
             />
           </View>
         </View>
 
-        {/* ── FAQ (kiya0908 IntroPhase faqs) ──────────────────────────── */}
+        {/* ── Comparador Classic vs Purist (MGC-658 P1 #7) ────────────── */}
+        {/* Bloque descriptivo: NO interactivo. La elección real del modo se
+            mantiene en /simulador-carrera/identity (decisión MGC-646 §3.3
+            Opción B). Aquí se comparan ambos modos para bajar la barrera
+            de entrada antes del primer partido. WCAG AA: cada columna
+            expone `accessibilityLabel` consolidado. */}
         <View
+          testID="draft-mode-comparator"
+          style={{
+            backgroundColor: colors.surface,
+            borderRadius: radii.lg,
+            padding: spacing[4],
+            borderWidth: 1,
+            borderColor: colors.border,
+            gap: spacing[3],
+          }}
+        >
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: fontSize.md,
+              fontWeight: fontWeight.bold,
+              fontFamily: fontFamily.display,
+            }}
+            accessibilityRole="header"
+          >
+            Modos de draft: Classic y Purist
+          </Text>
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: fontSize.sm,
+              lineHeight: fontSize.sm * 1.4,
+            }}
+          >
+            Antes del primer partido elegís cómo querés que sea el draft de 8
+            atributos. Dos modos, mismo techo de OVR, distinta dificultad.
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3] }}>
+            <CompareCard
+              eyebrow="MODO CLASSIC"
+              title="Ideal para arrancar"
+              bullets={[
+                '8 rondas con palabras y plantillas de apoyo.',
+                'Cada acierto sube un atributo fijo.',
+                'Ritmo tranquilo, menos riesgo de lesión mental.',
+              ]}
+              footer="Recomendado si es tu primera carrera."
+              testID="compare-classic"
+            />
+            <CompareCard
+              eyebrow="MODO PURIST"
+              title="Para los que saben"
+              bullets={[
+                '8 rondas con letras crudas, sin plantillas.',
+                'Cada acierto da más OVR pero sin red.',
+                'Ritmo rápido: más lesiones, más premios.',
+              ]}
+              footer="Recomendado para carreras con replay."
+              testID="compare-purist"
+            />
+          </View>
+        </View>
+
+        {/* ── FAQ (kiya0908 IntroPhase faqs) ──────────────────────────── */}
+        {/* MGC-658 P1 #8: +2 items (`internet` + `costo`). Resto del
+            contenido preservado 1:1 contra MGC-605. WCAG AA: cada item
+            expone `accessibilityLabel` con pregunta + respuesta combinada. */}
+        <View
+          testID="faq"
           style={{
             backgroundColor: colors.surface,
             borderRadius: radii.lg,
@@ -381,6 +472,14 @@ export default function Home() {
           <FaqItem
             q="¿Se guarda mi progreso?"
             a="Sí, localmente en el dispositivo. Tu carrera persiste entre sesiones mientras no limpies los datos de la app."
+          />
+          <FaqItem
+            q="¿Necesito internet para jugar?"
+            a="No. La carrera corre 100% en tu dispositivo y se guarda localmente. Sólo necesitás conexión si activás sincronización opcional en la nube."
+          />
+          <FaqItem
+            q="¿Cuánto cuesta Copero?"
+            a="La app es gratis, sin suscripción y sin compras dentro del juego. Hay un anuncio interstitial entre temporadas que financia el desarrollo."
           />
         </View>
 
@@ -448,7 +547,12 @@ function StepCard({ number, title, body }: { number: string; title: string; body
   return (
     <View
       style={{
-        flex: 1,
+        // MGC-658: 4 pasos en layout 2×2 con `flexBasis: '48%'`. En mobile
+        // angosto (`minWidth: 200` no entra en 1 fila) colapsa a 1 columna
+        // sin media queries. Antes era `flex: 1` para 3 pasos en 1 fila.
+        flexBasis: '48%',
+        flexGrow: 1,
+        minWidth: 200,
         backgroundColor: colors.surface,
         borderRadius: radii.lg,
         padding: spacing[4],
@@ -676,6 +780,94 @@ function TagPill({ label }: { label: string }) {
         }}
       >
         {label}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * CompareCard — columna del comparador Classic vs Purist (MGC-658).
+ *
+ * Renderiza una tarjeta con eyebrow, título, bullets y footer.
+ * `flexBasis: '48%'` en el padre hace que en desktop se vea 2-up
+ * y en mobile (< 480 px) colapse a una columna. WCAG AA: el View
+ * raíz combina título + bullets + footer en un único
+ * `accessibilityLabel` para lectores de pantalla.
+ */
+function CompareCard({
+  eyebrow,
+  title,
+  bullets,
+  footer,
+  testID,
+}: {
+  eyebrow: string;
+  title: string;
+  bullets: string[];
+  footer: string;
+  testID?: string;
+}) {
+  const { colors, radii, spacing, fontSize, fontWeight, fontFamily } = useTheme();
+  return (
+    <View
+      testID={testID}
+      style={{
+        flexBasis: '48%',
+        flexGrow: 1,
+        minWidth: 220,
+        backgroundColor: colors.surface2,
+        borderRadius: radii.md,
+        padding: spacing[4],
+        borderWidth: 1,
+        borderColor: colors.border,
+        gap: spacing[2],
+      }}
+      accessible
+      accessibilityLabel={`${eyebrow}: ${title}. ${bullets.join(' ')} ${footer}`}
+    >
+      <Text
+        style={{
+          color: colors.primary,
+          letterSpacing: 2,
+          fontSize: fontSize.xs,
+          fontWeight: fontWeight.bold,
+          fontFamily: fontFamily.display,
+        }}
+      >
+        {eyebrow}
+      </Text>
+      <Text
+        style={{
+          color: colors.textStrong,
+          fontSize: fontSize.md,
+          fontWeight: fontWeight.bold,
+          fontFamily: fontFamily.display,
+        }}
+        accessibilityRole="header"
+      >
+        {title}
+      </Text>
+      {bullets.map((line, idx) => (
+        <Text
+          key={`${eyebrow}-${idx}`}
+          style={{
+            color: colors.text,
+            fontSize: fontSize.sm,
+            lineHeight: fontSize.sm * 1.4,
+          }}
+        >
+          · {line}
+        </Text>
+      ))}
+      <Text
+        style={{
+          color: colors.textMuted,
+          fontSize: fontSize.xs,
+          letterSpacing: 0.5,
+          marginTop: spacing[1],
+        }}
+      >
+        {footer}
       </Text>
     </View>
   );

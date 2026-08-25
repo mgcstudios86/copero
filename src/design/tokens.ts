@@ -30,6 +30,7 @@ export type ColorScale = {
   primarySoft: string;
   accent: string;
   accentHover: string;
+  accentDeep: string;
   accentSoft: string;
   focus: string;
   focusSoft: string;
@@ -61,6 +62,7 @@ export const palette = {
     primarySoft: '#D9ECE2',
     accent: '#C73E2A',
     accentHover: '#A52F1F',
+    accentDeep: '#7E1F11',  // coral-800 — superficie coral con texto blanco WCAG AA
     accentSoft: '#F8DFDB',
     focus: '#2563EB',
     focusSoft: '#BFD4FF',
@@ -90,6 +92,7 @@ export const palette = {
     primarySoft: '#1B3A2B',
     accent: '#E96A56',
     accentHover: '#F08A78',
+    accentDeep: '#9F2D1E',  // coral oscuro dark — superficie con texto blanco WCAG AA
     accentSoft: '#4A2118',
     focus: '#93C5FD',
     focusSoft: '#1E3A8A',
@@ -128,6 +131,7 @@ const coperoPalette: ColorScale = {
   primarySoft: '#16161A',
   accent: '#A855F7',       // purple-500 (default archetype accent)
   accentHover: '#C084FC',
+  accentDeep: '#7E22CE',   // purple-700 — superficies que sostienen texto blanco (WCAG AA)
   accentSoft: '#3B0764',
   focus: '#D4D4D8',        // zinc-300
   focusSoft: '#3F3F46',
