@@ -88,11 +88,13 @@ module.exports = ({ config } = {}) => ({
   },
   android: {
     package: 'com.mgcstudios.copero',
-    // MGC-806 / MGC-808: declarar AD_ID para evitar zero-out en Android 13+.
-    // Permiso requerido por Play Console cuando la app declara usar
-    // publicidad (consistente con declaración "Sí" en la consola).
-    // El SDK de ads se agregará por separado; el permiso solo no rompe nada.
-    permissions: ['com.google.android.gms.permission.AD_ID'],
+    // MGC-839: NO declarar AD_ID. Per MGC-4919 rootcause, play-services-ads-*
+    // AARs autolinkeados la inyectan transitivamente y declarar el permiso
+    // no la remueve. Copero no usa ads → Play Console warning se resuelve
+    // bloqueando el permiso con `tools:node="remove"` (Expo genera el
+    // manifest entry automáticamente desde `blockedPermissions`).
+    permissions: [],
+    blockedPermissions: ['com.google.android.gms.permission.AD_ID'],
     adaptiveIcon: {
       backgroundColor: '#0B1320',
       foregroundImage: './assets/android-icon-foreground.png',
