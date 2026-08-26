@@ -72,7 +72,7 @@ module.exports = ({ config } = {}) => ({
   slug: 'copero',
   owner: 'mgcstudios',
   scheme: 'copero',
-  version: '0.1.0',
+  version: '0.1.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
@@ -88,10 +88,12 @@ module.exports = ({ config } = {}) => ({
   },
   android: {
     package: 'com.mgcstudios.copero',
-    // MGC-840: bloquear AD_ID. La app NO usa advertising ID — el permiso se
-    // filtraba desde play-services-ads-* AAR transitivo o declaradores previos.
-    // `blockedPermissions` genera `tools:node="remove"` en AndroidManifest.xml,
-    // sobrevive `expo prebuild` (ver MGC-839 y MGC-4919 rootcause).
+    // MGC-839: NO declarar AD_ID. Per MGC-4919 rootcause, play-services-ads-*
+    // AARs autolinkeados la inyectan transitivamente y declarar el permiso
+    // no la remueve. Copero no usa ads → Play Console warning se resuelve
+    // bloqueando el permiso con `tools:node="remove"` (Expo genera el
+    // manifest entry automáticamente desde `blockedPermissions`).
+    permissions: [],
     blockedPermissions: ['com.google.android.gms.permission.AD_ID'],
     adaptiveIcon: {
       backgroundColor: '#0B1320',
