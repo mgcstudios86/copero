@@ -88,11 +88,11 @@ module.exports = ({ config } = {}) => ({
   },
   android: {
     package: 'com.mgcstudios.copero',
-    // MGC-806 / MGC-808: declarar AD_ID para evitar zero-out en Android 13+.
-    // Permiso requerido por Play Console cuando la app declara usar
-    // publicidad (consistente con declaración "Sí" en la consola).
-    // El SDK de ads se agregará por separado; el permiso solo no rompe nada.
-    permissions: ['com.google.android.gms.permission.AD_ID'],
+    // MGC-840: bloquear AD_ID. La app NO usa advertising ID — el permiso se
+    // filtraba desde play-services-ads-* AAR transitivo o declaradores previos.
+    // `blockedPermissions` genera `tools:node="remove"` en AndroidManifest.xml,
+    // sobrevive `expo prebuild` (ver MGC-839 y MGC-4919 rootcause).
+    blockedPermissions: ['com.google.android.gms.permission.AD_ID'],
     adaptiveIcon: {
       backgroundColor: '#0B1320',
       foregroundImage: './assets/android-icon-foreground.png',
