@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   NATIONALITIES,
   POSITION_LABEL,
@@ -9,6 +9,7 @@ import {
 const POSITIONS: Position[] = ['ST', 'CAM', 'CM', 'LW', 'RW', 'CB', 'LB', 'RB', 'GK'];
 
 export default function Identidad() {
+  const navigate = useNavigate();
   const [surname, setSurname] = useState('Tu apellido');
   const [number, setNumber] = useState(10);
   const [foot, setFoot] = useState<'Izquierda' | 'Derecha'>('Derecha');
@@ -31,7 +32,7 @@ export default function Identidad() {
           className="mt-6 grid gap-5 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
-            window.location.assign('/draft');
+            navigate('/draft');
           }}
         >
           <div className="space-y-1.5">
