@@ -97,6 +97,30 @@ const server = createServer(async (request, response) => {
       return
     }
 
+    // SPA fallback: rutas sin extension que no matchean archivo estatico
+    // sirven dist/index.html (200) para que BrowserRouter pueda接管 la ruta.
+    // Solo aplicar a peticiones GET/HEAD sin extension de archivo.
+    if (
+      (request.method === 'GET' || request.method === 'HEAD') &&
+      !extname(pathname) &&
+      pathname !== '/' &&
+      !pathname.startsWith('/api/')
+    ) {
+      const indexPath = join(DIST, 'index.html')
+      try {
+        await stat(indexPath)
+        const body = await readFile(indexPath)
+        response.writeHead(200, {
+          'Content-Type': MIME['.html'],
+          'Cache-Control': 'no-store',
+        })
+        response.end(body)
+        return
+      } catch {
+        // index.html ausente: caer al 404 real abajo
+      }
+    }
+
     const notFound = join(DIST, '404.html')
     const body = await readFile(notFound)
     response.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' })
