@@ -10,6 +10,8 @@
     "extract": "node scripts/extract-catalog.mjs",
     "mirror:assets": "node scripts/mirror-copero-assets.mjs",
     "lint": "oxlint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "smoke:flow": "node scripts/smoke-game-flow.mjs",
     "validate:launch": "node scripts/validate-launch.mjs",
     "validate:simulator-content": "node scripts/validate-simulador-content.mjs",
@@ -31,9 +33,11 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "jsdom": "^25.0.1",
     "oxlint": "^1.75.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
-    "vite": "^8.2.0"
+    "vite": "^8.2.0",
+    "vitest": "^2.1.9"
   }
 }
