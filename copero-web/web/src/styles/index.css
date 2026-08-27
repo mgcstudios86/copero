@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(0, 230, 118, 0.06), transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, rgba(255, 215, 0, 0.04), transparent 60%),
+      #09090B;
+  }
+  ::selection { background: rgba(0, 230, 118, 0.35); color: #fff; }
+}
+
+@layer components {
+  .card {
+    @apply rounded-copero border border-copero-border bg-copero-surface;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-copero-border bg-copero-surface px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-[0.14em] text-copero-muted;
+  }
+  .pill-accent {
+    @apply border-copero-accent/40 bg-copero-accent/10 text-copero-accent;
+  }
+  .pill-amber {
+    @apply border-copero-amber/40 bg-copero-amber/10 text-copero-amber;
+  }
+  .label-eyebrow {
+    @apply text-[10px] font-mono uppercase tracking-[0.2em] text-copero-accent;
+  }
+  .heading-display {
+    @apply font-display uppercase tracking-tight leading-[0.95];
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-copero-accent px-6 py-3 font-semibold text-copero-bg shadow-glow transition hover:bg-copero-accentDeep focus:outline-none focus-visible:ring-2 focus-visible:ring-copero-accent/60;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-copero-border bg-transparent px-5 py-3 font-semibold text-copero-text transition hover:border-copero-borderStrong;
+  }
+  .field-label {
+    @apply text-[10px] font-mono uppercase tracking-[0.18em] text-copero-muted;
+  }
+  .input {
+    @apply w-full rounded-copero border border-copero-border bg-copero-surface px-4 py-3 text-copero-text placeholder:text-copero-muted/60 focus:border-copero-accent focus:outline-none focus:ring-2 focus:ring-copero-accent/30;
+  }
+  .tile {
+    @apply rounded-copero border border-copero-border bg-copero-surface p-3;
+  }
+  .row-cell {
+    @apply flex items-center gap-3 rounded-md border border-copero-border bg-copero-surface px-3 py-2;
+  }
+}
