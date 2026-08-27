@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { DebugPanel } from './components/debug/DebugPanel'
 import { CareerPhase } from './components/phases/CareerPhase'
 import { DraftPhase } from './components/phases/DraftPhase'
 import { DraftResultPhase } from './components/phases/DraftResultPhase'
@@ -34,6 +35,7 @@ import {
   submitNegotiation,
 } from './engine/game'
 import { clearState, createInitialState, loadLatestState, saveState } from './engine/state'
+import { LAST_SAVE_KEY } from './engine/eventCooldown'
 import type {
   DraftMode,
   GameState,
@@ -58,15 +60,29 @@ export default function App() {
   let content: React.ReactNode
 
   if (state.phase === 'intro') {
+    const savedSeed =
+      typeof window !== 'undefined' ? window.localStorage.getItem(LAST_SAVE_KEY) : null
+    const hasResume = Boolean(savedSeed)
     content = (
       <IntroPhase
         draftMode={state.draftMode}
+        hasResume={hasResume}
         onDraftModeChange={(draftMode: DraftMode) =>
           update((s) => ({ ...s, draftMode, draft: createDraftState(draftMode) }))
         }
         onStart={() => {
           trackGameEvent('game_started', { draft_mode: state.draftMode })
           update(beginCareer)
+        }}
+        onResume={() => {
+          if (!savedSeed) return
+          const latest = loadLatestState()
+          if (latest) setState(latest)
+        }}
+        onNewGame={() => {
+          trackGameEvent('game_started', { draft_mode: state.draftMode, fresh: true })
+          clearState(state.seed)
+          setState(createInitialState(state.mode, state.draftMode))
         }}
       />
     )
@@ -242,5 +258,10 @@ export default function App() {
     )
   }
 
-  return <div className="min-h-screen">{content}</div>
+  return (
+    <div className="min-h-screen">
+      {content}
+      <DebugPanel state={state} onChange={setState} />
+    </div>
+  )
 }

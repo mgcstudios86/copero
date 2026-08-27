@@ -8,12 +8,18 @@ const MODES: DraftMode[] = ['classic', 'purist']
 
 export function IntroPhase({
   draftMode,
+  hasResume = false,
   onDraftModeChange,
   onStart,
+  onResume,
+  onNewGame,
 }: {
   draftMode: DraftMode
+  hasResume?: boolean
   onDraftModeChange: (mode: DraftMode) => void
   onStart: () => void
+  onResume?: () => void
+  onNewGame?: () => void
 }) {
   const { t } = useI18n()
   const gameT: GameTranslate = (key, params) => t('game', key, params)
@@ -98,6 +104,28 @@ export function IntroPhase({
             <GameButton type="button" size="lg" onClick={onStart}>
               {gameT('intro.start')}
             </GameButton>
+            {hasResume && onResume && (
+              <GameButton
+                type="button"
+                size="lg"
+                variant="secondary"
+                onClick={onResume}
+                data-testid="resume-game"
+              >
+                Continuar partida
+              </GameButton>
+            )}
+            {hasResume && onNewGame && (
+              <GameButton
+                type="button"
+                size="lg"
+                variant="ghost"
+                onClick={onNewGame}
+                data-testid="new-game"
+              >
+                Nueva partida
+              </GameButton>
+            )}
             <GameButton
               type="button"
               size="lg"
