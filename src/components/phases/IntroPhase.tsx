@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import type { DraftMode } from '../../engine/types'
+import { isDebugActive, setDebugMode } from '../../engine/debug'
 import { useI18n } from '../../i18n/config'
 import type { GameTranslate } from '../../i18n/game'
 import { PITCH_LAYOUT } from '../ui/positions'
@@ -22,6 +24,18 @@ export function IntroPhase({
   onNewGame?: () => void
 }) {
   const { t } = useI18n()
+  const [debugOn, setDebugOn] = useState<boolean>(() => isDebugActive())
+
+  const toggleDebug = () => {
+    if (isDebugActive()) {
+      setDebugMode(null)
+      setDebugOn(false)
+    } else {
+      setDebugMode('1')
+      setDebugOn(true)
+    }
+    if (typeof window !== 'undefined') window.location.reload()
+  }
   const gameT: GameTranslate = (key, params) => t('game', key, params)
   const modeDescription = gameT(`intro.mode.${draftMode}.desc`)
   const howSteps = [
@@ -179,9 +193,21 @@ export function IntroPhase({
       <footer className="border-t border-[color:var(--copero-border)] px-4 py-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 text-xs text-[color:var(--copero-muted)] sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 copero.top · {gameT('intro.disclaimer')}</p>
-          <a href="mailto:support@copero.top" className="font-semibold transition hover:text-[color:var(--copero-fg)]">
-            support@copero.top
-          </a>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={toggleDebug}
+              className="font-mono text-[10px] uppercase tracking-widest text-[color:var(--copero-muted)] transition hover:text-[color:var(--copero-fg)]"
+              aria-pressed={debugOn}
+              data-testid="debug-toggle"
+              title="Alterna el panel de QA (avanzar temporadas, inyectar stats, forzar retiro)"
+            >
+              {debugOn ? 'QA · ON' : 'QA · OFF'}
+            </button>
+            <a href="mailto:support@copero.top" className="font-semibold transition hover:text-[color:var(--copero-fg)]">
+              support@copero.top
+            </a>
+          </div>
         </div>
       </footer>
     </main>
