@@ -44,6 +44,7 @@ yarn-error.*
 
 # Secrets / credentials
 credentials/
+credentials.json
 secrets/
 keystore.properties
 # MGC-336: ./secrets/play-store-service-account.json (referenciado en
