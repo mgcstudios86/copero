@@ -1,7 +1,8 @@
 # release-internal.yml — Copero (MGC-250, skill expo-cicd-workflows §release-internal)
-# Pipeline canónico: merge a main → build --local Android (Linux runner) + iOS (macOS runner) → submit --track internal.
-# Política §8.3 (engineering-workflow): builds --local; runners self-hosted (copero-ci).
+# Pipeline canónico: merge a main → build --local Android + iOS → submit --track internal.
+# Política §8.3 (engineering-workflow): builds --local; runner self-hosted (copero-ci).
 # Sólo `internal` como destino. Promoción a alpha/production la hace el operador a mano.
+# CLAUDE.md §Regla dura: TODOS los jobs usan runs-on: [self-hosted, copero-ci, Linux].
 
 name: release-internal (copero)
 
@@ -23,8 +24,8 @@ jobs:
     runs-on: [self-hosted, copero-ci, Linux]
     timeout-minutes: 60
     env:
-      # Skill local-build §Java setup: Homebrew openjdk@17 preferred. En Linux el runner
-      # tiene openjdk@17 vía apt-get; JAVA_HOME vacío → usa default del runner.
+      # Skill local-build §Java setup: en el runner copero-ci JDK 17 está disponible vía default.
+      # SDK 57 expo-modules-core 57.0.12 peer dep bug (MGC-366); ver eas.yml.
       EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +35,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          # CLAUDE.md: NO usar cache: 'npm' (MGC-359, sube ~800MB y bloquea runner).
 
       - name: Instalar eas-cli + infisical CLI
         run: |
@@ -48,7 +50,7 @@ jobs:
       - name: Patch expo-modules-core (worklets executeSync → runSync, MGC-366)
         run: node scripts/patch-expo-modules-core.js
 
-      - name: Load EXPO_TOKEN (Infisical /mgcstudios/expo)
+      - name: Load EXPO_TOKEN (Infisical /copero env=prod, MGC-379)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
@@ -57,13 +59,19 @@ jobs:
             echo "ERROR: Infisical secrets ausentes en repo. POLICIES §3: escalar al CTO." >&2
             exit 1
           fi
-          EXPO_TOKEN=$(infisical secrets \
+          EXPO_TOKEN=$(infisical export \
             --projectId "${INFISICAL_PROJECT_ID}" \
-            --env prod --path /mgcstudios/expo \
-            --token "${INFISICAL_TOKEN}" --plain 2>/dev/null \
+            --env=prod --path=/copero --format=dotenv 2>/dev/null \
             | grep '^paperclip-expo-eas-token=' | cut -d= -f2-)
+          # Fallback: si la key tiene otro nombre en Infisical, intentar EXPO_TOKEN directo.
+          if [[ -z "${EXPO_TOKEN}" ]]; then
+            EXPO_TOKEN=$(infisical export \
+              --projectId "${INFISICAL_PROJECT_ID}" \
+              --env=prod --path=/copero --format=dotenv 2>/dev/null \
+              | grep '^EXPO_TOKEN=' | cut -d= -f2-)
+          fi
           if [[ -z "${EXPO_TOKEN}" || "${EXPO_TOKEN}" == "test" || "${EXPO_TOKEN}" == "placeholder" ]]; then
-            echo "ERROR: EXPO_TOKEN ausente o placeholder en Infisical /mgcstudios/expo." >&2
+            echo "ERROR: EXPO_TOKEN ausente o placeholder en Infisical /copero env=prod." >&2
             exit 1
           fi
           echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
@@ -119,19 +127,18 @@ jobs:
               echo "- size: ${SIZE} bytes"
               echo "- track: internal (Play Console)"
               echo "- merge_sha: ${GITHUB_SHA}"
-              echo "- workflow: ${GITHUB_WORKFLOW_RUN_URL:-local}"
+              echo "- workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "WARN: no se encontró AAB; revisa el step locate." >&2
           fi
 
   ios-internal:
-    name: ios build + submit internal (eas build --local, simulator preview) [best-effort]
-    runs-on: [self-hosted, copero-ci, macOS]
+    name: ios build + submit internal (simulator preview, best-effort) [MGC-360]
+    runs-on: [self-hosted, copero-ci, Linux]
     timeout-minutes: 60
     continue-on-error: true
     env:
-      JAVA_HOME: /opt/homebrew/opt/openjdk@17
       EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
     steps:
       - uses: actions/checkout@v4
@@ -150,16 +157,15 @@ jobs:
         run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
       - name: Patch expo-modules-core (worklets executeSync → runSync, MGC-366)
         run: node scripts/patch-expo-modules-core.js
-      - name: Load EXPO_TOKEN
+      - name: Load EXPO_TOKEN (Infisical /copero env=prod)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
         run: |
-          EXPO_TOKEN=$(infisical secrets \
+          EXPO_TOKEN=$(infisical export \
             --projectId "${INFISICAL_PROJECT_ID}" \
-            --env prod --path /mgcstudios/expo \
-            --token "${INFISICAL_TOKEN}" --plain 2>/dev/null \
-            | grep '^paperclip-expo-eas-token=' | cut -d= -f2-)
+            --env=prod --path=/copero --format=dotenv 2>/dev/null \
+            | grep -E '^(paperclip-expo-eas-token|EXPO_TOKEN)=' | head -1 | cut -d= -f2-)
           echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
       - name: eas init
         env:
