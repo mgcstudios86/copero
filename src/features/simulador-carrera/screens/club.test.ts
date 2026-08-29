@@ -1,0 +1,76 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { GAME_LOCALES, gameT } from '@/i18n/game-copy';
+
+/**
+ * Regresión MGC-222 / MGC-232.
+ *
+ * MGC-222: el header decía "TRES CAMINOS" con 4 clubes en el catálogo.
+ * MGC-232: el fix inicial hardcodeó "CUATRO", que vuelve a mentir en el
+ * próximo cambio de catálogo. Estos tests verifican la *lógica* (el count
+ * entra por parámetro), no el literal renderizado.
+ */
+describe('club screen — copy de origen', () => {
+  const clubScreen = readFileSync(resolve(__dirname, 'club.tsx'), 'utf8');
+  const clubCount = Array.from(clubScreen.matchAll(/^\s*id:\s*'([^']+)'/gm)).length;
+
+  it('declara 4 clubes en la lista', () => {
+    expect(clubCount).toBe(4);
+  });
+
+  it('no tiene el título del header hardcodeado', () => {
+    expect(clubScreen).not.toContain('ELEGÍ ENTRE');
+  });
+
+  it('pasa el largo real del catálogo al componente de origen', () => {
+    expect(clubScreen).toContain('<OriginPhase count={CLUB_OPTIONS.length} />');
+  });
+
+  it('el título renderizado coincide con la cantidad de clubes del catálogo', () => {
+    expect(gameT('origin.title', { count: clubCount })).toBe('ELEGÍ ENTRE CUATRO CAMINOS');
+  });
+});
+
+describe('gameT — interpolación de {{count}}', () => {
+  it('sigue al catálogo cuando cambia la cantidad de clubes', () => {
+    expect(gameT('origin.title', { count: 3 })).toBe('ELEGÍ ENTRE TRES CAMINOS');
+    expect(gameT('origin.title', { count: 4 })).toBe('ELEGÍ ENTRE CUATRO CAMINOS');
+    expect(gameT('origin.title', { count: 5 })).toBe('ELEGÍ ENTRE CINCO CAMINOS');
+  });
+
+  it('cae al dígito cuando el count sale de la tabla de números', () => {
+    expect(gameT('origin.title', { count: 12 })).toBe('ELEGÍ ENTRE 12 CAMINOS');
+  });
+
+  it('define origin.title en los 7 locales soportados, sin dejar el placeholder', () => {
+    expect(GAME_LOCALES).toHaveLength(7);
+    for (const locale of GAME_LOCALES) {
+      const title = gameT('origin.title', { count: 4 }, locale);
+      expect(title).not.toContain('{{count}}');
+      expect(title).not.toBe('origin.title');
+      expect(title.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('traduce el título por locale', () => {
+    expect(gameT('origin.title', { count: 4 }, 'en')).toBe('CHOOSE BETWEEN FOUR PATHS');
+    expect(gameT('origin.title', { count: 4 }, 'pt-BR')).toBe('ESCOLHA ENTRE QUATRO CAMINHOS');
+    expect(gameT('origin.title', { count: 4 }, 'de')).toBe('WÄHLE AUS VIER WEGEN');
+  });
+
+  it('cae a es cuando el locale no existe', () => {
+    expect(gameT('origin.title', { count: 4 }, 'xx' as never)).toBe('ELEGÍ ENTRE CUATRO CAMINOS');
+  });
+
+  it('devuelve el path cuando la clave no existe, para que el typo sea visible', () => {
+    expect(gameT('origin.noExiste')).toBe('origin.noExiste');
+  });
+
+  it('define eyebrow y body en los 7 locales', () => {
+    for (const locale of GAME_LOCALES) {
+      expect(gameT('origin.eyebrow', undefined, locale)).not.toBe('origin.eyebrow');
+      expect(gameT('origin.body', undefined, locale)).not.toBe('origin.body');
+    }
+  });
+});

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CLUBS, OVR_INICIAL, POTENCIAL } from '../data/mock';
+import OriginPhase from '../components/OriginPhase';
 
 const colorMap: Record<'green' | 'amber' | 'rose', string> = {
   green: 'text-copero-accent',
@@ -10,15 +11,7 @@ const colorMap: Record<'green' | 'amber' | 'rose', string> = {
 export default function SeleccionClub() {
   return (
     <div className="space-y-6">
-      <header className="space-y-2">
-        <p className="label-eyebrow">PRIMERA DECISIÓN PROFESIONAL</p>
-        <h1 className="heading-display text-3xl sm:text-4xl">ELEGÍ ENTRE TRES CAMINOS</h1>
-        <p className="max-w-prose text-sm text-copero-muted">
-          Las opciones dependen de tu nacionalidad y del potencial obtenido en el draft. Un club
-          chico ofrece minutos; uno más fuerte ofrece exposición y títulos, pero también más
-          banco.
-        </p>
-      </header>
+      <OriginPhase count={CLUBS.length} />
 
       <div className="rounded-copero border border-copero-accent/40 bg-copero-accent/5 p-4">
         <p className="field-label">TU PERFIL</p>

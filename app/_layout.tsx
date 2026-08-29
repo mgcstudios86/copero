@@ -21,6 +21,7 @@ import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
 import { SiteFooter } from '@/design/components/SiteFooter';
+import { useCareerStore } from '@/shared/store/careerStore';
 
 /**
  * MGC-555 PR1 — carga tipográfica.
@@ -35,6 +36,16 @@ import { SiteFooter } from '@/design/components/SiteFooter';
 
 function ThemedShell() {
   const { colors, mode } = useTheme();
+
+  // MGC-227: bootstrap de persistencia. Llamamos `hydrateFromSave()`
+  // una sola vez al montar el root layout. Si hay save previo, la
+  // store arranca ya hidratada; si no, queda en initialSnapshot.
+  // `useCareerStore` se importa sincrónicamente; la action es async
+  // pero no bloquea el render — la UI pinta con el initial state y
+  // cuando la hidratación termina los selectors re-renderizan.
+  useEffect(() => {
+    void useCareerStore.getState().hydrateFromSave();
+  }, []);
 
   // MGC-556 — copia el `colors.bg` al `<body>` y `<html>` en web para que
   // `getComputedStyle(document.body).backgroundColor` matchee `palette.copero.bg`

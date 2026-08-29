@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
+import { OriginPhase } from '../components/OriginPhase';
 import type { Club } from '@/types/career';
 
 /**
@@ -118,35 +119,8 @@ export default function SeleccionClubScreen() {
         contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4] }]}
         testID="club-screen"
       >
-        {/* Header */}
-        <View style={{ gap: spacing[2] }}>
-          <Text
-            style={{
-              color: colors.primary,
-              letterSpacing: 4,
-              fontSize: fontSize.sm,
-              fontWeight: fontWeight.bold,
-            }}
-            accessibilityRole="header"
-          >
-            PRIMERA DECISIÓN PROFESIONAL
-          </Text>
-          <Text
-            style={{
-              color: colors.textStrong,
-              fontSize: fontSize['2xl'],
-              fontWeight: fontWeight.bold,
-            }}
-            accessibilityRole="header"
-          >
-            ELEGÍ ENTRE TRES CAMINOS
-          </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSize.base }}>
-            Las opciones dependen de tu nacionalidad y del potencial obtenido en el draft. Un club
-            chico ofrece minutos; uno más fuerte ofrece exposición y títulos, pero también más
-            banco.
-          </Text>
-        </View>
+        {/* Header — copy i18n con count dinámico (MGC-232) */}
+        <OriginPhase count={CLUB_OPTIONS.length} />
 
         {/* Profile summary */}
         <View
