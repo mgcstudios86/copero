@@ -31,7 +31,9 @@ export default function DashboardScreen() {
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
 
   const profile = useCareerStore((s) => s.profile);
+  const stage = useCareerStore((s) => s.stage);
   const openAcademy = useCareerStore((s) => s.openAcademy);
+  const startDraft = useCareerStore((s) => s.startDraft);
 
   const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
 
@@ -56,6 +58,15 @@ export default function DashboardScreen() {
   const onAcademyPress = () => {
     openAcademy();
     router.push('/simulador-carrera/academy');
+  };
+
+  // MGC-209: CTA al flow de 6 pantallas (draft → tu-jugador → club → temporada → fin-carrera).
+  // Se muestra cuando el jugador todavía no pasó por el draft. Permite acceder
+  // a las pantallas MGC-209 sin romper el flow legacy academy → match.
+  const showDraftCta = stage === 'dashboard' || stage === 'identity';
+  const onDraftPress = () => {
+    startDraft();
+    router.push('/simulador-carrera/draft');
   };
 
   return (
@@ -332,6 +343,17 @@ export default function DashboardScreen() {
           testID="btn-dashboard-academy"
           accessibilityHint={copy.resolve('academy_h1')}
         />
+        {showDraftCta ? (
+          <Button
+            label="Empezar draft de leyendas"
+            onPress={onDraftPress}
+            variant="secondary"
+            size="lg"
+            fullWidth
+            testID="btn-dashboard-draft"
+            accessibilityHint="Inicia el draft de 8 rondas con leyendas"
+          />
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

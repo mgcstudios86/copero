@@ -50,6 +50,15 @@ type CareerStore = CareerSnapshot & {
   acceptClub: (club: Club) => void;
   decide: (strategyId: StrategyId, choiceId: string) => void;
   advance: () => void;
+  /** Draft de leyendas (MGC-208 §1) — MGC-209. */
+  startDraft: (seed?: number) => void;
+  swapLegend: () => void;
+  pickLegend: () => void;
+  /** Selector de club post-draft (MGC-208 §2). */
+  pickClub: (club: Club) => void;
+  /** Loop anual (MGC-208 §3). */
+  advanceSeason: () => void;
+  runCareerToRetirement: () => void;
   reset: () => void;
 };
 
@@ -113,6 +122,51 @@ export const useCareerStore = create<CareerStore>()(
             setSnapshot((s) => step(s, { type: 'advance' } satisfies CareerAction));
           })();
         },
+        // MGC-209: acciones del draft + loop anual + selector de club.
+        // Todas usan el mismo patrón de dynamic import del motor para
+        // preservar el code-split del chunk inicial de /identity.
+        startDraft: (seed) => {
+          void (async () => {
+            const { step } = await import('@/features/career/engine');
+            setSnapshot((s) =>
+              step(s, { type: 'startDraft', seed } satisfies CareerAction),
+            );
+          })();
+        },
+        swapLegend: () => {
+          void (async () => {
+            const { step } = await import('@/features/career/engine');
+            setSnapshot((s) => step(s, { type: 'swapLegend' } satisfies CareerAction));
+          })();
+        },
+        pickLegend: () => {
+          void (async () => {
+            const { step } = await import('@/features/career/engine');
+            setSnapshot((s) => step(s, { type: 'pickLegend' } satisfies CareerAction));
+          })();
+        },
+        pickClub: (club) => {
+          void (async () => {
+            const { step } = await import('@/features/career/engine');
+            setSnapshot((s) => step(s, { type: 'pickClub', club } satisfies CareerAction));
+          })();
+        },
+        advanceSeason: () => {
+          void (async () => {
+            const { step } = await import('@/features/career/engine');
+            setSnapshot((s) =>
+              step(s, { type: 'advanceSeason' } satisfies CareerAction),
+            );
+          })();
+        },
+        runCareerToRetirement: () => {
+          void (async () => {
+            const { step } = await import('@/features/career/engine');
+            setSnapshot((s) =>
+              step(s, { type: 'runCareerToRetirement' } satisfies CareerAction),
+            );
+          })();
+        },
         // reset: estado inicial sin motor.
         reset: () => setSnapshot(() => initialSnapshot()),
       };
@@ -123,6 +177,10 @@ export const useCareerStore = create<CareerStore>()(
       partialize: (state): CareerSnapshot => ({
         stage: state.stage,
         profile: state.profile,
+        draft: state.draft ?? null,
+        card: state.card ?? null,
+        log: state.log ?? { timeline: [], events: [] },
+        seed: state.seed,
       }),
     },
   ),
