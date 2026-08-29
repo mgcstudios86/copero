@@ -6,3 +6,8 @@ export * from './strategy';
 export * from './positions';
 export * from './clubs';
 export * from './nationalities';
+export * from './legends';
+export * from './draft';
+export * from './season';
+export * from './retirement';
+export * from './persistence';

@@ -1,6 +1,8 @@
 import type {
   CareerSnapshot,
+  CareerStage,
   Club,
+  ClubArchetype,
   Foot,
   PlayerProfile,
   Position,
@@ -8,14 +10,26 @@ import type {
 } from '@/types/career';
 import { applyChoice, advanceWeek } from './simulation';
 import { createRng, seedFromString } from './rng';
+import {
+  cardFromPicks,
+  initialDraftBoard,
+  pickCurrentLegend,
+  swapLegend,
+  attrsFromCard,
+} from './draft';
+import { advanceSeason, isRetired, runCareerLoop } from './season';
 
 /**
  * Reducer puro para el state machine del simulador de carrera (MGC-430
- * + MGC-442).
+ * + MGC-442 + MGC-208).
  *
- * Cadena: identity -> dashboard -> academy -> clubStart -> dashboard (loop).
- * La simulación corre con RNG determinista por (week, season) para que
- * QA pueda validar feedback estable (acceptance bar #7 de strategies.md).
+ * Cadena: identity -> dashboard -> academy -> clubStart -> draft ->
+ * club -> season* -> retirement.
+ *
+ * La simulación semanal corre con RNG determinista por (week, season)
+ * para que QA valide feedback estable (acceptance bar #7 de
+ * strategies.md). El draft y el loop anual usan el mismo `seed`
+ * guardado en el snapshot para que la carrera sea reproducible.
  */
 
 export type CareerAction =
@@ -29,6 +43,12 @@ export type CareerAction =
   | { type: 'acceptClub'; club: Club }
   | { type: 'decide'; strategyId: StrategyId; choiceId: string }
   | { type: 'advance' }
+  | { type: 'startDraft'; seed?: number }
+  | { type: 'swapLegend' }
+  | { type: 'pickLegend' }
+  | { type: 'pickClub'; club: Club }
+  | { type: 'advanceSeason' }
+  | { type: 'runCareerToRetirement' }
   | { type: 'reset' };
 
 export const initialProfile: PlayerProfile = {
@@ -66,6 +86,9 @@ export const initialProfile: PlayerProfile = {
 export const initialSnapshot = (): CareerSnapshot => ({
   stage: 'identity',
   profile: { ...initialProfile },
+  draft: null,
+  card: null,
+  log: { timeline: [], events: [] },
 });
 
 export function step(state: CareerSnapshot, action: CareerAction): CareerSnapshot {
@@ -109,11 +132,123 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
     }
     case 'advance':
       return { ...state, profile: advanceWeek(state.profile) };
+    case 'startDraft': {
+      const seed = action.seed ?? seedFromString(state.profile.name || 'copero');
+      return {
+        ...state,
+        stage: 'draft',
+        draft: initialDraftBoard(),
+        card: null,
+        seed,
+      };
+    }
+    case 'swapLegend': {
+      if (!state.draft) return state;
+      return { ...state, draft: swapLegend(state.draft) };
+    }
+    case 'pickLegend': {
+      if (!state.draft) return state;
+      const result = pickCurrentLegend(state.draft);
+      const card = result.card ?? state.card;
+      const stage = result.card ? 'club' : 'draft';
+      // Cuando se confirma el último pick, mezclamos la card al profile
+      // y pasamos al selector de club.
+      if (result.card) {
+        const merged = applyCardToProfile(state.profile, result.card);
+        return {
+          ...state,
+          stage,
+          draft: result.board,
+          card,
+          profile: merged,
+        };
+      }
+      return { ...state, draft: result.board, card };
+    }
+    case 'pickClub': {
+      if (!state.card) return state;
+      const archetype: ClubArchetype = action.club.archetype ?? 'EQUILIBRIO';
+      // Modificadores del arquetipo: DESARROLLO +5 OVR inicial;
+      // EQUILIBRIO idem; AMBICIÓN +0 pero reputación alta.
+      const bonus = archetype === 'DESARROLLO' ? 2 : archetype === 'EQUILIBRIO' ? 1 : 0;
+      const profile: PlayerProfile = {
+        ...state.profile,
+        club: action.club,
+        clubPresupuesto: action.club.presupuesto,
+        clubInteres: true,
+        ovr: Math.min(99, state.profile.ovr + bonus),
+        season: 1,
+        week: 1,
+      };
+      return {
+        ...state,
+        stage: 'season',
+        profile,
+      };
+    }
+    case 'advanceSeason': {
+      if (!state.profile.club) return state;
+      const baseSeed = state.seed ?? seedFromString(state.profile.name || 'copero');
+      const seed =
+        baseSeed +
+        state.profile.season * 1009 +
+        seedFromString(state.profile.name || 'copero');
+      const result = advanceSeason(state.profile, state.profile.club, createRng(seed));
+      const log = {
+        timeline: [...(state.log?.timeline ?? []), result.row],
+        events: [...(state.log?.events ?? []), ...result.events],
+      };
+      const stage: CareerStage = isRetired(result.profile) ? 'retirement' : 'season';
+      return {
+        ...state,
+        stage,
+        profile: result.profile,
+        log,
+      };
+    }
+    case 'runCareerToRetirement': {
+      if (!state.profile.club) return state;
+      const baseSeed = state.seed ?? seedFromString(state.profile.name || 'copero');
+      const seed = baseSeed + seedFromString(state.profile.name || 'copero');
+      const result = runCareerLoop(state.profile, state.profile.club, createRng(seed));
+      return {
+        ...state,
+        stage: 'retirement',
+        profile: result.profile,
+        log: result.log,
+      };
+    }
     case 'reset':
       return initialSnapshot();
     default:
       return state;
   }
+}
+
+/** Mezcla la PlayerCard en el PlayerProfile (MGC-208 §1 + §3). */
+function applyCardToProfile(profile: PlayerProfile, card: ReturnType<typeof cardFromPicks>): PlayerProfile {
+  const attrs = attrsFromCard(card);
+  return {
+    ...profile,
+    attrs,
+    ovr: card.ovrInicial,
+    value: card.potencial,
+    age: 16,
+    season: 1,
+    week: 1,
+    stats: { apps: 0, goals: 0, ast: 0 },
+    career: {
+      ...profile.career,
+      presupuesto: 0,
+      lesion: { kind: 'ninguna', fechasOut: 0 },
+      reputation: {
+        prensa: 'neutral',
+        hinchada: 'aceptado',
+        vestuario: 'integrado',
+        seleccionConvocado: false,
+      },
+    },
+  };
 }
 
 /** Helper: ¿el profile tiene los campos mínimos para pasar de identity a dashboard? */
