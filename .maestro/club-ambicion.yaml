@@ -1,0 +1,66 @@
+# MGC-221 + MGC-217 — Club screen: AMBICIÓN (Boca Juniors) happy path.
+#
+# Precondiciones:
+#   - APK instalado: build-138-preview-6422e8e.apk
+#   - Pantalla /simulador-carrera/club abierta (draft completado).
+#   - El jugador ya pasó la pantalla "draft" y tiene una carta activa.
+#
+# AC MGC-217:
+#   - 4 tarjetas visibles: Vélez=EQUILIBRIO, Temperley=DESARROLLO,
+#     Morón=DESARROLLO, Boca=AMBICIÓN.
+#   - Tap "Firmar con Boca Juniors" -> motor aplica bonuses AMBICIÓN.
+#   - Sin regresión: las otras 3 tarjetas siguen renderizando
+#     correctamente (verificamos su presencia, no su selección).
+#
+# Ejecución: `maestro test .maestro/club-ambicion.yaml`
+# Owner del device: QA agent (ZY22G728HN). CI no corre Maestro mobile.
+
+appId: com.mgcstudios.copero
+name: club-ambicion
+tags:
+  - club
+  - career
+  - mgc-217
+  - mgc-221
+  - happy-path
+
+---
+- launchApp:
+    clearState: false
+
+- assertVisible:
+    id: club-screen
+    label: "Pantalla de selección de club visible"
+
+# Verificamos las 4 tarjetas y sus arquetipos antes de tocar nada.
+- assertVisible:
+    text: "EQUILIBRIO"
+    label: "Arquetipo EQUILIBRIO presente (Vélez)"
+- assertVisible:
+    text: "DESARROLLO"
+    label: "Arquetipo DESARROLLO presente (Temperley / Morón)"
+- assertVisible:
+    text: "AMBICIÓN"
+    label: "Arquetipo AMBICIÓN presente (Boca Juniors)"
+- assertVisible:
+    text: "Vélez Sarsfield"
+- assertVisible:
+    text: "Temperley"
+- assertVisible:
+    text: "Morón"
+- assertVisible:
+    text: "Boca Juniors"
+
+# Tap en Boca Juniors — ruta a /simulador-carrera/temporada.
+- tapOn:
+    id: club-pick-boca
+    label: "Firmar con Boca Juniors"
+
+# Verificación post-firma: la pantalla club ya no debe estar visible
+# y la pantalla de temporada debe haber cargado.
+- assertNotVisible:
+    id: club-screen
+    label: "Pantalla club cerrada tras la firma"
+- assertVisible:
+    text: "Temporada"
+    label: "Pantalla temporada abierta"
