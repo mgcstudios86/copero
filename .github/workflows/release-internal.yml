@@ -1,0 +1,180 @@
+# release-internal.yml — Copero (MGC-250, skill expo-cicd-workflows §release-internal)
+# Pipeline canónico: merge a main → build --local Android (Linux runner) + iOS (macOS runner) → submit --track internal.
+# Política §8.3 (engineering-workflow): builds --local; runners self-hosted (copero-ci).
+# Sólo `internal` como destino. Promoción a alpha/production la hace el operador a mano.
+
+name: release-internal (copero)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:    # reintentos manuales del operador
+
+concurrency:
+  group: release-internal-copero-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  android-internal:
+    name: android build + submit internal (eas build --local)
+    runs-on: [self-hosted, copero-ci, Linux]
+    timeout-minutes: 60
+    env:
+      # Skill local-build §Java setup: Homebrew openjdk@17 preferred. En Linux el runner
+      # tiene openjdk@17 vía apt-get; JAVA_HOME vacío → usa default del runner.
+      EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar eas-cli + infisical CLI
+        run: |
+          npm install -g eas-cli@latest
+          if ! command -v infisical >/dev/null 2>&1; then
+            curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
+          fi
+
+      - name: npm ci (deps)
+        run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+
+      - name: Patch expo-modules-core (worklets executeSync → runSync, MGC-366)
+        run: node scripts/patch-expo-modules-core.js
+
+      - name: Load EXPO_TOKEN (Infisical /mgcstudios/expo)
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+        run: |
+          if [[ -z "${INFISICAL_TOKEN:-}" || -z "${INFISICAL_PROJECT_ID:-}" ]]; then
+            echo "ERROR: Infisical secrets ausentes en repo. POLICIES §3: escalar al CTO." >&2
+            exit 1
+          fi
+          EXPO_TOKEN=$(infisical secrets \
+            --projectId "${INFISICAL_PROJECT_ID}" \
+            --env prod --path /mgcstudios/expo \
+            --token "${INFISICAL_TOKEN}" --plain 2>/dev/null \
+            | grep '^paperclip-expo-eas-token=' | cut -d= -f2-)
+          if [[ -z "${EXPO_TOKEN}" || "${EXPO_TOKEN}" == "test" || "${EXPO_TOKEN}" == "placeholder" ]]; then
+            echo "ERROR: EXPO_TOKEN ausente o placeholder en Infisical /mgcstudios/expo." >&2
+            exit 1
+          fi
+          echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
+          echo "[release-internal] EXPO_TOKEN cargado (length=${#EXPO_TOKEN})"
+
+      - name: eas init (link proyecto no-interactive)
+        env:
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
+        run: |
+          if grep -q '"projectId"' eas.json; then
+            echo "eas.json ya tiene projectId; skip init"
+          else
+            eas init --id 27354a3b-2ab8-46c1-8ed2-2d5448b0e71a --non-interactive || true
+          fi
+
+      - name: Android build (eas build --local, profile=preview, distribution=internal)
+        env:
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
+        run: |
+          mkdir -p dist
+          eas build --local --platform android --profile preview --non-interactive
+
+      - name: Locate AAB Android
+        id: locate
+        run: |
+          AAB=$(find dist -maxdepth 3 -name '*.aab' -type f | head -1 || true)
+          if [[ -z "${AAB}" ]]; then
+            echo "ERROR: no se encontró AAB Android en dist/" >&2
+            find . -maxdepth 5 -name '*.aab' -type f 2>/dev/null
+            exit 1
+          fi
+          echo "aab_path=${AAB}" >> "$GITHUB_OUTPUT"
+          echo "AAB: ${AAB}"
+
+      - name: Submit to internal (Android)
+        env:
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
+        run: |
+          eas submit --platform android --track internal --non-interactive
+
+      - name: Resumen + SHA256 del AAB Android
+        if: always()
+        run: |
+          set -euo pipefail
+          AAB="${{ steps.locate.outputs.aab_path }}"
+          if [[ -n "${AAB}" && -f "${AAB}" ]]; then
+            SHA=$(sha256sum "${AAB}" | awk '{print $1}')
+            SIZE=$(stat -c %s "${AAB}")
+            {
+              echo "## AAB Android firmado (copero)"
+              echo "- path: ${AAB}"
+              echo "- sha256: ${SHA}"
+              echo "- size: ${SIZE} bytes"
+              echo "- track: internal (Play Console)"
+              echo "- merge_sha: ${GITHUB_SHA}"
+              echo "- workflow: ${GITHUB_WORKFLOW_RUN_URL:-local}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "WARN: no se encontró AAB; revisa el step locate." >&2
+          fi
+
+  ios-internal:
+    name: ios build + submit internal (eas build --local, simulator preview) [best-effort]
+    runs-on: [self-hosted, copero-ci, macOS]
+    timeout-minutes: 60
+    continue-on-error: true
+    env:
+      JAVA_HOME: /opt/homebrew/opt/openjdk@17
+      EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar eas-cli + infisical CLI
+        run: |
+          npm install -g eas-cli@latest
+          if ! command -v infisical >/dev/null 2>&1; then
+            curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
+          fi
+      - name: npm ci (deps)
+        run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Patch expo-modules-core (worklets executeSync → runSync, MGC-366)
+        run: node scripts/patch-expo-modules-core.js
+      - name: Load EXPO_TOKEN
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+        run: |
+          EXPO_TOKEN=$(infisical secrets \
+            --projectId "${INFISICAL_PROJECT_ID}" \
+            --env prod --path /mgcstudios/expo \
+            --token "${INFISICAL_TOKEN}" --plain 2>/dev/null \
+            | grep '^paperclip-expo-eas-token=' | cut -d= -f2-)
+          echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
+      - name: eas init
+        env:
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
+        run: |
+          if ! grep -q '"projectId"' eas.json; then
+            eas init --id 27354a3b-2ab8-46c1-8ed2-2d5448b0e71a --non-interactive || true
+          fi
+      - name: iOS build (simulator preview)
+        env:
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
+        run: |
+          eas build --local --platform ios --profile preview-ios-sim --non-interactive
+      - name: iOS submit internal
+        env:
+          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
+        run: |
+          eas submit --platform ios --track internal --non-interactive
