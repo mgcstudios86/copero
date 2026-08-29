@@ -26,6 +26,10 @@ export default function TemporadaScreen() {
   const stage = useCareerStore((s) => s.stage);
   const advanceSeason = useCareerStore((s) => s.advanceSeason);
   const runCareerToRetirement = useCareerStore((s) => s.runCareerToRetirement);
+  // MGC-249: loop semanal con `advance()` para drenar lesión, bumpear
+  // semana y rotar season cada 38 semanas. Botón "Siguiente semana"
+  // abre el loop fino que QA necesita para validar feedback bar.
+  const advance = useCareerStore((s) => s.advance);
 
   const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
 
@@ -43,6 +47,13 @@ export default function TemporadaScreen() {
 
   const onRunAll = () => {
     runCareerToRetirement();
+  };
+
+  // MGC-249: loop semanal fino. Dispara `advance()` que drena lesión
+  // (1 fecha → -1) y bumpea week. Cuando week llega a 38, advanceSeason
+  // se hace cargo (rotación de temporada + stats anuales).
+  const onNextWeek = () => {
+    advance();
   };
 
   const onRetire = () => {
@@ -201,25 +212,41 @@ export default function TemporadaScreen() {
           ))}
         </View>
 
-        {/* CTAs */}
+        {/* MGC-251 — CTAs del loop. "Jugar temporada" avanza 1 temporada
+            (simula partidos, evoluciona OVR año a año) y "Retirarme" corre
+            la carrera hasta el retiro + navega al resumen de fin de carrera.
+            MGC-249: agregamos "Siguiente semana" como loop semanal fino
+            antes del botón anual. QA valida feedback bar con advance(). */}
         <View style={{ gap: spacing[3] }}>
           <Button
-            label="Pasar temporada"
-            onPress={onAdvance}
+            label={`Siguiente semana (${profile.week}/38)`}
+            onPress={onNextWeek}
             variant="primary"
             size="lg"
             fullWidth
-            testID="btn-temporada-advance"
+            testID="btn-temporada-next-week"
             disabled={stage === 'retirement'}
+            accessibilityHint="Avanza una semana de la temporada: drena lesión y rota eventos semanales"
           />
           <Button
-            label="Correr carrera hasta el retiro"
+            label="Jugar temporada"
+            onPress={onAdvance}
+            variant="secondary"
+            size="lg"
+            fullWidth
+            testID="btn-temporada-play"
+            disabled={stage === 'retirement'}
+            accessibilityHint="Simula una temporada de partidos y evoluciona OVR, edad y stats"
+          />
+          <Button
+            label="Retirarme"
             onPress={onRunAll}
             variant="secondary"
             size="lg"
             fullWidth
-            testID="btn-temporada-run-all"
+            testID="btn-temporada-retire"
             disabled={stage === 'retirement'}
+            accessibilityHint="Cierra la carrera y abre el resumen final con partidos, goles, asist y OVR final"
           />
           {stage === 'retirement' ? (
             <Button
@@ -228,10 +255,66 @@ export default function TemporadaScreen() {
               variant="primary"
               size="lg"
               fullWidth
-              testID="btn-temporada-retire"
+              testID="btn-temporada-retire-summary"
             />
           ) : null}
         </View>
+
+        {/* MGC-251 — Resumen del último partido/temporada jugada. Se muestra
+            cuando hay al menos una fila en el timeline: partidos, goles y
+            asist de la última temporada para confirmar el match results. */}
+        {log && log.timeline.length > 0 ? (
+          <View
+            testID="temporada-last-season"
+            accessibilityLabel={`Última temporada: edad ${profile.age}, OVR ${profile.ovr}, partidos ${log.timeline[log.timeline.length - 1].apps}, goles ${log.timeline[log.timeline.length - 1].goals}, asist ${log.timeline[log.timeline.length - 1].assists}`}
+            style={{
+              borderRadius: radii.lg,
+              borderWidth: 1,
+              borderColor: colors.primary,
+              backgroundColor: colors.primarySoft,
+              padding: spacing[4],
+              gap: spacing[2],
+            }}
+          >
+            <Text
+              style={{
+                color: colors.primary,
+                fontSize: fontSize.xs,
+                fontWeight: fontWeight.bold,
+                letterSpacing: 2,
+              }}
+            >
+              ÚLTIMA TEMPORADA JUGADA
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: spacing[3],
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.textStrong,
+                  fontSize: fontSize.xl,
+                  fontWeight: fontWeight.bold,
+                }}
+              >
+                {log.timeline[log.timeline.length - 1].apps} P ·{' '}
+                {log.timeline[log.timeline.length - 1].goals} G ·{' '}
+                {log.timeline[log.timeline.length - 1].assists} A
+              </Text>
+              <Text
+                style={{
+                  color: colors.textMuted,
+                  fontSize: fontSize.xs,
+                }}
+              >
+                OVR {log.timeline[log.timeline.length - 1].ovr} · {log.timeline[log.timeline.length - 1].clubName}
+              </Text>
+            </View>
+          </View>
+        ) : null}
 
         {/* Timeline */}
         <View

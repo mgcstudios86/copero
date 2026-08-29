@@ -34,7 +34,7 @@ export default function IdentityScreen() {
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);
-  const commitIdentity = useCareerStore((s) => s.commitIdentity);
+  const commitIdentityAndStartDraft = useCareerStore((s) => s.commitIdentityAndStartDraft);
 
   const [nationalityQuery, setNationalityQuery] = useState('');
   const filteredNationalities = useMemo(() => {
@@ -49,8 +49,11 @@ export default function IdentityScreen() {
 
   const onContinue = () => {
     if (!canContinue) return;
-    commitIdentity();
-    router.push('/simulador-carrera/dashboard');
+    // MGC-249: tras definir identidad, enrutamos directo al draft de 8 rondas.
+    // El motor deja la store en stage='draft' con board inicializado; la
+    // pantalla /simulador-carrera/draft renderiza el primer pick.
+    commitIdentityAndStartDraft();
+    router.push('/simulador-carrera/draft');
   };
 
   return (

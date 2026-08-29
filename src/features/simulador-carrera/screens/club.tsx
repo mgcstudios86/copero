@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,7 +6,9 @@ import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { OriginPhase } from '../components/OriginPhase';
-import type { Club } from '@/types/career';
+import { clubsForPosition } from '@/features/career/clubs';
+import { POSITIONS } from '@/features/career/positions';
+import type { Club, PositionGroup } from '@/types/career';
 
 /**
  * MGC-209 [4/6] — ELEGÍ TU CLUB.
@@ -17,80 +19,27 @@ import type { Club } from '@/types/career';
  * profile.attrs/ovr/potencial); acá solo mostramos opciones con metadata
  * consistente.
  *
- * Catálogo: usamos el mismo set de clubs del motor (MGC-430) pero con
- * los metadatos de arquetipo/reputation extendidos en línea para que la
- * tarjeta refleje lo que el jugador va a recibir.
+ * MGC-249: el catálogo se filtra y ordena por `clubsForPosition(group)`
+ * según la posición del jugador. Para ST/LW/RW/CAM sale Boca y Vélez
+ * primero; para CB/LB/RB sale Temperley/Morón (DESARROLLO). Siempre hay
+ * ≥1 club recomendado visible — el bug "queda Free agent" del
+ * build-143 desaparece.
  */
-const CLUB_OPTIONS: (Club & {
-  archetype: 'DESARROLLO' | 'EQUILIBRIO' | 'AMBICIÓN';
-  reputation: number;
+
+type ClubMeta = {
   minutesLabel: string;
   minutesColor: 'green' | 'amber' | 'rose';
   growthLabel: string;
   titlesLabel: string;
   riskLabel: string;
-})[] = [
-  {
-    id: 'velez',
-    name: 'Vélez Sarsfield',
-    league: 'Liga Profesional',
-    crestColor: '#1F2A24',
-    crestAccent: '#FFFFFF',
-    presupuesto: 8,
-    archetype: 'EQUILIBRIO',
-    reputation: 4,
-    minutesLabel: 'Alta',
-    minutesColor: 'green',
-    growthLabel: 'Medio',
-    titlesLabel: 'Alta',
-    riskLabel: 'Medio',
-  },
-  {
-    id: 'temperley',
-    name: 'Temperley',
-    league: 'Primera Nacional',
-    crestColor: '#5B0A0A',
-    crestAccent: '#F0EAE0',
-    presupuesto: 3,
-    archetype: 'DESARROLLO',
-    reputation: 2,
-    minutesLabel: 'Muy alta',
-    minutesColor: 'green',
-    growthLabel: 'Alto',
-    titlesLabel: 'Baja',
-    riskLabel: 'Bajo',
-  },
-  {
-    id: 'moron',
-    name: 'Morón',
-    league: 'Primera Nacional',
-    crestColor: '#0E1411',
-    crestAccent: '#FFFFFF',
-    presupuesto: 1,
-    archetype: 'DESARROLLO',
-    reputation: 1,
-    minutesLabel: 'Muy alta',
-    minutesColor: 'green',
-    growthLabel: 'Muy alto',
-    titlesLabel: 'Baja',
-    riskLabel: 'Bajo',
-  },
-  {
-    id: 'boca',
-    name: 'Boca Juniors',
-    league: 'Liga Profesional',
-    crestColor: '#0A2A6B',
-    crestAccent: '#FBBF24',
-    presupuesto: 25,
-    archetype: 'AMBICIÓN',
-    reputation: 5,
-    minutesLabel: 'Baja',
-    minutesColor: 'rose',
-    growthLabel: 'Medio',
-    titlesLabel: 'Muy alta',
-    riskLabel: 'Alto',
-  },
-];
+};
+
+const CLUB_META: Record<string, ClubMeta> = {
+  velez: { minutesLabel: 'Alta', minutesColor: 'green', growthLabel: 'Medio', titlesLabel: 'Alta', riskLabel: 'Medio' },
+  temperley: { minutesLabel: 'Muy alta', minutesColor: 'green', growthLabel: 'Alto', titlesLabel: 'Baja', riskLabel: 'Bajo' },
+  moron: { minutesLabel: 'Muy alta', minutesColor: 'green', growthLabel: 'Muy alto', titlesLabel: 'Baja', riskLabel: 'Bajo' },
+  boca: { minutesLabel: 'Baja', minutesColor: 'rose', growthLabel: 'Medio', titlesLabel: 'Muy alta', riskLabel: 'Alto' },
+};
 
 const ARCHETYPE_LABEL: Record<'DESARROLLO' | 'EQUILIBRIO' | 'AMBICIÓN', string> = {
   DESARROLLO: 'DESARROLLO',
@@ -98,12 +47,25 @@ const ARCHETYPE_LABEL: Record<'DESARROLLO' | 'EQUILIBRIO' | 'AMBICIÓN', string>
   'AMBICIÓN': 'AMBICIÓN',
 };
 
+function positionGroupFor(position: string): PositionGroup {
+  return POSITIONS.find((p) => p.id === position)?.group ?? 'midfield';
+}
+
+
 export default function SeleccionClubScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
 
   const card = useCareerStore((s) => s.card);
+  const profile = useCareerStore((s) => s.profile);
   const pickClub = useCareerStore((s) => s.pickClub);
+
+  // MGC-249: ordenamos los clubes por afinidad con la posición del jugador.
+  // Memo para evitar re-sort en cada render.
+  const clubOptions = useMemo(
+    () => clubsForPosition(positionGroupFor(profile.position)),
+    [profile.position],
+  );
 
   const onPick = (club: Club) => {
     pickClub(club);
@@ -120,7 +82,7 @@ export default function SeleccionClubScreen() {
         testID="club-screen"
       >
         {/* Header — copy i18n con count dinámico (MGC-232) */}
-        <OriginPhase count={CLUB_OPTIONS.length} />
+        <OriginPhase count={clubOptions.length} />
 
         {/* Profile summary */}
         <View
@@ -156,7 +118,7 @@ export default function SeleccionClubScreen() {
 
         {/* Clubs */}
         <View style={{ gap: spacing[4] }}>
-          {CLUB_OPTIONS.map((club) => {
+          {clubOptions.map((club) => {
             const archetypeBg =
               club.archetype === 'AMBICIÓN'
                 ? '#FBBF24'
@@ -165,6 +127,14 @@ export default function SeleccionClubScreen() {
                   : colors.primary;
             const archetypeFg =
               club.archetype === 'AMBICIÓN' ? '#0A120E' : club.archetype === 'EQUILIBRIO' ? colors.text : colors.textOnPrimary;
+            const meta = CLUB_META[club.id] ?? {
+              minutesLabel: 'Media',
+              minutesColor: 'amber' as const,
+              growthLabel: 'Medio',
+              titlesLabel: 'Media',
+              riskLabel: 'Medio',
+            };
+            const isFit = club.positionGroups.includes(positionGroupFor(profile.position));
 
             return (
               <View
@@ -172,7 +142,7 @@ export default function SeleccionClubScreen() {
                 style={{
                   borderRadius: radii.lg,
                   borderWidth: 1,
-                  borderColor: colors.border,
+                  borderColor: isFit ? colors.primary : colors.border,
                   backgroundColor: colors.surface,
                   padding: spacing[4],
                   gap: spacing[3],
@@ -217,7 +187,7 @@ export default function SeleccionClubScreen() {
                           fontWeight: fontWeight.bold,
                         }}
                       >
-                        {ARCHETYPE_LABEL[club.archetype]}
+                        {ARCHETYPE_LABEL[club.archetype ?? 'EQUILIBRIO']}
                       </Text>
                     </View>
                     <View
@@ -257,10 +227,10 @@ export default function SeleccionClubScreen() {
 
                 {/* Metrics */}
                 <View style={{ flexDirection: 'row', gap: spacing[2] }}>
-                  <Metric label="MINUTOS" value={club.minutesLabel} valueColor={minutesColor(club.minutesColor)} />
-                  <Metric label="CRECIMIENTO" value={club.growthLabel} valueColor={colors.primary} />
-                  <Metric label="TÍTULOS" value={club.titlesLabel} valueColor="#FBBF24" />
-                  <Metric label="RIESGO" value={club.riskLabel} valueColor={colors.textStrong} />
+                  <Metric label="MINUTOS" value={meta.minutesLabel} valueColor={minutesColor(meta.minutesColor)} />
+                  <Metric label="CRECIMIENTO" value={meta.growthLabel} valueColor={colors.primary} />
+                  <Metric label="TÍTULOS" value={meta.titlesLabel} valueColor="#FBBF24" />
+                  <Metric label="RIESGO" value={meta.riskLabel} valueColor={colors.textStrong} />
                 </View>
 
                 <Button

@@ -37,6 +37,12 @@ type CareerStore = CareerSnapshot & {
   setNationality: (code: string) => void;
   setPreferredFoot: (foot: Foot) => void;
   commitIdentity: () => void;
+  /**
+   * MGC-249: ruta directa desde "Empezar carrera" al draft, sin pasar
+   * por dashboard. Compone `commitIdentity` + `startDraft` en un solo step
+   * para evitar dos renders intermedios con snapshot inconsistente.
+   */
+  commitIdentityAndStartDraft: (seed?: number) => void;
   openAcademy: () => void;
   acceptClub: (club: Club) => void;
   decide: (strategyId: StrategyId, choiceId: string) => void;
@@ -127,6 +133,18 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     // existente en identity.tsx, dashboard.tsx y academy.tsx.
     commitIdentity: () =>
       applyAndPersist((s) => ({ ...s, stage: 'dashboard' as const })),
+    // MGC-249: combinamos commitIdentity + startDraft en un solo step para
+    // garantizar atomicidad del snapshot persistido (no hay frame intermedio
+    // con stage='dashboard' y sin draft que dispararía el bug original).
+    commitIdentityAndStartDraft: (seed) => {
+      void (async () => {
+        const { step } = await import('@/features/career/engine');
+        setSnapshot((s) =>
+          step(s, { type: 'commitIdentityAndDraft', seed } satisfies CareerAction),
+        );
+        persistSnapshot(get());
+      })();
+    },
     openAcademy: () =>
       applyAndPersist((s) => ({ ...s, stage: 'academy' as const })),
     acceptClub: (club) =>

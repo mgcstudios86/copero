@@ -82,8 +82,13 @@ export function HomepageCareerStarter(): React.ReactElement {
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);
-  const commitIdentity = useCareerStore((s) => s.commitIdentity);
-  const stage = useCareerStore((s) => s.stage);
+  const commitIdentityAndStartDraft = useCareerStore((s) => s.commitIdentityAndStartDraft);
+  // MGC-249 / MGC-251: el form empuja directo al draft; ya no leemos
+  // `stage` acá (la decisión de qué flujo mostrar la toma el home
+  // según `careerStage`). Prefix `_` para silenciar el warning y dejar
+  // explícito que es un placeholder histórico.
+  const _stage = useCareerStore((s) => s.stage);
+  void _stage;
 
   // Hidratar valores iniciales desde el store (si hay carrera parcial guardada).
   const [lastName, setLastName] = useState<string>(profile.name);
@@ -130,10 +135,13 @@ export function HomepageCareerStarter(): React.ReactElement {
     setPosition(position);
     setNationality(nationalityFifa);
     setPreferredFoot(preferredFoot);
-    commitIdentity();
-    // heritage + draftMode: se conservan en este componente sólo como state local
-    // (el motor mgcstudios actual no los consume; ver ADR-0015 §2).
-    router.push(stage === 'identity' ? '/simulador-carrera/dashboard' : '/simulador-carrera/dashboard');
+    // MGC-249: el botón "Empezar carrera" ahora va directo al draft (no al
+    // dashboard). El motor setea stage='draft' atómicamente vía
+    // `commitIdentityAndStartDraft` para que no haya frame intermedio con
+    // stage='dashboard' y draft vacío (que era el bug del build-143).
+    commitIdentityAndStartDraft();
+    // heritage + draftMode: state local; ver ADR-0015 §2.
+    router.push('/simulador-carrera/draft');
   };
 
   return (

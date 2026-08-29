@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { step, initialSnapshot, initialProfile, isIdentityComplete } from './engine';
 import { POSITIONS } from './positions';
-import { ACADEMY_CLUBS } from './clubs';
+import { ACADEMY_CLUBS, clubsForPosition } from './clubs';
 import { NATIONALITIES, NATIONALITIES_BY_CODE } from './nationalities';
 import { recommendStrategy } from './simulation';
 import { STRATEGIES } from './strategy';
@@ -44,6 +44,28 @@ describe('career engine', () => {
     s = step(s, { type: 'setName', name: 'Mateo' });
     s = step(s, { type: 'commitIdentity' });
     expect(s.stage).toBe('dashboard');
+  });
+
+  it('commitIdentityAndDraft enuta directo al draft (MGC-249)', () => {
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'Mateo' });
+    s = step(s, { type: 'setNumber', number: 9 });
+    s = step(s, { type: 'setPosition', position: 'ST' });
+    s = step(s, { type: 'commitIdentityAndDraft', seed: 12345 });
+    expect(s.stage).toBe('draft');
+    expect(s.draft).not.toBeNull();
+    expect(s.draft?.round).toBe(1);
+    expect(s.draft?.picks).toEqual([]);
+    expect(s.draft?.swapsLeft).toBe(5);
+    expect(s.seed).toBe(12345);
+  });
+
+  it('commitIdentityAndDraft sin seed usa determinismo del nombre', () => {
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'Mateo' });
+    s = step(s, { type: 'commitIdentityAndDraft' });
+    expect(s.stage).toBe('draft');
+    expect(s.seed).toBeGreaterThan(0);
   });
 
   it('acceptClub fija club y avanza a clubStart', () => {
@@ -147,6 +169,34 @@ describe('career fixtures', () => {
     expect(archetypes.has('DESARROLLO')).toBe(true);
     expect(archetypes.has('EQUILIBRIO')).toBe(true);
     expect(archetypes.has('AMBICIÓN')).toBe(true);
+  });
+
+  it('clubsForPosition attack prioriza Boca/Vélez (MGC-249)', () => {
+    const clubs = clubsForPosition('attack');
+    expect(clubs[0].id).toMatch(/boca|velez/);
+  });
+
+  it('clubsForPosition goalkeeper prioriza Temperley/Morón (MGC-249)', () => {
+    const clubs = clubsForPosition('goalkeeper');
+    expect(clubs[0].id).toMatch(/temperley|moron/);
+    expect(clubs[0].positionGroups).toContain('goalkeeper');
+  });
+
+  it('pickClub aplica fit bonus cuando el club es afín a la posición (MGC-249)', () => {
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'Test' });
+    s = step(s, { type: 'commitIdentity' });
+    s = step(s, { type: 'openAcademy' });
+    s = step(s, { type: 'acceptClub', club: ACADEMY_CLUBS[0] });
+    s = step(s, { type: 'startDraft', seed: 42 });
+    for (let r = 0; r < 8; r++) s = step(s, { type: 'pickLegend' });
+    expect(s.card).toBeTruthy();
+    const ovrSinFit = s.profile.ovr;
+    // Boca tiene fitBonus=2 para attack.
+    s = step(s, { type: 'setPosition', position: 'ST' });
+    s = step(s, { type: 'pickClub', club: ACADEMY_CLUBS[3] }); // Boca
+    // fitBonus=2 + EQUILIBRIO bonus... Boca es AMBICIÓN (bonus=0). fitBonus=2.
+    expect(s.profile.ovr).toBeGreaterThanOrEqual(ovrSinFit + 2);
   });
 
   it('NATIONALITIES está indexada por código', () => {

@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import type { CareerStage } from '@/types/career';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 // MGC-782: stats del juego vienen del store persistente sin engine. Antes
@@ -77,7 +79,52 @@ const FAQList = lazy(() =>
  * - `accessibilityLabel` descriptivo en cada stat, step, compare-card y FAQ item.
  * - WCAG AA target ≥ 4.5:1 sobre `colors.surface` y `colors.bg`.
  */
+// MGC-251 — Mapa stage → ruta. Cuando hay carrera persistida y el usuario
+// pulsa "Continuar carrera" en el home, debe retomar en la pantalla
+// correspondiente a su `stage` actual. Esto ejercita la persistencia
+// (saveCareerSave/loadCareerSave MGC-227): cerrar y reabrir la app retaura
+// la sesión y reanuda sin perder stats ni posición.
+function resumeRouteForStage(stage: CareerStage): string {
+  switch (stage) {
+    case 'identity':
+      return '/simulador-carrera/identity';
+    case 'dashboard':
+    case 'academy':
+    case 'clubStart':
+      return '/simulador-carrera/dashboard';
+    case 'draft':
+      return '/simulador-carrera/draft';
+    case 'club':
+      return '/simulador-carrera/tu-jugador';
+    case 'season':
+      return '/simulador-carrera/temporada';
+    case 'retirement':
+      return '/simulador-carrera/fin-carrera';
+    default:
+      return '/simulador-carrera/dashboard';
+  }
+}
+
+// MGC-251 — Etiqueta del botón "Continuar carrera". Refleja la etapa y el
+// progreso (edad + stats si están disponibles) para que el usuario sepa
+// dónde retoma.
+function resumeLabelForStage(stage: CareerStage): string {
+  switch (stage) {
+    case 'draft':
+      return 'Continuar draft';
+    case 'club':
+      return 'Elegir club de origen';
+    case 'season':
+      return 'Retomar temporada';
+    case 'retirement':
+      return 'Ver fin de carrera';
+    default:
+      return 'Continuar carrera';
+  }
+}
+
 export default function Home() {
+  const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
   // MGC-654: H1 multi-línea responsivo. Móvil (≤600) usa 2xl (30px) para que
   // "CREA TU PROPIA CARRERA DE FÚTBOL" quepa en 2 wraps cómodos sin overflow;
@@ -355,6 +402,25 @@ export default function Home() {
           testID="btn-how-to-play"
           accessibilityHint="Salta a la sección Cómo se juega"
         />
+
+        {/* ── MGC-251 — CTA "Continuar carrera" ──────────────────────────
+            Se muestra cuando hay una carrera persistida en una etapa
+            distinta a 'identity'. Carga la ruta que corresponde al
+            stage actual para que la persistencia (saveCareerSave /
+            loadCareerSave, MGC-227) sea ejercitable: cerrar y reabrir
+            la app debe permitir retomar desde la misma pantalla. */}
+        {hasCareer ? (
+          <Button
+            label={resumeLabelForStage(careerStage)}
+            onPress={() => router.push(resumeRouteForStage(careerStage))}
+            variant="primary"
+            size="lg"
+            fullWidth
+            testID="btn-home-resume-career"
+            accessibilityLabel={`Continuar carrera de ${careerProfileName} en etapa ${careerStage}`}
+            accessibilityHint="Restaura la sesión guardada y reanuda el loop de carrera"
+          />
+        ) : null}
 
         {/* ── Cómo se juega (lazy-load MGC-782) ──────────────────────── */}
         {/* Sección extraída a `src/components/home/HowToPlaySteps.tsx`. Ver

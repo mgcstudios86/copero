@@ -13,7 +13,14 @@ import { GAME_LOCALES, gameT } from '@/i18n/game-copy';
  */
 describe('club screen — copy de origen', () => {
   const clubScreen = readFileSync(resolve(__dirname, 'club.tsx'), 'utf8');
-  const clubCount = Array.from(clubScreen.matchAll(/^\s*id:\s*'([^']+)'/gm)).length;
+  // MGC-249: el catálogo de clubes vive en `features/career/clubs.ts`
+  // (`clubsForPosition(group)`), no inline en club.tsx. El test cuenta
+  // entradas desde el archivo canónico.
+  const clubsCatalog = readFileSync(
+    resolve(__dirname, '../../career/clubs.ts'),
+    'utf8',
+  );
+  const clubCount = Array.from(clubsCatalog.matchAll(/^\s*id:\s*'([^']+)'/gm)).length;
 
   it('declara 4 clubes en la lista', () => {
     expect(clubCount).toBe(4);
@@ -24,7 +31,9 @@ describe('club screen — copy de origen', () => {
   });
 
   it('pasa el largo real del catálogo al componente de origen', () => {
-    expect(clubScreen).toContain('<OriginPhase count={CLUB_OPTIONS.length} />');
+    // MGC-249: el catálogo ahora se deriva de `clubsForPosition(group)` y se
+    // memoiza en `clubOptions`. Aceptamos cualquier `*.length` dinámico.
+    expect(clubScreen).toMatch(/<OriginPhase\s+count=\{[A-Za-z_]+\.length\}\s*\/>/);
   });
 
   it('el título renderizado coincide con la cantidad de clubes del catálogo', () => {

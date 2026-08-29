@@ -1,4 +1,4 @@
-import type { Club } from '@/types/career';
+import type { Club, PositionGroup } from '@/types/career';
 
 /**
  * Clubes que el academy ofrece al jugador (MGC-430, pantalla 3) +
@@ -6,9 +6,22 @@ import type { Club } from '@/types/career';
  *
  * El catálogo cubre los 3 arquetipos para que cada playthrough del
  * simulador tenga al menos una opción por arquetipo (MGC-216). Datos
- * placeholder: se reemplazan con assets del designer (MGC-428) al final.
+ * placeholder: se reemplazan con assets del diseñador (MGC-428) al final.
+ *
+ * MGC-249: cada club declara `positionGroups` para que la pantalla de
+ * selección priorice clubes afines al rol del jugador (un ST verá a Boca
+ * y Vélez primero; un GK verá a Temperley y Morón como DESARROLLO
+ * natural). Esto evita el bug "queda Free agent" — siempre hay ≥1 club
+ * recomendado visible para cualquier posición.
  */
-export const ACADEMY_CLUBS: Club[] = [
+export type ClubWithPosition = Club & {
+  /** Grupos de posición donde el club recluta normalmente. */
+  positionGroups: PositionGroup[];
+  /** Bonus de fit (1=neutro, 2=afinidad alta) que se suma al OVR inicial en `pickClub`. */
+  fitBonus?: number;
+};
+
+export const ACADEMY_CLUBS: ClubWithPosition[] = [
   {
     id: 'velez',
     name: 'Vélez Sarsfield',
@@ -18,6 +31,8 @@ export const ACADEMY_CLUBS: Club[] = [
     presupuesto: 8,
     archetype: 'EQUILIBRIO',
     reputation: 4,
+    positionGroups: ['attack', 'midfield', 'defense'],
+    fitBonus: 1,
   },
   {
     id: 'temperley',
@@ -28,6 +43,8 @@ export const ACADEMY_CLUBS: Club[] = [
     presupuesto: 3,
     archetype: 'DESARROLLO',
     reputation: 2,
+    positionGroups: ['midfield', 'defense', 'goalkeeper'],
+    fitBonus: 2,
   },
   {
     id: 'moron',
@@ -38,6 +55,8 @@ export const ACADEMY_CLUBS: Club[] = [
     presupuesto: 1,
     archetype: 'DESARROLLO',
     reputation: 1,
+    positionGroups: ['defense', 'midfield', 'goalkeeper'],
+    fitBonus: 1,
   },
   {
     id: 'boca',
@@ -48,5 +67,17 @@ export const ACADEMY_CLUBS: Club[] = [
     presupuesto: 25,
     archetype: 'AMBICIÓN',
     reputation: 5,
+    positionGroups: ['attack', 'midfield'],
+    fitBonus: 2,
   },
 ];
+
+/** Devuelve los clubes afines a un grupo de posición, ordenados por fit. */
+export function clubsForPosition(group: PositionGroup): ClubWithPosition[] {
+  return [...ACADEMY_CLUBS].sort((a, b) => {
+    const aFit = a.positionGroups.includes(group) ? (a.fitBonus ?? 1) : 0;
+    const bFit = b.positionGroups.includes(group) ? (b.fitBonus ?? 1) : 0;
+    if (aFit !== bFit) return bFit - aFit;
+    return (b.reputation ?? 0) - (a.reputation ?? 0);
+  });
+}

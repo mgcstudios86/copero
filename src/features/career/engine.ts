@@ -39,6 +39,7 @@ export type CareerAction =
   | { type: 'setNationality'; code: string }
   | { type: 'setPreferredFoot'; foot: Foot }
   | { type: 'commitIdentity' }
+  | { type: 'commitIdentityAndDraft'; seed?: number }
   | { type: 'openAcademy' }
   | { type: 'acceptClub'; club: Club }
   | { type: 'decide'; strategyId: StrategyId; choiceId: string }
@@ -107,6 +108,19 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
       return { ...state, profile: { ...state.profile, preferredFoot: action.foot } };
     case 'commitIdentity':
       return { ...state, stage: 'dashboard' };
+    case 'commitIdentityAndDraft': {
+      // MGC-249: el flujo "Empezar carrera" desde el home/identity enruta
+      // directo al draft (sin pasar por dashboard) para no romper la cadena
+      // draft → club → temporada. Inicializa board + seed determinista.
+      const seed = action.seed ?? seedFromString(state.profile.name || 'copero');
+      return {
+        ...state,
+        stage: 'draft',
+        draft: initialDraftBoard(),
+        card: null,
+        seed,
+      };
+    }
     case 'openAcademy':
       return { ...state, stage: 'academy' };
     case 'acceptClub':
@@ -168,9 +182,35 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
     case 'pickClub': {
       if (!state.card) return state;
       const archetype: ClubArchetype = action.club.archetype ?? 'EQUILIBRIO';
-      // Modificadores del arquetipo: DESARROLLO +5 OVR inicial;
-      // EQUILIBRIO idem; AMBICIÓN +0 pero reputación alta.
-      const bonus = archetype === 'DESARROLLO' ? 2 : archetype === 'EQUILIBRIO' ? 1 : 0;
+      // Modificadores del arquetipo: DESARROLLO +2 OVR inicial;
+      // EQUILIBRIO +1; AMBICIÓN +0 pero reputación alta.
+      const archetypeBonus = archetype === 'DESARROLLO' ? 2 : archetype === 'EQUILIBRIO' ? 1 : 0;
+      // MGC-249: fit bonus por posición del club. Si el club declara
+      // `positionGroups` y el jugador está en ese grupo, suma +1 OVR.
+      // La asignación typed a `unknown` evita el ciclo entre engine y clubs.
+      const fit = (action.club as unknown as { fitBonus?: number; positionGroups?: string[] })
+        .fitBonus ?? 0;
+      const playerGroup = state.profile.position;
+      const groupMap: Record<string, string> = {
+        ST: 'attack',
+        LW: 'attack',
+        RW: 'attack',
+        CAM: 'midfield',
+        CM: 'midfield',
+        LM: 'midfield',
+        RM: 'midfield',
+        CDM: 'midfield',
+        CB: 'defense',
+        LB: 'defense',
+        RB: 'defense',
+        GK: 'goalkeeper',
+      };
+      const playerGroupResolved = groupMap[playerGroup] ?? 'midfield';
+      const positionGroups = (action.club as unknown as { positionGroups?: string[] })
+        .positionGroups ?? [];
+      const fitBonus =
+        positionGroups.includes(playerGroupResolved) ? fit : 0;
+      const bonus = archetypeBonus + fitBonus;
       const profile: PlayerProfile = {
         ...state.profile,
         club: action.club,
