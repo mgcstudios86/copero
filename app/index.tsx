@@ -170,6 +170,37 @@ export default function Home() {
         contentContainerStyle={[styles.container, { gap: spacing[5] }]}
         testID="home-screen"
       >
+        {/* ── CTA principal: form de identidad (MGC-261) ─────────────
+            MGC-655 portó HomepageCareerStarter.tsx con FIFA nationalities y
+            draft modes. Reemplaza el Button legacy que navegaba a
+            /simulador-carrera/identity con un form persistido vía careerStore
+            (commitIdentity). El submit interno (testID="btn-career") reemplaza
+            la navegación legacy y mantiene compat con e2e/home.spec.ts.
+
+            MGC-261 fix: el form ahora vive como PRIMER hijo del ScrollView.
+            Antes era el segundo (debajo del hero card premium ~600-700 px de
+            alto), lo que ubicaba el `btn-career` en y≈2237 sobre viewports
+            1920x1080 → fuera del viewport visible (bound stop>bottom inválidos,
+            visible=false en uiautomator dump de MGC-254). Reordenando, el
+            botón queda dentro del fold inicial (~y=400-700) en mobile.
+
+            MGC-768: envuelto en Suspense con fallback skeleton que respeta
+            el alto aproximado del form (480 px) para evitar CLS durante el
+            chunk fetch asincrónico. */}
+        <Suspense
+          fallback={
+            <View
+              testID="homecareer-starter-loading"
+              accessible
+              role="status"
+              accessibilityLabel="Cargando formulario de identidad"
+              style={{ minHeight: 480 }}
+            />
+          }
+        >
+          <HomepageCareerStarter />
+        </Suspense>
+
         {/* ── Premium visual card (kiya0908 CareerCard inspired) ─────── */}
         <View
           style={{
@@ -365,29 +396,6 @@ export default function Home() {
             />
           </View>
         </View>
-
-        {/* ── CTA principal: form de identidad (MGC-718) ───────────────
-            MGC-655 portó HomepageCareerStarter.tsx con FIFA nationalities y
-            draft modes. Reemplaza el Button legacy que navegaba a
-            /simulador-carrera/identity con un form persistido vía careerStore
-            (commitIdentity). El submit interno (testID="btn-career") reemplaza
-            la navegación legacy y mantiene compat con e2e/home.spec.ts.
-            MGC-768: envuelto en Suspense con fallback skeleton que respeta
-            el alto aproximado del form (480 px) para evitar CLS durante el
-            chunk fetch asincrónico. */}
-        <Suspense
-          fallback={
-            <View
-              testID="homecareer-starter-loading"
-              accessible
-              role="status"
-              accessibilityLabel="Cargando formulario de identidad"
-              style={{ minHeight: 480 }}
-            />
-          }
-        >
-          <HomepageCareerStarter />
-        </Suspense>
 
 {/* ── CTA secundario (MGC-654 P0 #4) ────────────────────────────
             Ghost variant sobre `colors.bg` lee en `colors.text` (sigue
