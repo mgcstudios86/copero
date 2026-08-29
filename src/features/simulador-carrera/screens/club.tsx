@@ -74,6 +74,21 @@ const CLUB_OPTIONS: (Club & {
     titlesLabel: 'Baja',
     riskLabel: 'Bajo',
   },
+  {
+    id: 'boca',
+    name: 'Boca Juniors',
+    league: 'Liga Profesional',
+    crestColor: '#0A2A6B',
+    crestAccent: '#FBBF24',
+    presupuesto: 25,
+    archetype: 'AMBICIÓN',
+    reputation: 5,
+    minutesLabel: 'Baja',
+    minutesColor: 'rose',
+    growthLabel: 'Medio',
+    titlesLabel: 'Muy alta',
+    riskLabel: 'Alto',
+  },
 ];
 
 const ARCHETYPE_LABEL: Record<'DESARROLLO' | 'EQUILIBRIO' | 'AMBICIÓN', string> = {

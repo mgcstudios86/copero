@@ -131,12 +131,22 @@ describe('career fixtures', () => {
     expect(new Set(POSITIONS.map((p) => p.id)).size).toBe(12);
   });
 
-  it('ACADEMY_CLUBS tiene 3 ofertas (Vélez / Temperley / Morón)', () => {
-    expect(ACADEMY_CLUBS).toHaveLength(3);
+  it('ACADEMY_CLUBS tiene 4 ofertas (Vélez / Temperley / Morón / Boca)', () => {
+    expect(ACADEMY_CLUBS).toHaveLength(4);
     const names = ACADEMY_CLUBS.map((c) => c.name);
     expect(names).toContain('Vélez Sarsfield');
     expect(names).toContain('Temperley');
     expect(names).toContain('Morón');
+    expect(names).toContain('Boca Juniors');
+  });
+
+  it('ACADEMY_CLUBS cubre los 3 arquetipos (DESARROLLO / EQUILIBRIO / AMBICIÓN)', () => {
+    const archetypes = new Set(
+      ACADEMY_CLUBS.map((c) => c.archetype).filter((a): a is NonNullable<typeof a> => Boolean(a)),
+    );
+    expect(archetypes.has('DESARROLLO')).toBe(true);
+    expect(archetypes.has('EQUILIBRIO')).toBe(true);
+    expect(archetypes.has('AMBICIÓN')).toBe(true);
   });
 
   it('NATIONALITIES está indexada por código', () => {
