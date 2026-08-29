@@ -77,7 +77,7 @@
   "foot.left": "Left-footed",
   "foot.right": "Right-footed",
   "origin.eyebrow": "First professional decision",
-  "origin.title": "Choose between three paths",
+  "origin.title": "Choose between {{count}} paths",
   "origin.body": "The choices depend on your nationality and draft potential. A smaller club offers minutes; a stronger club offers exposure and trophies, but more competition for a place.",
   "origin.profile": "Your profile",
   "origin.path.development": "Development",

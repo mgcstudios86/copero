@@ -77,7 +77,7 @@
   "foot.left": "Mancino",
   "foot.right": "Destro",
   "origin.eyebrow": "Prima decisione da professionista",
-  "origin.title": "Scegli tra tre percorsi",
+  "origin.title": "Scegli tra {{count}} percorsi",
   "origin.body": "Le opzioni dipendono dalla nazionalità e dal potenziale del draft. Un club più piccolo offre minuti; uno più forte offre visibilità e trofei, ma anche più concorrenza per un posto.",
   "origin.profile": "Il tuo profilo",
   "origin.path.development": "Sviluppo",

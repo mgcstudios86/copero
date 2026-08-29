@@ -77,7 +77,7 @@
   "foot.left": "Zurdo",
   "foot.right": "Diestro",
   "origin.eyebrow": "Primera decisión profesional",
-  "origin.title": "Elegí entre tres caminos",
+  "origin.title": "Elegí entre {{count}} caminos",
   "origin.body": "Las opciones dependen de tu nacionalidad y del potencial obtenido en el draft. Un club chico ofrece minutos; uno más fuerte ofrece exposición y títulos, pero también más banco.",
   "origin.profile": "Tu perfil",
   "origin.path.development": "Desarrollo",

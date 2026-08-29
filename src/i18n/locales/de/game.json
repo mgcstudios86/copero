@@ -77,7 +77,7 @@
   "foot.left": "Linksfuß",
   "foot.right": "Rechtsfuß",
   "origin.eyebrow": "Erste Profi-Entscheidung",
-  "origin.title": "Wähle zwischen drei Wegen",
+  "origin.title": "Wähle zwischen {{count}} Wegen",
   "origin.body": "Die Optionen hängen von deiner Nationalität und deinem Draft-Potenzial ab. Ein kleinerer Verein bietet Einsatzzeit; ein stärkerer Verein bietet Sichtbarkeit und Titelchancen, aber auch mehr Konkurrenz um einen Platz.",
   "origin.profile": "Dein Profil",
   "origin.path.development": "Entwicklung",

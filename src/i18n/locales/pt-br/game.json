@@ -77,7 +77,7 @@
   "foot.left": "Canhoto",
   "foot.right": "Destro",
   "origin.eyebrow": "Primeira decisão profissional",
-  "origin.title": "Escolha entre três caminhos",
+  "origin.title": "Escolha entre {{count}} caminhos",
   "origin.body": "As opções dependem da sua nacionalidade e do potencial no draft. Um clube menor oferece minutos; um clube mais forte oferece visibilidade e títulos, mas também mais concorrência por espaço.",
   "origin.profile": "Seu perfil",
   "origin.path.development": "Desenvolvimento",

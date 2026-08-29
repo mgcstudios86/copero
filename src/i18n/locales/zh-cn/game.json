@@ -77,7 +77,7 @@
   "foot.left": "左脚球员",
   "foot.right": "右脚球员",
   "origin.eyebrow": "第一项职业决定",
-  "origin.title": "在三条起步路线中选择",
+  "origin.title": "在{{count}}条起步路线中选择",
   "origin.body": "可选俱乐部取决于你的国籍和 Draft 潜力。小俱乐部通常给更多出场时间；更强的俱乐部有更高曝光和争冠机会，但位置竞争也更激烈。",
   "origin.profile": "你的球员",
   "origin.path.development": "成长路线",

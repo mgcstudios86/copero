@@ -26,7 +26,7 @@ export function OriginPhase({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-xl">
             <SectionEyebrow>{gameT('origin.eyebrow')}</SectionEyebrow>
-            <SectionTitle as="h3" className="mt-2">{gameT('origin.title')}</SectionTitle>
+            <SectionTitle as="h3" className="mt-2">{gameT('origin.title', { count: choices.length })}</SectionTitle>
             <p className="mt-2 text-sm leading-relaxed text-[color:var(--copero-muted)]">{gameT('origin.body')}</p>
           </div>
           <Metric
