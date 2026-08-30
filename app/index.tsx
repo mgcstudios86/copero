@@ -170,7 +170,7 @@ export default function Home() {
         contentContainerStyle={[styles.container, { gap: spacing[5] }]}
         testID="home-screen"
       >
-        {/* ── CTA principal: form de identidad (MGC-261) ─────────────
+        {/* ── CTA principal: form de identidad (MGC-261, gateado por MGC-268) ──
             MGC-655 portó HomepageCareerStarter.tsx con FIFA nationalities y
             draft modes. Reemplaza el Button legacy que navegaba a
             /simulador-carrera/identity con un form persistido vía careerStore
@@ -184,22 +184,32 @@ export default function Home() {
             visible=false en uiautomator dump de MGC-254). Reordenando, el
             botón queda dentro del fold inicial (~y=400-700) en mobile.
 
+            MGC-268 gate: cuando hay una carrera persistida en stage terminal
+            ('retirement'), el form ya no aplica — la carrera está cerrada.
+            Renderizar el form vacío lo empuja a y≈3.4k y el CTA "Continuar
+            carrera" a y≈6.2k, fuera del viewport. Ocultamos el form para
+            stage=retirement; los demás stages (identity/draft/club/season)
+            siguen mostrando el form porque el usuario aún puede abandonarla
+            y empezar una nueva.
+
             MGC-768: envuelto en Suspense con fallback skeleton que respeta
             el alto aproximado del form (480 px) para evitar CLS durante el
             chunk fetch asincrónico. */}
-        <Suspense
-          fallback={
-            <View
-              testID="homecareer-starter-loading"
-              accessible
-              role="status"
-              accessibilityLabel="Cargando formulario de identidad"
-              style={{ minHeight: 480 }}
-            />
-          }
-        >
-          <HomepageCareerStarter />
-        </Suspense>
+        {careerStage !== 'retirement' ? (
+          <Suspense
+            fallback={
+              <View
+                testID="homecareer-starter-loading"
+                accessible
+                role="status"
+                accessibilityLabel="Cargando formulario de identidad"
+                style={{ minHeight: 480 }}
+              />
+            }
+          >
+            <HomepageCareerStarter />
+          </Suspense>
+        ) : null}
 
         {/* ── Premium visual card (kiya0908 CareerCard inspired) ─────── */}
         <View
@@ -397,6 +407,30 @@ export default function Home() {
           </View>
         </View>
 
+        {/* ── MGC-268 — CTA "Continuar carrera" reubicado a la cabeza ─────
+            Bug MGC-268: con d80b2b7 + MGC-768, el form de identidad creció
+            ~2.6k px y empujó este CTA a y≈6.2k (logcat: `btn-home-resume-
+            career visible=false boundsInScreen: Rect(40, 6216 - 1040, 1990)`),
+            fuera del viewport. Tras relaunch con stage=retirement, el home
+            mostraba la hero card + jersey TESTQA #99 pero ningún usuario
+            llegaba al CTA sin scrollear >6k px. MGC-251 lo había puesto
+            debajo de "Ver cómo se juega" + 3 secciones lazy. Lo movemos a
+            inmediatamente después de la hero card para que esté dentro del
+            primer fold y el tap navegue a /simulador-carrera/fin-carrera
+            (o la ruta correspondiente a `stage`). Cumple el AC de MGC-262. */}
+        {hasCareer ? (
+          <Button
+            label={resumeLabelForStage(careerStage)}
+            onPress={() => router.push(resumeRouteForStage(careerStage))}
+            variant="primary"
+            size="lg"
+            fullWidth
+            testID="btn-home-resume-career"
+            accessibilityLabel={`Continuar carrera de ${careerProfileName} en etapa ${careerStage}`}
+            accessibilityHint="Restaura la sesión guardada y reanuda el loop de carrera"
+          />
+        ) : null}
+
 {/* ── CTA secundario (MGC-654 P0 #4) ────────────────────────────
             Ghost variant sobre `colors.bg` lee en `colors.text` (sigue
             cumpliendo AA porque Button ghost usa texto del theme, no literal).
@@ -410,25 +444,6 @@ export default function Home() {
           testID="btn-how-to-play"
           accessibilityHint="Salta a la sección Cómo se juega"
         />
-
-        {/* ── MGC-251 — CTA "Continuar carrera" ──────────────────────────
-            Se muestra cuando hay una carrera persistida en una etapa
-            distinta a 'identity'. Carga la ruta que corresponde al
-            stage actual para que la persistencia (saveCareerSave /
-            loadCareerSave, MGC-227) sea ejercitable: cerrar y reabrir
-            la app debe permitir retomar desde la misma pantalla. */}
-        {hasCareer ? (
-          <Button
-            label={resumeLabelForStage(careerStage)}
-            onPress={() => router.push(resumeRouteForStage(careerStage))}
-            variant="primary"
-            size="lg"
-            fullWidth
-            testID="btn-home-resume-career"
-            accessibilityLabel={`Continuar carrera de ${careerProfileName} en etapa ${careerStage}`}
-            accessibilityHint="Restaura la sesión guardada y reanuda el loop de carrera"
-          />
-        ) : null}
 
         {/* ── Cómo se juega (lazy-load MGC-782) ──────────────────────── */}
         {/* Sección extraída a `src/components/home/HowToPlaySteps.tsx`. Ver

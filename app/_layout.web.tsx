@@ -1,14 +1,15 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, View, StyleSheet } from 'react-native';
-import { useEffect } from 'react';
+import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
 import { useFonts, FontDisplay } from 'expo-font';
 import { Banner } from '@/features/ads';
 import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
 import { SiteFooter } from '@/design/components/SiteFooter';
+import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 
 /**
  * MGC-743 — split-layout (web) · carga tipográfica WOFF2 latin subset.
@@ -64,6 +65,49 @@ const PoppinsBold = require('../assets/fonts/woff2/Poppins-Bold.woff2');
 function ThemedShell() {
   const { colors, mode } = useTheme();
 
+  // MGC-259 — gate de hidratación. Mismo patrón que `_layout.native.tsx`.
+  // Bloqueamos el render del Stack hasta que `hydrateFromSave()` termine
+  // para que la home no pinte con snapshot vacío y luego salte al
+  // persistido. En web no hay force-stop del proceso (la pestaña vive
+  // hasta refresh/close), pero el `refresh` del dev server o un F5
+  // reproducen el mismo flash si no esperamos la carga de AsyncStorage.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void useCareerStore
+      .getState()
+      .hydrateFromSave()
+      .catch(() => {
+        // best-effort: misma política que la variante native.
+      })
+      .finally(() => {
+        if (!cancelled) setHydrated(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // MGC-259 — drenamos la save pendiente cuando la pestaña pasa a
+  // hidden (cubrimos el caso de cerrar/refresh abrupto donde el
+  // navegador mata el contexto JS antes de que `setItem` resuelva).
+  // `AppState` en RN-Web reusa el evento `visibilitychange` del
+  // browser y dispara `change` a `'background'` cuando `document.hidden`.
+  const appStateRef = useRef(AppState.currentState);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      const prev = appStateRef.current;
+      appStateRef.current = next;
+      if (
+        (prev === 'active' || prev === 'unknown') &&
+        (next === 'background' || next === 'inactive')
+      ) {
+        void flushPendingSave();
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
   // MGC-556 — copia el `colors.bg` al `<body>` y `<html>` en web para que
   // `getComputedStyle(document.body).backgroundColor` matchee `palette.copero.bg`.
   useEffect(() => {
@@ -72,6 +116,14 @@ function ThemedShell() {
     document.documentElement.style.backgroundColor = target;
     document.body.style.backgroundColor = target;
   }, [colors.bg]);
+
+  if (!hydrated) {
+    return (
+      <View style={[styles.root, styles.hydrationGate, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
@@ -149,4 +201,8 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  hydrationGate: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

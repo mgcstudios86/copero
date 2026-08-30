@@ -129,7 +129,7 @@ export function HomepageCareerStarter(): React.ReactElement {
   // stack <380 px; agregamos el breakpoint explícito al row compartido.
   const isNarrow = width < 380;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setName(lastName.trim().slice(0, NAME_MAX_LENGTH));
     setNumber(Math.min(NUMBER_MAX, Math.max(NUMBER_MIN, Math.floor(preferredNumber) || NUMBER_DEFAULT)));
     setPosition(position);
@@ -139,7 +139,14 @@ export function HomepageCareerStarter(): React.ReactElement {
     // dashboard). El motor setea stage='draft' atómicamente vía
     // `commitIdentityAndStartDraft` para que no haya frame intermedio con
     // stage='dashboard' y draft vacío (que era el bug del build-143).
-    commitIdentityAndStartDraft();
+    //
+    // MGC-273: AWAIT antes del `router.push`. La acción ahora retorna
+    // `Promise<void>` y resuelve solo después de que AsyncStorage confirme
+    // la escritura del snapshot. Sin el await, la navegación se disparaba
+    // antes de que `setItem` resolviera y un force-stop inmediato (típico
+    // en QA que fuerza kill para reproducir AC7) perdía el snapshot —
+    // home mostraba "Definí tu identidad" con valores default tras relaunch.
+    await commitIdentityAndStartDraft();
     // heritage + draftMode: state local; ver ADR-0015 §2.
     router.push('/simulador-carrera/draft');
   };

@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, View, StyleSheet } from 'react-native';
-import { useEffect } from 'react';
+import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
 // MGC-743 — imports subpath explícitos: el `index.js` raíz de
 // @expo-google-fonts/{inter,poppins} re-exporta TODOS los pesos (100Thin
@@ -22,6 +22,7 @@ import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
 import { SiteFooter } from '@/design/components/SiteFooter';
+import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 
 /**
  * MGC-555 PR1 — carga tipográfica.
@@ -37,6 +38,56 @@ import { SiteFooter } from '@/design/components/SiteFooter';
 function ThemedShell() {
   const { colors, mode } = useTheme();
 
+  // MGC-259 — gate de hidratación. Bloqueamos el render del Stack
+  // hasta que `hydrateFromSave()` termine (con save o sin save) para
+  // evitar que la home pinte con el initial snapshot vacío y luego
+  // "salte" al snapshot persistido cuando AsyncStorage resuelva. El
+  // flash intermedio es lo que QA reportó como "home muestra jersey
+  // Tu jugador / OVR —" tras force-stop: la suscripción al store
+  // técnicamente re-rendereaba, pero el form de identidad ya había
+  // montado su estado vacío y el CTA Continuar nunca aparecía si la
+  // transición ocurría después del primer commit.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void useCareerStore
+      .getState()
+      .hydrateFromSave()
+      .catch(() => {
+        // Falla best-effort: si AsyncStorage falla, dejamos el
+        // initial snapshot y desbloqueamos igual para no bloquear la
+        // UI forever.
+      })
+      .finally(() => {
+        if (!cancelled) setHydrated(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // MGC-259 — drenamos la save pendiente cuando el OS manda la app a
+  // background (app switcher, lockscreen, force-stop inminente).
+  // Antes este listener solo vivía en `app/_layout.tsx`, que Metro
+  // IGNORA en builds nativos cuando existe `_layout.native.tsx`. Sin
+  // este wiring, un force-stop inmediato tras `runCareerToRetirement`
+  // podía matar el proceso antes de que `setItem` resolviera y el
+  // snapshot quedaba en memoria sin llegar a disco (AC7).
+  const appStateRef = useRef(AppState.currentState);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      const prev = appStateRef.current;
+      appStateRef.current = next;
+      if (
+        (prev === 'active' || prev === 'unknown') &&
+        (next === 'background' || next === 'inactive')
+      ) {
+        void flushPendingSave();
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
   // MGC-556 — copia el `colors.bg` al `<body>` y `<html>` en web para que
   // `getComputedStyle(document.body).backgroundColor` matchee `palette.copero.bg`
   // (#09090B). RN-Web renderiza el theme en un `<div>` interno; el `<body>`
@@ -48,6 +99,14 @@ function ThemedShell() {
     document.documentElement.style.backgroundColor = target;
     document.body.style.backgroundColor = target;
   }, [colors.bg]);
+
+  if (!hydrated) {
+    return (
+      <View style={[styles.root, styles.hydrationGate, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
@@ -142,4 +201,8 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  hydrationGate: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

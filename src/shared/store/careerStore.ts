@@ -41,8 +41,17 @@ type CareerStore = CareerSnapshot & {
    * MGC-249: ruta directa desde "Empezar carrera" al draft, sin pasar
    * por dashboard. Compone `commitIdentity` + `startDraft` en un solo step
    * para evitar dos renders intermedios con snapshot inconsistente.
+   *
+   * MGC-273: retorna `Promise<void>` y AWAITA `flushPendingSave()` al
+   * final. Antes la acción disparaba la persistencia pero resolvía sin
+   * esperar la confirmación de AsyncStorage — el caller (form
+   * HomepageCareerStarter) hacía `router.push('/simulador-carrera/draft')`
+   * inmediatamente, y un force-stop del usuario antes de que `setItem`
+   * resolviera perdía el snapshot. La AC1/AC2 de MGC-270 fallaban con
+   * home mostrando "Definí tu identidad" vacío tras relaunch. Await
+   * bloquea la navegación hasta que AsyncStorage confirme la escritura.
    */
-  commitIdentityAndStartDraft: (seed?: number) => void;
+  commitIdentityAndStartDraft: (seed?: number) => Promise<void>;
   openAcademy: () => void;
   acceptClub: (club: Club) => void;
   decide: (strategyId: StrategyId, choiceId: string) => void;
@@ -91,14 +100,57 @@ function snapshotToSave(s: CareerStore): {
 }
 
 /**
- * Persiste el snapshot actual. Fire-and-forget: errores de AsyncStorage
- * (quota, red en web fallback) no rompen la mutación de la store. La
- * UI sigue funcionando; el próximo save reintenta.
+ * MGC-257 — handle a la save en curso (o la última). Se reusa entre
+ * mutaciones: una nueva save espera a que termine la anterior (evita
+ * race en `setItem`) y queda registrada para que un listener
+ * `AppState` en `_layout.tsx` la pueda drenar antes de background
+ * (revivir tras force-stop / kill OS). Antes era fire-and-forget: el
+ * snapshot podía no llegar a disco si el proceso moría antes de que
+ * `AsyncStorage.setItem` resolviera (AC7).
+ */
+let pendingSave: Promise<void> | null = null;
+
+export function getPendingSave(): Promise<void> | null {
+  return pendingSave;
+}
+
+/**
+ * MGC-257 — drena la save pendiente. Llamado por el listener
+ * `AppState` en `_layout.tsx` cuando el OS manda la app a background
+ * (al briefcase switch, lockscreen, o force-stop inminente). Devuelve
+ * la promesa resuelta cuando AsyncStorage confirmó la escritura, así
+ * el snapshot queda en disco antes de que el proceso muera.
+ */
+export function flushPendingSave(): Promise<void> {
+  if (!pendingSave) return Promise.resolve();
+  return pendingSave;
+}
+
+/**
+ * Persiste el snapshot actual encadenando la promesa en `pendingSave`
+ * para que (a) llamadas concurrentes no pisen `setItem` y (b) un
+ * `AppState` listener en `_layout.tsx` pueda esperar la escritura
+ * completa antes de background. Errores de AsyncStorage (quota, red
+ * en web fallback) no rompen la mutación de la store; la UI sigue
+ * funcionando y el próximo save reintenta.
  */
 function persistSnapshot(s: CareerStore): void {
-  void saveCareerSave(snapshotToSave(s)).catch(() => {
+  const next = saveCareerSave(snapshotToSave(s)).catch(() => {
     // Silencioso: persistencia best-effort. Loguear en QA si aparece
     // recurrentemente (hoy no hay logger central).
+  });
+  // MGC-277 review CTO: capturar la promesa compuesta en una variable
+  // local para que la comparación de identidad (===) cierre
+  // correctamente cuando hay saves encadenadas. Antes, `pendingSave`
+  // apuntaba a la promesa compuesta en la segunda/tercera/... llamada
+  // y `pendingSave === next` siempre era `false` — la cadena crecía
+  // sin límite durante la sesión y `flushPendingSave()` terminaba
+  // awaiteando toda la historia de saves en el path crítico del
+  // force-stop (AC7).
+  const chained = pendingSave ? pendingSave.then(() => next) : next;
+  pendingSave = chained;
+  void chained.finally(() => {
+    if (pendingSave === chained) pendingSave = null;
   });
 }
 
@@ -136,14 +188,18 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     // MGC-249: combinamos commitIdentity + startDraft en un solo step para
     // garantizar atomicidad del snapshot persistido (no hay frame intermedio
     // con stage='dashboard' y sin draft que dispararía el bug original).
-    commitIdentityAndStartDraft: (seed) => {
-      void (async () => {
-        const { step } = await import('@/features/career/engine');
-        setSnapshot((s) =>
-          step(s, { type: 'commitIdentityAndDraft', seed } satisfies CareerAction),
-        );
-        persistSnapshot(get());
-      })();
+    // MGC-273: la acción ahora retorna la Promise del IIFE y AWAITA
+    // `flushPendingSave()` antes de resolver. Ver rationale en el type
+    // declaration arriba (AC1/AC2 MGC-270 — force-stop inmediato tras
+    // "Empezar carrera" perdía el snapshot porque la persistencia quedaba
+    // en vuelo).
+    commitIdentityAndStartDraft: async (seed) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'commitIdentityAndDraft', seed } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
     },
     openAcademy: () =>
       applyAndPersist((s) => ({ ...s, stage: 'academy' as const })),
@@ -225,14 +281,31 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         setSnapshot((s) =>
           step(s, { type: 'runCareerToRetirement' } satisfies CareerAction),
         );
+        // MGC-257 (AC7) — esta transición es el último step del flow y
+        // el que estaba perdiéndose tras force-stop: el snapshot
+        // quedaba en memoria pero `setItem` no resolvía antes de que
+        // el proceso muriera. Forzamos un flush sincrónico del handle
+        // pendingSave para que el `stage: 'retirement'` + log final
+        // queden en AsyncStorage antes de que el usuario salga de la
+        // pantalla.
         persistSnapshot(get());
+        await flushPendingSave();
       })();
     },
     // MGC-227: hidratación desde AsyncStorage. Llamado una vez en el
-    // bootstrap de la app (ver `app/_layout.tsx`). Aplica el save al
-    // estado actual; si no hay save, devuelve `false` y deja el initial.
+    // bootstrap de la app (ver `app/_layout.native.tsx` + `_layout.web.tsx`).
+    // Aplica el save al estado actual; si no hay save, devuelve `false`
+    // y deja el initial. MGC-259: envolvemos `loadCareerSave` en try/catch
+    // para que el `hydrateGate` en `_layout.*.tsx` SIEMPRE desbloquee
+    // (un save corrupto o AsyncStorage roto no debe dejar la UI colgada
+    // en el splash).
     hydrateFromSave: async () => {
-      const saved = await loadCareerSave();
+      let saved;
+      try {
+        saved = await loadCareerSave();
+      } catch {
+        return false;
+      }
       if (!saved) return false;
       setSnapshot((s) => ({
         ...s,
