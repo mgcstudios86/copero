@@ -51,11 +51,20 @@ jobs:
               --json databaseId,headBranch,workflowName,event,createdAt)
           echo "queued_count=$(printf '%s' "$QUEUED_JSON" | jq 'length')"
           {
+            # MGC-410 (root cause): el bug NO era el nombre del delimitador sino
+            # que `printf '%s' "$QUEUED_JSON"` (sin \n) dejaba el `echo "EOF"`
+            # siguiente concatenado al final del JSON en la MISMA línea.
+            # El parser de GitHub Actions busca una línea que sea EXACTAMENTE el
+            # delimitador; como `}EOF` no matchea `EOF`, fallaba con
+            # "Matching delimiter not found EOF".
+            # Fix: usar `printf '%s\n'` para QUEUED_JSON así el delimitador
+            # de cierre queda en su propia línea. Volvemos a `<<EOF` (es el
+            # delimitador soportado por la doc oficial).
             echo "open_branches<<EOF"
             printf '%s\n' "$OPEN_BRANCHES"
             echo "EOF"
             echo "queued_json<<EOF"
-            printf '%s' "$QUEUED_JSON"
+            printf '%s\n' "$QUEUED_JSON"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
