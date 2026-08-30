@@ -46,7 +46,10 @@ permissions:
 jobs:
   playwright-web:
     name: Playwright (web, headless)
-    runs-on: [self-hosted, copero-ci, Linux]
+    # MGC-346: quitar label `Linux` para que el pool macOS ARM64 (copero-ci-runner-02)
+    # pueda tomar jobs de Playwright. Playwright/Chromium corren nativamente en macOS ARM64.
+    # El runner-01 sigue siendo Linux x64; runner-02 macOS. Ambos comparten label `copero-ci`.
+    runs-on: [self-hosted, copero-ci]
     # MGC-380: 15min insuficiente; bump a 30min.
     # MGC-444: 30min insufficient cuando el runner self-hosted tiene
     # errores intermitentes de red al subir logs a
@@ -59,7 +62,9 @@ jobs:
     # con swap-thrash. Run 32678661082 disparó ~46min, cayó por timeout al
     # terminar retries del último spec visual. 90min cubre npm ci + 5 specs
     # pesados con 2 retries + margen para upload de logs a GitHub.
-    timeout-minutes: 90
+    # MGC-346: bajar a 60min tras sumar runner-02 (macOS) al pool. Con 2 runners
+    # disponibles, un job colgado de 60min inmoviliza un solo runner en vez del único.
+    timeout-minutes: 60
     env:
       INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
     steps:

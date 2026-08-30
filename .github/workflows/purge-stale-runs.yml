@@ -1,0 +1,104 @@
+# purge-stale-runs.yml — Copero (MGC-346)
+# Cancela runs encolados cuya rama NO tiene PR abierto contra main.
+# El 2026-08-30 la cola llegó a 31 runs encolados (algunos del día anterior)
+# por workflow_dispatch sobre ramas sin PR abierto (ej. fix/mgc282-persistencia-hermes).
+# Corre cada 15min en el runner Linux self-hosted (copero-ci-runner-01).
+# Política §8.3: corre --local; el script usa gh CLI con el token del repo.
+
+name: purge-stale-runs (copero)
+
+on:
+  schedule:
+    # Cada 15min. GitHub schedule puede tener jitter; aceptable.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+  pull-requests: read
+
+jobs:
+  purge:
+    name: purge queued runs sin PR
+    runs-on: [self-hosted, copero-ci]
+    timeout-minutes: 10
+    steps:
+      - name: Listar runs encolados y PRs abiertos contra main
+        id: list
+        env:
+          GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          # 1) PRs abiertos contra main (todas las branches con PR vivo).
+          OPEN_BRANCHES=$(gh pr list --repo mgcstudios/copero \
+              --state open --base main --json headRefName \
+              --jq '.[].headRefName' | sort -u)
+          OPEN_COUNT=$(printf '%s\n' "$OPEN_BRANCHES" | grep -c . || true)
+          echo "PRs abiertos contra main: $OPEN_COUNT"
+          printf '%s\n' "$OPEN_BRANCHES" | head -20
+          # 2) Runs encolados o en progreso temprano.
+          # gh run list --json fields --jq filtra.
+          QUEUED_JSON=$(gh run list --repo mgcstudios/copero \
+              --status queued --limit 100 \
+              --json databaseId,headBranch,workflowName,event,createdAt)
+          INPROG_JSON=$(gh run list --repo mgcstudios/copero \
+              --status in_progress --limit 50 \
+              --json databaseId,headBranch,workflowName,event,createdAt)
+          echo "queued_count=$(printf '%s' "$QUEUED_JSON" | jq 'length')"
+          echo "in_progress_count=$(printf '%s' "$INPROG_JSON" | jq 'length')"
+          {
+            echo "open_branches<<EOF"
+            printf '%s\n' "$OPEN_BRANCHES"
+            echo "EOF"
+            echo "queued_json<<EOF"
+            printf '%s' "$QUEUED_JSON"
+            echo "EOF"
+            echo "inprog_json<<EOF"
+            printf '%s' "$INPROG_JSON"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Cancelar runs encolados cuya rama no tiene PR vivo
+        env:
+          GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Parsear outputs.
+          OPEN_BRANCHES=$(echo "${{ steps.list.outputs.open_branches }}")
+          QUEUED_JSON='${{ steps.list.outputs.queued_json }}'
+          CANCELLED=0
+          SKIPPED=0
+          # Branch de push a main siempre permitida (releases internos).
+          ALWAYS_KEEP='main'
+          # Iterar runs encolados.
+          echo "$QUEUED_JSON" | jq -c '.[]' | while IFS= read -r RUN; do
+            DBID=$(printf '%s' "$RUN" | jq -r '.databaseId')
+            BRANCH=$(printf '%s' "$RUN" | jq -r '.headBranch // ""')
+            WF=$(printf '%s' "$RUN" | jq -r '.workflowName')
+            EVENT=$(printf '%s' "$RUN" | jq -r '.event')
+            CREATED=$(printf '%s' "$RUN" | jq -r '.createdAt')
+            # Reglas de skip:
+            # - branch es main (release/push directo).
+            if [[ "$BRANCH" == "$ALWAYS_KEEP" ]]; then
+              echo "[skip] run=$DBID branch=main event=$EVENT"
+              continue
+            fi
+            # - branch tiene PR abierto contra main.
+            if printf '%s\n' "$OPEN_BRANCHES" | grep -qx "$BRANCH"; then
+              echo "[skip] run=$DBID branch=$BRANCH PR abierto"
+              continue
+            fi
+            # - workflow_dispatch sin PR abierto: candidato a purga.
+            #   workflow_dispatch manual se usa para smoke; sin PR, no protege nada.
+            echo "[cancel] run=$DBID wf=$WF branch=$BRANCH event=$EVENT created=$CREATED"
+            if gh run cancel "$DBID" --repo mgcstudios/copero 2>&1; then
+              CANCELLED=$((CANCELLED + 1))
+            fi
+          done
+          echo "Resumen: cancelados (intentos)=$CANCELLED"
+
+      - name: Resumen
+        if: always()
+        run: |
+          echo "purge-stale-runs completado. Ver outputs arriba para detalle."
