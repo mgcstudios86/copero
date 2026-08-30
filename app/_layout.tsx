@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState, Platform, View, StyleSheet } from 'react-native';
@@ -36,6 +36,14 @@ import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 
 function ThemedShell() {
   const { colors, mode } = useTheme();
+  // MGC-394 — chrome global (SiteHeader + SiteFooter + Banner) oculto
+  // en la pantalla principal. La home ahora es splash + botón Jugar;
+  // el header con 7 nav links y el footer con Privacy · Terms ·
+  // Contacto · GitHub viven solo en rutas internas (simulador-carrera
+  // y rutas de juego). El operador pidió limpiar la principal — sin
+  // perder la identidad ni la navegación en el resto de la app.
+  const pathname = usePathname();
+  const isHome = pathname === '/' || pathname === '/index';
 
   // MGC-227 + MGC-306 AC4: bootstrap de persistencia. Llamamos
   // `hydrateFromSave()` una sola vez al montar el root layout y
@@ -110,8 +118,11 @@ function ThemedShell() {
         (todas las `Stack.Screen` debajo quedan con `headerShown: false`).
         El header chrome vive acá; las pantallas ya no deben montar su
         propio `<Header>`.
-      */}
-      <SiteHeader />
+
+        MGC-394 — ocultamos el SiteHeader (y el SiteFooter + Banner más
+        abajo) cuando la ruta es la pantalla principal. El operador
+        pidió limpiar visualmente el home; el chrome vive en el resto. */}
+      {!isHome ? <SiteHeader /> : null}
       <Stack
         screenOptions={{
           headerShown: false,
@@ -166,9 +177,12 @@ function ThemedShell() {
         Privacy · Terms · Contacto · GitHub. Replica `site-footer` de
         kiya0908/copero (Gap P1 MGC-646 audit). Hairline divider arriba lo
         separa visualmente del contenido.
-      */}
-      <SiteFooter />
-      <Banner />
+
+        MGC-394 — oculto en la pantalla principal (mismo `isHome` que el
+        SiteHeader). El operador pidió quitar los enlaces a GitHub y
+        términos de la principal; el footer sigue activo en el resto. */}
+      {!isHome ? <SiteFooter /> : null}
+      {!isHome ? <Banner /> : null}
         </>
       )}
     </View>

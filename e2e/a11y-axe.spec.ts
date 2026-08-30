@@ -61,8 +61,11 @@ test.describe('Copero — axe-core scan (web)', () => {
     test.setTimeout(90_000);
     await page.goto('/', { waitUntil: 'load' });
     await page.waitForSelector('[data-testid="home-screen"]', { timeout: 10_000 });
-    // MGC-505: home → btn-career → /simulador-carrera/identity
-    await page.locator('[data-testid="btn-career"]').click();
+    // MGC-394: home limpio → btn-home-play → /simulador-carrera.
+    // El form de identidad ya no vive en el home; el push a la ruta
+    // raiz del simulador dispara el flow identity/dashboard según
+    // el snapshot persistido.
+    await page.locator('[data-testid="btn-home-play"]').click();
     await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
     const { total, blockers } = await scanRoute(page, 'identity-screen');
     await page.screenshot({ path: testInfo.outputPath('axe-identity.png'), fullPage: true });

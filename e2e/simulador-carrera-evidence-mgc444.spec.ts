@@ -40,7 +40,7 @@ async function completeIdentity(page: any, name: string) {
   // devuelve 404. Hay que entrar por / y luego navegar via click.
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-  await page.getByTestId('btn-career').click();
+  await page.getByTestId('btn-home-play').click();
   await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 10_000 });
   await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
   await page.getByTestId('input-name').fill(name);
@@ -72,7 +72,7 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
   test('1) home → CTA Simulador → identity', async ({ page }, testInfo) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-    await page.getByTestId('btn-career').click();
+    await page.getByTestId('btn-home-play').click();
     await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 10_000 });
     await expect(page.getByTestId('identity-screen')).toBeVisible();
     await page.screenshot({
@@ -130,7 +130,7 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
     // identity (estado limpio) — vía SPA, no page.goto directo (404)
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-    await page.getByTestId('btn-career').click();
+    await page.getByTestId('btn-home-play').click();
     await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 10_000 });
     const axeIdentity = await scanRoute(page, 'identity-screen', 'identity');
     await page.screenshot({

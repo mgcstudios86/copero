@@ -23,13 +23,14 @@ test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
   test('teclado puro navega home → identity → dashboard sin mouse', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
 
-    // 1) HOME — Tab hasta el CTA btn-career.
+    // 1) HOME — Tab hasta el CTA btn-home-play (MGC-394: home limpio
+    // expone sólo el botón Jugar; antes era btn-career).
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-testid="home-screen"]', { timeout: 15_000 });
     await page.screenshot({ path: testInfo.outputPath('kbd-1-home.png'), fullPage: true });
 
     await page.keyboard.press('Tab');
-    const btnCareer = page.locator('[data-testid="btn-career"]');
+    const btnCareer = page.locator('[data-testid="btn-home-play"]');
     await expect(btnCareer).toBeVisible();
     for (let i = 0; i < 40; i += 1) {
       const isFocused = await btnCareer.evaluate(

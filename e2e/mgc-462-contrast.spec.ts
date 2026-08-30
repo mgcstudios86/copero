@@ -54,7 +54,7 @@ test.describe('MGC-462 — axe contrast /simulador-carrera/identity', () => {
     // en lugar de hardcodear :8082. Otros specs navegan con '/' relativo.
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await page.waitForSelector('[data-testid="home-screen"]', { timeout: 10_000 });
-    await page.getByTestId('btn-career').click();
+    await page.getByTestId('btn-home-play').click();
     await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
     await page.waitForSelector('[data-testid="jersey-preview"]', { timeout: 10_000 });

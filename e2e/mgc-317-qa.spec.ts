@@ -2,29 +2,35 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 
 /**
- * MGC-505 — QA visual del home rediseñado + smoke del simulador de carrera.
+ * MGC-394 — QA visual del home limpio (splash + botón Jugar) + smoke
+ * del simulador de carrera.
  *
- * Reemplaza el spec MGC-317 original (validaba emoji 🍕 en /categoria,
- * timer de ronda, persistencia de highScore). Ese flujo fue removido del
- * home en MGC-505: el único camino accesible desde el landing es
- * `btn-career` → /simulador-carrera/identity.
+ * Reemplaza MGC-505 (validaba "Convertite en Leyenda" + "Cómo se
+ * juega" + form de identidad en home). Esos elementos fueron removidos
+ * del landing en MGC-394: el home ahora sólo expone el splash
+ * (assets/splash.png) y el botón Jugar.
  *
- * AC MGC-505:
- *  - Home muestra hero "Convertite en Leyenda" + CTA carrera.
- *  - Home NO expone botones viejos (btn-play / btn-compass) — esos
- *    routes persisten como deep-links pero el landing no los linkea.
- *  - Tap en btn-career navega al simulador de carrera y el identity
+ * AC MGC-394:
+ *  - Home muestra splash + botón Jugar verde (`btn-home-play`).
+ *  - Home NO expone el chrome global (SiteHeader con 7 nav links +
+ *    SiteFooter con Privacy · Terms · Contacto · GitHub). El chrome
+ *    vive sólo en rutas internas.
+ *  - Home NO expone los controles del home anterior (btn-career, btn-how-
+ *    to-play, home-tag-list, home-jersey, btn-home-resume-career).
+ *  - Tap en btn-home-play navega al simulador de carrera y el identity
  *    screen renderiza el JerseyPreview con los 4 grupos pos-{id}.
  */
 
-const OUT_DIR = path.join(__dirname, '.results', 'mgc-505');
+const OUT_DIR = path.join(__dirname, '.results', 'mgc-394');
 
-test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
+test.describe('MGC-394 — QA visual home (splash + Jugar) + simulador-carrera', () => {
   test.beforeAll(() => {
     require('node:fs').mkdirSync(OUT_DIR, { recursive: true });
   });
 
-  test('home rediseñado + navegación a simulador-carrera/identity', async ({ page }, testInfo) => {
+  test('home limpio (splash + Jugar) + navegación a simulador-carrera', async ({
+    page,
+  }, testInfo) => {
     test.setTimeout(90_000);
 
     // Estado limpio: cookies + storage.
@@ -40,47 +46,48 @@ test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
     });
     await page.reload({ waitUntil: 'domcontentloaded' });
 
-    // 1) HOME rediseñado
+    // 1) HOME limpio — splash + botón Jugar (MGC-394).
     await page.waitForSelector('[data-testid="home-screen"]', { timeout: 15_000 });
-    await page.screenshot({ path: path.join(OUT_DIR, '01-home-mgc505.png'), fullPage: true });
+    await page.waitForSelector('[data-testid="home-screen-clean"]', { timeout: 5_000 });
+    await page.screenshot({ path: path.join(OUT_DIR, '01-home-mgc394.png'), fullPage: true });
 
-    const homeText = await page.locator('[data-testid="home-screen"]').innerText();
-    expect(homeText.toLowerCase()).toContain('convertite en leyenda');
-    expect(homeText.toLowerCase()).toContain('cómo se juega');
+    // Splash visible.
+    await expect(page.locator('[data-testid="home-splash-image"]')).toBeVisible();
+    // CTA principal con label "Jugar".
+    await expect(page.locator('[data-testid="btn-home-play"]')).toBeVisible();
 
-    // Garantizar que NO están los botones del viejo flujo.
+    // Chrome global NO debe estar en home (AC MGC-394: sin GitHub/Terms).
+    await expect(page.locator('[data-testid="copero-site-header"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="copero-site-footer"]')).toHaveCount(0);
+
+    // Garantizar que NO están los controles del home anterior (MGC-505).
     const btnPlayCount = await page.locator('[data-testid="btn-play"]').count();
     const btnCompassCount = await page.locator('[data-testid="btn-compass"]').count();
-    expect(btnPlayCount, 'home no debe exponer btn-play (MGC-505)').toBe(0);
-    expect(btnCompassCount, 'home no debe exponer btn-compass (MGC-505)').toBe(0);
+    expect(btnPlayCount, 'home no debe exponer btn-play').toBe(0);
+    expect(btnCompassCount, 'home no debe exponer btn-compass').toBe(0);
+    await expect(page.locator('[data-testid="btn-career"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="btn-how-to-play"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="home-tag-list"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="home-jersey"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="btn-home-resume-career"]')).toHaveCount(0);
 
-    // CTA único al simulador de carrera.
-    await expect(page.locator('[data-testid="btn-career"]')).toBeVisible();
-
-    // 2) Navegación al simulador-carrera/identity.
-    await page.locator('[data-testid="btn-career"]').click();
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
-    await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
-    await page.waitForSelector('[data-testid="jersey-preview"]', { timeout: 10_000 });
-    await page.screenshot({ path: path.join(OUT_DIR, '02-identity-mgc505.png'), fullPage: true });
-
-    // 3) Validar los 4 grupos pos-{id} (ataque / mediocampo / defensa / arquero).
-    const groupIds = ['ST', 'CAM', 'CB', 'GK'];
-    for (const id of groupIds) {
-      const pos = page.locator(`[data-testid="pos-${id}"]`);
-      await expect(pos, `pos-${id} debe existir en el field map`).toBeVisible();
-      await pos.click();
-      await page.waitForTimeout(120);
-    }
+    // 2) Navegación al simulador-carrera. El push a la raíz del
+    // simulador dispara el flow identity/dashboard según el snapshot
+    // persistido. En estado limpio cae en /identity.
+    await page.locator('[data-testid="btn-home-play"]').click();
+    await page.waitForURL(/\/simulador-carrera(\/.*)?$/, { timeout: 10_000 });
+    // El chrome global reaparece en rutas internas.
+    await expect(page.locator('[data-testid="copero-site-header"]')).toBeVisible();
+    await expect(page.locator('[data-testid="copero-site-footer"]')).toBeVisible();
     await page.screenshot({
-      path: path.join(OUT_DIR, '03-identity-all-groups.png'),
+      path: path.join(OUT_DIR, '02-after-tap-play.png'),
       fullPage: true,
     });
 
     // Adjuntar el screenshot principal al report de Playwright.
     testInfo.attachments.push({
-      name: 'mgc-505-home',
-      path: path.join(OUT_DIR, '01-home-mgc505.png'),
+      name: 'mgc-394-home',
+      path: path.join(OUT_DIR, '01-home-mgc394.png'),
       contentType: 'image/png',
     });
   });

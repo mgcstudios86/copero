@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
@@ -64,6 +64,11 @@ const PoppinsBold = require('../assets/fonts/woff2/Poppins-Bold.woff2');
 
 function ThemedShell() {
   const { colors, mode } = useTheme();
+  // MGC-394 — chrome global (SiteHeader + SiteFooter + Banner) oculto
+  // en la pantalla principal. Mantener sincronizado con `_layout.tsx`
+  // y `_layout.native.tsx`.
+  const pathname = usePathname();
+  const isHome = pathname === '/' || pathname === '/index';
 
   // MGC-259 — gate de hidratación. Mismo patrón que `_layout.native.tsx`.
   // Bloqueamos el render del Stack hasta que `hydrateFromSave()` termine
@@ -128,7 +133,7 @@ function ThemedShell() {
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar style={mode === 'dark' || mode === 'copero' ? 'light' : 'dark'} />
-      <SiteHeader />
+      {!isHome ? <SiteHeader /> : null}
       <Stack
         screenOptions={{
           headerShown: false,
@@ -160,8 +165,8 @@ function ThemedShell() {
         />
         <Stack.Screen name="simulador-carrera" />
       </Stack>
-      <SiteFooter />
-      <Banner />
+      {!isHome ? <SiteFooter /> : null}
+      {!isHome ? <Banner /> : null}
     </View>
   );
 }
