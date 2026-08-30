@@ -84,6 +84,54 @@ facturables (resuelve el error de billing del run 32611369496).
   Además `@playwright/test ^1.49.0` debe estar en `devDependencies` para
   que `npm ci --include=dev` lo instale. Verificado en MGC-308.
 
+## Bootstrap Playwright en macOS ARM64 (MGC-346 + MGC-351)
+
+`copero-ci-runner-02` es un Mac mini M4 (16 GB, macOS 26 ARM64). A partir
+de MGC-346 el pool `qa.yml` lo habilita junto con el runner-01 Linux.
+
+- **Chromium binario**: NO requiere bootstrap manual. El job corre
+  `npx playwright install chromium` y baja el binario ARM64 nativo a
+  `~/Library/Caches/ms-playwright/`. En los runs observados
+  (run 33296847880, SHA `72af9b3` de PR #162) la instalación completa en
+  ~3 s sin warnings.
+- **Sin `--with-deps`**: en macOS las system libs (libnss, libatk,
+  libxcomposite, etc.) son nativas de Chromium y NO requieren apt. NO
+  correr `playwright install --with-deps` en macOS (equivale a un
+  `brew install` implícito que rompe la idempotencia del runner).
+- **Verificación reproducible** desde shell del runner:
+  ```bash
+  # 1. Verificar que el binario se instaló y es ejecutable ARM64.
+  ls -la ~/Library/Caches/ms-playwright/chromium-*/chrome-mac/chrome
+  file ~/Library/Caches/ms-playwright/chromium-*/chrome-mac/chrome \
+    | grep -q "arm64" && echo OK
+
+  # 2. Smoke test (lanza Chromium, navega data: URL, cierra).
+  node -e "
+    const { chromium } = require('@playwright/test');
+    (async () => {
+      const b = await chromium.launch();
+      const p = await b.newPage();
+      await p.goto('data:text/html,<h1>ok</h1>');
+      console.log('title=', await p.title());
+      await b.close();
+    })().catch(e => { console.error(e); process.exit(1); });
+  "
+  ```
+- **Trampa conocida**: en macOS el primer `npx playwright install` puede
+  fallar con `cannot find Chromium` si el binario se descargó bajo
+  Rosetta (x86_64). Verificar con `file` que el binario es `arm64`. Si
+  aparece x86_64, forzar reinstalación con:
+  ```bash
+  npx playwright install --force chromium
+  ```
+- **Verificado en MGC-351** (run 33296847880, SHA `72af9b3` de PR #162):
+  el log de `Install Playwright Chromium` muestra assets/font/woff2
+  descargados sin errores, y la suite Playwright llegó a ejecutar los
+  specs (no falló por missing binary). Los 17 specs FAIL son por
+  `waitForURL('**/simulador-carrera/identity')` que timeout — la causa
+  raíz es routing de `btn-career` en el branch base (MGC-326), NO
+  Chromium bootstrap.
+
 ## Verificación de billing cero
 
 Tras mergear el cambio de `runs-on`, confirmar en
