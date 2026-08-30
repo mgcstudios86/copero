@@ -17,6 +17,7 @@
 // Acceptance criteria MGC-543: transfer /identity <= 415 KB. Esta refactor
 // apunta a sacar ~120 KB de strategy+simulation+reputation del entry chunk.
 
+import { AppState } from 'react-native';
 import { create } from 'zustand';
 import {
   initialSnapshot,
@@ -26,6 +27,7 @@ import {
   saveCareerSave,
   loadCareerSave,
   clearCareerSave,
+  isPersistentStorage,
 } from '@/features/career/persistence';
 import type { CareerAction } from '@/features/career/engine';
 import type { CareerSnapshot, Club, Foot, Position, StrategyId } from '@/types/career';
@@ -152,6 +154,55 @@ export function getPendingSave(): Promise<void> | null {
 export function flushPendingSave(): Promise<void> {
   if (!pendingSave) return Promise.resolve();
   return pendingSave;
+}
+
+/**
+ * MGC-363 — `lastSnapshot` es el snapshot persistible más reciente del
+ * store. Se mantiene sincronizado con cada mutación vía un `subscribe`
+ * que corre al cargar este módulo (abajo). Es independiente de
+ * `pendingSave`: aunque la cadena de promesas esté en vuelo o vacía,
+ * `lastSnapshot` refleja el estado actual del store y se puede volcar
+ * a disco síncronamente desde el listener de `AppState`.
+ *
+ * Belt-and-suspenders sobre el fix de PR #155 (`require` estático +
+ * `flushPendingSave` en cada acción): si por algún motivo una save
+ * encadenada queda huérfana (re-render que descarta la promesa, race
+ * entre `setItem` y un kill inmediato del proceso, o un setXxx
+ * fire-and-forget del form de identidad que nunca llega al
+ * `flushPendingSave` final), el listener de AppState escribe el
+ * último snapshot conocido sin depender de la cadena de promesas.
+ */
+type SnapshotPayload = {
+  v: 1;
+  stage: CareerSnapshot['stage'];
+  profile: CareerSnapshot['profile'];
+  draft: NonNullable<CareerSnapshot['draft']> | null;
+  card: NonNullable<CareerSnapshot['card']> | null;
+  clubId: string | null;
+  log: NonNullable<CareerSnapshot['log']>;
+  seed: number;
+};
+let lastSnapshot: SnapshotPayload | null = null;
+
+export function getLastSnapshot(): SnapshotPayload | null {
+  return lastSnapshot;
+}
+
+/**
+ * MGC-363 — escribe `lastSnapshot` directo a AsyncStorage sin pasar por
+ * `pendingSave`. Llamado por el listener de `AppState` registrado a
+ * nivel módulo (abajo). Es best-effort: si AsyncStorage falla, el
+ * `catch` silencia (el listener de MGC-257 + `flushPendingSave` siguen
+ * siendo la red de seguridad principal).
+ */
+async function writeLastSnapshotToDisk(): Promise<void> {
+  if (!lastSnapshot) return;
+  try {
+    await saveCareerSave(lastSnapshot);
+  } catch {
+    // best-effort: el listener ya hizo su parte; el próximo
+    // `flushPendingSave` o el `await` post-acción cubren el gap.
+  }
 }
 
 /**
@@ -372,3 +423,119 @@ export const getCareerSnapshot = (): CareerSnapshot => {
 };
 
 export { isIdentityComplete };
+
+/**
+ * MGC-363 — bootstrap de la red de seguridad de persistencia. Se ejecuta
+ * al cargar el módulo `careerStore.ts` (la primera vez que cualquier
+ * parte de la app importa el store), antes de que React monte el root
+ * layout. Hace tres cosas:
+ *
+ * 1. Sincroniza `lastSnapshot` con cada mutación del store vía
+ *    `useCareerStore.subscribe`. Zustand dispara el listener después
+ *    de cada `set(...)` exitoso, así que `lastSnapshot` queda alineado
+ *    con el estado autoritativo del store antes de que cualquier
+ *    `await` o navegación pueda sacarnos del proceso (force-stop).
+ *
+ * 2. Registra un listener de `AppState` a nivel módulo. Antes vivía en
+ *    `_layout.tsx` y se ataba al ciclo de vida del componente ThemedShell
+ *    — si React todavía no había montado (gate hidratando) o ya se había
+ *    desmontado (HMR / fast-refresh), el listener desaparecía. A nivel
+ *    módulo corre durante toda la vida del JS bundle. El listener
+ *    dispara cuando el OS pasa la app a background o inactive
+ *    (lockscreen, briefcase switch, o force-stop inminente vía OS
+ *    pressure), vuelca `lastSnapshot` a disco y drena la cadena
+ *    `pendingSave` pendiente. Es best-effort: si el proceso muere antes
+ *    de que `setItem` resuelva, al menos la save anterior (capturada
+ *    por `lastSnapshot`) está viajando a disco.
+ *
+ * 3. Loguea un warning si AsyncStorage cayó al fallback de memoria. Eso
+ *    indica que `pickStorage()` no resolvió `@react-native-async-storage/async-storage`
+ *    (Metro/Hermes), y todo `saveCareerSave` queda en RAM — el force-stop
+ *    perdería la partida sin este warning. Visible en `adb logcat | grep
+ *    copero:career`.
+ *
+ * Idempotente: si por algún motivo el módulo se importa dos veces
+ * (HMR, tests), reutilizamos `appStateListenerInstalled` como guard.
+ *
+ * Nota técnica: `AppState` y `console` se acceden directo (sin guard
+ * `typeof X === 'undefined'`) porque `react-native` exporta un mock
+ * estable para Node (vitest) y un binding real para el runtime RN.
+ * El guard con `typeof` rompía el SSR transform de Rollup en vitest
+ * (parse error "Expected 'from', got 'typeOf'" porque el compilador
+ * de SSR trata el bloque como código de usuario y no strip-ea el
+ * operador TS-only).
+ */
+
+/**
+ * MGC-363 — bootstrap lazy. La función se ejecuta la primera vez que
+ * React monta el árbol (vía `bootstrapPersistence()` invocada desde
+ * `app/_layout.tsx`). ANTES el listener se ataba al ciclo de vida del
+ * componente ThemedShell y desaparecía en HMR o antes del mount — el
+ * OS mandaba la app a background antes de que React registrara el
+ * useEffect, perdiendo la save. AHORA corre en cuanto el primer import
+ * del store resuelve, garantizado por `bootstrapPersistence`.
+ *
+ * Importante: NO usamos guard `typeof AppState === 'object'` para
+ * gate de SSR — vite/rollup SSR transform emite parse error con
+ * `Expected 'from', got 'typeOf'` cuando procesa el bloque durante la
+ * transformación de tipos del bundle de tests. `react-native` exporta
+ * un mock estable de `AppState` para Node/vitest, así que el acceso
+ * directo funciona en ambos runtimes.
+ */
+let appStateListenerInstalled = false;
+let storeSubscribeInstalled = false;
+
+export function bootstrapPersistence(): void {
+  if (appStateListenerInstalled) return;
+  appStateListenerInstalled = true;
+  let prevAppState: string | null = null;
+  prevAppState = AppState.currentState ?? null;
+  AppState.addEventListener('change', (next) => {
+    const goingBackground =
+      (prevAppState === 'active' || prevAppState === 'unknown' || prevAppState === null) &&
+      (next === 'background' || next === 'inactive');
+    prevAppState = next;
+    if (!goingBackground) return;
+    // Volcado redundante del último snapshot (no depende de
+    // `pendingSave`) + drain de cualquier cadena en vuelo. Ambos son
+    // best-effort; el OS puede matarnos antes de que `setItem`
+    // resuelva, pero cubrimos los dos paths críticos:
+    //  - acción que llamó `persistSnapshot` pero todavía no completó.
+    //  - mutación intermedia (setXxx del form) sin `await flush`.
+    void writeLastSnapshotToDisk();
+    void flushPendingSave();
+  });
+
+  if (!storeSubscribeInstalled) {
+    storeSubscribeInstalled = true;
+    // Zustand v5: `subscribe(listener)` recibe `(state, prevState)` después
+    // de cada `set`. Mantenemos `lastSnapshot` sincronizado; así el
+    // listener de AppState puede volcarlo a disco aún si la cadena
+    // `pendingSave` quedó huérfana.
+    useCareerStore.subscribe(function syncLastSnapshot(state) {
+      lastSnapshot = snapshotToSave(state);
+    });
+  }
+}
+
+if (isPersistentStorage && !isPersistentStorage()) {
+  // MGC-363 debug aid: si AsyncStorage cayó al fallback en memoria, las
+  // saves se pierden en cada force-stop. Logueamos en `console.warn`
+  // para que aparezca en `adb logcat *:S ReactNativeJS:V` y QA pueda
+  // diagnosticarlo en el campo sin un dev build.
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[copero:career] AsyncStorage no resolvió; persistencia en memoria (force-stop pierde la partida).',
+  );
+}
+
+if (isPersistentStorage && !isPersistentStorage()) {
+  // MGC-363 debug aid: si AsyncStorage cayó al fallback en memoria, las
+  // saves se pierden en cada force-stop. Logueamos en `console.warn`
+  // para que aparezca en `adb logcat *:S ReactNativeJS:V` y QA pueda
+  // diagnosticarlo en el campo sin un dev build.
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[copero:career] AsyncStorage no resolvió; persistencia en memoria (force-stop pierde la partida).',
+  );
+}
