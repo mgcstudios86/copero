@@ -4,11 +4,13 @@ App Expo (iOS/Android/web) del repo `mgcstudios/copero`. Esta guía aplica solo 
 
 ## Regla dura: CI corre en runner self-hosted
 
-**Todos los jobs de GitHub Actions en este repo deben usar `runs-on: [self-hosted, copero-ci, Linux]`. Nunca usar `runs-on: self-hosted` pelado, ni `ubuntu-latest`, ni otro hosted de GitHub.**
+**Todos los jobs de GitHub Actions en este repo deben usar `runs-on: [self-hosted, copero-ci]`** (la label `copero-ci` resuelve tanto al runner Linux del VPS `mgcstudios-01` como al runner macOS ARM64 del Mac mini local). Nunca usar `runs-on: self-hosted` pelado, ni `ubuntu-latest`, ni otro hosted de GitHub.
 
-Razón: el org `mgcstudios` tiene la facturación de GH Actions suspendida por falta de pago (MGC-305). Cualquier minuto en runner hosted falla con *"recent account payments have failed or your spending limit needs to be increased"* y bloquea el job completo. Referencia: MGC-308 migró Playwright a self-hosted; MGC-379 migró `eas-preview` a runner con label `copero-ci`.
+La label histórica `Linux` puede mantenerse en workflows existentes como documentada en MGC-308 (limita a runner Linux VPS) — pero **NO** debe agregarse en nuevos workflows ni en jobs que deben correr en el pool mixto (ej. `qa.yml` Playwright, donde macOS ARM64 reduce `npm ci` de 25min a 4s y `build web` de OOM a 30s).
 
-**Aplica a todos los workflows**: `ci.yml`, `qa.yml`, `eas.yml`. Cualquier PR que use `runs-on: self-hosted` sin la label `copero-ci` será rechazada en review (§8.3 + §1.4 de `engineering-workflow`).
+Razón: el org `mgcstudios` tiene la facturación de GH Actions suspendida por falta de pago (MGC-305). Cualquier minuto en runner hosted falla con *"recent account payments have failed or your spending limit needs to be increased"* y bloquea el job completo. Referencia: MGC-308 migró Playwright a self-hosted; MGC-346 amplió el pool a macOS ARM64; MGC-379 migró `eas-preview` a runner con label `copero-ci`.
+
+**Aplica a todos los workflows**: `ci.yml`, `qa.yml`, `eas.yml`, `purge-stale-runs.yml`. Cualquier PR que use `runs-on: self-hosted` sin la label `copero-ci` será rechazada en review (§8.3 + §1.4 de `engineering-workflow`).
 
 ## Convenciones del runner
 
