@@ -37,12 +37,18 @@ import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 function ThemedShell() {
   const { colors, mode } = useTheme();
 
-  // MGC-227: bootstrap de persistencia. Llamamos `hydrateFromSave()`
-  // una sola vez al montar el root layout. Si hay save previo, la
-  // store arranca ya hidratada; si no, queda en initialSnapshot.
-  // `useCareerStore` se importa sincrónicamente; la action es async
-  // pero no bloquea el render — la UI pinta con el initial state y
-  // cuando la hidratación termina los selectors re-renderizan.
+  // MGC-227 + MGC-306 AC4: bootstrap de persistencia. Llamamos
+  // `hydrateFromSave()` una sola vez al montar el root layout y
+  // BLOQUEAMOS el render del Stack hasta que `hydrated === true`.
+  // Antes era fire-and-forget: el home pintaba con initialSnapshot
+  // (form vacío, sin CTA Continuar) y luego re-renderizaba cuando
+  // llegaba el save. El flash intermedio es lo que QA reprodujo en
+  // ZY22G728HN tras `am force-stop` + relaunch — `careerStage='identity'`
+  // y `careerProfileName=''` durante ~50–200 ms hasta que el gate
+  // hidrataba. Ahora mostramos un splash neutro con el `colors.bg`
+  // hasta que `hydrateFromSave` resuelva (éxito, vacío o error —
+  // el flag se flippea en los tres paths).
+  const hydrated = useCareerStore((s) => s.hydrated);
   useEffect(() => {
     void useCareerStore.getState().hydrateFromSave();
   }, []);
@@ -84,7 +90,22 @@ function ThemedShell() {
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar style={mode === 'dark' || mode === 'copero' ? 'light' : 'dark'} />
       {/*
-        MGC-653 — SiteHeader global con 7 nav links + LanguageSwitcher +
+        MGC-306 AC4 — gate hydrated. Hasta que `hydrateFromSave()`
+        resuelva (flag `hydrated === true`) mostramos un splash neutro
+        con el `colors.bg` y sin header/stack. Evita el flash de form
+        identidad vacío que QA reprodujo tras `am force-stop` + relaunch.
+        Cuando llega el save (o se confirma vacío), pintamos el header
+        + stack y la home renderiza con el `stage`/`profile` correctos.
+      */}
+      {!hydrated ? (
+        <View
+          style={[styles.root, { backgroundColor: colors.bg }]}
+          testID="career-hydrate-gate"
+          accessibilityLabel="Cargando carrera guardada"
+        />
+      ) : (
+        <>
+      {/* MGC-653 — SiteHeader global con 7 nav links + LanguageSwitcher +
         CTA "Jugar" verde. Reemplaza el header built-in de expo-router
         (todas las `Stack.Screen` debajo quedan con `headerShown: false`).
         El header chrome vive acá; las pantallas ya no deben montar su
@@ -148,6 +169,8 @@ function ThemedShell() {
       */}
       <SiteFooter />
       <Banner />
+        </>
+      )}
     </View>
   );
 }

@@ -31,6 +31,15 @@ import type { CareerAction } from '@/features/career/engine';
 import type { CareerSnapshot, Club, Foot, Position, StrategyId } from '@/types/career';
 
 type CareerStore = CareerSnapshot & {
+  /**
+   * MGC-306 AC4 — flag de hidratación completada. `false` durante el
+   * bootstrap (entre mount del root layout y resolución de
+   * `loadCareerSave`). `app/_layout.tsx` bloquea el render del Stack
+   * hasta que sea `true` para evitar el flash de form identidad vacío
+   * ("Apellido placeholder", "Dorsal 9 default") que QA reprodujo
+   * post-force-stop. No se persiste (es state runtime del gate).
+   */
+  hydrated: boolean;
   setName: (name: string) => void;
   setNumber: (number: number) => void;
   setPosition: (position: Position) => void;
@@ -189,6 +198,11 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
 
   return {
     ...initialSnapshot(),
+    // MGC-306 AC4: arrancamos en `false` para que `app/_layout.tsx`
+    // muestre el gate (splash neutro, sin form ni CTA) hasta que
+    // `hydrateFromSave()` resuelva. Se flippea a `true` al final del
+    // action — éxito, vacío, o error, todos garantizan progreso.
+    hydrated: false,
     // Setters livianos: identity-state, sin motor.
     setName: (name) => applyAndPersist((s) => ({ ...s, profile: { ...s.profile, name } })),
     setNumber: (number) =>
@@ -318,9 +332,17 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       try {
         saved = await loadCareerSave();
       } catch {
+        // MGC-306 AC4: incluso si AsyncStorage explota, flippeamos
+        // `hydrated` para destrabar el gate del layout. El usuario
+        // sigue pudiendo usar la app con initialSnapshot; la próxima
+        // save sobrescribirá cualquier estado corrupto.
+        set((s) => ({ ...s, hydrated: true }));
         return false;
       }
-      if (!saved) return false;
+      if (!saved) {
+        set((s) => ({ ...s, hydrated: true }));
+        return false;
+      }
       setSnapshot((s) => ({
         ...s,
         stage: saved.stage,
@@ -330,6 +352,7 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         log: saved.log,
         seed: saved.seed,
       }));
+      set((s) => ({ ...s, hydrated: true }));
       return true;
     },
     // reset: estado inicial sin motor. Borra el save persistido.

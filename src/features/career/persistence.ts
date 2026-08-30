@@ -22,26 +22,61 @@ type StorageLike = {
 
 let memoryStore: Record<string, string> = {};
 
+const memoryStorage: StorageLike = {
+  getItem: async (k) => (k in memoryStore ? memoryStore[k] : null),
+  setItem: async (k, v) => {
+    memoryStore[k] = v;
+  },
+  removeItem: async (k) => {
+    delete memoryStore[k];
+  },
+};
+
+/** Backend resuelto una sola vez (AsyncStorage real o memoria). */
+let resolved: StorageLike | null = null;
+
+/**
+ * MGC-282 — root cause del bug "la partida no se restaura tras force-stop".
+ *
+ * Antes esta función resolvía AsyncStorage con `eval('require')(...)`. En
+ * device eso NUNCA funciona:
+ *  1. Hermes (motor por defecto de RN 0.86) no compila JS en runtime, así
+ *     que `eval` tira excepción.
+ *  2. Aun si `eval` estuviera habilitado, devuelve el `require` GLOBAL del
+ *     bundle de Metro, que en release espera un id numérico de módulo — no
+ *     un string.
+ *
+ * El `catch` se tragaba las dos fallas y devolvía el fallback en memoria.
+ * Resultado: la partida se guardaba en un objeto del proceso, la sesión
+ * en curso se veía bien, y al matar la app el snapshot desaparecía. Por eso
+ * MGC-257/259/270/273/277 (todos fixes de timing del flush) no movieron la
+ * aguja: el flush escribía correctamente… a memoria.
+ *
+ * `require` a secas es estático: Metro lo resuelve en build time y Hermes
+ * nunca ve un `eval`. En node/vitest `require` no existe en el scope ESM y
+ * el `ReferenceError` cae al mismo fallback de memoria de siempre, así que
+ * los tests no cambian de comportamiento.
+ */
 function pickStorage(): StorageLike {
+  if (resolved) return resolved;
   try {
-    // require lazy para no romper vitest si AsyncStorage no resuelve.
-    const mod = eval('require')('@react-native-async-storage/async-storage');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('@react-native-async-storage/async-storage');
     const candidate: StorageLike | undefined = mod?.default ?? mod;
     if (candidate && typeof candidate.getItem === 'function') {
+      resolved = candidate;
       return candidate;
     }
   } catch {
-    // AsyncStorage no disponible: fallback memoria.
+    // AsyncStorage no disponible (node/vitest): fallback memoria.
   }
-  return {
-    getItem: async (k) => (k in memoryStore ? memoryStore[k] : null),
-    setItem: async (k, v) => {
-      memoryStore[k] = v;
-    },
-    removeItem: async (k) => {
-      delete memoryStore[k];
-    },
-  };
+  resolved = memoryStorage;
+  return memoryStorage;
+}
+
+/** Backend activo. `true` = AsyncStorage real (persiste a disco). */
+export function isPersistentStorage(): boolean {
+  return pickStorage() !== memoryStorage;
 }
 
 /** Devuelve la partida guardada o `null` si no hay nada. */
