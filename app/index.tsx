@@ -73,7 +73,7 @@ export default function Home() {
       >
         <View style={styles.splashWrap}>
           <Image
-            source={require('../../assets/splash.png')}
+            source={require('../assets/splash.png')}
             style={{
               width: splashWidth,
               height: splashHeight,
