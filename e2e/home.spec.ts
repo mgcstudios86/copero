@@ -3,13 +3,16 @@ import { test, expect } from '@playwright/test';
 /**
  * Copero — E2E web (Playwright headless contra bundle Expo web).
  *
- * MGC-505: el home queda como landing único de "Convertite en Leyenda".
- * Los flujos de Juego de palabras / Ideología Futbolística se removieron
- * del home (ver `app/index.tsx`). Las pantallas existen como rutas
- * (deep-link) pero no se exponen desde el home.
+ * MGC-394: el home queda como splash minimal con un único CTA "Jugar".
+ * Se removieron: tag-list, cómo se juega, comparador Classic/Purist, FAQ,
+ * mini-stats, jersey preview, hero premium. El SiteFooter con links
+ * GitHub/Terms/Privacidad/Contacto se removió del root layout. El
+ * form de identidad ahora vive exclusivamente en
+ * /simulador-carrera/identity (ruta a la que empuja `btn-career`).
  *
- * Selectores canónicos (testIDs del MVP actualizado, MGC-505):
- *   - home-screen, btn-career
+ * Selectores canónicos (testIDs del MVP actualizado, MGC-394):
+ *   - home-screen, btn-career (= botón "Jugar")
+ *   - home-splash, btn-home-resume-career (opcional, sólo si hay carrera)
  *   - simulador-carrera: identity, dashboard, academy
  *   - dashboard-screen, dashboard-jersey, dashboard-recommended
  *   - btn-dashboard-academy
@@ -34,36 +37,36 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-test.describe('Copero — smoke home (web) — MGC-505', () => {
-  test('home renderiza con hero multi-línea + tag-list + CTA carrera', async ({ page }, testInfo) => {
+test.describe('Copero — smoke home (web) — MGC-394', () => {
+  test('home renderiza como splash minimal + CTA Jugar', async ({ page }, testInfo) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await expect(page.getByTestId('home-screen')).toBeVisible();
-    // MGC-654 P0 #3 — H1 multi-línea reemplaza "Convertite en leyenda".
-    await expect(page.getByText(/COPERO JUEGO/i)).toBeVisible();
-    await expect(page.getByText(/CREA TU PROPIA CARRERA DE FÚTBOL/i)).toBeVisible();
-    // MGC-654 P0 #2 — tag-list 4 chips con accessibilityRole text.
-    await expect(page.getByTestId('home-tag-list')).toBeVisible();
-    await expect(page.getByText(/Juego online/i)).toBeVisible();
-    await expect(page.getByText(/Draft 8 atributos/i)).toBeVisible();
-    await expect(page.getByText(/Modo carrera/i)).toBeVisible();
-    await expect(page.getByText(/Guardado local/i)).toBeVisible();
-    // CTA principal + CTA secundario ghost (MGC-654 P0 #4).
+    // MGC-394: splash visible con título del simulador + descripción.
+    await expect(page.getByTestId('home-splash')).toBeVisible();
+    await expect(page.getByText(/COPERO · SIMULADOR DE CARRERA/i)).toBeVisible();
+    await expect(page.getByText(/Convertite en leyenda/i)).toBeVisible();
+    // CTA principal único: "Jugar".
     await expect(page.getByTestId('btn-career')).toBeVisible();
-    await expect(page.getByTestId('btn-how-to-play')).toBeVisible();
+    await expect(page.getByTestId('btn-career')).toHaveText(/Jugar/i);
+    // Sin sesión persistida no debe aparecer el CTA Continuar carrera.
+    await expect(page.getByTestId('btn-home-resume-career')).toHaveCount(0);
+    // Banner global del layout debe persistir.
     await expect(page.getByTestId('ad-banner-web')).toBeVisible();
-    await expect(page.getByText(/PUBLICIDAD/i)).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath('home-baseline.png'), fullPage: true });
   });
 
-  test('CTA ghost Ver cómo se juega scrollea a #how-to-play', async ({ page }, testInfo) => {
+  test('home NO expone secciones removidas (tag-list / how-to-play / FAQ)', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await expect(page.getByTestId('home-screen')).toBeVisible();
-    // Verifica que la sección objetivo tiene nativeID/how-to-play (MGC-654 P0 #4).
-    await expect(page.locator('#how-to-play')).toHaveCount(1);
-    // Click produce scrollIntoView; assert que la sección queda visible después.
-    await page.getByTestId('btn-how-to-play').click();
-    await expect(page.locator('#how-to-play')).toBeVisible();
-    await page.screenshot({ path: testInfo.outputPath('home-how-to-play.png'), fullPage: true });
+    // MGC-394: limpieza de la pantalla principal — se removieron los
+    // bloques tag-list, "Cómo se juega", comparador Classic/Purist, FAQ
+    // y SiteFooter (GitHub/Terms/Privacidad/Contacto).
+    await expect(page.getByTestId('home-tag-list')).toHaveCount(0);
+    await expect(page.getByTestId('btn-how-to-play')).toHaveCount(0);
+    await expect(page.locator('#how-to-play')).toHaveCount(0);
+    await expect(page.getByTestId('copero-site-footer')).toHaveCount(0);
+    await expect(page.getByTestId('copero-site-footer-link-github')).toHaveCount(0);
+    await expect(page.getByTestId('copero-site-footer-link-terms')).toHaveCount(0);
   });
 
   test('home NO expone otros juegos (Jugar/Compass)', async ({ page }) => {
@@ -75,12 +78,12 @@ test.describe('Copero — smoke home (web) — MGC-505', () => {
     await expect(page.getByTestId('btn-compass')).toHaveCount(0);
   });
 
-  test('tap Empezar carrera navega a /simulador-carrera/dashboard', async ({ page }, testInfo) => {
+  test('tap Jugar navega a /simulador-carrera/identity', async ({ page }, testInfo) => {
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.getByTestId('btn-career').click();
-    // stage=identity → cae en /identity; si tiene carrera → /dashboard.
-    // Aceptamos ambos sub-routes.
-    await page.waitForURL(/\/simulador-carrera\/(identity|dashboard)/, { timeout: 10_000 });
+    // MGC-394: el CTA Jugar empuja directo a /simulador-carrera/identity
+    // (sin carrera persistida). El form de identidad vive en esa ruta.
+    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 10_000 });
     // Banner global del layout debe persistir al navegar.
     await expect(page.getByTestId('ad-banner-web')).toBeVisible();
     await page.screenshot({
@@ -89,12 +92,10 @@ test.describe('Copero — smoke home (web) — MGC-505', () => {
     });
   });
 
-  test('flujo home → dashboard muestra hero del jugador', async ({ page }, testInfo) => {
-    // MGC-523: seed del careerStore vía localStorage para evitar el race
-    // inicial `/identity` (regex greedy `\/simulador-carrera\/` matcheaba
-    // `/identity` antes de que el test pudiera aterrizar en `/dashboard`).
-    // Con stage='dashboard' + name seteado, `btn-career` empuja directo
-    // a `/simulador-carrera/dashboard` y el waitForURL anclado no ambiguo.
+  test('con carrera persistida, tap Jugar empuja a la ruta del stage', async ({ page }, testInfo) => {
+    // MGC-523: seed del careerStore vía localStorage. Con stage='dashboard'
+    // + name seteado, `btn-career` empuja directo a
+    // `/simulador-carrera/dashboard`.
     await page.addInitScript(() => {
       const seed = {
         state: {
@@ -143,24 +144,78 @@ test.describe('Copero — smoke home (web) — MGC-505', () => {
       window.localStorage.setItem('copero-career', JSON.stringify(seed));
     });
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    // Con carrera persistida el home expone un segundo CTA ghost.
+    await expect(page.getByTestId('btn-home-resume-career')).toBeVisible();
     await page.getByTestId('btn-career').click();
-    // Regex anclado al final: matchea `/simulador-carrera/dashboard` exacto,
-    // NO matchea `/simulador-carrera/identity` (MGC-523).
+    // El botón Jugar siempre empuja a /identity (decisión MGC-394: el
+    // usuario que quiere empezar una nueva carrera llega al form; el
+    // que quiere reanudar usa el botón ghost secundario).
+    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 10_000 });
+    await page.screenshot({ path: testInfo.outputPath('home-with-career.png'), fullPage: true });
+  });
+
+  test('con carrera persistida, CTA Continuar carrera navega al stage', async ({ page }, testInfo) => {
+    // MGC-394: con stage='dashboard' + name seteado, el botón ghost
+    // "Continuar carrera" debe empujar directo a `/simulador-carrera/dashboard`.
+    await page.addInitScript(() => {
+      const seed = {
+        state: {
+          stage: 'dashboard',
+          profile: {
+            name: 'Test Jugador',
+            number: 9,
+            position: 'ST',
+            nationalityCode: 'AR',
+            preferredFoot: 'right',
+            age: 17,
+            club: {
+              id: 'river',
+              name: 'River Plate',
+              league: 'Liga Profesional',
+              crestColor: '#FFFFFF',
+              crestAccent: '#D9001B',
+              presupuesto: 50,
+            },
+            value: 5,
+            ovr: 62,
+            stats: { apps: 0, goals: 0, ast: 0 },
+            attrs: { tecnico: 60, fisico: 60, mental: 60, portero: 50 },
+            career: {
+              presupuesto: 0,
+              moral: 70,
+              fisico: 80,
+              confianza: 60,
+              racha: 0,
+              lesion: { kind: 'ninguna', fechasOut: 0 },
+              reputation: {
+                prensa: 'neutral',
+                hinchada: 'aceptado',
+                vestuario: 'integrado',
+                seleccionConvocado: false,
+              },
+            },
+            week: 1,
+            season: 1,
+            clubPresupuesto: 50,
+            clubInteres: true,
+          },
+        },
+        version: 0,
+      };
+      window.localStorage.setItem('copero-career', JSON.stringify(seed));
+    });
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await expect(page.getByTestId('btn-home-resume-career')).toBeVisible();
+    await page.getByTestId('btn-home-resume-career').click();
     await page.waitForURL(/\/simulador-carrera\/dashboard$/, { timeout: 10_000 });
-    // Dashboard expone el JerseyPreview con testID canónico (MGC-466).
-    // El Stack fade del _layout puede tardar en pintar; pequeño settle
-    // antes del assert evita el race contra la animación fade.
-    await page.waitForLoadState('domcontentloaded');
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByTestId('jersey-preview')).toBeVisible();
-    await expect(page.getByTestId('btn-dashboard-academy')).toBeVisible();
-    await page.screenshot({ path: testInfo.outputPath('dashboard-hero.png'), fullPage: true });
+    await page.screenshot({ path: testInfo.outputPath('home-resume-career.png'), fullPage: true });
   });
 
   test('requests AdSense bloqueadas por el mock del provider', async ({ page }) => {
     const blockedRequests: string[] = [];
     page.on('requestfailed', (req) => {
-      const url = req.url();
+      const url = req.request().url();
       if (AD_DOMAINS.some((d) => url.includes(d))) {
         blockedRequests.push(url);
       }

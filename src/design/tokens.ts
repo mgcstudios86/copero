@@ -126,9 +126,15 @@ const coperoPalette: ColorScale = {
   textOnAccent: '#FFFFFF',
   border: '#1C1C20',
   borderStrong: '#27272A',
-  primary: '#FAFAFA',      // pill blanco
-  primaryHover: '#E4E4E7',
-  primarySoft: '#16161A',
+  // MGC-396 / MGC-397: verde brillante para CTAs / highlights / chips (match
+  // con fotos de referencia MGC-11). Antes era pill blanco — eso explicaba
+  // que las CTAs (incluido el botón Jugar del home) se vieran blancas y el
+  // operador reportara "sigue distinta a la foto". `textOnPrimary=#09090B`
+  // da contraste WCAG AA sobre `#22C55E` (4.5:1+). Ver
+  // `mgc-396-refs/COMPARATIVA.md` §Tokens visuales y ticket MGC-397 AC #3.
+  primary: '#22C55E',      // green-500 — CTA, chips, highlights, eyebrows
+  primaryHover: '#4ADE80', // green-400 — pressed/hover
+  primarySoft: '#052E1B',  // green-950 tint — fondo POTENCIAL box / highlight
   accent: '#A855F7',       // purple-500 (default archetype accent)
   accentHover: '#C084FC',
   accentDeep: '#7E22CE',   // purple-700 — superficies que sostienen texto blanco (WCAG AA)

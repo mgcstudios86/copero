@@ -20,7 +20,6 @@ import { Banner } from '@/features/ads';
 import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
-import { SiteFooter } from '@/design/components/SiteFooter';
 // MGC-363 — el listener de `AppState` se mudó a `careerStore.ts`.
 // `bootstrapPersistence()` se llama una vez al montar el root layout
 // y registra el listener a nivel módulo + sincroniza `lastSnapshot`
@@ -28,6 +27,7 @@ import { SiteFooter } from '@/design/components/SiteFooter';
 // (atado al ciclo de vida del componente ThemedShell) y desaparecía
 // en HMR o antes del mount — el OS mandaba la app a background antes
 // de que React registrara el useEffect, perdiendo la save.
+// MGC-394 — `SiteFooter` removido del root layout para limpiar la pantalla principal.
 import { useCareerStore, bootstrapPersistence } from '@/shared/store/careerStore';
 
 /**
@@ -148,13 +148,12 @@ function ThemedShell() {
         <Stack.Screen name="simulador-carrera" />
       </Stack>
       {/*
-        MGC-657 — SiteFooter global. Renderiza debajo del Stack (debajo del
-        contenido de cualquier screen) con copyright dinámico del año actual
-        Privacy · Terms · Contacto · GitHub. Replica `site-footer` de
-        kiya0908/copero (Gap P1 MGC-646 audit). Hairline divider arriba lo
-        separa visualmente del contenido.
+        MGC-394 — SiteFooter global removido. El footer exponía enlaces
+        a GitHub/Terms/Privacidad/Contacto que contaminaban visualmente
+        la pantalla principal. Si en el futuro se necesita restaurar
+        (ej. ajustes/about), reintroducir como conditional dentro de cada
+        screen para preservar el principio de "pantalla principal limpia".
       */}
-      <SiteFooter />
       <Banner />
         </>
       )}

@@ -8,7 +8,7 @@ import { Banner } from '@/features/ads';
 import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
-import { SiteFooter } from '@/design/components/SiteFooter';
+// MGC-394: SiteFooter removido del root layout web (ver comentario sobre el JSX).
 import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 
 /**
@@ -160,7 +160,13 @@ function ThemedShell() {
         />
         <Stack.Screen name="simulador-carrera" />
       </Stack>
-      <SiteFooter />
+      {/*
+        MGC-394 — SiteFooter global removido. El footer exponía enlaces
+        a GitHub/Terms/Privacidad/Contacto que contaminaban visualmente
+        la pantalla principal. Si en el futuro se necesita restaurar
+        (ej. ajustes/about), reintroducir como conditional dentro de cada
+        screen para preservar el principio de "pantalla principal limpia".
+      */}
       <Banner />
     </View>
   );
