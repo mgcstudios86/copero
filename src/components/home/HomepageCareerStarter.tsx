@@ -135,10 +135,13 @@ export function HomepageCareerStarter(): React.ReactElement {
     setPosition(position);
     setNationality(nationalityFifa);
     setPreferredFoot(preferredFoot);
-    // MGC-249: el botón "Empezar carrera" ahora va directo al draft (no al
-    // dashboard). El motor setea stage='draft' atómicamente vía
-    // `commitIdentityAndStartDraft` para que no haya frame intermedio con
-    // stage='dashboard' y draft vacío (que era el bug del build-143).
+    // MGC-249: el botón "Empezar carrera" salta al dashboard del simulador
+    // de carrera (no a /categoria legacy). MGC-326 / e2e/_visual-regression
+    // espera la pantalla /identity para capturar el rediseño MGC-505
+    // (reemplaza la vieja captura de /categoria). El motor setea el snapshot
+    // de identidad atómicamente vía `commitIdentityAndStartDraft` para que
+    // no haya frame intermedio con stage='dashboard' y draft vacío (que era
+    // el bug del build-143).
     //
     // MGC-273: AWAIT antes del `router.push`. La acción ahora retorna
     // `Promise<void>` y resuelve solo después de que AsyncStorage confirme
@@ -148,7 +151,7 @@ export function HomepageCareerStarter(): React.ReactElement {
     // home mostraba "Definí tu identidad" con valores default tras relaunch.
     await commitIdentityAndStartDraft();
     // heritage + draftMode: state local; ver ADR-0015 §2.
-    router.push('/simulador-carrera/draft');
+    router.push('/simulador-carrera/identity');
   };
 
   return (
