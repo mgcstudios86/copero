@@ -45,7 +45,7 @@ type StorageLike = {
   removeItem(key: string): Promise<void>;
 };
 
-let memoryStore: Record<string, string> = {};
+const memoryStore: Record<string, string> = {};
 
 const memoryStorage: StorageLike = {
   getItem: async (k) => (k in memoryStore ? memoryStore[k] : null),

@@ -5,6 +5,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      // MGC-363 — mock react-native para que vitest SSR no parsee los
+      // archivos .js con Flow types (Rollup SSR transform emite parse
+      // error "Expected 'from', got 'typeOf'" al cruzar la barrera de
+      // tipos cuando se importa `AppState` directamente desde el entry
+      // `react-native/index.js`). El mock expone solo lo que usa el
+      // código bajo test.
+      'react-native': path.resolve(__dirname, 'tests/mocks/react-native.ts'),
     },
   },
   test: {
