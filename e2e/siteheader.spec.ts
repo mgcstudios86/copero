@@ -91,8 +91,11 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
     page,
   }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
+    await page.goto('/simulador-carrera', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    // MGC-394: el chrome global (SiteHeader + SiteFooter) vive solo en
+    // rutas internas. El landing limpio ya no lo expone, así que este
+    // spec navega directo a /simulador-carrera.
+    await expect(page.getByTestId('copero-site-header')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('copero-site-header')).toBeVisible();
     await expect(page.getByTestId('copero-site-header-nav')).toBeVisible();
     // CTA Jugar con fondo primario (verde). El testID basta para asegurar
@@ -127,7 +130,7 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
     page,
   }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/simulador-carrera', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await expect(page.getByTestId('copero-site-header')).toBeVisible({ timeout: 15_000 });
 
     const switcher = page.getByTestId('copero-language-switcher');
@@ -181,7 +184,7 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
 
   test('CTA Jugar navega a /simulador-carrera', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/simulador-carrera', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await expect(page.getByTestId('copero-site-header')).toBeVisible({ timeout: 15_000 });
     await page.getByTestId('copero-site-header-play').click();
     await page.waitForURL(/\/simulador-carrera/, { timeout: 15_000 });
@@ -193,8 +196,11 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
     page,
   }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
+    await page.goto('/simulador-carrera', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    // MGC-394: el chrome global (SiteHeader + SiteFooter) vive solo en
+    // rutas internas. El landing limpio ya no lo expone, así que este
+    // spec navega directo a /simulador-carrera.
+    await expect(page.getByTestId('copero-site-header')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('copero-site-header')).toBeVisible();
 
     // En compact (<720) la nav inline se oculta, sólo queda el toggle.
@@ -241,7 +247,7 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await page.goto('/simulador-carrera', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await expect(page.getByTestId('copero-site-header')).toBeVisible({ timeout: 15_000 });
     const toggle = page.getByTestId('copero-site-header-toggle');
     await toggle.click();
@@ -261,8 +267,11 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
   }) => {
     // >= 720: nav inline visible.
     await page.setViewportSize({ width: 720, height: 900 });
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
+    await page.goto('/simulador-carrera', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    // MGC-394: el chrome global (SiteHeader + SiteFooter) vive solo en
+    // rutas internas. El landing limpio ya no lo expone, así que este
+    // spec navega directo a /simulador-carrera.
+    await expect(page.getByTestId('copero-site-header')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('copero-site-header-nav')).toBeVisible();
 
     // < 720: nav colapsada, toggle visible.

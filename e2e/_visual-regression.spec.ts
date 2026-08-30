@@ -9,7 +9,8 @@ import { mkdirSync } from 'node:fs';
  * Futbolística) ya no se exponen desde el home. Persisten como rutas
  * para deep-linking, pero la qa.yml SPA workaround no permite goto
  * directo (`python3 -m http.server` sin fallback), así que el único
- * camino verificable vía Playwright es el nuevo CTA `btn-career`.
+ * camino verificable vía Playwright es el nuevo CTA `btn-home-play`
+ * (MGC-394 — antes `btn-career`).
  *
  * Las capturas viven en /tmp/mgc373 (Linux runner) y /tmp/mgc373-* local.
  */
@@ -26,7 +27,7 @@ test.describe('Copero — visual regression MGC-505', () => {
     await page.screenshot({ path: '/tmp/mgc373/home.png', fullPage: true });
 
     // 2) simulador-carrera/identity (reemplaza la vieja captura de /categoria).
-    await page.locator('[data-testid="btn-career"]').click();
+    await page.locator('[data-testid="btn-home-play"]').click();
     await page.waitForURL('**/simulador-carrera/identity', { timeout: 10000 });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10000 });
     await page.waitForTimeout(500);

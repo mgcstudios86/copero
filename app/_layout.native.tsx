@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
@@ -37,6 +37,13 @@ import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 
 function ThemedShell() {
   const { colors, mode } = useTheme();
+  // MGC-394 — chrome global (SiteHeader + SiteFooter + Banner) oculto
+  // en la pantalla principal. La home ahora es splash + botón Jugar;
+  // el header con 7 nav links y el footer con Privacy · Terms ·
+  // Contacto · GitHub viven solo en rutas internas. Mantener
+  // sincronizado con `_layout.tsx` y `_layout.web.tsx`.
+  const pathname = usePathname();
+  const isHome = pathname === '/' || pathname === '/index';
 
   // MGC-259 — gate de hidratación. Bloqueamos el render del Stack
   // hasta que `hydrateFromSave()` termine (con save o sin save) para
@@ -117,8 +124,9 @@ function ThemedShell() {
         (todas las `Stack.Screen` debajo quedan con `headerShown: false`).
         El header chrome vive acá; las pantallas ya no deben montar su
         propio `<Header>`.
-      */}
-      <SiteHeader />
+
+        MGC-394 — oculto en home (splash + botón Jugar limpios). */}
+      {!isHome ? <SiteHeader /> : null}
       <Stack
         screenOptions={{
           headerShown: false,
@@ -156,9 +164,12 @@ function ThemedShell() {
         Privacy · Terms · Contacto · GitHub. Replica `site-footer` de
         kiya0908/copero (Gap P1 MGC-646 audit). Hairline divider arriba lo
         separa visualmente del contenido.
-      */}
-      <SiteFooter />
-      <Banner />
+
+        MGC-394 — oculto en home. El operador pidió quitar los enlaces
+        a GitHub y términos de la principal; el footer sigue activo
+        en el resto de las rutas. */}
+      {!isHome ? <SiteFooter /> : null}
+      {!isHome ? <Banner /> : null}
     </View>
   );
 }

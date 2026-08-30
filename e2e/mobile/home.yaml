@@ -1,11 +1,23 @@
 appId: host.exp.exponent
-# Maestro flow — Copero home (Expo Go scheme).
-# MGC-302 scaffold. Cuando MGC-291 mergee el MVP este flow crece con AC reales
-# (tap Jugar, swipe categorías, modal de resultados, etc).
+# Maestro flow — Copero home limpio (Expo Go scheme).
+# MGC-394: el landing expone sólo el splash (assets/splash.png) y
+# el botón Jugar. Sin form de identidad, sin hero card premium,
+# sin chrome global (SiteHeader/SiteFooter). Antes este flow
+# esperaba `.*Copero.*` opcional mientras MGC-291 no mergee; ahora
+# anclamos al botón Jugar (AC del MGC-394) y a la ausencia del
+# footer de GitHub/Términos.
 ---
 - launchApp:
     clearState: true
 - takeScreenshot: home-baseline.png
 - assertVisible:
-    text: '.*Copero.*'
-    optional: true   # opcional mientras MGC-291 no mergee
+    text: 'Jugar'
+- assertNotVisible:
+    text: 'GitHub'
+- assertNotVisible:
+    text: 'Términos'
+- tapOn:
+    id: 'btn-home-play'
+- assertVisible:
+    text: '.*[Ss]imulador.*'
+    optional: true   # el sub-route puede ser /identity, /dashboard o /fin-carrera según snapshot.

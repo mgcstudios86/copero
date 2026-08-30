@@ -92,11 +92,11 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // ── 1. HOME: navegar al CTA simulador-carrera ──────────────────────
     await page.goto(`${BASE}/`);
     await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-    // El botón desde home suele ser testID `btn-career` o un Pressable con
-    // texto "Simulador de carrera" / "Carrera". Aceptamos ambos por si
-    // cambia el naming entre commits.
+    // MGC-394: el CTA del home limpio es `btn-home-play`. Aceptamos
+    // también un Pressable con texto "Simulador de carrera" / "Carrera"
+    // por si cambia el naming entre commits.
     const careerCta = page
-      .getByTestId('btn-career')
+      .getByTestId('btn-home-play')
       .or(page.getByRole('link', { name: /simulador de carrera/i }))
       .or(page.getByRole('button', { name: /simulador de carrera/i }))
       .first();
