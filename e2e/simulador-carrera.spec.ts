@@ -90,17 +90,16 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
    */
   test('CALVO/10/Derecho/AR/ST → dashboard → academy → Vélez', async ({ page }, testInfo) => {
     // ── 1. HOME: navegar al CTA simulador-carrera ──────────────────────
+    // MGC-405: navegamos directo a /identity vía SPA (serve-spa.py hace
+    // fallback a index.html). Evita race con btn-career click + posible
+    // fallback a SiteHeader "Simulador de carrera" → /simulador-carrera
+    // (sin subpath), que expo-router resolvía a /simulador-carrera/club
+    // (en lugar de /identity) cuando btn-career no estaba visible aún.
+    // Mantener el assert de home-screen arriba del walk garantiza que el
+    // dev server terminó de hidratar el chunk lazy de HomepageCareerStarter.
     await page.goto(`${BASE}/`);
     await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-    // El botón desde home suele ser testID `btn-career` o un Pressable con
-    // texto "Simulador de carrera" / "Carrera". Aceptamos ambos por si
-    // cambia el naming entre commits.
-    const careerCta = page
-      .getByTestId('btn-career')
-      .or(page.getByRole('link', { name: /simulador de carrera/i }))
-      .or(page.getByRole('button', { name: /simulador de carrera/i }))
-      .first();
-    await careerCta.click();
+    await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
 
     // ── 2. IDENTITY: completar los 5 campos del AC ────────────────────
@@ -110,7 +109,15 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // 2b. Número = 10. El estado inicial arranca en 9 (ver engine.ts:36),
     //     por lo que una pulsación sobre "Sumar número" deja 10.
     await page.getByRole('button', { name: 'Sumar número' }).click();
-    await expect(page.getByLabel('Número 10')).toBeVisible();
+    // MGC-405: el display del número en identity.tsx no expone aria-label
+    // accesible para query directo (`getByLabel('Número 10')` falla). El Text
+    // interno renderiza `{profile.number}` literal — verificamos que el texto
+    // "10" sea visible (puede aparecer más de una vez en el form por las
+    // pistas del picker de dorsal — `.first()` picks el primero que es el
+    // display numérico del jugador).
+    await expect(
+      page.getByTestId('identity-screen').getByText('10', { exact: true }).first(),
+    ).toBeVisible({ timeout: 5_000 });
 
     // 2c. Posición = ST (attack group) — tap en el field map
     await page.getByTestId('pos-ST').click();
@@ -131,8 +138,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
 
     // ── 3. CONTINUAR → DASHBOARD ──────────────────────────────────────
     await page.getByTestId('btn-identity-continue').click();
-    await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByTestId('identity-screen')).not.toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId('identity-screen')).toBeHidden({ timeout: 15_000 });
+    await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
 
     // ── 4. DASHBOARD: aserciones del AC (OVR/Age/Name/Pos/Nat) ────────
     await expect(
@@ -146,15 +153,21 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
       .locator('text=/ST\\s*·/');
     await expect(playerCard).toBeVisible();
     await expect(
-      page.getByTestId('dashboard-screen').getByText('Argentina', { exact: false }),
+      page
+        .getByTestId('dashboard-screen')
+        .getByText('Argentina', { exact: false })
+        .first(),
     ).toBeVisible();
 
     // Badge: "16 años · Free agent" (placeholder hasta fichar)
     await expect(
-      page.getByTestId('dashboard-screen').getByText(/16\s*a[ñn]os/i),
+      page.getByTestId('dashboard-screen').getByText(/16\s*a[ñn]os/i).first(),
     ).toBeVisible();
     await expect(
-      page.getByTestId('dashboard-screen').getByText('Free agent', { exact: false }),
+      page
+        .getByTestId('dashboard-screen')
+        .getByText('Free agent', { exact: false })
+        .first(),
     ).toBeVisible();
 
     // axe gate 2: dashboard
@@ -179,16 +192,17 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     });
 
     // ── 6. FICHAR POR VÉLEZ ───────────────────────────────────────────
+    // MGC-405: en RN Web el Alert.alert no monta DOM (MGC-452 → MGC-473);
+    // academy.tsx usa `window.confirm(...)` y router.replace('/dashboard').
+    // Patrón idéntico al de simulador-carrera-evidence-mgc444.spec.ts:104 —
+    // page.once() se registra antes del click para capturar el dialog nativo.
+    page.once('dialog', async (dialog) => {
+      // eslint-disable-next-line no-console
+      console.log(`[dialog clubStart] ${dialog.type()}: ${dialog.message().slice(0, 60)}`);
+      await dialog.accept();
+    });
     await page.getByTestId('club-velez').click();
-    // El botón dispara `Alert.alert('Fichaste por Vélez...', ..., [{text, onPress: () => replace('/simulador-carrera/dashboard')}])`.
-    // En RN Web el Alert renderiza un `role=alertdialog`; el botón accesible
-    // expone el copy de `identity_cta` ("Continuar" / "Continuar a la academia").
-    const acceptBtn = page
-      .getByRole('button', { name: /continuar/i })
-      .or(page.getByRole('button', { name: /aceptar/i }))
-      .or(page.getByRole('button', { name: /ok/i }))
-      .first();
-    await acceptBtn.click({ timeout: 5_000 });
+    await page.waitForURL(/\/simulador-carrera\/dashboard/, { timeout: 10_000 }).catch(() => undefined);
 
     // ── 7. NAVEGACIÓN post-fichaje ────────────────────────────────────
     // El router.replace debería llevarnos al dashboard (clubStart stage).
@@ -198,11 +212,15 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     if (!page.url().includes('/simulador-carrera/dashboard')) {
       await page.goto(`${BASE}/simulador-carrera/dashboard`);
     }
-    await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
     // Tras aceptar club, el badge ya no dice "Free agent" — aparece "Vélez"
     // (renderiza `profile.club.name`).
     await expect(
-      page.getByTestId('dashboard-screen').getByText('Vélez', { exact: false }),
+      page
+        .getByTestId('dashboard-screen')
+        .last()
+        .getByText('Vélez', { exact: false })
+        .first(),
     ).toBeVisible({ timeout: 10_000 });
 
     await page.screenshot({

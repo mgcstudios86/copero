@@ -10,7 +10,7 @@ import path from 'node:path';
  * `btn-career` → /simulador-carrera/identity.
  *
  * AC MGC-505:
- *  - Home muestra hero "Convertite en Leyenda" + CTA carrera.
+ *  - Home muestra el H1 multi-línea del simulador + CTA carrera.
  *  - Home NO expone botones viejos (btn-play / btn-compass) — esos
  *    routes persisten como deep-links pero el landing no los linkea.
  *  - Tap en btn-career navega al simulador de carrera y el identity
@@ -45,8 +45,12 @@ test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
     await page.screenshot({ path: path.join(OUT_DIR, '01-home-mgc505.png'), fullPage: true });
 
     const homeText = await page.locator('[data-testid="home-screen"]').innerText();
+    // MGC-394 (#174) reemplazó el home por splash + botón Jugar con copy
+    // "copero · simulador de carrera / convertite en leyenda / jugar".
+    // home.spec.ts:41 ya asserta el copy actual; este spec alinea con la
+    // nueva presentación visual.
+    expect(homeText.toLowerCase()).toContain('simulador de carrera');
     expect(homeText.toLowerCase()).toContain('convertite en leyenda');
-    expect(homeText.toLowerCase()).toContain('cómo se juega');
 
     // Garantizar que NO están los botones del viejo flujo.
     const btnPlayCount = await page.locator('[data-testid="btn-play"]').count();

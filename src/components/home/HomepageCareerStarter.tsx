@@ -152,7 +152,16 @@ export function HomepageCareerStarter(): React.ReactElement {
     // home mostraba "Definí tu identidad" con valores default tras relaunch.
     await commitIdentityAndStartDraft();
     // heritage + draftMode: state local; ver ADR-0015 §2.
-    router.push('/simulador-carrera/draft');
+// MGC-359 fix-forward: si el stage previo era 'dashboard' (carrera
+    // rehydrated con etapa intermedia) btn-career respeta ese destino para
+    // evitar el flash intermedio /identity; en cualquier otro caso cae en
+    // /identity — alineado con simulador-carrera.spec.ts:104 y
+    // home.spec.ts:92 (seed `stage:'dashboard'` espera /dashboard exacto).
+    router.push(
+      _stage === 'dashboard'
+        ? '/simulador-carrera/dashboard'
+        : '/simulador-carrera/identity',
+    );
   };
 
   return (

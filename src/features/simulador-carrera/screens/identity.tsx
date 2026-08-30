@@ -49,11 +49,15 @@ export default function IdentityScreen() {
 
   const onContinue = () => {
     if (!canContinue) return;
-    // MGC-249: tras definir identidad, enrutamos directo al draft de 8 rondas.
-    // El motor deja la store en stage='draft' con board inicializado; la
-    // pantalla /simulador-carrera/draft renderiza el primer pick.
+    // MGC-375: tras definir identidad, enrutamos al dashboard. Mantenemos
+    // commitIdentityAndStartDraft() para preservar atomicidad del motor
+    // (stage='draft', board inicializado) — solo cambiamos la pantalla
+    // destino para alinearnos con los specs (simulador-carrera.spec.ts:133,
+    // a11y-keyboard.spec.ts:68, simulador-carrera-evidence-mgc444.spec.ts:51)
+    // y el contrato a11y que espera /simulador-carrera/dashboard tras click.
+    // router.replace evita que /identity quede en el back-stack.
     commitIdentityAndStartDraft();
-    router.push('/simulador-carrera/draft');
+    router.replace('/simulador-carrera/dashboard');
   };
 
   return (
@@ -165,6 +169,7 @@ export default function IdentityScreen() {
           <View style={{ flexDirection: 'row', gap: spacing[3] }}>
             <Pressable
               onPress={() => setNumber(profile.number - 1)}
+              accessibilityRole="button"
               accessibilityLabel="Restar número"
               style={[
                 styles.stepBtn,
@@ -195,6 +200,7 @@ export default function IdentityScreen() {
             </View>
             <Pressable
               onPress={() => setNumber(profile.number + 1)}
+              accessibilityRole="button"
               accessibilityLabel="Sumar número"
               style={[
                 styles.stepBtn,

@@ -49,12 +49,16 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // En CI el workflow hace `npm run build:web` y sirve dist/ vía python3 http.server.
-    // En local asume `npx expo start --web` corriendo en :8081.
+    // En CI: workflow hace `npm run build:web` y sirve dist/ vía scripts/serve-spa.py
+    // (MGC-374). Necesitamos SPA fallback para rutas deep como
+    // /simulador-carrera/identity que no existen como archivo en dist/.
+    // `python3 -m http.server` devuelve 404 y rompe ~12 specs (MGC-399).
+    // En local asume `npx expo start --web` corriendo en :8081 (SPA por
+    // defecto).
     // cwd apunta a la raíz del proyecto: Playwright por default usa el dir
     // del config (e2e/), y desde ahí `dist/` no existe.
     command: process.env.CI
-      ? `python3 -m http.server ${PORT} --bind 127.0.0.1 --directory "${resolve(__dirname, '..', 'dist')}"`
+      ? `python3 ${resolve(__dirname, '..', 'scripts', 'serve-spa.py')} --port ${PORT} --root "${resolve(__dirname, '..', 'dist')}"`
       : 'npx expo start --web --port 8081',
     url: BASE_URL,
     cwd: resolve(__dirname, '..'),

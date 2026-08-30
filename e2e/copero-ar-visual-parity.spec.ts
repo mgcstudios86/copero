@@ -121,12 +121,20 @@ test.describe('MGC-556 — Visual parity web vs copero.com.ar', () => {
     });
   });
 
-  test('tipografía: body y headings cargan Inter / Poppins desde Google Fonts', async ({ page }, testInfo) => {
+  test('tipografía: body y headings cargan Inter / Poppins', async ({ page }, testInfo) => {
     test.setTimeout(60_000);
     const fontRequests: string[] = [];
     page.on('request', (req) => {
       const url = req.url();
-      if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com')) {
+      // El bundle deployado sirve Inter/Poppins desde Google Fonts; el bundle
+      // local que levanta CI los self-hostea bajo `/assets/**/fonts/woff2/`
+      // (MGC-374). Ambos orígenes cuentan: el AC de §4 es que las familias
+      // carguen, no de qué CDN vienen (MGC-399).
+      if (
+        url.includes('fonts.googleapis.com') ||
+        url.includes('fonts.gstatic.com') ||
+        /\/fonts\/woff2\//.test(url)
+      ) {
         fontRequests.push(url);
       }
     });
@@ -137,10 +145,10 @@ test.describe('MGC-556 — Visual parity web vs copero.com.ar', () => {
     const inter = fontRequests.some((u) => /Inter/i.test(u));
     const poppins = fontRequests.some((u) => /Poppins/i.test(u));
 
-    // Spec §4 exige Inter y Poppins. MGC-555 PR1 (177e114) los carga vía
-    // Google Fonts. Si falta alguno, PR no deployado o PR2 rompió el preload.
-    expect(inter, 'Inter debe estar precargado desde Google Fonts').toBe(true);
-    expect(poppins, 'Poppins debe estar precargado desde Google Fonts').toBe(true);
+    // Spec §4 exige Inter y Poppins. Si falta alguna, el preload se rompió
+    // (Google Fonts en prod, `<link rel=preload>` self-hosted en CI).
+    expect(inter, 'Inter debe cargar (Google Fonts o self-hosted)').toBe(true);
+    expect(poppins, 'Poppins debe cargar (Google Fonts o self-hosted)').toBe(true);
 
     await page.screenshot({
       path: testInfo.outputPath('fonts-check.png'),

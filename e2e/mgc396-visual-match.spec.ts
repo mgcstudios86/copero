@@ -49,7 +49,11 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     await page.locator('[data-testid="btn-identity-continue"]').click();
 
     // 3) Draft ronda 1
-    await page.waitForURL('**/simulador-carrera/draft', { timeout: 15_000 });
+    // MGC-405: MGC-375 hace que btn-identity-continue enrute a /dashboard
+    // (no /draft). Navegamos directo a /draft para mantener el intent del
+    // spec MGC-396 (capturas visuales del flow draft → tu-jugador → club).
+    await page.waitForURL('**/simulador-carrera/dashboard', { timeout: 15_000 });
+    await page.goto('/simulador-carrera/draft');
     await page.waitForSelector('[data-testid="draft-screen"]', { timeout: 10_000 });
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${OUT}/03-draft-ronda1.png`, fullPage: true });

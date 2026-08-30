@@ -9,10 +9,20 @@
  * La forma del payload está versionada (`v: 1`) para futuras migraciones.
  */
 
-import type { CareerSaveState } from '@/types/career';
+import type { CareerSaveState, SeasonLog } from '@/types/career';
 import { initialProfile } from './identity-state';
 
 const STORAGE_KEY = 'copero:career:save:v1';
+// MGC-227 migró la key `copero-career` (zustand persist middleware, formato
+// `{ state, version }`) a `copero:career:save:v1` (formato versionado manual).
+// Tests Playwright existentes (MGC-523/523/444) siguen sembrando
+// `copero-career` desde addInitScript. Sin back-compat, esos seeds quedan
+// huérfanos y el store arranca en initialSnapshot() con `stage: 'identity'`,
+// rompiendo `home.spec.ts:92` (espera stage='dashboard' → /dashboard) y
+// `simulador-carrera-evidence-mgc444.spec.ts:154` (lee `copero-career`
+// directo). MGC-385: loadCareerSave intenta primero la key nueva, y si
+// está vacía, lee la legacy + convierte al shape v1 + migra silenciosamente.
+const LEGACY_STORAGE_KEYS = ['copero-career'] as const;
 
 type StorageLike = {
   getItem(key: string): Promise<string | null>;
@@ -83,14 +93,81 @@ export function isPersistentStorage(): boolean {
 export async function loadCareerSave(): Promise<CareerSaveState | null> {
   const storage = pickStorage();
   const raw = await storage.getItem(STORAGE_KEY);
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as CareerSaveState;
-    if (parsed && parsed.v === 1) return parsed;
-    return null;
-  } catch {
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as CareerSaveState;
+      if (parsed && parsed.v === 1) return parsed;
+    } catch {
+      // cae a back-compat abajo.
+    }
+  }
+  // MGC-385 back-compat: si la key nueva está vacía o corrupta, intenta la
+  // legacy (`copero-career`, formato zustand persist `{ state, version }`).
+  // Si la legacy tiene el shape esperado, la convertimos a v1 + migramos
+  // silenciosamente a la key nueva para que el próximo load haga fast-path.
+  for (const legacyKey of LEGACY_STORAGE_KEYS) {
+    const legacyRaw = await storage.getItem(legacyKey);
+    if (!legacyRaw) continue;
+    try {
+      const legacy = JSON.parse(legacyRaw) as { state?: unknown; version?: number };
+      const inner = legacy?.state;
+      if (!inner || typeof inner !== 'object') continue;
+      const migrated = migrateLegacyToV1(inner as Record<string, unknown>);
+      if (!migrated) continue;
+      // Migración silenciosa: escribe nueva key, deja legacy por si otra
+      // surface (e.g. devtools) la inspecciona. clearCareerSave() borra ambas.
+      await storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      return migrated;
+    } catch {
+      // legacy corrupto, seguir al próximo candidato.
+      continue;
+    }
+  }
+  return null;
+}
+
+/**
+ * MGC-385 — convierte el payload legacy de zustand persist
+ * (`{ state: { stage, profile, draft, card, log, seed, ... }, version }`)
+ * al shape versionado manual `v: 1`. Devuelve `null` si el payload no tiene
+ * los campos mínimos (stage + profile) — en ese caso el caller lo trata
+ * como "no hay partida guardada".
+ */
+export function migrateLegacyToV1(legacy: Record<string, unknown>): CareerSaveState | null {
+  const stage = legacy.stage;
+  const profile = legacy.profile;
+  if (typeof stage !== 'string' || !profile || typeof profile !== 'object') {
     return null;
   }
+  return {
+    v: 1,
+    stage: stage as CareerSaveState['stage'],
+    profile: profile as CareerSaveState['profile'],
+    draft: (legacy.draft as CareerSaveState['draft']) ?? null,
+    card: (legacy.card as CareerSaveState['card']) ?? null,
+    clubId: (legacy.clubId as CareerSaveState['clubId']) ?? null,
+    log: normalizeLegacyLog(legacy.log),
+    seed: typeof legacy.seed === 'number' ? legacy.seed : Math.floor(Math.random() * 1_000_000),
+  };
+}
+
+/**
+ * MGC-399 — normaliza el `log` legacy al shape `SeasonLog`
+ * (`{ timeline, events }`). Payloads viejos lo guardaban como array plano
+ * de temporadas; otros lo omitían. Devuelve siempre un `SeasonLog` válido.
+ */
+function normalizeLegacyLog(raw: unknown): SeasonLog {
+  if (Array.isArray(raw)) {
+    return { timeline: raw as SeasonLog['timeline'], events: [] };
+  }
+  if (!raw || typeof raw !== 'object') {
+    return { timeline: [], events: [] };
+  }
+  const obj = raw as Partial<SeasonLog>;
+  return {
+    timeline: Array.isArray(obj.timeline) ? obj.timeline : [],
+    events: Array.isArray(obj.events) ? obj.events : [],
+  };
 }
 
 /** Guarda la partida. Idempotente. */
@@ -103,6 +180,10 @@ export async function saveCareerSave(state: CareerSaveState): Promise<void> {
 export async function clearCareerSave(): Promise<void> {
   const storage = pickStorage();
   await storage.removeItem(STORAGE_KEY);
+  // MGC-385: borra también las keys legacy para no dejar basura en storage.
+  for (const legacyKey of LEGACY_STORAGE_KEYS) {
+    await storage.removeItem(legacyKey);
+  }
   memoryStore = {};
 }
 
