@@ -34,7 +34,12 @@ export default function IdentityScreen() {
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);
-  const commitIdentityAndStartDraft = useCareerStore((s) => s.commitIdentityAndStartDraft);
+  // MGC-374: el contrato del flow E2E (PR #169, simulador-carrera.spec.ts:133,
+  // a11y-keyboard.spec.ts:68) navega identity → /dashboard. El draft de 8 rondas
+  // se sigue disparando desde el botón "Empezar draft de leyendas" del propio
+  // dashboard (dashboard.tsx:352). Volvemos al patrón simple `commitIdentity +
+  // router.push('/dashboard')` que existía antes de MGC-249/MGC-251.
+  const commitIdentity = useCareerStore((s) => s.commitIdentity);
 
   const [nationalityQuery, setNationalityQuery] = useState('');
   const filteredNationalities = useMemo(() => {
@@ -49,11 +54,12 @@ export default function IdentityScreen() {
 
   const onContinue = () => {
     if (!canContinue) return;
-    // MGC-249: tras definir identidad, enrutamos directo al draft de 8 rondas.
-    // El motor deja la store en stage='draft' con board inicializado; la
-    // pantalla /simulador-carrera/draft renderiza el primer pick.
-    commitIdentityAndStartDraft();
-    router.push('/simulador-carrera/draft');
+    // MGC-374: tras definir identidad, enrutamos al dashboard (no al draft).
+    // El draft arranca desde el CTA del propio dashboard. Mantener el stage
+    // sincronizado con la URL evita el "Unmatched Route" que QA reprodujo en
+    // PR #169 (9/33 specs fallaban esperando `**/simulador-carrera/dashboard`).
+    commitIdentity();
+    router.push('/simulador-carrera/dashboard');
   };
 
   return (
@@ -166,6 +172,7 @@ export default function IdentityScreen() {
             <Pressable
               onPress={() => setNumber(profile.number - 1)}
               accessibilityLabel="Restar número"
+              accessibilityRole="button"
               style={[
                 styles.stepBtn,
                 { borderColor: colors.borderStrong, borderRadius: radii.md },
@@ -196,6 +203,7 @@ export default function IdentityScreen() {
             <Pressable
               onPress={() => setNumber(profile.number + 1)}
               accessibilityLabel="Sumar número"
+              accessibilityRole="button"
               style={[
                 styles.stepBtn,
                 { borderColor: colors.borderStrong, borderRadius: radii.md },
