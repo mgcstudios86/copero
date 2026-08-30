@@ -56,15 +56,34 @@ type CareerStore = CareerSnapshot & {
   acceptClub: (club: Club) => void;
   decide: (strategyId: StrategyId, choiceId: string) => void;
   advance: () => void;
-  /** Draft de leyendas (MGC-208 §1) — MGC-209. */
-  startDraft: (seed?: number) => void;
-  swapLegend: () => void;
-  pickLegend: () => void;
+  /**
+   * Draft de leyendas (MGC-208 §1) — MGC-209.
+   *
+   * MGC-284: todas las acciones del draft/post-draft retornan `Promise<void>`
+   * y AWAITAN `flushPendingSave()` antes de resolver. Antes eran fire-and-
+   * forget (`void (async () => {...})()`) — el snapshot quedaba en memoria
+   * pero un force-stop antes de que `setItem` resolviera lo perdía.
+   *
+   * Concretamente: tras `pickLegend`/`swapLegend`/`pickClub`/`advanceSeason`,
+   * si el usuario force-stopea antes del flush, AsyncStorage queda con un
+   * snapshot anterior y al relaunch la home mostraba onboarding vacío
+   * (AC1) o la pantalla de draft sin las picks confirmadas (AC4).
+   *
+   * El await interno serializa el chain (las saves encadenadas vía
+   * `pendingSave` de MGC-277 ya garantizan ordenamiento) y bloquea hasta
+   * que `setItem` confirme la escritura. Los callers pueden ignorar el
+   * return value (Button.onPress lo descarta), pero si navegan justo
+   * después deben `await` para estar seguros — patrón idéntico al de
+   * `commitIdentityAndStartDraft` (MGC-273) en HomepageCareerStarter.
+   */
+  startDraft: (seed?: number) => Promise<void>;
+  swapLegend: () => Promise<void>;
+  pickLegend: () => Promise<void>;
   /** Selector de club post-draft (MGC-208 §2). */
-  pickClub: (club: Club) => void;
+  pickClub: (club: Club) => Promise<void>;
   /** Loop anual (MGC-208 §3). */
-  advanceSeason: () => void;
-  runCareerToRetirement: () => void;
+  advanceSeason: () => Promise<void>;
+  runCareerToRetirement: () => Promise<void>;
   /** MGC-227: hidrata la store desde AsyncStorage vía `loadCareerSave`.
    * Llamado una vez durante el bootstrap de la app (`app/_layout.tsx`).
    * Devuelve `true` si encontró un save previo y lo aplicó. */
@@ -217,80 +236,75 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     // Acciones de simulación: dynamic import del engine. La navegación
     // ya ocurrió (la UI está en /dashboard), así que el update
     // asincrónico no rompe el flujo de pantalla.
-    decide: (strategyId, choiceId) => {
-      void (async () => {
-        const { step } = await import('@/features/career/engine');
-        setSnapshot((s) =>
-          step(s, { type: 'decide', strategyId, choiceId } satisfies CareerAction),
-        );
-        persistSnapshot(get());
-      })();
+    // MGC-284: ahora async + await flushPendingSave() para que cada
+    // step del simulador bloquee hasta que AsyncStorage confirme la
+    // escritura — antes fire-and-forget perdía el snapshot post
+    // force-stop (AC4 — 8 rounds + force-stop).
+    decide: async (strategyId, choiceId) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'decide', strategyId, choiceId } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
     },
-    advance: () => {
-      void (async () => {
-        const { step } = await import('@/features/career/engine');
-        setSnapshot((s) => step(s, { type: 'advance' } satisfies CareerAction));
-        persistSnapshot(get());
-      })();
+    advance: async () => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) => step(s, { type: 'advance' } satisfies CareerAction));
+      persistSnapshot(get());
+      await flushPendingSave();
     },
     // MGC-209: acciones del draft + loop anual + selector de club.
-    // Todas usan el mismo patrón de dynamic import del motor para
-    // preservar el code-split del chunk inicial de /identity.
-    startDraft: (seed) => {
-      void (async () => {
-        const { step } = await import('@/features/career/engine');
-        setSnapshot((s) =>
-          step(s, { type: 'startDraft', seed } satisfies CareerAction),
-        );
-        persistSnapshot(get());
-      })();
+    // MGC-284: ahora async + await flushPendingSave — antes fire-and-
+    // forget. Ver rationale en el type declaration arriba.
+    startDraft: async (seed) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'startDraft', seed } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
     },
-    swapLegend: () => {
-      void (async () => {
-        const { step } = await import('@/features/career/engine');
-        setSnapshot((s) => step(s, { type: 'swapLegend' } satisfies CareerAction));
-        persistSnapshot(get());
-      })();
+    swapLegend: async () => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) => step(s, { type: 'swapLegend' } satisfies CareerAction));
+      persistSnapshot(get());
+      await flushPendingSave();
     },
-    pickLegend: () => {
-      void (async () => {
-        const { step } = await import('@/features/career/engine');
-        setSnapshot((s) => step(s, { type: 'pickLegend' } satisfies CareerAction));
-        persistSnapshot(get());
-      })();
+    pickLegend: async () => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) => step(s, { type: 'pickLegend' } satisfies CareerAction));
+      persistSnapshot(get());
+      await flushPendingSave();
     },
-    pickClub: (club) => {
-      void (async () => {
-        const { step } = await import('@/features/career/engine');
-        setSnapshot((s) => step(s, { type: 'pickClub', club } satisfies CareerAction));
-        persistSnapshot(get());
-      })();
+    pickClub: async (club) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) => step(s, { type: 'pickClub', club } satisfies CareerAction));
+      persistSnapshot(get());
+      await flushPendingSave();
     },
-    advanceSeason: () => {
-      void (async () => {
-        const { step } = await import('@/features/career/engine');
-        setSnapshot((s) =>
-          step(s, { type: 'advanceSeason' } satisfies CareerAction),
-        );
-        persistSnapshot(get());
-      })();
+    advanceSeason: async () => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'advanceSeason' } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
     },
-    runCareerToRetirement: () => {
-      void (async () => {
-        const { step } = await import('@/features/career/engine');
-        setSnapshot((s) =>
-          step(s, { type: 'runCareerToRetirement' } satisfies CareerAction),
-        );
-        // MGC-257 (AC7) — esta transición es el último step del flow y
-        // el que estaba perdiéndose tras force-stop: el snapshot
-        // quedaba en memoria pero `setItem` no resolvía antes de que
-        // el proceso muriera. Forzamos un flush sincrónico del handle
-        // pendingSave para que el `stage: 'retirement'` + log final
-        // queden en AsyncStorage antes de que el usuario salga de la
-        // pantalla.
-        persistSnapshot(get());
-        await flushPendingSave();
-      })();
+    runCareerToRetirement: async () => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'runCareerToRetirement' } satisfies CareerAction),
+      );
+      // MGC-257 (AC7) — esta transición es el último step del flow y
+      // el que estaba perdiéndose tras force-stop: el snapshot
+      // quedaba en memoria pero `setItem` no resolvía antes de que
+      // el proceso muriera. Forzamos un flush sincrónico del handle
+      // pendingSave para que el `stage: 'retirement'` + log final
+      // queden en AsyncStorage antes de que el usuario salga de la
+      // pantalla.
+      persistSnapshot(get());
+      await flushPendingSave();
     },
     // MGC-227: hidratación desde AsyncStorage. Llamado una vez en el
     // bootstrap de la app (ver `app/_layout.native.tsx` + `_layout.web.tsx`).

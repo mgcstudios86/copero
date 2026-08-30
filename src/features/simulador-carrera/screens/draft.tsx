@@ -28,9 +28,16 @@ export default function DraftScreen() {
   const pickLegend = useCareerStore((s) => s.pickLegend);
 
   // Inicializa el draft si entramos sin board (entry directo desde CTA).
+  // MGC-284: `startDraft` ahora es async + await flushPendingSave. El
+  // `useEffect` no puede await, pero propagamos la promesa al caller
+  // vía `void` para que React Native no escupa un unhandled rejection
+  // si el flujo termina antes del flush. La AC1 de MGC-273 ya cubre
+  // el caso crítico: `commitIdentityAndStartDraft` awaited antes de
+  // navegar, así que este `startDraft()` redundante solo reescribe el
+  // board si el snapshot quedó en disco con draft=null.
   useEffect(() => {
     if (!draft) {
-      startDraft();
+      void startDraft();
     }
   }, [draft, startDraft]);
 
@@ -57,16 +64,21 @@ export default function DraftScreen() {
   const round = draft.picks.length + 1;
   const finished = draft.picks.length >= DRAFT_SLOTS.length;
 
-  const onConfirm = () => {
-    pickLegend();
+  const onConfirm = async () => {
+    // MGC-284: `pickLegend` ahora es async + await flushPendingSave.
+    // Antes fire-and-forget; ahora cada "Confirmar atributo" bloquea
+    // hasta que AsyncStorage confirme la pick + board. AC4 — 8 rounds
+    // + force-stop dependía de esto.
+    await pickLegend();
   };
 
-  const onSwap = () => {
+  const onSwap = async () => {
     if (draft.swapsLeft <= 0) {
       Alert.alert('Sin cambios disponibles', 'Ya usaste los 5 cambios del draft.');
       return;
     }
-    swapLegend();
+    // MGC-284: idem pickLegend — `swapLegend` ahora es async.
+    await swapLegend();
   };
 
   return (

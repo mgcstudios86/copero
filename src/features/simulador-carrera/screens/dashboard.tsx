@@ -63,9 +63,13 @@ export default function DashboardScreen() {
   // MGC-209: CTA al flow de 6 pantallas (draft → tu-jugador → club → temporada → fin-carrera).
   // Se muestra cuando el jugador todavía no pasó por el draft. Permite acceder
   // a las pantallas MGC-209 sin romper el flow legacy academy → match.
+  // MGC-284: `startDraft` ahora es async + await flushPendingSave; el
+  // await acá garantiza que el board + stage='draft' queden en disco
+  // antes de navegar — patrón idéntico al de `commitIdentityAndStartDraft`
+  // en HomepageCareerStarter (MGC-273).
   const showDraftCta = stage === 'dashboard' || stage === 'identity';
-  const onDraftPress = () => {
-    startDraft();
+  const onDraftPress = async () => {
+    await startDraft();
     router.push('/simulador-carrera/draft');
   };
 

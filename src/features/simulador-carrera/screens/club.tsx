@@ -67,8 +67,13 @@ export default function SeleccionClubScreen() {
     [profile.position],
   );
 
-  const onPick = (club: Club) => {
-    pickClub(club);
+  const onPick = async (club: Club) => {
+    // MGC-284: await del flush antes de navegar. `pickClub` ahora es
+    // async + await flushPendingSave() — sin el await, la navegación
+    // puede dispararse antes de que AsyncStorage confirme el stage
+    // 'season' + profile con club asignado, y un force-stop del
+    // usuario pierde el snapshot (AC4 — 8 rounds + force-stop).
+    await pickClub(club);
     router.replace('/simulador-carrera/temporada');
   };
 

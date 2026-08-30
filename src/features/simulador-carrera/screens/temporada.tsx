@@ -41,19 +41,29 @@ export default function TemporadaScreen() {
 
   const rowFor = (age: number) => log?.timeline.find((r) => r.age === age);
 
-  const onAdvance = () => {
-    advanceSeason();
+  const onAdvance = async () => {
+    // MGC-284: `advanceSeason` ahora es async + await flushPendingSave.
+    // No navegamos inmediatamente después, pero bloqueamos el handler
+    // hasta que AsyncStorage confirme la rotación de temporada + log
+    // (AC4 — 8 rounds + force-stop).
+    await advanceSeason();
   };
 
-  const onRunAll = () => {
-    runCareerToRetirement();
+  const onRunAll = async () => {
+    // MGC-257/MGC-284: la última transición del flow ya esperaba
+    // flushPendingSave; el cambio de firma a Promise<void> es lo único
+    // que nos toca acá.
+    await runCareerToRetirement();
   };
 
   // MGC-249: loop semanal fino. Dispara `advance()` que drena lesión
   // (1 fecha → -1) y bumpea week. Cuando week llega a 38, advanceSeason
   // se hace cargo (rotación de temporada + stats anuales).
-  const onNextWeek = () => {
-    advance();
+  const onNextWeek = async () => {
+    // MGC-284: `advance` ahora es async + await flushPendingSave.
+    // Antes fire-and-forget; ahora cada "Siguiente semana" bloquea
+    // hasta confirmar la rotación de week/lesión en AsyncStorage.
+    await advance();
   };
 
   const onRetire = () => {

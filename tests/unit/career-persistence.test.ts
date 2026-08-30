@@ -242,4 +242,69 @@ describe('MGC-259 career persistence (AC7)', () => {
     expect(useCareerStore.getState().stage).toBe('retirement');
     expect(useCareerStore.getState().profile.name).toBe('UpgradeLock');
   });
+
+  it('MGC-284 startDraft persiste el board tras await (AC1 draft visible)', async () => {
+    // QA MGC-275 reportó que tras "Empezar carrera" el snapshot con
+    // stage='draft' + draft board (Johan Cruyff) quedaba en memoria pero
+    // NO en AsyncStorage — force-stop + relaunch mostraba home vacío.
+    // AC1 de MGC-273 cubría el commit, pero `commitIdentityAndStartDraft`
+    // setea `draft: initialDraftBoard()` VACÍO (no legend picked aún).
+    // El board CON la primera leyenda se inicializa en `startDraft()`,
+    // que antes era fire-and-forget. Sin el await del flush, la primera
+    // pick (Johan Cruyff) podía no llegar a disco si el usuario force-
+    // stopeaba apenas entrar a /draft.
+    //
+    // El fix cambia `startDraft` a Promise<void> + await
+    // flushPendingSave(). Este test verifica que tras await, el save
+    // contiene el board inicial con la primera legend visible.
+    await useCareerStore.getState().commitIdentityAndStartDraft();
+    await useCareerStore.getState().startDraft();
+    const reloaded = await loadCareerSave();
+    expect(reloaded).not.toBeNull();
+    expect(reloaded?.stage).toBe('draft');
+    expect(reloaded?.draft).not.toBeNull();
+    // El board inicial tiene round=1, legendIdx=0 (primera legend,
+    // Johan Cruyff según LEGENDS[0]), 5 swaps disponibles y 0 picks.
+    expect(reloaded?.draft?.round).toBe(1);
+    expect(reloaded?.draft?.legendIdx).toBe(0);
+    expect(reloaded?.draft?.swapsLeft).toBe(5);
+    expect(reloaded?.draft?.picks.length).toBe(0);
+  });
+
+  it('MGC-284 pickLegend 8 rondas + advanceSeason persiste cada step (AC4)', async () => {
+    // AC4 — QA simuló 8 rounds de draft (pickLegend × 8) más avance de
+    // temporada y force-stop. Antes, cada `pickLegend` era fire-and-
+    // forget: la chain de `pendingSave` ordenaba las saves pero nadie
+    // esperaba al drain, así que un force-stop entre la pick N y la N+1
+    // dejaba el snapshot con la pick N-1 (o anterior). El board post-
+    // relaunch mostraba menos picks de las que el usuario había hecho.
+    //
+    // El fix hace `pickLegend`/`swapLegend`/`pickClub`/`advanceSeason`
+    // async + await flushPendingSave(). Cada await bloquea el handler
+    // hasta que AsyncStorage confirme, así que un force-stop post-await
+    // siempre deja el snapshot con la última mutación.
+    await useCareerStore.getState().commitIdentityAndStartDraft();
+    await useCareerStore.getState().startDraft();
+    // 8 picks confirman las 8 rondas del draft.
+    for (let i = 0; i < 8; i += 1) {
+      await useCareerStore.getState().pickLegend();
+    }
+    const afterDraft = await loadCareerSave();
+    expect(afterDraft?.stage).toBe('club');
+    expect(afterDraft?.draft?.picks.length).toBe(8);
+    expect(afterDraft?.card).not.toBeNull();
+    // pickClub -> advanceSeason. pickClub requiere un Club real del
+    // catálogo, así que tomamos el primero del motor de clubs.
+    const { clubsForPosition } = await import('@/features/career/clubs');
+    const club = clubsForPosition('attack')[0];
+    await useCareerStore.getState().pickClub(club);
+    const afterClub = await loadCareerSave();
+    expect(afterClub?.stage).toBe('season');
+    expect(afterClub?.profile.club?.id).toBe(club.id);
+    // Avance de temporada: la persistencia debe sobrevivir force-stop.
+    await useCareerStore.getState().advanceSeason();
+    const afterSeason = await loadCareerSave();
+    expect(afterSeason?.stage).toBe('season');
+    expect(afterSeason?.log?.timeline.length).toBeGreaterThan(0);
+  });
 });
