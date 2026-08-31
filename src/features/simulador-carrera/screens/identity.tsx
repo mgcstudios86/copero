@@ -467,6 +467,8 @@ export default function IdentityScreen() {
           está siempre presente en la jerarquía, con bounds reales (>0),
           sin depender del estado del IME. */}
       <View
+        testID="btn-number-sticky"
+        collapsable={false}
         style={[
           styles.stepperSticky,
           {
@@ -487,7 +489,19 @@ export default function IdentityScreen() {
         >
           NÚMERO (1–99)
         </Text>
-        <View style={{ flexDirection: 'row', gap: spacing[3] }}>
+        <View
+          testID="btn-number-row"
+          collapsable={false}
+          style={{
+            flexDirection: 'row',
+            gap: spacing[3],
+            width: '100%',
+            height: 48,
+            minHeight: 48,
+            overflow: 'visible',
+            alignItems: 'center',
+          }}
+        >
           <Pressable
             onPress={() => setNumber(profile.number - 1)}
             accessibilityRole="button"
@@ -508,6 +522,8 @@ export default function IdentityScreen() {
             <Text style={{ color: colors.text, fontSize: fontSize.lg }}>−</Text>
           </Pressable>
           <View
+            testID="btn-number-display"
+            collapsable={false}
             style={[
               styles.numberDisplay,
               {
@@ -607,12 +623,16 @@ const styles = StyleSheet.create({
   footer: {
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  // MGC-585: contenedor sticky del stepper +/- sobre el Continue.
-  // borderTop sutil separa visualmente del ScrollView. minHeight del row
-  // padre fija el piso vertical para que RN-Android no comprima la fila
-  // cuando el soft keyboard se cierra/reabre y dispare un re-layout.
+  // MGC-585 + MGC-612: contenedor sticky del stepper +/- sobre el Continue.
+  // borderTop sutil separa visualmente del ScrollView. minHeight fija el
+  // piso vertical para que RN-Android no mida wrap_content=0 en el primer
+  // layout pass (cold start sin IME), lo que dejaba btn-number-plus/minus
+  // con bounds height=0 en uiautomator. flexShrink:0 evita que el wrapper
+  // sea comprimido por el ScrollView/footer cuando compiten por altura.
   stepperSticky: {
     borderTopWidth: StyleSheet.hairlineWidth,
+    minHeight: 120,
+    flexShrink: 0,
   },
   input: {
     borderWidth: 1,
