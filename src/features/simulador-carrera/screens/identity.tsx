@@ -175,10 +175,24 @@ export default function IdentityScreen() {
       {/* MGC-517: layout split — form scrollable arriba, footer fijo abajo.
           Patrón mobile-first: el CTA primario nunca queda atrapado debajo
           del soft keyboard. Antes el Continue estaba al final del ScrollView
-          y con teclado abierto quedaba fuera del fold visible. */}
+          y con teclado abierto quedaba fuera del fold visible.
+
+          MGC-751: input-name-wrapper y btn-foot-row se extraen del
+          ScrollView (ver <View testID="identity-fixed-form"/> abajo). El
+          primer layout pass de RN-Android dentro de un ScrollView clipea
+          los bounds de los hijos al viewport visible (en ZY22G728HN 1080x2400
+          con SiteHeader + Banner arriba, viewport bottom ≈ y=1638). Resultado
+          QA MGC-711: input-name-wrapper h=-22 y btn-foot-row h=-270 aunque
+          wrapper tuviera collapsable={false} + minHeight:48 + overflow:visible.
+          Mismo patrón que PR #223 ea57f8b + PR #252 0b41800 que sacaron el
+          stepper +/- del ScrollView para resolver MGC-585 / MGC-744: el
+          stepper pasó de h=0 a bounds reales porque vive en un View fijo
+          entre ScrollView y footer, sin pasar por el measure pass del
+          ScrollView. Aquí replicamos ese patrón en los wrappers que QA
+          necesita testear por testID estable. */}
       <ScrollView
         testID="identity-scroll"
-        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[6] }]}
+        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[4] }]}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
@@ -252,102 +266,6 @@ export default function IdentityScreen() {
             {profile.position} · OVR 50
           </Text>
         </View>
-
-        {/* Name */}
-        {/* MGC-686: tras PR #243 (MGC-674) el wrapper View collapsable=false
-            + minHeight:48 seguía colapsando (bounds h=-22) porque RN-Android
-            colapsa TextInput en la jerarquía nativa, lo que también colapsa al
-            wrapper. Diagnóstico MGC-677: aplicar collapsable={false} en el
-            TextInput además del wrapper. Sin afectar estilo visual.
-            Patrón canónico MGC-594/PR-227 commit 6be789c extendido al TextInput. */}
-        <Field label="Nombre">
-          <View
-            testID="input-name-wrapper"
-            collapsable={false}
-            style={{ minHeight: 48, width: '100%' }}
-          >
-            <TextInput
-              value={profile.name}
-              onChangeText={setName}
-              placeholder="Ej. Mateo Romero"
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
-              autoCorrect={false}
-              maxLength={24}
-              collapsable={false}
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  borderColor: colors.borderStrong,
-                  borderRadius: radii.md,
-                  paddingHorizontal: spacing[3],
-                  paddingVertical: spacing[3],
-                  fontSize: fontSize.base,
-                },
-              ]}
-              accessibilityLabel="Nombre del jugador"
-              testID="input-name"
-            />
-          </View>
-        </Field>
-
-        {/* MGC-585: el stepper +/- se renderiza ahora en un sticky footer
-            entre el ScrollView y el Continue (ver styles.stepperSticky).
-            Lo sacamos del ScrollView porque caía al borde inferior del
-            viewport (y=1907 en ZY22G728HN con IME abierto) y quedaba con
-            height=0 en el reporte de uiautomator — colapsable={false} no
-            alcanzaba porque la fila no entraba en la jerarquía accesible.
-            Sticky garantiza bounds reales sin depender del estado del IME. */}
-
-        {/* Preferred foot — MGC-632: wrapper View collapsable=false + minHeight:48
-            garantiza bounds reales en uiautomator (PR-228-2 omitió este wrapper,
-            PR-229 c97604b tampoco llegó al APK). Patrón canónico MGC-594/PR-227
-            (commit 6be789c) replicado en foot-row radios Izquierdo/Derecho/Ambos. */}
-        <Field label="Pie hábil">
-          <View
-            testID="btn-foot-row"
-            collapsable={false}
-            style={{
-              flexDirection: 'row',
-              gap: spacing[2],
-              width: '100%',
-              minHeight: 48,
-            }}
-          >
-            {(['left', 'right', 'both'] as Foot[]).map((f) => {
-              const active = profile.preferredFoot === f;
-              return (
-                <Pressable
-                  key={f}
-                  onPress={() => setPreferredFoot(f)}
-                  {...onKeyActivate(() => setPreferredFoot(f))}
-                  style={{
-                    flex: 1,
-                    paddingVertical: spacing[3],
-                    borderRadius: radii.md,
-                    borderWidth: 1,
-                    borderColor: active ? colors.primary : colors.borderStrong,
-                    backgroundColor: active ? colors.primarySoft : colors.surface,
-                    alignItems: 'center',
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Text
-                    style={{
-                      color: active ? colors.primary : colors.text,
-                      fontWeight: fontWeight.semibold,
-                      fontSize: fontSize.sm,
-                    }}
-                  >
-                    {f === 'left' ? 'Izquierdo' : f === 'right' ? 'Derecho' : 'Ambos'}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Field>
 
         {/* Field map */}
         <Field label="Posición (tap en el campo)">
@@ -514,13 +432,143 @@ export default function IdentityScreen() {
         </Field>
 
         </ScrollView>
+      {/* MGC-751: section fija fuera del ScrollView con los wrappers que QA
+          necesita testear (input-name-wrapper + btn-foot-row). Mismo patrón
+          que el stepper sticky de MGC-585/PR-223 (ea57f8b) y MGC-744/PR-252
+          (0b41800): vivir fuera del ScrollView evita el clipping del measure
+          pass de RN-Android que reportaba bounds h=-22 / h=-270 fresh-load
+          en ZY22G728HN 1080x2400. El View padre lleva collapsable={false}
+          para garantizar que el subtree entra en la jerarquía nativa
+          reportada por uiautomator, replicando el snippet canónico de
+          MGC-594/PR-227 (commit 6be789c) — ahora aplicado a la sección
+          completa, no solo al wrapper interno.
+
+          Posicionado entre el ScrollView (Header + Jersey + Posición +
+          Nacionalidad) y el stepper sticky (número), de modo que el usuario
+          ve: Header+Jersey arriba → scroll para Posición+Nacionalidad →
+          Name + Foot siempre visibles → Stepper + Continue. Los wrappers
+          quedan en zona fija (y ≥ 1660 según bounds del layout, fuera del
+          viewport bottom del ScrollView ~y=1638) donde el measure pass NO
+          clipea sus bounds.
+
+          Queda FUERA del wrapper identity-sticky-footer (MGC-754) porque el
+          translateY de IME avoidance solo aplica al stepper+Continue; los
+          inputs Name/Foot no necesitan esquivar el teclado (su input foco
+          ya se gestiona vía KAV). */}
+      <View
+        testID="identity-fixed-form"
+        collapsable={false}
+        style={{
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          padding: spacing[4],
+          gap: spacing[4],
+          flexShrink: 0,
+        }}
+      >
+        {/* Name — MGC-686: wrapper View collapsable=false + minHeight:48 +
+            TextInput collapsable=false. El patrón snippet completo vive
+            ahora en zona fija (no ScrollView) para bounds reales en
+            uiautomator fresh-load. */}
+        <Field label="Nombre">
+          <View
+            testID="input-name-wrapper"
+            collapsable={false}
+            style={{ minHeight: 48, width: '100%' }}
+          >
+            <TextInput
+              value={profile.name}
+              onChangeText={setName}
+              placeholder="Ej. Mateo Romero"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+              autoCorrect={false}
+              maxLength={24}
+              collapsable={false}
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  borderColor: colors.borderStrong,
+                  borderRadius: radii.md,
+                  paddingHorizontal: spacing[3],
+                  paddingVertical: spacing[3],
+                  fontSize: fontSize.base,
+                },
+              ]}
+              accessibilityLabel="Nombre del jugador"
+              testID="input-name"
+            />
+          </View>
+        </Field>
+
+        {/* Preferred foot — MGC-632: wrapper View collapsable=false +
+            minHeight:48. Pressable hijos sin collapsable={false} porque
+            RN-Android mide bounds reales desde el wrapper padre cuando
+            vive fuera del ScrollView (verificado por QA MGC-744 sobre
+            stepper). Si QA reporta flake en los Pressables individuales
+            (Izquierdo/Derecho/Ambos), replicar el patrón canónico del
+            stepper (collapsable={false} en cada Pressable hijo). */}
+        <Field label="Pie hábil">
+          <View
+            testID="btn-foot-row"
+            collapsable={false}
+            style={{
+              flexDirection: 'row',
+              gap: spacing[2],
+              width: '100%',
+              minHeight: 48,
+            }}
+          >
+            {(['left', 'right', 'both'] as Foot[]).map((f) => {
+              const active = profile.preferredFoot === f;
+              return (
+                <Pressable
+                  key={f}
+                  onPress={() => setPreferredFoot(f)}
+                  {...onKeyActivate(() => setPreferredFoot(f))}
+                  testID={`btn-foot-${f === 'left' ? 'izq' : f === 'right' ? 'der' : 'ambos'}`}
+                  collapsable={false}
+                  style={{
+                    flex: 1,
+                    paddingVertical: spacing[3],
+                    borderRadius: radii.md,
+                    borderWidth: 1,
+                    borderColor: active ? colors.primary : colors.borderStrong,
+                    backgroundColor: active ? colors.primarySoft : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Text
+                    style={{
+                      color: active ? colors.primary : colors.text,
+                      fontWeight: fontWeight.semibold,
+                      fontSize: fontSize.sm,
+                    }}
+                  >
+                    {f === 'left' ? 'Izquierdo' : f === 'right' ? 'Derecho' : 'Ambos'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Field>
+      </View>
       {/* MGC-754: wrap stepperSticky + footer en `identity-sticky-footer` para
           aplicar translateY simultáneo cuando IME abre. translateY es
           independiente del flex layout del padre y empuja los dos elementos
           (stepper +/- + Continue) arriba del IME sin depender de flexShrink
           calculations. collapsable=false garantiza bounds reales en
           uiautomator para el wrapper padre. testID permite hook Maestro
-          para asserts de subtree sticky-footer entero. */}
+          para asserts de subtree sticky-footer entero.
+
+          Vive entre identity-fixed-form (MGC-751) y el cierre del KeyboardAvoidingView.
+          identity-fixed-form queda fuera a propósito: sus inputs (Name/Foot)
+          no necesitan translateY porque su foco ya lo gestiona KAV. */}
       <View
         testID="identity-sticky-footer"
         collapsable={false}
@@ -541,9 +589,7 @@ export default function IdentityScreen() {
           Maestro tapOn saltaba silenciosamente. El wrapper colapsable=false
           + altura explícita evita el colapso a ViewGroup h=0 desde el primer
           frame del identity cold-start. testID row permite hook adicional en
-          Maestro para asserts de subtree.
-
-          Refs: MGC-571 / MGC-585 / MGC-591 / MGC-594 (6be789c), MGC-744. */}
+          Maestro para asserts de subtree. */}
       <View
         testID="btn-number-sticky"
         collapsable={false}
