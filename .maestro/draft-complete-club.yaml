@@ -90,75 +90,94 @@ tags:
     label: "Empezar draft de leyendas"
 
 # 6) Draft screen — confirmar 8 picks con pacing >=5s (ver
-#    copero-qa-draft-rapid-tap-rollback). Un assertVisible por
-#    ronda fuerza la espera hasta que el counter cambie.
+#    copero-qa-draft-rapid-tap-rollback).
+#
+# MGC-549: tras tap `btn-draft-confirm` el label `RONDA N+1 DE 8` puede
+# tardar >10s en re-renderizarse aunque `waitForAnimationToEnd` haya
+# retornado (race entre fin de animación y commit del state de la
+# siguiente ronda en el simulador). Reemplazamos `waitForAnimationToEnd`
+# + `assertVisible` por `extendedWaitUntil` que polea específicamente
+# el texto de la próxima ronda — wait determinístico sobre el estado
+# del counter, no sobre el timing de la animación.
 - assertVisible:
     id: draft-screen
     label: "Pantalla draft visible"
-# Round 1
+# Round 1 (inicial — sólo assert).
 - assertVisible:
     text: "RONDA 1 DE 8"
     label: "Espera ronda 1"
+# Round 2
 - tapOn:
     id: btn-draft-confirm
     label: "Confirmar pick 1"
-- waitForAnimationToEnd
-# Round 2
-- assertVisible:
-    text: "RONDA 2 DE 8"
-    label: "Espera ronda 2"
+- extendedWaitUntil:
+    visible:
+      text: "RONDA 2 DE 8"
+    timeout: 20000
+    label: "Espera ronda 2 (extendedWaitUntil 20s)"
+# Round 3
 - tapOn:
     id: btn-draft-confirm
     label: "Confirmar pick 2"
-- waitForAnimationToEnd
-# Round 3
-- assertVisible:
-    text: "RONDA 3 DE 8"
-    label: "Espera ronda 3"
+- extendedWaitUntil:
+    visible:
+      text: "RONDA 3 DE 8"
+    timeout: 20000
+    label: "Espera ronda 3 (extendedWaitUntil 20s)"
+# Round 4
 - tapOn:
     id: btn-draft-confirm
     label: "Confirmar pick 3"
-- waitForAnimationToEnd
-# Round 4
-- assertVisible:
-    text: "RONDA 4 DE 8"
-    label: "Espera ronda 4"
+- extendedWaitUntil:
+    visible:
+      text: "RONDA 4 DE 8"
+    timeout: 20000
+    label: "Espera ronda 4 (extendedWaitUntil 20s)"
+# Round 5
 - tapOn:
     id: btn-draft-confirm
     label: "Confirmar pick 4"
-- waitForAnimationToEnd
-# Round 5
-- assertVisible:
-    text: "RONDA 5 DE 8"
-    label: "Espera ronda 5"
+- extendedWaitUntil:
+    visible:
+      text: "RONDA 5 DE 8"
+    timeout: 20000
+    label: "Espera ronda 5 (extendedWaitUntil 20s)"
+# Round 6
 - tapOn:
     id: btn-draft-confirm
     label: "Confirmar pick 5"
-- waitForAnimationToEnd
-# Round 6
-- assertVisible:
-    text: "RONDA 6 DE 8"
-    label: "Espera ronda 6"
+- extendedWaitUntil:
+    visible:
+      text: "RONDA 6 DE 8"
+    timeout: 20000
+    label: "Espera ronda 6 (extendedWaitUntil 20s)"
+# Round 7
 - tapOn:
     id: btn-draft-confirm
     label: "Confirmar pick 6"
-- waitForAnimationToEnd
-# Round 7
-- assertVisible:
-    text: "RONDA 7 DE 8"
-    label: "Espera ronda 7"
+- extendedWaitUntil:
+    visible:
+      text: "RONDA 7 DE 8"
+    timeout: 20000
+    label: "Espera ronda 7 (extendedWaitUntil 20s)"
+# Round 8
 - tapOn:
     id: btn-draft-confirm
     label: "Confirmar pick 7"
-- waitForAnimationToEnd
-# Round 8
-- assertVisible:
-    text: "RONDA 8 DE 8"
-    label: "Espera ronda 8"
+- extendedWaitUntil:
+    visible:
+      text: "RONDA 8 DE 8"
+    timeout: 20000
+    label: "Espera ronda 8 (extendedWaitUntil 20s)"
+# Pick 8 + wait final del draft-complete.
 - tapOn:
     id: btn-draft-confirm
     label: "Confirmar pick 8"
-- waitForAnimationToEnd
+- extendedWaitUntil:
+    notVisible:
+      text: "RONDA 8 DE 8"
+    timeout: 20000
+    label: "Espera salida de RONDA 8 (post-draft-complete)"
 
 # 7) Tu-jugador (post-draft).
 - assertVisible:
