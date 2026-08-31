@@ -34,22 +34,23 @@ export default function IdentityScreen() {
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
   const insets = useSafeAreaInsets();
 
-  // MGC-610: en ZY22G728HN 1080x2400, el KeyboardAvoidingView con behavior=height
-  // (PR-226 commit 3be92dd) solo reducia la altura del ScrollView en ~152px
-  // (y=1907 -> 1755) y NO empujaba el footer fijo. Con teclado abierto
-  // (~1080px de alto), btn-identity-continue quedaba en [40,1796][1040,1938]
-  // detras del IME (top y~1296). Tambien el sticky stepper colapsaba a h=-128.
+  // MGC-754: en ZY22G728HN 1080x2400 con `softwareKeyboardLayoutMode: "pan"`
+  // en app.json, el paddingBottom dinamico sobre kavContent (MGC-610) NO
+  // empujaba el sticky stepper arriba del IME — QA second pass MGC-752 sobre
+  // PR #252 encontro btn-number-plus en y=1807 con IME y=1560-2310 (tap
+  // interceptado por IME). El flex layout entre ScrollView + stepperSticky
+  // (flexShrink:0, minHeight:120) + footer no redistribuye la altura
+  // reducida de forma consistente: stepperSticky queda bajo el IME porque
+  // el flex shrink se aplica a ScrollView y footer, no al stepper sticky.
   //
-  // Estrategia: `softwareKeyboardLayoutMode: "pan"` en app.json (ajusta el
-  // AndroidManifest a `adjustPan`) + offset manual via Keyboard.addListener
-  // + paddingBottom en el wrapper. Con `pan` el OS NO reduce la ventana,
-  // solo scrollea el input enfocado — el padding manual del wrapper empuja
-  // el stepper sticky y el footer (Continue) arriba del IME sin doble descuento
-  // (anteriormente `adjustResize` default + KAV padding = doble descuento,
-  // REVIEW CTO MGC-709). Restamos `insets.bottom` para no doble-contar la
-  // safe area del gesture nav bar (84px en ZY22G728HN). El padding se aplica
-  // al wrapper, NO al SafeAreaView, para evitar conflicto con edges=['bottom'].
-  // En iOS, KeyboardAvoidingView maneja el offset nativamente.
+  // Estrategia definitiva: wrap stepperSticky + footer en un View padre
+  // `identity-sticky-footer` con `transform: [{ translateY: -keyboardOffset }]`
+  // (Android only). translateY es independiente del flex layout del padre
+  // y empuja los dos elementos juntos sobre el IME sin depender de
+  // flexShrink calculations ni del comportamiento de `adjustPan` del OS.
+  // Restamos `insets.bottom` para no doble-contar la safe area del gesture
+  // nav bar (84px en ZY22G728HN). En iOS, KeyboardAvoidingView maneja el
+  // offset nativamente — translateY alli es 0 para evitar doble push.
   const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   useEffect(() => {
@@ -163,7 +164,7 @@ export default function IdentityScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={0}
       >
-      <View style={[styles.kavContent, { paddingBottom: Platform.OS === 'android' ? keyboardOffset : 0 }]}>
+      <View style={[styles.kavContent]}>
       {/* MGC-429: el testID `identity-screen` vive en el wrapper
           (`app/simulador-carrera/identity.tsx`) que monta sincrónicamente
           antes de que el chunk lazy de este componente termine de cargar.
@@ -513,6 +514,22 @@ export default function IdentityScreen() {
         </Field>
 
         </ScrollView>
+      {/* MGC-754: wrap stepperSticky + footer en `identity-sticky-footer` para
+          aplicar translateY simultáneo cuando IME abre. translateY es
+          independiente del flex layout del padre y empuja los dos elementos
+          (stepper +/- + Continue) arriba del IME sin depender de flexShrink
+          calculations. collapsable=false garantiza bounds reales en
+          uiautomator para el wrapper padre. testID permite hook Maestro
+          para asserts de subtree sticky-footer entero. */}
+      <View
+        testID="identity-sticky-footer"
+        collapsable={false}
+        style={[
+          Platform.OS === 'android' && keyboardOffset > 0
+            ? { transform: [{ translateY: -keyboardOffset }] }
+            : null,
+        ]}
+      >
       {/* MGC-585 + MGC-744: stepper +/- en sticky footer entre el form scrollable
           y el botón Continuar. MGC-585 (PR #223 / ea57f8b) extrajo el row del
           ScrollView; MGC-744 agrega el wrapper canónico collapsable=false +
@@ -651,6 +668,7 @@ export default function IdentityScreen() {
           importantForAccessibility="yes"
           accessibilityHint="Guarda la identidad y abre el dashboard"
         />
+      </View>
       </View>
       </View>
       </KeyboardAvoidingView>
