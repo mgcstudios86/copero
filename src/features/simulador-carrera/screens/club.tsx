@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -57,6 +57,7 @@ export default function SeleccionClubScreen() {
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
 
   const card = useCareerStore((s) => s.card);
+  const draft = useCareerStore((s) => s.draft);
   const profile = useCareerStore((s) => s.profile);
   const pickClub = useCareerStore((s) => s.pickClub);
 
@@ -66,6 +67,24 @@ export default function SeleccionClubScreen() {
     () => clubsForPosition(positionGroupFor(profile.position)),
     [profile.position],
   );
+
+  // MGC-490 — guard contra auto-assign con Boca. Si entramos a /club con
+  // stage='season' y profile.club ya seteado, el snapshot está stale (típico
+  // tras force-stop post-pickClub o re-entry accidental vía deep link) y el
+  // selector de 4 clubes no aplica — redirigimos a /temporada para evitar
+  // que la UI muestre las 4 tarjetas mientras el store ya cerró el loop con
+  // Boca (bug MGC-486). Si no hay card/draft tampoco podemos mostrar el
+  // selector — mandamos a /tu-jugador para que el flow se recupere.
+  const stage = useCareerStore((s) => s.stage);
+  useEffect(() => {
+    if (stage === 'season' && profile.club) {
+      router.replace('/simulador-carrera/temporada');
+      return;
+    }
+    if (!card || !draft) {
+      router.replace('/simulador-carrera/tu-jugador');
+    }
+  }, [stage, profile.club, card, draft, router]);
 
   const onPick = async (club: Club) => {
     // MGC-284: await del flush antes de navegar. `pickClub` ahora es

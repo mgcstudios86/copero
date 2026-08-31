@@ -1,0 +1,130 @@
+# MGC-490 — Selector 4 clubes en draft-complete (regresión MGC-249 / MGC-486).
+#
+# Cubre el flow completo: home → identity → draft 8 rondas → tu-jugador →
+# tap "Elegir club de origen" → 4 clubes visibles (Boca/Temperley/Vélez/Morón)
+# → tap "Firmar con Boca Juniors" → temporada.
+#
+# Bug regresivo reportado en MGC-486: el tap en "Elegir club de origen"
+# saltaba la pantalla de 4 clubes y firmaba directo con Boca Juniors
+# (auto-assign). El guard de MGC-490 en `club.tsx` ahora detecta el
+# snapshot stale y redirige a /temporada; este test verifica el happy
+# path nuevo: las 4 tarjetas son visibles antes de elegir.
+#
+# Precondiciones:
+#   1. APK instalado en ZY22G728HN (com.mgcstudios.copero).
+#   2. JAVA_HOME apuntando a openjdk@17 (Maestro).
+#   3. AsyncStorage limpio (sin carrera persistida previa) — el flow
+#      asume estado identity. Si hay sesión, agregar `tapOn: btn-career`
+#      + reset manual antes.
+#
+# Ejecución:
+#   export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+#   maestro test .maestro/draft-complete-club.yaml
+#
+# Owner del device: QA agent (ZY22G728HN). CI no corre Maestro mobile.
+
+appId: com.mgcstudios.copero
+name: draft-complete-club
+tags:
+  - club
+  - career
+  - draft
+  - mgc-249
+  - mgc-486
+  - mgc-490
+  - regression
+  - happy-path
+
+---
+# 1) Home → Jugar.
+- assertVisible:
+    id: btn-career
+    label: "Botón Jugar visible en home"
+- tapOn:
+    id: btn-career
+    label: "Tap Jugar"
+
+# 2) Identity screen.
+- assertVisible:
+    id: identity-screen
+    label: "Pantalla identidad visible"
+
+# 3) Completar identidad mínima (QA provee `input-name` con texto + tap
+# `btn-identity-continue`).
+- inputText:
+    id: input-name
+    text: "Mateo MGC490"
+    label: "Nombre del jugador"
+
+- tapOn:
+    id: btn-identity-continue
+    label: "Confirmar identidad"
+
+# 4) Pantalla academy/draft entry.
+#    Tras identity hay un breve paso "Elegí un club" (academy). Tap
+#    cualquier club AMBICIÓN (Boca) para llegar al draft.
+- assertVisible:
+    id: academy-screen
+    label: "Pantalla academy visible"
+- tapOn:
+    id: club-boca
+    label: "Fichar por Boca Juniors (academy, paso previo al draft)"
+
+# 5) Si hay alert de academy en web, confirmar. En mobile Android el
+#    alert es nativo; usamos `tapOn: Aceptar` (button label).
+- tapOn:
+    text: "Aceptar"
+    label: "Aceptar contrato academy"
+    optional: true
+
+# 6) Draft screen — confirmar 8 picks.
+- assertVisible:
+    id: draft-screen
+    label: "Pantalla draft visible"
+- repeat:
+    times: 8
+    commands:
+      - tapOn:
+          id: btn-draft-confirm
+          label: "Confirmar pick #{index}"
+      - wait: 1200
+
+# 7) Tu-jugador (post-draft).
+- assertVisible:
+    id: tu-jugador-screen
+    label: "Pantalla tu-jugador (draft-complete) visible"
+
+# 8) Tap "Elegir club de origen" → selector 4 clubes.
+- tapOn:
+    id: btn-tu-jugador-club
+    label: "Elegir club de origen"
+
+# 9) Pantalla club con 4 clubes visibles (MGC-249 spec).
+- assertVisible:
+    id: club-screen
+    label: "Pantalla selector de club visible"
+- assertVisible:
+    text: "VÉLEZ SARSFIELD"
+    label: "Tarjeta Vélez Sarsfield visible"
+- assertVisible:
+    text: "BOCA JUNIORS"
+    label: "Tarjeta Boca Juniors visible"
+- assertVisible:
+    text: "TEMPERLEY"
+    label: "Tarjeta Temperley visible"
+- assertVisible:
+    text: "MORÓN"
+    label: "Tarjeta Morón visible"
+
+# 10) Tap Boca → /temporada (NO auto-firmar antes del tap).
+- tapOn:
+    id: club-pick-boca
+    label: "Firmar con Boca Juniors"
+
+# 11) Temporada abierta, club-screen cerrada.
+- assertNotVisible:
+    id: club-screen
+    label: "Pantalla club cerrada tras la firma"
+- assertVisible:
+    id: temporada-screen
+    label: "Pantalla temporada abierta"

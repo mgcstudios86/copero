@@ -36,6 +36,20 @@ describe('club screen — copy de origen', () => {
     expect(clubScreen).toMatch(/<OriginPhase\s+count=\{[A-Za-z_]+\.length\}\s*\/>/);
   });
 
+  // MGC-490 — guard contra auto-assign con Boca Juniors (regresión
+  // MGC-486). Si entramos a /club con stage='season' y profile.club ya
+  // seteado, el snapshot está stale y el selector no aplica: el guard
+  // debe redirigir a /temporada en lugar de mostrar las 4 tarjetas con
+  // un loop ya cerrado. Si no hay card/draft tampoco aplica el selector.
+  it('declara guard que redirige a /temporada cuando stage=season y hay club', () => {
+    expect(clubScreen).toMatch(/stage\s*===\s*['"]season['"]/);
+    expect(clubScreen).toMatch(/router\.replace\(['"]\/simulador-carrera\/temporada['"]\)/);
+  });
+
+  it('declara guard que redirige a /tu-jugador cuando no hay card o draft', () => {
+    expect(clubScreen).toMatch(/router\.replace\(['"]\/simulador-carrera\/tu-jugador['"]\)/);
+  });
+
   it('el título renderizado coincide con la cantidad de clubes del catálogo', () => {
     expect(gameT('origin.title', { count: clubCount })).toBe('ELEGÍ ENTRE CUATRO CAMINOS');
   });
