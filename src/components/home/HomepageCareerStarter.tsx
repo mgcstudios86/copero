@@ -83,12 +83,13 @@ export function HomepageCareerStarter(): React.ReactElement {
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);
   const commitIdentityAndStartDraft = useCareerStore((s) => s.commitIdentityAndStartDraft);
-  // MGC-249 / MGC-251: el form empuja directo al draft; ya no leemos
-  // `stage` acá (la decisión de qué flujo mostrar la toma el home
-  // según `careerStage`). Prefix `_` para silenciar el warning y dejar
-  // explícito que es un placeholder histórico.
+  // MGC-379: restauramos la lectura de `stage` (MGC-359) y aplicamos
+  // routing condicional en handleSubmit. MGC-368 había forzado el push
+  // universal a /identity, lo que rompió la navegación identity → dashboard
+  // y destruyó 10/33 specs Playwright en PR #169 (run 33301919200).
+  // Capturamos `stage` ANTES de `commitIdentityAndStartDraft` (que muta
+  // el stage a 'draft') para que la decisión de push respete el flujo previo.
   const _stage = useCareerStore((s) => s.stage);
-  void _stage;
 
   // Hidratar valores iniciales desde el store (si hay carrera parcial guardada).
   const [lastName, setLastName] = useState<string>(profile.name);
@@ -135,14 +136,21 @@ export function HomepageCareerStarter(): React.ReactElement {
     setPosition(position);
     setNationality(nationalityFifa);
     setPreferredFoot(preferredFoot);
-    // MGC-359 fix-forward: btn-career navega a /draft (no /identity legacy)
-    // tras commitIdentityAndStartDraft — /identity es el form de input, no
-    // el destino post-submit. MGC-326 / e2e/_visual-regression capturaba
-    // /identity mid-render antes del fix-forward; los specs actualizados en
-    // MGC-359 esperan /draft post-Empezar-carrera. El motor setea el
-    // snapshot de identidad atómicamente vía `commitIdentityAndStartDraft`
-    // para que no haya frame intermedio con stage='dashboard' y draft vacío
-    // (que era el bug del build-143).
+    // MGC-379 fix: routing condicional por stage pre-mutación. Capturamos
+    // `_stage` ANTES de `commitIdentityAndStartDraft` para que la decisión
+    // de push respete el flujo previo del usuario. Si stage === 'identity'
+    // (estado inicial, sin carrera o con carrera que aún no completó draft),
+    // llevamos a /identity para que el form siga siendo editable. En
+    // cualquier otro stage (dashboard/draft/club/season/retirement) llevamos
+    // a /dashboard, que es el resumen canónico con CTA "Iniciar draft" y
+    // respeta la matriz de specs Playwright que esperan `**/dashboard`.
+    //
+    // MGC-249: el botón "Empezar carrera" salta al simulador de carrera.
+    // MGC-326 / e2e/_visual-regression espera la pantalla /identity para
+    // capturar el rediseño MGC-505. El motor setea el snapshot de identidad
+    // atómicamente vía `commitIdentityAndStartDraft` para que no haya frame
+    // intermedio con stage='dashboard' y draft vacío (que era el bug del
+    // build-143).
     //
     // MGC-273: AWAIT antes del `router.push`. La acción ahora retorna
     // `Promise<void>` y resuelve solo después de que AsyncStorage confirme
@@ -150,17 +158,13 @@ export function HomepageCareerStarter(): React.ReactElement {
     // antes de que `setItem` resolviera y un force-stop inmediato (típico
     // en QA que fuerza kill para reproducir AC7) perdía el snapshot —
     // home mostraba "Definí tu identidad" con valores default tras relaunch.
+    const targetStage = _stage;
     await commitIdentityAndStartDraft();
     // heritage + draftMode: state local; ver ADR-0015 §2.
-// MGC-359 fix-forward: si el stage previo era 'dashboard' (carrera
-    // rehydrated con etapa intermedia) btn-career respeta ese destino para
-    // evitar el flash intermedio /identity; en cualquier otro caso cae en
-    // /identity — alineado con simulador-carrera.spec.ts:104 y
-    // home.spec.ts:92 (seed `stage:'dashboard'` espera /dashboard exacto).
     router.push(
-      _stage === 'dashboard'
-        ? '/simulador-carrera/dashboard'
-        : '/simulador-carrera/identity',
+      targetStage === 'identity'
+        ? '/simulador-carrera/identity'
+        : '/simulador-carrera/dashboard',
     );
   };
 

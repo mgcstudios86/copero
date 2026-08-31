@@ -34,7 +34,12 @@ export default function IdentityScreen() {
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);
-  const commitIdentityAndStartDraft = useCareerStore((s) => s.commitIdentityAndStartDraft);
+  // MGC-374: el contrato del flow E2E (PR #169, simulador-carrera.spec.ts:133,
+  // a11y-keyboard.spec.ts:68) navega identity → /dashboard. El draft de 8 rondas
+  // se sigue disparando desde el botón "Empezar draft de leyendas" del propio
+  // dashboard (dashboard.tsx:352). Volvemos al patrón simple `commitIdentity +
+  // router.push('/dashboard')` que existía antes de MGC-249/MGC-251.
+  const commitIdentity = useCareerStore((s) => s.commitIdentity);
 
   const [nationalityQuery, setNationalityQuery] = useState('');
   const filteredNationalities = useMemo(() => {
@@ -49,15 +54,12 @@ export default function IdentityScreen() {
 
   const onContinue = () => {
     if (!canContinue) return;
-    // MGC-375: tras definir identidad, enrutamos al dashboard. Mantenemos
-    // commitIdentityAndStartDraft() para preservar atomicidad del motor
-    // (stage='draft', board inicializado) — solo cambiamos la pantalla
-    // destino para alinearnos con los specs (simulador-carrera.spec.ts:133,
-    // a11y-keyboard.spec.ts:68, simulador-carrera-evidence-mgc444.spec.ts:51)
-    // y el contrato a11y que espera /simulador-carrera/dashboard tras click.
-    // router.replace evita que /identity quede en el back-stack.
-    commitIdentityAndStartDraft();
-    router.replace('/simulador-carrera/dashboard');
+    // MGC-374: tras definir identidad, enrutamos al dashboard (no al draft).
+    // El draft arranca desde el CTA del propio dashboard. Mantener el stage
+    // sincronizado con la URL evita el "Unmatched Route" que QA reprodujo en
+    // PR #169 (9/33 specs fallaban esperando `**/simulador-carrera/dashboard`).
+    commitIdentity();
+    router.push('/simulador-carrera/dashboard');
   };
 
   return (
