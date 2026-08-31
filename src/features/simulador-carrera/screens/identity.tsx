@@ -77,12 +77,33 @@ export default function IdentityScreen() {
     // de focus → blur del EditText + cualquier settle de layout antes
     // de disparar la navegación, eliminando el conflicto.
     //
+    // MGC-633 — encadenar un `requestAnimationFrame` + `setTimeout 250`
+    // al callback de `runAfterInteractions`. En ZY22G728HN + PR-clean
+    // (commit 282f497), el rebote se reproduce ~5 s después del tap
+    // (no 645 ms como en MGC-532): la app monta `dashboard-screen`
+    // con la identidad persistida correctamente y luego vuelve sola a
+    // `home-screen`. La causa raíz parece ser una race entre el
+    // settle del lazy chunk del dashboard (~1 s) y el settle del
+    // reanimated del dismiss del teclado que `runAfterInteractions`
+    // no garantiza al 100 % en builds nativos (mientras que en web
+    // el settle es síncrono). Diferir 250 ms adicionales dentro del
+    // callback le da al chunk del dashboard tiempo a montar su árbol
+    // + al splash screen plugin a terminar su fade-out nativo antes
+    // de empujar el `router.replace`. Sin el setTimeout, el push
+    // entraba en el mismo tick de la animación del IME y Expo Router
+    // podía volver atrás si el stack del simulador-carrera no estaba
+    // todavía anclado al top del root stack.
+    //
     // Además usamos `router.replace` en vez de `push` para que identity
     // no quede en el back-stack post-commit (memory pressure + UX más
     // limpio: back desde dashboard va a home, no al form ya enviado).
     commitIdentity();
     InteractionManager.runAfterInteractions(() => {
-      router.replace('/simulador-carrera/dashboard');
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          router.replace('/simulador-carrera/dashboard');
+        }, 250);
+      });
     });
   };
 
