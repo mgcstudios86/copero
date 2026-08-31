@@ -15,8 +15,14 @@ export default function AcademyScreen() {
 
   const acceptClub = useCareerStore((s) => s.acceptClub);
 
-  const onPickClub = (club: Club) => {
-    acceptClub(club);
+  const onPickClub = async (club: Club) => {
+    // MGC-421 AC7 — C1 atomic save gate: acceptClub ahora retorna
+    // `Promise<void>` y resuelve solo cuando AsyncStorage confirmó la
+    // escritura del snapshot con el club aplicado. Await bloquea la
+    // navegación hasta que `setItem` haya escrito a disco — antes
+    // fire-and-forget podía perder el snapshot si el usuario force-
+    // stopeaba entre el tap y el `router.replace('/dashboard')`.
+    await acceptClub(club);
     const title = copy.resolve('academy_cta', { club: club.name });
     const body = copy.resolve('academy_sub');
     const acceptLabel = copy.resolve('academy_accept_cta');

@@ -70,7 +70,13 @@ test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
     await page.screenshot({ path: testInfo.outputPath('kbd-3-dashboard.png'), fullPage: true });
 
     // 3) DASHBOARD — Jersey visible + Academy focuseable.
-    await expect(page.locator('[data-testid="jersey-preview"]')).toBeVisible();
+    // MGC-448: scope al dashboard-screen. Sin el scope, expo-router deja
+    // identity.tsx montado (lazy-unmount) y `[data-testid="jersey-preview"]`
+    // resuelve a 2 elementos (uno en /identity, otro en /dashboard) →
+    // strict mode violation en Playwright.
+    await expect(
+      page.locator('[data-testid="dashboard-screen"] [data-testid="jersey-preview"]'),
+    ).toBeVisible();
     const btnAcademy = page.locator('[data-testid="btn-dashboard-academy"]');
     await expect(btnAcademy).toBeVisible();
     // Validar que el botón es focuseable por teclado.

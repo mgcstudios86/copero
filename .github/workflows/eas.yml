@@ -246,3 +246,71 @@ jobs:
           EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
         run: |
           eas build --local --platform ios --profile preview-ios-sim --non-interactive
+
+  qa-ac7-force-stop:
+    # MGC-421 AC7 — gate de E2E post force-stop. Este job bloquea el
+    # merge a `main` si el flow Maestro `ac7-force-stop.yaml` falla
+    # sobre el APK built por `preview-android`.
+    #
+    # Runner requerido: self-hosted con label `copero-ci-android-device`
+    # (host con el device físico ZY22G728HN conectado vía adb). Si
+    # el label no existe en el repo, GitHub Actions saltea el job
+    # silenciosamente (no hay runner match) — el CI verde NO implica
+    # que este gate haya corrido.
+    #
+    # Política actual: el device es propiedad de QA (AGENTS.md §"Ownership
+    # exclusivo del hardware de testing"). Mobile-developer no debe
+    # tocar ZY22G728HN. El QA agent puede wire-ear el runner
+    # copero-ci-android-device cuando lo considere necesario.
+    #
+    # Mientras el runner no esté wired, QA corre el flow manualmente
+    # siguiendo las instrucciones en `.maestro/ac7-force-stop.yaml` y
+    # postea evidencia (logcat + screenshot del relaunch) en el
+    # ticket MGC-421.
+    name: qa AC7 force-stop (Maestro)
+    runs-on: [self-hosted, copero-ci-android-device]
+    needs: [preview-android]
+    if: needs.preview-android.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Localizar APK built por preview-android
+        env:
+          ARTIFACT_DIR: ${{ github.workspace }}
+        run: |
+          # El job preview-android deja el .apk en el cwd del runner
+          # (eas build --local output). El path exacto depende del
+          # runner; si el output no existe, fallamos explícito.
+          shopt -s nullglob
+          APKS=("$ARTIFACT_DIR"/*.apk)
+          if [[ ${#APKS[@]} -eq 0 ]]; then
+            echo "ERROR: no se encontró ningún APK en $ARTIFACT_DIR" >&2
+            exit 1
+          fi
+          echo "APK_PATH=${APKS[0]}" >> "$GITHUB_ENV"
+          echo "[qa-ac7] usando APK: ${APKS[0]}"
+      - name: Instalar APK en device
+        env:
+          APK_PATH: ${{ env.APK_PATH }}
+          DEVICE_SERIAL: ${{ vars.QA_DEVICE_SERIAL || 'ZY22G728HN' }}
+        run: |
+          adb -s "$DEVICE_SERIAL" install -r "$APK_PATH"
+      - name: Limpiar AsyncStorage previo
+        env:
+          DEVICE_SERIAL: ${{ vars.QA_DEVICE_SERIAL || 'ZY22G728HN' }}
+        run: |
+          adb -s "$DEVICE_SERIAL" shell pm clear com.mgcstudios.copero
+      - name: Correr flow Maestro AC7 force-stop
+        env:
+          DEVICE_SERIAL: ${{ vars.QA_DEVICE_SERIAL || 'ZY22G728HN' }}
+          JAVA_HOME: /opt/homebrew/opt/openjdk@17
+        run: |
+          if [[ ! -d "${JAVA_HOME}" ]]; then
+            echo "ERROR: JAVA_HOME=${JAVA_HOME} no existe; ver .maestro/README.md §1" >&2
+            exit 1
+          fi
+          maestro test .maestro/ac7-force-stop.yaml --device "$DEVICE_SERIAL"

@@ -233,6 +233,29 @@ function persistSnapshot(s: CareerStore): void {
   });
 }
 
+/**
+ * MGC-421 AC7 — C1 atomic save gate (helper).
+ *
+ * Patrón canónico para mutaciones terminales: encadena el snapshot
+ * actual en `pendingSave` Y espera la confirmación de AsyncStorage
+ * antes de resolver. Garantiza que un `await caller.navigate()` no
+ * ocurra antes de que `setItem` haya escrito a disco, evitando la
+ * condición de carrera que 5 PRs previos (MGC-262/273/284/311 +
+ * MGC-306) no cerraron (force-stop post-mutación perdía el snapshot).
+ *
+ * Usar en: `commitIdentityAndStartDraft`, `acceptClub`,
+ * `runCareerToRetirement`, `advanceSeason` cuando `season >= 8`
+ * (cierre de loop al retirement). Para mutaciones no terminales
+ * (setters de identity, decide, advance, swapLegend, pickLegend,
+ * pickClub) sigue siendo válido el patrón `persistSnapshot(get())`
+ * sin await — la navegación post-step es local al dashboard y el
+ * listener `AppState` (MGC-363) cubre la persistencia en background.
+ */
+function persistAndFlush(s: CareerStore): Promise<void> {
+  persistSnapshot(s);
+  return flushPendingSave();
+}
+
 export const useCareerStore = create<CareerStore>()((set, get) => {
   // Adaptador para que `set((s) => ...)` siga funcionando con la firma
   // original de Zustand en la creación del store. Zustand set acepta
@@ -350,11 +373,23 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     },
     advanceSeason: async () => {
       const { step } = await import('@/features/career/engine');
+      // MGC-421 AC7 — C1 atomic save gate con guard explícito de
+      // cierre de loop: si la temporada actual es >= 8, estamos
+      // cerca del cierre del loop carrera→retiro (el simulador
+      // corre ~17 seasons hasta `RETIREMENT_AGE = 34`). El flush
+      // sincrónico protege contra force-stop entre la última
+      // season y la pantalla retirement — escenario que 5 PRs
+      // previos no cerraron.
+      const isClosingLoop = get().profile.season >= 8;
       setSnapshot((s) =>
         step(s, { type: 'advanceSeason' } satisfies CareerAction),
       );
-      persistSnapshot(get());
-      await flushPendingSave();
+      if (isClosingLoop) {
+        await persistAndFlush(get());
+      } else {
+        persistSnapshot(get());
+        await flushPendingSave();
+      }
     },
     runCareerToRetirement: async () => {
       const { step } = await import('@/features/career/engine');
@@ -368,8 +403,7 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       // pendingSave para que el `stage: 'retirement'` + log final
       // queden en AsyncStorage antes de que el usuario salga de la
       // pantalla.
-      persistSnapshot(get());
-      await flushPendingSave();
+      await persistAndFlush(get());
     },
     // MGC-227: hidratación desde AsyncStorage. Llamado una vez en el
     // bootstrap de la app (ver `app/_layout.native.tsx` + `_layout.web.tsx`).

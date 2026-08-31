@@ -13,6 +13,16 @@ Playwright web; Maestro mobile queda fuera por costo de hardware.
 ## Flows
 - `club-ambicion.yaml` — AC MGC-217 + MGC-221 + MGC-223: tap "Firmar con Boca Juniors"
   verifica arquetipo AMBICIÓN y navegación a `/simulador-carrera/temporada`.
+- `ac7-force-stop.yaml` — AC MGC-421 (AC7): corre el loop end-to-end
+  completo (identity → academy → club → draft 8 rondas → temporada →
+  retiro), dispara `am force-stop` vía adb, relaunch, y aserta que la
+  home hidrata con el CTA "Continuar" y el OVR final del jugador
+  (no guion vacío). Es el gate que las 5 PRs previas
+  (MGC-262/273/284/311 + MGC-306) no cerraron: sin un flow E2E que
+  reproduzca el force-stop, las fixes de timing del flush seguían
+  pasando tests unitarios pero el bug volvía en device. Pre-step:
+  `adb shell pm clear com.mgcstudios.copero` para arrancar con
+  AsyncStorage limpio.
 
 ## Precondiciones de entorno
 

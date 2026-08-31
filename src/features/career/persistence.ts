@@ -89,6 +89,18 @@ export function isPersistentStorage(): boolean {
   return pickStorage() !== memoryStorage;
 }
 
+/**
+ * MGC-421 AC7 — hook de test: fuerza la re-resolución del backend
+ * de storage. Sin esto, una vez que `pickStorage()` cachea el resultado
+ * en el closure del módulo, los tests no pueden simular la caída al
+ * fallback en memoria. Marcado con prefijo `__` para señalar uso
+ * interno (no se debe llamar desde código de producto).
+ */
+export function __resetStorageForTests(): void {
+  resolved = null;
+  memoryStore = {};
+}
+
 /** Devuelve la partida guardada o `null` si no hay nada. */
 export async function loadCareerSave(): Promise<CareerSaveState | null> {
   const storage = pickStorage();

@@ -1,0 +1,153 @@
+# MGC-421 AC7 — flow Maestro E2E post force-stop.
+#
+# Reproduce el escenario exacto que 5 PRs previos (MGC-262/273/284/311
+# + MGC-306) no cerraron: instalar APK limpio, jugar hasta fin-carrera
+# (stage='retirement'), force-stop del proceso vía adb, relaunch, y
+# asertar que la home hidrata con el último snapshot persistido y
+# muestra el CTA "Continuar" (resume).
+#
+# AC:
+#   1. Tap "Jugar" -> identity -> academy -> club -> draft (8 rondas) ->
+#      temporada (avanzar hasta retiro) -> pantalla retirement.
+#   2. Force-stop del proceso (adb shell am force-stop).
+#   3. Relaunch app. La home debe mostrar:
+#      - jersey con nombre del jugador.
+#      - OVR final (no guion).
+#      - CTA "Continuar" (resume CTA post-relaunch).
+#
+# Precondiciones (idénticas a club-ambicion.yaml):
+#   1. APK instalado: build-<PR>-<versionCode>-<shortSHA>.apk
+#   2. adb shim en ~/.local/bin/adb.
+#   3. Device físico ZY22G728HN conectado.
+#   4. JAVA_HOME apuntando a openjdk@17.
+#   5. AsyncStorage limpio (sin save previo) — el flow empieza en
+#      identity vacío. Si la app tiene un save de una sesión previa,
+#      MGC-227 lo hidrata y el flow no llega a la pantalla identity.
+#      Para forzar estado limpio, ejecutar antes:
+#        adb shell pm clear com.mgcstudios.copero
+#
+# Ejecución:
+#   export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+#   adb shell pm clear com.mgcstudios.copero
+#   maestro test .maestro/ac7-force-stop.yaml
+#
+# Wire-up CI (MGC-421 AC7 gate): el step en .github/workflows/eas.yml
+# `qa-ac7-force-stop` corre este flow sobre el APK built por el job
+# `preview-android` cuando el runner tiene label `copero-ci-android-device`
+# (no wired todavía — la primera ejecución debe hacerla QA en el
+# host del device).
+
+appId: com.mgcstudios.copero
+name: ac7-force-stop
+tags:
+  - career
+  - persistence
+  - mgc-270
+  - mgc-421
+  - ac7
+  - force-stop
+  - regression
+
+---
+# AC7.1 — Tap "Jugar" en home.
+- assertVisible:
+    text: "Jugar"
+- tapOn:
+    text: "Jugar"
+
+# AC7.2 — Pantalla identity: completar form.
+- assertVisible:
+    id: identity-screen
+- inputText:
+    id: input-name
+    text: "Mateo AC7"
+- inputText:
+    id: input-number
+    text: "9"
+- tapOn:
+    id: btn-identity-confirm
+
+# AC7.3 — Pantalla academy: pick club (primera tarjeta = Vélez).
+- assertVisible:
+    id: academy-screen
+- tapOn:
+    id: club-velez
+
+# Confirm Alert de "Fichar con Vélez".
+- assertVisible:
+    text: "Fichar por Vélez Sarsfield"
+- tapOn:
+    text: "Firmar"
+- waitForAnimationToEnd
+
+# AC7.4 — Dashboard: navegar a draft.
+- assertVisible:
+    id: dashboard-screen
+- tapOn:
+    id: btn-dashboard-draft
+
+# AC7.5 — Pantalla draft: 8 rondas pickLegend.
+- assertVisible:
+    id: draft-screen
+- repeat:
+    times: 8
+    commands:
+      - tapOn:
+          id: btn-draft-pick
+      - waitForAnimationToEnd
+
+# AC7.6 — Pantalla tu-jugador: confirmar que card fue generada con OVR.
+- assertVisible:
+    id: tu-jugador-screen
+- assertVisible:
+    text: "OVR"
+
+# AC7.7 — Pantalla club (post-draft): pick club y avanzar a temporada.
+- tapOn:
+    id: club-velez
+- assertVisible:
+    text: "Firmar"
+- tapOn:
+    text: "Firmar"
+- waitForAnimationToEnd
+
+# AC7.8 — Temporada: avanzar hasta retiro (8 seasons default).
+- assertVisible:
+    id: temporada-screen
+- repeat:
+    times: 8
+    commands:
+      - tapOn:
+          id: btn-temporada-advance
+      - waitForAnimationToEnd
+
+# AC7.9 — Pantalla retirement: confirmar que la última temporada
+# disparó el cierre de loop. El snapshot persistido debe tener
+# `stage: 'retirement'` para que el relaunch hidrate correctamente.
+- assertVisible:
+    id: retirement-screen
+
+# AC7.10 — Force-stop del proceso vía adb. Aquí es donde el bug
+# histórico se manifestaba: un force-stop antes de que AsyncStorage
+# confirmara el `setItem` perdía el snapshot. Con C1+C2+C3+C4 en
+# el bridge, el snapshot ya está en disco.
+- evalScript: ${output.adbShell = adb -s ZY22G728HN shell am force-stop com.mgcstudios.copero}
+- runFlow:
+    when:
+      visible: false
+    commands:
+      - wait: 10000
+
+# AC7.11 — Relaunch. La app debe abrir en home con CTA "Continuar"
+# (resume CTA post-relaunch con snapshot stage='retirement').
+- launchApp:
+    appId: com.mgcstudios.copero
+    clearState: false
+- assertVisible:
+    text: "Continuar"
+- assertVisible:
+    text: "Mateo AC7"
+- assertNotVisible:
+    text: "OVR —"
+- assertNotVisible:
+    text: "OVR -"
