@@ -160,6 +160,12 @@ jobs:
       # MGC-293 AC: "Reporte de cobertura subido como artefacto".
       # Subimos SIEMPRE (no solo on-failure) para tener histórico de runs
       # verdes y screenshots de baseline. retention 14d.
+      # MGC-377: e2e/playwright.config.ts ahora ancla outputDir y el HTML
+      # reporter a resolve(__dirname, '.results'|'playwright-report'), que
+      # desde el runner (cwd = repo root tras actions/checkout) caen en
+      # e2e/.results y e2e/playwright-report. Antes el path del HTML era
+      # 'playwright-report' (raíz), pero Playwright con --config hace
+      # process.chdir(e2e/), así que nunca encontraba el directorio.
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -167,6 +173,6 @@ jobs:
           name: playwright-report
           path: |
             e2e/.results
-            playwright-report
+            e2e/playwright-report
           if-no-files-found: ignore
           retention-days: 14

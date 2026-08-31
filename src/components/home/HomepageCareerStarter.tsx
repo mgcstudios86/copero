@@ -146,6 +146,7 @@ export function HomepageCareerStarter(): React.ReactElement {
     // a /dashboard, que es el resumen canónico con CTA "Iniciar draft" y
     // respeta la matriz de specs Playwright que esperan `**/dashboard`.
     //
+
     // MGC-249: el botón "Empezar carrera" salta al simulador de carrera.
     // MGC-326 / e2e/_visual-regression espera la pantalla /identity para
     // capturar el rediseño MGC-505. El motor setea el snapshot de identidad

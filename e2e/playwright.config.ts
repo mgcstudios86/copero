@@ -19,6 +19,16 @@ const BASE_URL =
   process.env.EXPO_WEB_BASE_URL ??
   (process.env.CI ? `http://127.0.0.1:${PORT}` : 'http://localhost:8081');
 
+// MGC-377: anclar outputDir y HTML reporter a rutas absolutas (resolve(__dirname, ...))
+// para que no dependan del cwd del proceso Playwright. Cuando se invoca con
+// --config=e2e/playwright.config.ts, Playwright hace process.chdir(dirname(configFile))
+// y cwd pasa a e2e/. Si outputDir es relativo, queda acoplado al cwd del runner y puede
+// drift entre runners (Linux VPS vs macOS ARM64) o entre invocaciones desde repo root
+// vs e2e/. Tambien permite que el upload-artifact del workflow apunte a un path estable
+// desde repo root (e2e/.results, e2e/playwright-report).
+const RESULTS_DIR = resolve(__dirname, '.results');
+const HTML_REPORT_DIR = resolve(__dirname, 'playwright-report');
+
 export default defineConfig({
   testDir: '.',
   testMatch: /.*\.spec\.ts$/,
@@ -29,8 +39,13 @@ export default defineConfig({
   // para que el dev server se recupere del swap-thrash entre specs.
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: process.env.CI ? [['github'], ['list']] : 'list',
-  outputDir: './.results',
+  // MGC-377: añadir HTML reporter en CI (siempre, no solo on-failure) para que el
+  // artefacto playwright-report contenga index.html + resumen por spec en cada run.
+  // open:'never' evita que Playwright intente abrir el browser en el runner headless.
+  reporter: process.env.CI
+    ? [['html', { outputFolder: HTML_REPORT_DIR, open: 'never' }], ['github'], ['list']]
+    : [['html', { outputFolder: HTML_REPORT_DIR, open: 'never' }], 'list'],
+  outputDir: RESULTS_DIR,
   use: {
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
