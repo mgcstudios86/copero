@@ -70,3 +70,16 @@ export const TextInput = function TextInput() {
 export const AccessibilityInfo = {
   announceForAccessibility: () => undefined,
 };
+
+// MGC-565: Alert stub for tests que invocan onPress destructivo.
+// Tests pueden mockear este módulo vía vi.mock('react-native') arriba
+// y reemplazar este Alert por uno espiable.
+export const Alert = {
+  alert: (
+    _title?: string,
+    _body?: string,
+    _buttons?: Array<{ text?: string; onPress?: () => void; style?: string }>,
+  ) => {
+    /* no-op default — tests que importan Button+Alert deben mockear. */
+  },
+};

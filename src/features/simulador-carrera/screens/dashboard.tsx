@@ -7,6 +7,7 @@ import { Button } from '@/design/components';
 import { copy, copyHelpers } from '@/design/copy/es-AR/simulador-carrera';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
+import { ResetCareerButton } from '@/features/simulador-carrera/components/ResetCareerButton';
 
 // Lazy-load del bloque "Estrategia recomendada" (MGC-482).
 // Separa `recommendStrategy` + `strategy` (~10 KB) del chunk inicial
@@ -358,6 +359,9 @@ export default function DashboardScreen() {
             accessibilityHint="Inicia el draft de 8 rondas con leyendas"
           />
         ) : null}
+        {/* MGC-565 — affordance dev-only para reset de carrera. Solo
+            visible bajo `__DEV__` o env flag; sin gate no renderiza. */}
+        <ResetCareerButton />
       </ScrollView>
     </SafeAreaView>
   );
