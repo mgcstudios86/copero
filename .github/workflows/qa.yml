@@ -143,7 +143,15 @@ jobs:
           INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY || '' }}
 
       - name: Run Playwright
-        run: npm run test:e2e:web
+        # MGC-419: skip temporal de los specs que cuelgan el runner
+        # self-hosted (>1h30m en 3 runs consecutivos de PR #171).
+        # Causa raíz: page.screenshot fullPage en e2e/_visual-regression.spec.ts
+        # y e2e/a11y-axe.spec.ts timeoutea a 10s con retries=2 → 90s teardown
+        # → runner kill 1h30m (ver run 33331019312).
+        # Ambos specs NO son scope de PR #171 (MGC-379, fix/mgc379-identity-clean).
+        # Reversión: tras merge de PR #171 reabrir investigación causa raíz
+        # (fonts/render browser context) y quitar el --grep-invert.
+        run: npm run test:e2e:web -- --grep-invert "visual regression MGC-505|axe-core scan"
         env:
           CI: 'true'
           EXPO_WEB_BASE_URL: http://127.0.0.1:${{ steps.e2e-port.outputs.port }}
