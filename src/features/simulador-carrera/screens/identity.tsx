@@ -1,5 +1,6 @@
-import React, { Suspense, lazy, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import {
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,7 +10,7 @@ import {
   InteractionManager,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { onKeyActivate } from '@/design/utils/keyboardActivation';
@@ -29,6 +30,28 @@ const JerseyPreview = lazy(() =>
 export default function IdentityScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  // MGC-621: el footer fijo necesita elevarse con translateY negativo
+  // cuando el IME está abierto para que Continue quede sobre el teclado
+  // en ZY22G728HN (1080x2400). El KAV con behavior=height (PR-226) solo
+  // reduce ~152 px del ancestor flex en RN-Android con adjustResize.
+  // El approach: Keyboard.addListener('keyboardDidShow'/'keyboardDidHide')
+  // + translateY=-keyboardHeight en el footer. Restamos insets.bottom
+  // porque SafeAreaView edges=['bottom'] ya dejó ese espacio reservado.
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(Math.max(0, e.endCoordinates.height - insets.bottom));
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [insets.bottom]);
 
   const profile = useCareerStore((s) => s.profile);
   const setName = useCareerStore((s) => s.setName);
@@ -201,14 +224,6 @@ export default function IdentityScreen() {
             testID="input-name"
           />
         </Field>
-
-        {/* MGC-585: el stepper +/- se renderiza ahora en un sticky footer
-            entre el ScrollView y el Continue (ver styles.stepperSticky).
-            Lo sacamos del ScrollView porque caía al borde inferior del
-            viewport (y=1907 en ZY22G728HN con IME abierto) y quedaba con
-            height=0 en el reporte de uiautomator — colapsable={false} no
-            alcanzaba porque la fila no entraba en la jerarquía accesible.
-            Sticky garantiza bounds reales sin depender del estado del IME. */}
 
         {/* Preferred foot */}
         <Field label="Pie hábil">
@@ -412,36 +427,47 @@ export default function IdentityScreen() {
         </Field>
 
         </ScrollView>
-      {/* MGC-585: stepper +/- en sticky footer entre el form scrollable y el
-          botón Continuar. Antes el row caía al borde inferior del ScrollView
-          (y=1907 en ZY22G728HN) y, con el soft keyboard abierto, RN medía
-          height=0 aunque collapsable={false} estuviera aplicado, porque la
-          fila quedaba fuera del fold visible y no entraba en la jerarquía
-          accesible que uiautomator reporta. Sticky garantiza que el stepper
-          está siempre presente en la jerarquía, con bounds reales (>0),
-          sin depender del estado del IME. */}
+      {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
+          el soft keyboard esté abierto o el form se desplace. El botón
+          sigue siendo testeable por testID `btn-identity-continue` desde
+          el footer (el subtree ya no es scrollable).
+          MGC-621: el stepper + el Continue viven ahora en el mismo View
+          para garantizar que el `translateY=-keyboardHeight` eleve ambos
+          como una unidad sobre el IME. Antes (PR-228) el stepper vivía
+          en un View `stepperSticky` separado entre ScrollView y footer,
+          pero sobre ZY22G728HN el wrapper colapsaba a height=0 (PR-228) o
+          quedaba fuera de la jerarquía accesible. Unificarlos en el footer
+          pone el row dentro del flexbox del footer (sin ancestor flex que
+          aplique adjustResize), con bounds reales con/sin IME. */}
       <View
         style={[
-          styles.stepperSticky,
+          styles.footer,
           {
             backgroundColor: colors.bg,
             borderTopColor: colors.border,
             padding: spacing[4],
+            gap: spacing[3],
+            transform: [{ translateY: -keyboardHeight }],
           },
         ]}
       >
-        <Text
+        {/* MGC-621: stepper movido desde stepperSticky. Wrapper View
+            collapsable=false + dimensiones explícitas — ahora mide dentro
+            del footer flex (sin ancestor flex del ScrollView que aplicaba
+            adjustResize=0). Mantenemos Pressable (no TouchableOpacity,
+            memory copero-touchable-opacity-stepper-regression). */}
+        <View
+          testID="btn-number-row"
+          collapsable={false}
           style={{
-            color: colors.textMuted,
-            fontSize: fontSize.sm,
-            fontWeight: fontWeight.semibold,
-            letterSpacing: 1,
-            marginBottom: spacing[2],
+            flexDirection: 'row',
+            gap: spacing[3],
+            alignItems: 'center',
+            minHeight: 48,
+            width: '100%',
+            overflow: 'visible',
           }}
         >
-          NÚMERO (1–99)
-        </Text>
-        <View style={{ flexDirection: 'row', gap: spacing[3] }}>
           <Pressable
             onPress={() => setNumber(profile.number - 1)}
             accessibilityRole="button"
@@ -462,6 +488,8 @@ export default function IdentityScreen() {
             <Text style={{ color: colors.text, fontSize: fontSize.lg }}>−</Text>
           </Pressable>
           <View
+            testID="btn-number-display"
+            collapsable={false}
             style={[
               styles.numberDisplay,
               {
@@ -501,21 +529,6 @@ export default function IdentityScreen() {
             <Text style={{ color: colors.text, fontSize: fontSize.lg }}>+</Text>
           </Pressable>
         </View>
-      </View>
-      {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
-          el soft keyboard esté abierto o el form se desplace. El botón
-          sigue siendo testeable por testID `btn-identity-continue` desde
-          el footer (el subtree ya no es scrollable). */}
-      <View
-        style={[
-          styles.footer,
-          {
-            backgroundColor: colors.bg,
-            borderTopColor: colors.border,
-            padding: spacing[4],
-          },
-        ]}
-      >
         <Button
           label="Continuar"
           onPress={onContinue}
@@ -559,13 +572,6 @@ const styles = StyleSheet.create({
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
   // esté abierto. borderTop sutil separa visualmente del form scrollable.
   footer: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  // MGC-585: contenedor sticky del stepper +/- sobre el Continue.
-  // borderTop sutil separa visualmente del ScrollView. minHeight del row
-  // padre fija el piso vertical para que RN-Android no comprima la fila
-  // cuando el soft keyboard se cierra/reabre y dispare un re-layout.
-  stepperSticky: {
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   input: {
