@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { copy, copyHelpers } from '@/design/copy/es-AR/simulador-carrera';
-import { useCareerStore } from '@/shared/store/careerStore';
+import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
 import { ResetCareerButton } from '@/features/simulador-carrera/components/ResetCareerButton';
 
@@ -56,8 +56,15 @@ export default function DashboardScreen() {
   // del chunk diferido; el inicial sólo importa la firma del componente.
   // Ver <RecommendedStrategy> abajo.
 
-  const onAcademyPress = () => {
+  const onAcademyPress = async () => {
+    // MGC-722 — AWAIT del flush antes de navegar. Antes era
+    // fire-and-forget: openAcademy disparaba persistSnapshot y el
+    // router.push se ejecutaba antes de que AsyncStorage confirmara
+    // la transición a stage='academy'. Un force-stop del usuario
+    // durante ese gap perdía el snapshot y la home re-pintaba con
+    // initialSnapshot vacío tras relaunch.
     openAcademy();
+    await flushPendingSave();
     router.push('/simulador-carrera/academy');
   };
 
@@ -68,7 +75,12 @@ export default function DashboardScreen() {
   // await acá garantiza que el board + stage='draft' queden en disco
   // antes de navegar — patrón idéntico al de `commitIdentityAndStartDraft`
   // en HomepageCareerStarter (MGC-273).
-  const showDraftCta = stage === 'dashboard' || stage === 'identity';
+  // MGC-698: tras academy onPickClub → acceptClub() el stage queda en
+  // 'clubStart' (no vuelve a 'dashboard'). Incluyo clubStart en el show
+  // para que el CTA "Empezar draft de leyendas" sea visible y el flow AC7
+  // (identity → dashboard → academy → clubStart → draft) no quede atrapado.
+  const showDraftCta =
+    stage === 'dashboard' || stage === 'identity' || stage === 'clubStart';
   const onDraftPress = async () => {
     await startDraft();
     router.push('/simulador-carrera/draft');

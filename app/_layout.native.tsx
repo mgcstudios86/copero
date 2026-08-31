@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFonts } from 'expo-font';
 // MGC-743 — imports subpath explícitos: el `index.js` raíz de
 // @expo-google-fonts/{inter,poppins} re-exporta TODOS los pesos (100Thin
@@ -22,7 +22,11 @@ import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
 // MGC-394: SiteFooter removido del root layout (ver comentario sobre el JSX).
-import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
+import {
+  useCareerStore,
+  bootstrapPersistence,
+  flushPendingSave,
+} from '@/shared/store/careerStore';
 
 /**
  * MGC-555 PR1 — carga tipográfica.
@@ -38,18 +42,18 @@ import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 function ThemedShell() {
   const { colors, mode } = useTheme();
 
-  // MGC-259 — gate de hidratación. Bloqueamos el render del Stack
-  // hasta que `hydrateFromSave()` termine (con save o sin save) para
-  // evitar que la home pinte con el initial snapshot vacío y luego
-  // "salte" al snapshot persistido cuando AsyncStorage resuelva. El
-  // flash intermedio es lo que QA reportó como "home muestra jersey
-  // Tu jugador / OVR —" tras force-stop: la suscripción al store
-  // técnicamente re-rendereaba, pero el form de identidad ya había
-  // montado su estado vacío y el CTA Continuar nunca aparecía si la
-  // transición ocurría después del primer commit.
-  const [hydrated, setHydrated] = useState(false);
+  // MGC-722 — gate de hidratación usando `hydrated` flag del store (mismo
+  // patrón que `_layout.tsx`). Antes este layout tenía `useState(false)`
+  // local + no llamaba `bootstrapPersistence()`: el module-level AppState
+  // listener de `careerStore.ts` (que drena `pendingSave` y vuelca
+  // `lastSnapshot` a disco) NUNCA se instalaba en builds Android/iOS. Sin
+  // esa red, una save en vuelo al momento de un force-stop (Android no
+  // envía AppState 'background' en force-stop) podía quedar huérfana y la
+  // home re-pintaba con initialSnapshot vacío en el relaunch (AC4/AC7 de
+  // MGC-722 sobre build-MGC306-159-14-dc89705.apk).
+  const hydrated = useCareerStore((s) => s.hydrated);
   useEffect(() => {
-    let cancelled = false;
+    bootstrapPersistence();
     void useCareerStore
       .getState()
       .hydrateFromSave()
@@ -57,22 +61,14 @@ function ThemedShell() {
         // Falla best-effort: si AsyncStorage falla, dejamos el
         // initial snapshot y desbloqueamos igual para no bloquear la
         // UI forever.
-      })
-      .finally(() => {
-        if (!cancelled) setHydrated(true);
+        useCareerStore.setState({ hydrated: true });
       });
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
-  // MGC-259 — drenamos la save pendiente cuando el OS manda la app a
-  // background (app switcher, lockscreen, force-stop inminente).
-  // Antes este listener solo vivía en `app/_layout.tsx`, que Metro
-  // IGNORA en builds nativos cuando existe `_layout.native.tsx`. Sin
-  // este wiring, un force-stop inmediato tras `runCareerToRetirement`
-  // podía matar el proceso antes de que `setItem` resolviera y el
-  // snapshot quedaba en memoria sin llegar a disco (AC7).
+  // MGC-722 — drenamos la save pendiente cuando el OS manda la app a
+  // background (app switcher, lockscreen). Defensa redundante sobre el
+  // module-level listener instalado por `bootstrapPersistence()`. Cubre el
+  // gap si el orden de imports retrasa la instalación module-level.
   const appStateRef = useRef(AppState.currentState);
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {

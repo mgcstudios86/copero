@@ -2,14 +2,18 @@ import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFonts, FontDisplay } from 'expo-font';
 import { Banner } from '@/features/ads';
 import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
 // MGC-394: SiteFooter removido del root layout web (ver comentario sobre el JSX).
-import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
+import {
+  useCareerStore,
+  bootstrapPersistence,
+  flushPendingSave,
+} from '@/shared/store/careerStore';
 
 /**
  * MGC-743 — split-layout (web) · carga tipográfica WOFF2 latin subset.
@@ -65,27 +69,24 @@ const PoppinsBold = require('../assets/fonts/woff2/Poppins-Bold.woff2');
 function ThemedShell() {
   const { colors, mode } = useTheme();
 
-  // MGC-259 — gate de hidratación. Mismo patrón que `_layout.native.tsx`.
-  // Bloqueamos el render del Stack hasta que `hydrateFromSave()` termine
-  // para que la home no pinte con snapshot vacío y luego salte al
-  // persistido. En web no hay force-stop del proceso (la pestaña vive
-  // hasta refresh/close), pero el `refresh` del dev server o un F5
-  // reproducen el mismo flash si no esperamos la carga de AsyncStorage.
-  const [hydrated, setHydrated] = useState(false);
+  // MGC-722 — gate de hidratación usando `hydrated` flag del store (mismo
+  // patrón que `_layout.tsx` + `_layout.native.tsx`). Antes este layout
+  // tenía `useState(false)` local + no llamaba `bootstrapPersistence()`:
+  // el module-level AppState listener de `careerStore.ts` (que drena
+  // `pendingSave` y vuelca `lastSnapshot` a disco) NUNCA se instalaba en
+  // builds web. Sin esa red, una save en vuelo al momento de cerrar/refrescar
+  // la pestaña podía quedar huérfana y la home re-pintaba con
+  // initialSnapshot vacío en el reload (AC4/AC7 de MGC-722).
+  const hydrated = useCareerStore((s) => s.hydrated);
   useEffect(() => {
-    let cancelled = false;
+    bootstrapPersistence();
     void useCareerStore
       .getState()
       .hydrateFromSave()
       .catch(() => {
         // best-effort: misma política que la variante native.
-      })
-      .finally(() => {
-        if (!cancelled) setHydrated(true);
+        useCareerStore.setState({ hydrated: true });
       });
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   // MGC-259 — drenamos la save pendiente cuando la pestaña pasa a
