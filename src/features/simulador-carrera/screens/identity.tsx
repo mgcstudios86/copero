@@ -64,9 +64,15 @@ export default function IdentityScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['bottom']}>
+      {/* MGC-429: el testID `identity-screen` vive en el wrapper
+          (`app/simulador-carrera/identity.tsx`) que monta sincrónicamente
+          antes de que el chunk lazy de este componente termine de cargar.
+          Antes este `ScrollView` interno también llevaba el testID y
+          rompía `getByTestId('identity-screen')` por strict-mode
+          (resolvía a 2 elementos: el wrapper `View` y este `ScrollView`).
+          Lo quitamos para preservar un único nodo testeable. */}
       <ScrollView
         contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4] }]}
-        testID="identity-screen"
       >
         {/* Header */}
         <View style={{ gap: spacing[2] }}>
