@@ -132,8 +132,9 @@ tags:
 # confirmara el `setItem` perdía el snapshot. Con C1+C2+C3+C4 en
 # el bridge, el snapshot ya está en disco.
 - evalScript: ${output.adbShell = adb -s ZY22G728HN shell am force-stop com.mgcstudios.copero}
-# Pausa fija de 10s para que el OS confirme el kill del proceso antes del relaunch.
-- wait: 10000
+# evalScript adb es síncrono: cuando retorna, ADB ya confirmó el kill del proceso.
+# No se requiere pausa adicional — la espera previa de 10s con `- wait:` es
+# inválida en Maestro 2.x (top-level) y fue removida en MGC-502.
 
 # AC7.11 — Relaunch. La app debe abrir en home con CTA "Continuar"
 # (resume CTA post-relaunch con snapshot stage='retirement').
