@@ -92,7 +92,7 @@ jobs:
           node-version: '20'
       - name: Instalar eas-cli + infisical CLI
         run: |
-          npm install -g eas-cli@latest
+          bash scripts/install-eas-cli.sh
           if ! command -v infisical >/dev/null 2>&1; then
             # MGC-658: el script get-cli.sh upstream retorna 404 (movido a artifacts-cli).
             # Nuevo flujo documentado: setup.deb.sh agrega repo APT oficial + apt-get install.
@@ -188,7 +188,7 @@ jobs:
           node-version: '20'
       - name: Instalar eas-cli + infisical CLI
         run: |
-          npm install -g eas-cli@latest
+          bash scripts/install-eas-cli.sh
           if ! command -v infisical >/dev/null 2>&1; then
             # MGC-658: el script get-cli.sh upstream retorna 404 (movido a artifacts-cli).
             # Nuevo flujo documentado: setup.deb.sh agrega repo APT oficial + apt-get install.

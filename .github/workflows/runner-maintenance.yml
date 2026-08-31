@@ -1,0 +1,33 @@
+# runner-maintenance.yml — Copero (MGC-696)
+# Mantenimiento manual de los runners self-hosted copero-ci.
+#
+# Los runners son persistentes: un job cancelado a mitad de un `npm install -g`
+# deja restos (`.eas-cli-XXXX`) que rompen todos los jobs posteriores con
+# ENOTEMPTY. Este workflow permite limpiar y reinstalar el toolchain sin tener
+# que rebasear ramas de feature ni entrar por SSH al runner.
+
+name: runner-maintenance (copero)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  clean-eas-cli:
+    name: limpiar e reinstalar eas-cli en runner
+    runs-on: [self-hosted, copero-ci, Linux]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Estado previo del node_modules global
+        run: ls -la "$(npm root -g)" || true
+      - name: Reinstalar eas-cli (idempotente)
+        run: bash scripts/install-eas-cli.sh
+      - name: Estado posterior
+        run: |
+          ls -la "$(npm root -g)"
+          eas --version

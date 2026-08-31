@@ -39,7 +39,7 @@ jobs:
 
       - name: Instalar eas-cli + infisical CLI
         run: |
-          npm install -g eas-cli@latest
+          bash scripts/install-eas-cli.sh
           if ! command -v infisical >/dev/null 2>&1; then
             curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
           fi
@@ -149,7 +149,7 @@ jobs:
           node-version: '20'
       - name: Instalar eas-cli + infisical CLI
         run: |
-          npm install -g eas-cli@latest
+          bash scripts/install-eas-cli.sh
           if ! command -v infisical >/dev/null 2>&1; then
             curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
           fi
