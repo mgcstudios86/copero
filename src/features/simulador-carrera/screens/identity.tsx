@@ -227,7 +227,22 @@ export default function IdentityScreen() {
 
         {/* Preferred foot */}
         <Field label="Pie hábil">
-          <View style={{ flexDirection: 'row', gap: spacing[2] }}>
+          {/* MGC-619: wrapper View collapsable=false + minHeight:48 para
+              garantizar bounds reales en uiautomator dump (ZY22G728HN).
+              Sin collapsable={false} el row colapsa a height negativo
+              fuera del fold y no entra en la jerarquía accesible.
+              Memory: copero-pr228-2-pie-habil-wrapper. */}
+          <View
+            testID="btn-foot-row"
+            collapsable={false}
+            style={{
+              flexDirection: 'row',
+              gap: spacing[2],
+              width: '100%',
+              minHeight: 48,
+              overflow: 'visible',
+            }}
+          >
             {(['left', 'right', 'both'] as Foot[]).map((f) => {
               const active = profile.preferredFoot === f;
               return (
