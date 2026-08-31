@@ -7,8 +7,9 @@
 # muestra el CTA "Continuar" (resume).
 #
 # AC:
-#   1. Tap "Jugar" -> identity -> academy -> club -> draft (8 rondas) ->
-#      temporada (avanzar hasta retiro) -> pantalla retirement.
+#   1. Tap "Jugar" -> identity -> dashboard -> academy -> club ->
+#      dashboard -> draft (8 rondas) -> temporada (avanzar hasta
+#      retiro) -> pantalla retirement.
 #   2. Force-stop del proceso (adb shell am force-stop).
 #   3. Relaunch app. La home debe mostrar:
 #      - jersey con nombre del jugador.
@@ -75,7 +76,23 @@ tags:
 - tapOn:
     id: btn-identity-continue
 
-# AC7.3 — Pantalla academy: pick club (primera tarjeta = Vélez).
+# AC7.3 — Pantalla dashboard post-identity: navegar a academy.
+# MGC-553 / MGC-374 / MGC-399: la navegación directa identity -> academy
+# se deprecó. El flow canónico post-identity es identity -> dashboard ->
+# tap `btn-dashboard-academy` -> academy. El fix previo (PR #193/#194)
+# asumió la ruta vieja y la AC7.3 fallaba con `assertVisible academy-screen`
+# porque la app monta dashboard-screen. Inserto el paso intermedio aquí.
+- assertVisible:
+    id: dashboard-screen
+- scrollUntilVisible:
+    element:
+      id: btn-dashboard-academy
+    direction: down
+    timeout: 5000
+- tapOn:
+    id: btn-dashboard-academy
+
+# AC7.4 — Pantalla academy: pick club (primera tarjeta = Vélez).
 - assertVisible:
     id: academy-screen
 - tapOn:
@@ -88,13 +105,13 @@ tags:
     text: "Firmar"
 - waitForAnimationToEnd
 
-# AC7.4 — Dashboard: navegar a draft.
+# AC7.5 — Dashboard (post-club-pick): navegar a draft.
 - assertVisible:
     id: dashboard-screen
 - tapOn:
     id: btn-dashboard-draft
 
-# AC7.5 — Pantalla draft: 8 rondas pickLegend.
+# AC7.6 — Pantalla draft: 8 rondas pickLegend.
 - assertVisible:
     id: draft-screen
 - repeat:
@@ -104,13 +121,13 @@ tags:
           id: btn-draft-confirm
       - waitForAnimationToEnd
 
-# AC7.6 — Pantalla tu-jugador: confirmar que card fue generada con OVR.
+# AC7.7 — Pantalla tu-jugador: confirmar que card fue generada con OVR.
 - assertVisible:
     id: tu-jugador-screen
 - assertVisible:
     text: "OVR"
 
-# AC7.7 — Pantalla club (post-draft): pick club y avanzar a temporada.
+# AC7.8 — Pantalla club (post-draft): pick club y avanzar a temporada.
 - tapOn:
     id: club-pick-velez
 - assertVisible:
@@ -119,7 +136,7 @@ tags:
     text: "Firmar"
 - waitForAnimationToEnd
 
-# AC7.8 — Temporada: avanzar hasta retiro (8 seasons default).
+# AC7.9 — Temporada: avanzar hasta retiro (8 seasons default).
 - assertVisible:
     id: temporada-screen
 - repeat:
@@ -129,13 +146,13 @@ tags:
           id: btn-temporada-play
       - waitForAnimationToEnd
 
-# AC7.9 — Pantalla retirement: confirmar que la última temporada
+# AC7.10 — Pantalla retirement: confirmar que la última temporada
 # disparó el cierre de loop. El snapshot persistido debe tener
 # `stage: 'retirement'` para que el relaunch hidrate correctamente.
 - assertVisible:
     id: temporada-last-season
 
-# AC7.10 — Force-stop del proceso vía adb. Aquí es donde el bug
+# AC7.11 — Force-stop del proceso vía adb. Aquí es donde el bug
 # histórico se manifestaba: un force-stop antes de que AsyncStorage
 # confirmara el `setItem` perdía el snapshot. Con C1+C2+C3+C4 en
 # el bridge, el snapshot ya está en disco.
@@ -144,7 +161,7 @@ tags:
 # No se requiere pausa adicional — la espera previa de 10s con `- wait:` es
 # inválida en Maestro 2.x (top-level) y fue removida en MGC-502.
 
-# AC7.11 — Relaunch. La app debe abrir en home con CTA "Continuar"
+# AC7.12 — Relaunch. La app debe abrir en home con CTA "Continuar"
 # (resume CTA post-relaunch con snapshot stage='retirement').
 - launchApp:
     appId: com.mgcstudios.copero

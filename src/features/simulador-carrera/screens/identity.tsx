@@ -6,6 +6,7 @@ import {
   TextInput,
   View,
   Pressable,
+  InteractionManager,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -59,8 +60,30 @@ export default function IdentityScreen() {
     // El draft arranca desde el CTA del propio dashboard. Mantener el stage
     // sincronizado con la URL evita el "Unmatched Route" que QA reprodujo en
     // PR #169 (9/33 specs fallaban esperando `**/simulador-carrera/dashboard`).
+    //
+    // MGC-532 — el push al dashboard se difiere hasta que RN termine de
+    // procesar las interacciones pendientes (`InteractionManager.runAfterInteractions`).
+    // En ZY22G728HN + PR #197 (footer fijo), el push síncrono inmediato
+    // competía con la animación de focus del EditText recién dismissed
+    // y el chunk lazy del dashboard (~1 s de Metro). El resultado era
+    // que la app montaba `dashboard-screen` 146 ms post-tap y luego
+    // rebotaba al launcher 645 ms después — el OS mataba el proceso
+    // porque la transición de Stack + lazy-load del chunk del dashboard
+    // coincidía con el foco residual del teclado aún en reanimación
+    // (QA MGC-531 sobre PR #202, step 12 de `draft-complete-club.yaml`
+    // falla con `Element not found: btn-dashboard-draft`).
+    //
+    // Diferir a `runAfterInteractions` deja que RN complete la animación
+    // de focus → blur del EditText + cualquier settle de layout antes
+    // de disparar la navegación, eliminando el conflicto.
+    //
+    // Además usamos `router.replace` en vez de `push` para que identity
+    // no quede en el back-stack post-commit (memory pressure + UX más
+    // limpio: back desde dashboard va a home, no al form ya enviado).
     commitIdentity();
-    router.push('/simulador-carrera/dashboard');
+    InteractionManager.runAfterInteractions(() => {
+      router.replace('/simulador-carrera/dashboard');
+    });
   };
 
   return (
