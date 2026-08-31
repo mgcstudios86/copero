@@ -1,5 +1,8 @@
-import React, { Suspense, lazy, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,7 +12,7 @@ import {
   InteractionManager,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { onKeyActivate } from '@/design/utils/keyboardActivation';
@@ -29,6 +32,44 @@ const JerseyPreview = lazy(() =>
 export default function IdentityScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  // MGC-610: en ZY22G728HN 1080x2400, el KeyboardAvoidingView con behavior=height
+  // (PR-226 commit 3be92dd) solo reducia la altura del ScrollView en ~152px
+  // (y=1907 -> 1755) y NO empujaba el footer fijo. Con teclado abierto
+  // (~1080px de alto), btn-identity-continue quedaba en [40,1796][1040,1938]
+  // detras del IME (top y~1296). Tambien el sticky stepper colapsaba a h=-128.
+  //
+  // Estrategia: `softwareKeyboardLayoutMode: "pan"` en app.json (ajusta el
+  // AndroidManifest a `adjustPan`) + offset manual via Keyboard.addListener
+  // + paddingBottom en el wrapper. Con `pan` el OS NO reduce la ventana,
+  // solo scrollea el input enfocado — el padding manual del wrapper empuja
+  // el stepper sticky y el footer (Continue) arriba del IME sin doble descuento
+  // (anteriormente `adjustResize` default + KAV padding = doble descuento,
+  // REVIEW CTO MGC-709). Restamos `insets.bottom` para no doble-contar la
+  // safe area del gesture nav bar (84px en ZY22G728HN). El padding se aplica
+  // al wrapper, NO al SafeAreaView, para evitar conflicto con edges=['bottom'].
+  // En iOS, KeyboardAvoidingView maneja el offset nativamente.
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardOffset(Math.max(0, e.endCoordinates.height - insets.bottom));
+      },
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardOffset(0);
+      },
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [insets.bottom]);
 
   const profile = useCareerStore((s) => s.profile);
   const setName = useCareerStore((s) => s.setName);
@@ -109,6 +150,20 @@ export default function IdentityScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['bottom']}>
+      {/* MGC-610: wrapper View con paddingBottom dinamico. Cuando el IME
+          se abre, keyboardOffset sube al alto del teclado menos el inset
+          inferior (84px en ZY22G728HN). Esto empuja el stepper sticky y el
+          footer (Continue) arriba del keyboard. NO se aplica al SafeAreaView
+          directo porque edges=['bottom'] ya consume el inset del gesture
+          nav bar — sumarlos darian doble padding. En iOS, KeyboardAvoidingView
+          maneja el offset nativamente, por eso el padding solo se aplica en
+          Android. */}
+      <KeyboardAvoidingView
+        style={styles.kav}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
+      >
+      <View style={[styles.kavContent, { paddingBottom: Platform.OS === 'android' ? keyboardOffset : 0 }]}>
       {/* MGC-429: el testID `identity-screen` vive en el wrapper
           (`app/simulador-carrera/identity.tsx`) que monta sincrónicamente
           antes de que el chunk lazy de este componente termine de cargar.
@@ -198,13 +253,12 @@ export default function IdentityScreen() {
         </View>
 
         {/* Name */}
-        {/* MGC-674: input-name colapsado en uiautomator (bounds h=-53) en
-            build-PR-235-1-mgc632-098150e.apk → tap Maestro no aceptaba foco.
-            Mismo patrón wrapper View collapsable=false que btn-foot-row
-            (MGC-647 commit a587d82 / PR-228-2 sobre PR-227 commit 6be789c):
-            evita que RN-Android colapse el View en la jerarquía nativa y
-            mantiene bounds reales en el dump. Sin afectar el estilo visual
-            del TextInput. */}
+        {/* MGC-686: tras PR #243 (MGC-674) el wrapper View collapsable=false
+            + minHeight:48 seguía colapsando (bounds h=-22) porque RN-Android
+            colapsa TextInput en la jerarquía nativa, lo que también colapsa al
+            wrapper. Diagnóstico MGC-677: aplicar collapsable={false} en el
+            TextInput además del wrapper. Sin afectar estilo visual.
+            Patrón canónico MGC-594/PR-227 commit 6be789c extendido al TextInput. */}
         <Field label="Nombre">
           <View
             testID="input-name-wrapper"
@@ -219,6 +273,7 @@ export default function IdentityScreen() {
               autoCapitalize="words"
               autoCorrect={false}
               maxLength={24}
+              collapsable={false}
               style={[
                 styles.input,
                 {
@@ -591,6 +646,8 @@ export default function IdentityScreen() {
           accessibilityHint="Guarda la identidad y abre el dashboard"
         />
       </View>
+      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -616,6 +673,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+  // MGC-610: KAV ocupa todo el alto del SafeAreaView para que el padding
+  // de iOS afecte al split ScrollView + footer. En Android el padding
+  // se aplica via kavContent para no chocar con adjustResize del OS.
+  kav: { flex: 1 },
+  // MGC-610: wrapper interior con paddingBottom dinamico (Android). El
+  // padding empuja el stepper sticky + footer arriba del IME sin tocar
+  // el SafeAreaView edges=['bottom'].
+  kavContent: { flex: 1 },
   container: {},
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
