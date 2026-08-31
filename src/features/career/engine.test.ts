@@ -191,12 +191,28 @@ describe('career fixtures', () => {
     s = step(s, { type: 'startDraft', seed: 42 });
     for (let r = 0; r < 8; r++) s = step(s, { type: 'pickLegend' });
     expect(s.card).toBeTruthy();
+    // MGC-427: tras 8 picks, stage debe pasar a 'club' para que el draft
+    // screen navegue a /simulador-carrera/tu-jugador.
+    expect(s.stage).toBe('club');
     const ovrSinFit = s.profile.ovr;
     // Boca tiene fitBonus=2 para attack.
     s = step(s, { type: 'setPosition', position: 'ST' });
     s = step(s, { type: 'pickClub', club: ACADEMY_CLUBS[3] }); // Boca
     // fitBonus=2 + EQUILIBRIO bonus... Boca es AMBICIÓN (bonus=0). fitBonus=2.
     expect(s.profile.ovr).toBeGreaterThanOrEqual(ovrSinFit + 2);
+  });
+
+  it('MGC-427: tras 8 pickLegend, stage es "club" y draft.picks.length === 8', () => {
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'M' });
+    s = step(s, { type: 'commitIdentity' });
+    s = step(s, { type: 'openAcademy' });
+    s = step(s, { type: 'acceptClub', club: ACADEMY_CLUBS[0] });
+    s = step(s, { type: 'startDraft', seed: 7 });
+    for (let r = 0; r < 8; r++) s = step(s, { type: 'pickLegend' });
+    expect(s.stage).toBe('club');
+    expect(s.draft?.picks.length).toBe(8);
+    expect(s.card).toBeTruthy();
   });
 
   it('NATIONALITIES está indexada por código', () => {

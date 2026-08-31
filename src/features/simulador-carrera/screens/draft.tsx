@@ -70,6 +70,22 @@ export default function DraftScreen() {
     // hasta que AsyncStorage confirme la pick + board. AC4 — 8 rounds
     // + force-stop dependía de esto.
     await pickLegend();
+    // MGC-427: tras el pick 8, `pickLegend` setea stage='club' en la
+    // store. El useEffect de arriba vigila la transición, pero en build
+    // Android (build-pr174-mgc396.apk) la navegación no llegaba — el
+    // usuario quedaba en /draft con ronda 8 ya confirmada sin destino.
+    // Hacemos la navegación acá, explícita, leyendo el snapshot
+    // actualizado vía `useCareerStore.getState()` (evita una carrera
+    // con un re-render perdido). El useEffect queda como red de
+    // seguridad por si esta rama no se ejecuta (force-stop justo en el
+    // await, hot-reload, etc.).
+    const next = useCareerStore.getState();
+    if (
+      next.stage === 'club' ||
+      (next.draft && next.draft.picks.length >= DRAFT_SLOTS.length)
+    ) {
+      router.replace('/simulador-carrera/tu-jugador');
+    }
   };
 
   const onSwap = async () => {
