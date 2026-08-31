@@ -513,14 +513,20 @@ export default function IdentityScreen() {
         </Field>
 
         </ScrollView>
-      {/* MGC-585: stepper +/- en sticky footer entre el form scrollable y el
-          botón Continuar. Antes el row caía al borde inferior del ScrollView
-          (y=1907 en ZY22G728HN) y, con el soft keyboard abierto, RN medía
-          height=0 aunque collapsable={false} estuviera aplicado, porque la
-          fila quedaba fuera del fold visible y no entraba en la jerarquía
-          accesible que uiautomator reporta. Sticky garantiza que el stepper
-          está siempre presente en la jerarquía, con bounds reales (>0),
-          sin depender del estado del IME. */}
+      {/* MGC-585 + MGC-744: stepper +/- en sticky footer entre el form scrollable
+          y el botón Continuar. MGC-585 (PR #223 / ea57f8b) extrajo el row del
+          ScrollView; MGC-744 agrega el wrapper canónico collapsable=false +
+          height:48 + minHeight:48 sobre el row padre porque, aunque los
+          Pressable hijos tuvieran collapsable={false}, en cold-start fresh
+          mount (no resume from dashboard) el View row padría colapsar a
+          wrap_content=0 en el primer layout pass de RN-Android y uiautomator
+          reportaba bounds=[40,1907][150,1907] height=0 — invisible=true y
+          Maestro tapOn saltaba silenciosamente. El wrapper colapsable=false
+          + altura explícita evita el colapso a ViewGroup h=0 desde el primer
+          frame del identity cold-start. testID row permite hook adicional en
+          Maestro para asserts de subtree.
+
+          Refs: MGC-571 / MGC-585 / MGC-591 / MGC-594 (6be789c), MGC-744. */}
       <View
         testID="btn-number-sticky"
         collapsable={false}
