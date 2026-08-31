@@ -56,12 +56,14 @@ tags:
     text: "Mateo MGC490"
     label: "Nombre del jugador"
 
-# Tap identity-screen header to dismiss soft keyboard focus.
-- tapOn:
-    id: identity-screen
-    label: "Dismiss keyboard focus"
+# Hide soft keyboard (Maestro 2.x native command) para descartar
+# foco del EditText antes del scroll. Reemplaza el tapOn identity-screen
+# de PR #198, que solo tocaba el header pero no dismissaba el IME en
+# Android (MGC-527).
+- hideKeyboard
+- waitForAnimationToEnd
 
-# Scroll down to reveal continue button (also dismisses keyboard).
+# Scroll down to reveal continue button.
 - scrollUntilVisible:
     element:
       id: btn-identity-continue
