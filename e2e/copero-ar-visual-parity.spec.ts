@@ -195,21 +195,41 @@ test.describe('MGC-556 — Visual parity web vs copero.com.ar', () => {
     await page.goto(`${TARGET_URL}/`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
 
-    const radiusObservations = await page.evaluate(() => {
-      // Selector amplio: cualquier elemento que parezca card (bg oscuro
-      // + border visible + radius > 4px). Filtramos los obvios (button
-      // pill = radius 9999, se acepta).
-      const all = Array.from(document.querySelectorAll('div, section, article'));
-      return all
-        .map((el) => {
-          const cs = window.getComputedStyle(el);
-          const r = parseFloat(cs.borderTopLeftRadius || '0');
-          if (r < 12) return null;
-          return { tag: el.tagName, radius: r, bg: cs.backgroundColor };
-        })
-        .filter(Boolean)
-        .slice(0, 10);
-    });
+    // MGC-452 (PR #182 run 33349873432): flake cuando `networkidle→load`
+    // se cumple antes que HeroCard/LeagueCard terminen de montar / aplicar
+    // estilos — radiusObservations.length quedaba en 0. Reintentamos la
+    // observación con `expect.poll` hasta que aparezca al menos 1 card con
+    // border-radius ≥ 12px.
+    const observeRadiusCards = (): Promise<
+      { tag: string; radius: number; bg: string }[]
+    > =>
+      page.evaluate(() => {
+        // Selector amplio: cualquier elemento que parezca card (bg oscuro
+        // + border visible + radius > 4px). Filtramos los obvios (button
+        // pill = radius 9999, se acepta).
+        const all = Array.from(document.querySelectorAll('div, section, article'));
+        return all
+          .map((el) => {
+            const cs = window.getComputedStyle(el);
+            const r = parseFloat(cs.borderTopLeftRadius || '0');
+            if (r < 12) return null;
+            return { tag: el.tagName, radius: r, bg: cs.backgroundColor };
+          })
+          .filter(Boolean)
+          .slice(0, 10);
+      });
+
+    let radiusObservations: { tag: string; radius: number; bg: string }[] = [];
+    await expect
+      .poll(async () => {
+        radiusObservations = await observeRadiusCards();
+        return radiusObservations.length;
+      }, {
+        message: 'al menos 1 elemento con border-radius ≥ 12px (HeroCard/LeagueCard)',
+        timeout: 15_000,
+        intervals: [100, 250, 500],
+      })
+      .toBeGreaterThanOrEqual(1);
 
     expect(radiusObservations.length).toBeGreaterThanOrEqual(1);
     await page.screenshot({
