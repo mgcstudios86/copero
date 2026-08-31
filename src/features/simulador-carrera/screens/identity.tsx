@@ -231,7 +231,30 @@ export default function IdentityScreen() {
 
         {/* Preferred foot */}
         <Field label="Pie hábil">
-          <View style={{ flexDirection: 'row', gap: spacing[2] }}>
+          {/* MGC-619: wrapper View collapsable=false + height:48 para
+              bounds reales en uiautomator dump sobre ZY22G728HN. PR-228
+              (commit 1540c87) re-aplicó el patrón canónico de MGC-594
+              (PR-227, commit 6be789c) en el stepper pero omitió este
+              row de radios. Sin el wrapper, el flexDirection:'row' con
+              3 Pressable hijos colapsa a height=-248 en el ancestor flex
+              del ScrollView (adjustResize) y tap (985,1910) sobre
+              "Derecho" no aplica preferredFoot. Mismo patrón que el
+              stepper: testID="btn-foot-row" + collapsable={false} +
+              height:48 + minHeight:48 + width:100% + overflow:visible
+              + alignItems:center (memory copero-pr228-2-pie-habil-wrapper). */}
+          <View
+            testID="btn-foot-row"
+            collapsable={false}
+            style={{
+              flexDirection: 'row',
+              gap: spacing[2],
+              alignItems: 'center',
+              height: 48,
+              minHeight: 48,
+              width: '100%',
+              overflow: 'visible',
+            }}
+          >
             {(['left', 'right', 'both'] as Foot[]).map((f) => {
               const active = profile.preferredFoot === f;
               return (
@@ -239,14 +262,16 @@ export default function IdentityScreen() {
                   key={f}
                   onPress={() => setPreferredFoot(f)}
                   {...onKeyActivate(() => setPreferredFoot(f))}
+                  collapsable={false}
                   style={{
                     flex: 1,
-                    paddingVertical: spacing[3],
+                    height: 48,
                     borderRadius: radii.md,
                     borderWidth: 1,
                     borderColor: active ? colors.primary : colors.borderStrong,
                     backgroundColor: active ? colors.primarySoft : colors.surface,
                     alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
