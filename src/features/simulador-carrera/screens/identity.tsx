@@ -34,21 +34,44 @@ export default function IdentityScreen() {
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
   const insets = useSafeAreaInsets();
 
-  // MGC-610: en ZY22G728HN 1080x2400, el KeyboardAvoidingView con behavior=height
-  // (PR-226 commit 3be92dd) solo reducia la altura del ScrollView en ~152px
-  // (y=1907 -> 1755) y NO empujaba el footer fijo. Con teclado abierto
-  // (~1080px de alto), btn-identity-continue quedaba en [40,1796][1040,1938]
-  // detras del IME (top y~1296). Tambien el sticky stepper colapsaba a h=-128.
+  // MGC-710 — estrategia única de keyboard avoidance en identity.
   //
-  // Causa raiz: `adjustResize` en AndroidManifest + KAV behavior=height
-  // doble-aplican el resize y el KAV termina midiendo mal. Ademas el footer
-  // como sibling del ScrollView no participa del shrink del KAV.
+  // Contexto del lineage:
+  //   PR #224 (827ebc9) intento combinar KAV behavior=padding (iOS) +
+  //   Keyboard.addListener + paddingBottom dinamico en wrapper (Android).
+  //   CTO review (MGC-709) devolvio REQUEST CHANGES porque el codigo
+  //   asumia implicitamente `adjustResize` (default Expo/Android) y lo
+  //   aplicaba sobre una ventana YA achicada por el OS. En ZY22G728HN
+  //   1080x2400, sumar paddingBottom = keyboardHeight - insets.bottom
+  //   (~1000px) sobre una ventana ya shrunk daba doble-descuenta y podia
+  //   empujar el footer/stepper fuera del area visible.
   //
-  // Fix: combinar KeyboardAvoidingView (iOS) + offset manual via
-  // Keyboard.addListener + paddingBottom en el wrapper. Restamos `insets.bottom`
-  // para no doble-contar la safe area del gesture nav bar (84px en ZY22G728HN).
-  // El padding se aplica al wrapper, NO al SafeAreaView, para evitar conflicto
-  // con edges=['bottom'].
+  // Estrategia elegida: una sola fuente de verdad.
+  //   1. app.json -> android.softwareKeyboardLayoutMode = "pan".
+  //      Mapea a android:windowSoftInputMode="adjustPan" en AndroidManifest.
+  //      El OS NO resizea la ventana cuando el IME se abre: deja el viewport
+  //      intacto y solo intenta hacer scroll para que el input enfocado
+  //      quede visible. Esto saca del medio el shrink automatico del OS.
+  //   2. Keyboard.addListener calcula keyboardOffset = endCoordinates.height
+  //      - insets.bottom y lo aplica como paddingBottom al wrapper interior.
+  //      Es la UNICA fuente de empuje del footer/stepper arriba del IME.
+  //   3. iOS usa KeyboardAvoidingView nativo (behavior=padding) — iOS no
+  //      tiene el problema adjustResize vs manual porque RN mide el keyboard
+  //      frame correctamente desde el main run loop.
+  //
+  // Por que NO las otras alternativas:
+  //   - "resize + eliminar padding manual": el sticky footer como sibling
+  //     del ScrollView no participa del shrink del KAV. Sin padding manual,
+  //     el footer queda detras del IME (ver bounds [40,1796][1040,1938] vs
+  //     top IME y~1296 reportados por QA MGC-602).
+  //   - "resize + onLayout medir keyboardTop-footerTop": agregaria un
+  //     useState/useEffect extra + measureInWindow por focus event, sin
+  //     garantia de bounds sincronizados con el IME animation en <16ms.
+  //     El pan-mode lo resuelve sin instrumentacion adicional.
+  //
+  // Restamos insets.bottom para no doble-contar la safe area del gesture
+  // nav bar (84px en ZY22G728HN): el wrapper NO es SafeAreaView, lo evita
+  // a proposito para no chocar con edges=['bottom'] del padre.
   const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   useEffect(() => {
@@ -149,13 +172,15 @@ export default function IdentityScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['bottom']}>
-      {/* MGC-610: wrapper View con paddingBottom dinamico. Cuando el IME
-          se abre, keyboardOffset sube al alto del teclado menos el inset
-          inferior (84px en ZY22G728HN). Esto empuja el stepper sticky y el
-          footer (Continue) arriba del keyboard. NO se aplica al SafeAreaView
-          directo porque edges=['bottom'] ya consume el inset del gesture
-          nav bar — sumarlos darian doble padding. En iOS, KeyboardAvoidingView
-          maneja el offset nativamente, por eso el padding solo se aplica en
+      {/* MGC-710: wrapper View con paddingBottom dinamico. Single source of
+          truth para empujar el stepper sticky + footer arriba del IME.
+          El OS NO resizea (android.softwareKeyboardLayoutMode=pan en
+          app.json), por lo que este padding es la unica compensacion
+          contra el alto del teclado. Restamos insets.bottom (84px en
+          ZY22G728HN por gesture nav bar) para no doble-contar — el
+          SafeAreaView padre ya consume ese inset via edges=['bottom'].
+          En iOS, KeyboardAvoidingView con behavior=padding maneja el
+          offset nativamente, por eso el padding aqui solo se aplica en
           Android. */}
       <KeyboardAvoidingView
         style={styles.kav}
