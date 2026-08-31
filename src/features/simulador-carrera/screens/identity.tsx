@@ -202,59 +202,13 @@ export default function IdentityScreen() {
           />
         </Field>
 
-        {/* Number */}
-        <Field label="Número (1–99)">
-          <View style={{ flexDirection: 'row', gap: spacing[3] }}>
-            <Pressable
-              onPress={() => setNumber(profile.number - 1)}
-              accessibilityRole="button"
-              accessibilityLabel="Restar número"
-              testID="btn-number-minus"
-              hitSlop={12}
-              {...onKeyActivate(() => setNumber(profile.number - 1))}
-              style={[
-                styles.stepBtn,
-                { borderColor: colors.borderStrong, borderRadius: radii.md },
-              ]}
-            >
-              <Text style={{ color: colors.text, fontSize: fontSize.lg }}>−</Text>
-            </Pressable>
-            <View
-              style={[
-                styles.numberDisplay,
-                {
-                  borderColor: colors.borderStrong,
-                  borderRadius: radii.md,
-                  backgroundColor: colors.surface,
-                },
-              ]}
-            >
-              <Text
-                style={{
-                  color: colors.textStrong,
-                  fontSize: fontSize['2xl'],
-                  fontWeight: fontWeight.bold,
-                }}
-              >
-                {profile.number}
-              </Text>
-            </View>
-            <Pressable
-              onPress={() => setNumber(profile.number + 1)}
-              accessibilityRole="button"
-              accessibilityLabel="Sumar número"
-              testID="btn-number-plus"
-              hitSlop={12}
-              {...onKeyActivate(() => setNumber(profile.number + 1))}
-              style={[
-                styles.stepBtn,
-                { borderColor: colors.borderStrong, borderRadius: radii.md },
-              ]}
-            >
-              <Text style={{ color: colors.text, fontSize: fontSize.lg }}>+</Text>
-            </Pressable>
-          </View>
-        </Field>
+        {/* MGC-585: el stepper +/- se renderiza ahora en un sticky footer
+            entre el ScrollView y el Continue (ver styles.stepperSticky).
+            Lo sacamos del ScrollView porque caía al borde inferior del
+            viewport (y=1907 en ZY22G728HN con IME abierto) y quedaba con
+            height=0 en el reporte de uiautomator — colapsable={false} no
+            alcanzaba porque la fila no entraba en la jerarquía accesible.
+            Sticky garantiza bounds reales sin depender del estado del IME. */}
 
         {/* Preferred foot */}
         <Field label="Pie hábil">
@@ -458,6 +412,96 @@ export default function IdentityScreen() {
         </Field>
 
         </ScrollView>
+      {/* MGC-585: stepper +/- en sticky footer entre el form scrollable y el
+          botón Continuar. Antes el row caía al borde inferior del ScrollView
+          (y=1907 en ZY22G728HN) y, con el soft keyboard abierto, RN medía
+          height=0 aunque collapsable={false} estuviera aplicado, porque la
+          fila quedaba fuera del fold visible y no entraba en la jerarquía
+          accesible que uiautomator reporta. Sticky garantiza que el stepper
+          está siempre presente en la jerarquía, con bounds reales (>0),
+          sin depender del estado del IME. */}
+      <View
+        style={[
+          styles.stepperSticky,
+          {
+            backgroundColor: colors.bg,
+            borderTopColor: colors.border,
+            padding: spacing[4],
+          },
+        ]}
+      >
+        <Text
+          style={{
+            color: colors.textMuted,
+            fontSize: fontSize.sm,
+            fontWeight: fontWeight.semibold,
+            letterSpacing: 1,
+            marginBottom: spacing[2],
+          }}
+        >
+          NÚMERO (1–99)
+        </Text>
+        <View style={{ flexDirection: 'row', gap: spacing[3] }}>
+          <Pressable
+            onPress={() => setNumber(profile.number - 1)}
+            accessibilityRole="button"
+            accessibilityLabel="Restar número"
+            testID="btn-number-minus"
+            hitSlop={12}
+            collapsable={false}
+            {...onKeyActivate(() => setNumber(profile.number - 1))}
+            style={[
+              styles.stepBtn,
+              {
+                borderColor: colors.borderStrong,
+                borderRadius: radii.md,
+                backgroundColor: colors.surface,
+              },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontSize: fontSize.lg }}>−</Text>
+          </Pressable>
+          <View
+            style={[
+              styles.numberDisplay,
+              {
+                borderColor: colors.borderStrong,
+                borderRadius: radii.md,
+                backgroundColor: colors.surface,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: colors.textStrong,
+                fontSize: fontSize['2xl'],
+                fontWeight: fontWeight.bold,
+              }}
+            >
+              {profile.number}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => setNumber(profile.number + 1)}
+            accessibilityRole="button"
+            accessibilityLabel="Sumar número"
+            testID="btn-number-plus"
+            hitSlop={12}
+            collapsable={false}
+            {...onKeyActivate(() => setNumber(profile.number + 1))}
+            style={[
+              styles.stepBtn,
+              {
+                borderColor: colors.borderStrong,
+                borderRadius: radii.md,
+                backgroundColor: colors.surface,
+              },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontSize: fontSize.lg }}>+</Text>
+          </Pressable>
+        </View>
+      </View>
       {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
           el soft keyboard esté abierto o el form se desplace. El botón
           sigue siendo testeable por testID `btn-identity-continue` desde
@@ -517,15 +561,23 @@ const styles = StyleSheet.create({
   footer: {
     borderTopWidth: StyleSheet.hairlineWidth,
   },
+  // MGC-585: contenedor sticky del stepper +/- sobre el Continue.
+  // borderTop sutil separa visualmente del ScrollView. minHeight del row
+  // padre fija el piso vertical para que RN-Android no comprima la fila
+  // cuando el soft keyboard se cierra/reabre y dispare un re-layout.
+  stepperSticky: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   input: {
     borderWidth: 1,
   },
   stepBtn: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   numberDisplay: {
     flex: 1,

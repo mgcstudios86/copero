@@ -143,25 +143,13 @@ jobs:
           INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY: ${{ secrets.INFISICAL_EXPO_PUBLIC_FIREBASE_API_KEY || '' }}
 
       - name: Run Playwright
-        # MGC-444: revertir --grep-invert parcial post-PR #182.
-        # El fix de causa-raíz del hang (actionTimeout 30s + maxFailures=5
-        # en playwright.config.ts, per-call screenshot timeout 30s) protege
-        # correctamente a _visual-regression y a11y-axe — verificado PASS en
-        # run QA 33349873432. PERO exponer la matrix completa despertó 3
-        # fallas pre-existentes que NO son scope del fix de hang:
-        #   1) e2e/simulador-carrera.spec.ts:91 — strict mode getByTestId
-        #      "identity-screen" resuelve 2 elementos (MGC-431).
-        #   2) e2e/a11y-keyboard.spec.ts:23 — keyboard-only happy path
-        #      falla en home → identity → dashboard (MGC-505 keyboard).
-        #   3) e2e/copero-ar-visual-parity.spec.ts:200 — flaky radius
-        #      observations (MGC-556). Se triangula en ticket aparte.
-        # Estrategia: re-añadir --grep-invert SOLO para los 2 specs cuyo
-        # investigate bloquea la matrix (simulador-carrera + a11y-keyboard).
-        # Mantener visual-regression (MGC-505) + axe-core scan dentro del
-        # suite — el fix de causa-raíz del hang los protege, no requieren
-        # exclusión. Cada bug pre-existente se triage como ticket separado.
-        # Tickets abiertos: MGC-431, MGC-505-keyboard, MGC-556.
-        run: npm run test:e2e:web -- --grep-invert "MGC-431 — simulador-carrera walk end-to-end|Copero — keyboard-only happy path \(web\) — MGC-505"
+        # MGC-598 / MGC-460: simulador-carrera strict-mode identity-screen
+        # resuelto por MGC-429 / PR #180 (wrapper único en
+        # app/simulador-carrera/identity.tsx:33). El spec pasa con
+        # --workers=1 --retries=0 sin .first() defensivo — validado PASS
+        # local 3/3 en 11.7s. Solo queda invertida la spec a11y-keyboard
+        # (MGC-505 keyboard, fix vive en ticket aparte).
+        run: npm run test:e2e:web -- --grep-invert "Copero — keyboard-only happy path \(web\) — MGC-505"
         env:
           CI: 'true'
           EXPO_WEB_BASE_URL: http://127.0.0.1:${{ steps.e2e-port.outputs.port }}
