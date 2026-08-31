@@ -8,6 +8,7 @@ import {
   AccessibilityProps,
   Platform,
   PressableStateCallbackType,
+  Insets,
 } from 'react-native';
 import { useTheme } from '../useTheme';
 import { useReducedMotion } from '../useReducedMotion';
@@ -27,6 +28,13 @@ type ButtonProps = {
   iconRight?: React.ReactNode;
   fullWidth?: boolean;
   accessibilityHint?: string;
+  /**
+   * hitSlop opcional para extender el área tocable del Pressable más allá
+   * de los bounds visuales. Útil para CTAs críticos en pantallas donde el
+   * thumb-reach puede descentrar el tap por 1-2 cm (MGC-425: btn-career del
+   * splash en ZY22G728HN 1080x2400).
+   */
+  hitSlop?: Insets | number;
 } & Omit<AccessibilityProps, 'accessibilityRole' | 'accessibilityState'>;
 
 export function Button({

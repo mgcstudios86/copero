@@ -88,12 +88,25 @@ export default function Home() {
 
   // MGC-394: el splash ocupa el viewport visible. Cap por aspect ratio
   // para que en tablets/landscape no quede una franja gigante de imagen;
-  // piso mínimo 320 px garantiza legibilidad del título en 320x568.
+  // piso mínimo 240 px garantiza legibilidad del título en 320x568.
+  // MGC-425 fix: en mobile angosto (≤600 dp en su lado menor) bajamos el
+  // cap a 300 para que el botón Jugar quede más arriba en pantallas
+  // 1080x2400 (ZY22G728HN). MGC-453 fix: el cap previo de 360 dejaba el
+  // btn en y≈1100 y el usuario seguía tapeando cerca del ad-banner; el
+  // nuevo cap de 300 + hitSlop bottom=100 en el btn garantiza que un tap
+  // intencional sobre el btn (o su hit-area extendida) registre el Pressable
+  // sin caer en el gap inferior. Detección compact usa Math.min(width,height)
+  // para cubrir portrait y landscape; antes usaba sólo width y el dispositivo
+  // 1080x2400 (432 dp) quedaba correctamente compacto pero la altura del
+  // splash seguía alta por la combinación ratio 0.48 + cap 360.
   const splashHeight = useMemo(() => {
-    const ratio = 0.62;
-    const capped = Math.min(Math.max(viewportHeight * ratio, 320), 560);
+    const shortestSide = Math.min(viewportWidth, viewportHeight);
+    const isCompact = shortestSide < 600;
+    const ratio = isCompact ? 0.42 : 0.62;
+    const cap = isCompact ? 300 : 560;
+    const capped = Math.min(Math.max(viewportHeight * ratio, 240), cap);
     return Math.round(capped);
-  }, [viewportHeight]);
+  }, [viewportHeight, viewportWidth]);
 
   // MGC-394: la imagen de referencia usa `assets/splash.png` bundleado en
   // Expo. Si require falla (web sin bundle), fallback a superficie accentDeep
@@ -188,7 +201,18 @@ export default function Home() {
             para que los e2e (home.spec, mgc-317-qa, mgc-462-contrast)
             sigan funcionando sin tocarlos. Label visible = "Jugar";
             accessibilityLabel = "Iniciar carrera" para usuarios de
-            TalkBack/VoiceOver. */}
+            TalkBack/VoiceOver.
+            MGC-425: `hitSlop` extiende el área tocable más allá de los
+            bounds visuales para que un tap descentrado por 1-2 cm (típico
+            en thumb-reach en pantallas 1080x2400) siga registrando el
+            Pressable en lugar de caer en el gap inferior hacia el
+            ad-banner.
+            MGC-453: hitSlop de 16 px en cada lado era insuficiente — el gap
+            entre el borde inferior real del btn y el tap histórico era de
+            84 px en ZY22G728HN. Aumentamos bottom a 100 para garantizar
+            captura incluso cuando el usuario tapea entre el btn y el
+            ad-banner (lugar intuitivo si la splash quedó alta). top/left/right
+            se mantienen en 16 para no invadir UI adyacente. */}
         <Button
           label="Jugar"
           onPress={goPlay}
@@ -198,6 +222,7 @@ export default function Home() {
           testID="btn-career"
           accessibilityLabel="Iniciar carrera"
           accessibilityHint="Abre el formulario de identidad para empezar una nueva carrera"
+          hitSlop={{ top: 16, bottom: 100, left: 16, right: 16 }}
         />
 
         {/* ── CTA secundario: Continuar carrera si hay sesión ──────── */}
