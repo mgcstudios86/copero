@@ -225,57 +225,15 @@ export default function IdentityScreen() {
           />
         </Field>
 
-        {/* Preferred foot */}
-        <Field label="Pie hábil">
-          {/* MGC-619: wrapper View collapsable=false + minHeight:48 para
-              garantizar bounds reales en uiautomator dump (ZY22G728HN).
-              Sin collapsable={false} el row colapsa a height negativo
-              fuera del fold y no entra en la jerarquía accesible.
-              Memory: copero-pr228-2-pie-habil-wrapper. */}
-          <View
-            testID="btn-foot-row"
-            collapsable={false}
-            style={{
-              flexDirection: 'row',
-              gap: spacing[2],
-              width: '100%',
-              minHeight: 48,
-              overflow: 'visible',
-            }}
-          >
-            {(['left', 'right', 'both'] as Foot[]).map((f) => {
-              const active = profile.preferredFoot === f;
-              return (
-                <Pressable
-                  key={f}
-                  onPress={() => setPreferredFoot(f)}
-                  {...onKeyActivate(() => setPreferredFoot(f))}
-                  style={{
-                    flex: 1,
-                    paddingVertical: spacing[3],
-                    borderRadius: radii.md,
-                    borderWidth: 1,
-                    borderColor: active ? colors.primary : colors.borderStrong,
-                    backgroundColor: active ? colors.primarySoft : colors.surface,
-                    alignItems: 'center',
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Text
-                    style={{
-                      color: active ? colors.primary : colors.text,
-                      fontWeight: fontWeight.semibold,
-                      fontSize: fontSize.sm,
-                    }}
-                  >
-                    {f === 'left' ? 'Izquierdo' : f === 'right' ? 'Derecho' : 'Ambos'}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Field>
+        {/* MGC-632: Pie hábil movido al footer sticky (ver bloque abajo).
+            Estar dentro del ScrollView lo dejaba clipped a y=1757 bajo el
+            IME en ZY22G728HN → bounds invertidos [40,1907][1040,1757].
+            El wrapper collapsable=false + minHeight:48 (PR-228-2) no
+            resolvía el clipping del scroll. Solución arquitectural:
+            sacar el row del ScrollView y montarlo en el footer fijo
+            junto al stepper + Continue, igual que MGC-621 hizo con
+            btn-number-row. Memory: copero-pr228-2-pie-habil-wrapper,
+            copero-sticky-footer-stepper-pattern, copero-mgc594-pr227-wrapper-view-fix. */}
 
         {/* Field map */}
         <Field label="Posición (tap en el campo)">
@@ -543,6 +501,56 @@ export default function IdentityScreen() {
           >
             <Text style={{ color: colors.text, fontSize: fontSize.lg }}>+</Text>
           </Pressable>
+        </View>
+        {/* MGC-632: radios Pie hábil movidos del ScrollView al footer
+            sticky. Wrapper collapsable=false + height:48 explícito para
+            bounds reales en uiautomator dump (ZY22G728HN). Vive dentro
+            del footer flex sin ancestor flex del ScrollView → sin
+            clipping por IME. Mismo patrón que btn-number-row (MGC-621)
+            y pie-hábil wrapper original (MGC-619). */}
+        <View
+          testID="btn-foot-row"
+          collapsable={false}
+          style={{
+            flexDirection: 'row',
+            gap: spacing[2],
+            width: '100%',
+            height: 48,
+            overflow: 'visible',
+          }}
+        >
+          {(['left', 'right', 'both'] as Foot[]).map((f) => {
+            const active = profile.preferredFoot === f;
+            return (
+              <Pressable
+                key={f}
+                onPress={() => setPreferredFoot(f)}
+                {...onKeyActivate(() => setPreferredFoot(f))}
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: radii.md,
+                  borderWidth: 1,
+                  borderColor: active ? colors.primary : colors.borderStrong,
+                  backgroundColor: active ? colors.primarySoft : colors.surface,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+              >
+                <Text
+                  style={{
+                    color: active ? colors.primary : colors.text,
+                    fontWeight: fontWeight.semibold,
+                    fontSize: fontSize.sm,
+                  }}
+                >
+                  {f === 'left' ? 'Izquierdo' : f === 'right' ? 'Derecho' : 'Ambos'}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
         <Button
           label="Continuar"
