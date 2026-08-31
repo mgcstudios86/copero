@@ -192,14 +192,22 @@ test.describe('MGC-556 — Visual parity web vs copero.com.ar', () => {
     test.setTimeout(60_000);
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.setViewportSize({ width: 1280, height: 800 });
+
+    // MGC-462 — captura determinista. Tres anclas antes de medir radius:
+    //   1) goto domcontentloaded (rápido).
+    //   2) waitForLoadState networkidle (best-effort, no bloqueante).
+    //   3) await document.fonts.ready (MGC-374 self-hosted woff2) para que
+    //      el font swap ya haya recolocado texto antes de medir layout.
+    //   4) DOM scan amplio sobre cards renderizadas (NO usamos locator
+    //      data-testid porque el bundle web de copero.com.ar no expone
+    //      `copero-hero-card` / `copero-league-card-*` — esos testIDs
+    //      viven en src/design/components (cliente RN), no en
+    //      copero-web/web; reintroducir el waitFor rompe el step 9 con
+    //      TimeoutError 15s. Fallback defensivo: MGC-452 (PR #182).
     await page.goto(`${TARGET_URL}/`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+    await page.evaluate(() => document.fonts.ready);
 
-    // MGC-452 (PR #182 run 33349873432): flake cuando `networkidle→load`
-    // se cumple antes que HeroCard/LeagueCard terminen de montar / aplicar
-    // estilos — radiusObservations.length quedaba en 0. Reintentamos la
-    // observación con `expect.poll` hasta que aparezca al menos 1 card con
-    // border-radius ≥ 12px.
     const observeRadiusCards = (): Promise<
       { tag: string; radius: number; bg: string }[]
     > =>
@@ -219,6 +227,11 @@ test.describe('MGC-556 — Visual parity web vs copero.com.ar', () => {
           .slice(0, 10);
       });
 
+    // MGC-452 (PR #182 run 33349873432): flake cuando `networkidle→load`
+    // se cumple antes que HeroCard/LeagueCard terminen de montar / aplicar
+    // estilos — radiusObservations.length quedaba en 0. Reintentamos la
+    // observación con `expect.poll` hasta que aparezca al menos 1 card con
+    // border-radius ≥ 12px.
     let radiusObservations: { tag: string; radius: number; bg: string }[] = [];
     await expect
       .poll(async () => {
