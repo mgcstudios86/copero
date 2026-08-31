@@ -65,7 +65,7 @@ test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
     await page.locator('[data-testid="btn-career"]').click();
     await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
-    await page.waitForSelector('[data-testid="jersey-preview"]', { timeout: 10_000 });
+    await page.waitForSelector('[data-testid="identity-jersey-preview"]', { timeout: 10_000 });
     await page.screenshot({ path: path.join(OUT_DIR, '02-identity-mgc505.png'), fullPage: true });
 
     // 3) Validar los 4 grupos pos-{id} (ataque / mediocampo / defensa / arquero).

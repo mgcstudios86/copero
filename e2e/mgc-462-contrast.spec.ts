@@ -57,7 +57,7 @@ test.describe('MGC-462 — axe contrast /simulador-carrera/identity', () => {
     await page.getByTestId('btn-career').click();
     await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
-    await page.waitForSelector('[data-testid="jersey-preview"]', { timeout: 10_000 });
+    await page.waitForSelector('[data-testid="identity-jersey-preview"]', { timeout: 10_000 });
 
     const totalByGroup: Record<string, number> = {};
     const blockersByGroup: Record<string, number> = {};
@@ -72,7 +72,7 @@ test.describe('MGC-462 — axe contrast /simulador-carrera/identity', () => {
       const result = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         // Limita el scan al subtree del jersey preview para aislar el hallazgo.
-        .include('[data-testid="jersey-preview"]')
+        .include('[data-testid="identity-jersey-preview"]')
         .analyze();
 
       const blockers = result.violations.filter(
@@ -107,6 +107,6 @@ test.describe('MGC-462 — axe contrast /simulador-carrera/identity', () => {
       `[MGC-462] axe jersey preview — violations totales por grupo: ${JSON.stringify(totalByGroup)}`,
     );
     // Garantiza que seguimos en /identity y que el preview nunca desapareció.
-    await expect(page.getByTestId('jersey-preview')).toBeVisible();
+    await expect(page.getByTestId('identity-jersey-preview')).toBeVisible();
   });
 });

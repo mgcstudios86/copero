@@ -139,7 +139,7 @@ export default function IdentityScreen() {
               number={profile.number}
               name={profile.name}
               size="md"
-              testID="jersey-preview"
+              testID="identity-jersey-preview"
             />
           </Suspense>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
