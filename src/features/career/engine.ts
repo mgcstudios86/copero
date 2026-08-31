@@ -144,8 +144,18 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
       );
       return { ...state, profile };
     }
-    case 'advance':
+    case 'advance': {
+      // MGC-441: si la semana llega al rollover (week >= 38) y hay club
+      // asignado, delegamos a `advanceSeason` para acumular OP/OG/OA y
+      // demás stats anuales. Mantiene granularidad semanal fina para
+      // semanas 1..37 y anual para el cierre de temporada (recomendación
+      // CTO opción 1). Si no hay club, fallback a `advanceWeek` (no-op
+      // silencioso, marcado para fix UI en issue separada).
+      if (state.profile.week >= 38 && state.profile.club) {
+        return step(state, { type: 'advanceSeason' });
+      }
       return { ...state, profile: advanceWeek(state.profile) };
+    }
     case 'startDraft': {
       const seed = action.seed ?? seedFromString(state.profile.name || 'copero');
       return {

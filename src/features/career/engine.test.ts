@@ -145,6 +145,47 @@ describe('career engine', () => {
     expect(s.profile.season).toBe(season + 1);
     expect(s.profile.week).toBe(1);
   });
+
+  it('advance al rollover (week=38) acumula stats anuales OP/OG/OA (MGC-441)', () => {
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'Mateo' });
+    s = step(s, { type: 'commitIdentity' });
+    s = step(s, { type: 'openAcademy' });
+    s = step(s, { type: 'acceptClub', club: ACADEMY_CLUBS[0] });
+    // Jugamos 37 semanas con `advance()`: stats deben quedar en 0.
+    for (let i = 0; i < 37; i++) {
+      s = step(s, { type: 'advance' });
+    }
+    expect(s.profile.week).toBe(38);
+    expect(s.profile.stats.apps).toBe(0);
+    expect(s.profile.stats.goals).toBe(0);
+    expect(s.profile.stats.ast).toBe(0);
+    // El advance #38 cierra temporada y debe acumular OP/OG/OA.
+    const seasonBefore = s.profile.season;
+    const ageBefore = s.profile.age;
+    s = step(s, { type: 'advance' });
+    expect(s.profile.season).toBe(seasonBefore + 1);
+    expect(s.profile.week).toBe(1);
+    expect(s.profile.stats.apps).toBeGreaterThan(0);
+    // El timeline debe tener al menos 1 fila registrada.
+    expect(s.log?.timeline.length).toBeGreaterThanOrEqual(1);
+    // La edad subió 1 año.
+    expect(s.profile.age).toBe(ageBefore + 1);
+  });
+
+  it('advance sin club al rollover no acumula stats (no-op silencioso, MGC-441 causa 2)', () => {
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'SinClub' });
+    s = step(s, { type: 'commitIdentity' });
+    // Forzamos week=38 sin club.
+    s = { ...s, profile: { ...s.profile, week: 38 } };
+    const seasonBefore = s.profile.season;
+    s = step(s, { type: 'advance' });
+    // El rollover vía advanceWeek ocurre (season+1, week=1), pero sin stats.
+    expect(s.profile.season).toBe(seasonBefore + 1);
+    expect(s.profile.week).toBe(1);
+    expect(s.profile.stats.apps).toBe(0);
+  });
 });
 
 describe('career fixtures', () => {
