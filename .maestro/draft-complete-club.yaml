@@ -56,38 +56,107 @@ tags:
     text: "Mateo MGC490"
     label: "Nombre del jugador"
 
+# Tap identity-screen header to dismiss soft keyboard focus.
+- tapOn:
+    id: identity-screen
+    label: "Dismiss keyboard focus"
+
+# Scroll down to reveal continue button (also dismisses keyboard).
+- scrollUntilVisible:
+    element:
+      id: btn-identity-continue
+    direction: DOWN
+    label: "Scroll identity-screen to continue button"
+
 - tapOn:
     id: btn-identity-continue
     label: "Confirmar identidad"
 
-# 4) Pantalla academy/draft entry.
-#    Tras identity hay un breve paso "Elegí un club" (academy). Tap
-#    cualquier club AMBICIÓN (Boca) para llegar al draft.
+# 4) Dashboard tras identity.
 - assertVisible:
-    id: academy-screen
-    label: "Pantalla academy visible"
-- tapOn:
-    id: club-boca
-    label: "Fichar por Boca Juniors (academy, paso previo al draft)"
+    id: dashboard-screen
+    label: "Dashboard del jugador visible"
 
-# 5) Si hay alert de academy en web, confirmar. En mobile Android el
-#    alert es nativo; usamos `tapOn: Aceptar` (button label).
+# 5) Scroll to draft CTA and tap.
+- scrollUntilVisible:
+    element:
+      id: btn-dashboard-draft
+    direction: DOWN
+    label: "Scroll dashboard to draft button"
 - tapOn:
-    text: "Aceptar"
-    label: "Aceptar contrato academy"
-    optional: true
+    id: btn-dashboard-draft
+    label: "Empezar draft de leyendas"
 
-# 6) Draft screen — confirmar 8 picks.
+# 6) Draft screen — confirmar 8 picks con pacing >=5s (ver
+#    copero-qa-draft-rapid-tap-rollback). Un assertVisible por
+#    ronda fuerza la espera hasta que el counter cambie.
 - assertVisible:
     id: draft-screen
     label: "Pantalla draft visible"
-- repeat:
-    times: 8
-    commands:
-      - tapOn:
-          id: btn-draft-confirm
-          label: "Confirmar pick #{index}"
-      - wait: 1200
+# Round 1
+- assertVisible:
+    text: "RONDA 1 DE 8"
+    label: "Espera ronda 1"
+- tapOn:
+    id: btn-draft-confirm
+    label: "Confirmar pick 1"
+- waitForAnimationToEnd
+# Round 2
+- assertVisible:
+    text: "RONDA 2 DE 8"
+    label: "Espera ronda 2"
+- tapOn:
+    id: btn-draft-confirm
+    label: "Confirmar pick 2"
+- waitForAnimationToEnd
+# Round 3
+- assertVisible:
+    text: "RONDA 3 DE 8"
+    label: "Espera ronda 3"
+- tapOn:
+    id: btn-draft-confirm
+    label: "Confirmar pick 3"
+- waitForAnimationToEnd
+# Round 4
+- assertVisible:
+    text: "RONDA 4 DE 8"
+    label: "Espera ronda 4"
+- tapOn:
+    id: btn-draft-confirm
+    label: "Confirmar pick 4"
+- waitForAnimationToEnd
+# Round 5
+- assertVisible:
+    text: "RONDA 5 DE 8"
+    label: "Espera ronda 5"
+- tapOn:
+    id: btn-draft-confirm
+    label: "Confirmar pick 5"
+- waitForAnimationToEnd
+# Round 6
+- assertVisible:
+    text: "RONDA 6 DE 8"
+    label: "Espera ronda 6"
+- tapOn:
+    id: btn-draft-confirm
+    label: "Confirmar pick 6"
+- waitForAnimationToEnd
+# Round 7
+- assertVisible:
+    text: "RONDA 7 DE 8"
+    label: "Espera ronda 7"
+- tapOn:
+    id: btn-draft-confirm
+    label: "Confirmar pick 7"
+- waitForAnimationToEnd
+# Round 8
+- assertVisible:
+    text: "RONDA 8 DE 8"
+    label: "Espera ronda 8"
+- tapOn:
+    id: btn-draft-confirm
+    label: "Confirmar pick 8"
+- waitForAnimationToEnd
 
 # 7) Tu-jugador (post-draft).
 - assertVisible:
