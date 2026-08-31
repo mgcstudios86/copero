@@ -198,13 +198,12 @@ export default function IdentityScreen() {
         </View>
 
         {/* Name */}
-        {/* MGC-674: input-name colapsado en uiautomator (bounds h=-53) en
-            build-PR-235-1-mgc632-098150e.apk → tap Maestro no aceptaba foco.
-            Mismo patrón wrapper View collapsable=false que btn-foot-row
-            (MGC-647 commit a587d82 / PR-228-2 sobre PR-227 commit 6be789c):
-            evita que RN-Android colapse el View en la jerarquía nativa y
-            mantiene bounds reales en el dump. Sin afectar el estilo visual
-            del TextInput. */}
+        {/* MGC-686: tras PR #243 (MGC-674) el wrapper View collapsable=false
+            + minHeight:48 seguía colapsando (bounds h=-22) porque RN-Android
+            colapsa TextInput en la jerarquía nativa, lo que también colapsa al
+            wrapper. Diagnóstico MGC-677: aplicar collapsable={false} en el
+            TextInput además del wrapper. Sin afectar estilo visual.
+            Patrón canónico MGC-594/PR-227 commit 6be789c extendido al TextInput. */}
         <Field label="Nombre">
           <View
             testID="input-name-wrapper"
@@ -219,6 +218,7 @@ export default function IdentityScreen() {
               autoCapitalize="words"
               autoCorrect={false}
               maxLength={24}
+              collapsable={false}
               style={[
                 styles.input,
                 {
