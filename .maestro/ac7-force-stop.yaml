@@ -61,9 +61,17 @@ tags:
 - inputText:
     id: input-name
     text: "Mateo AC7"
-- inputText:
-    id: input-number
-    text: "9"
+# MGC-506: el `input-number` no es un TextInput nativo — es un stepper +/-.
+# Reemplazamos inputText por tapOn en el botón + del stepper. El default
+# del store ya es 9, así que 0 taps son suficientes; dejamos el id
+# explícito para que QA vea la intención y pueda parametrizar el número.
+- assertVisible:
+    id: btn-number-plus
+- scrollUntilVisible:
+    element:
+      id: btn-identity-continue
+    direction: down
+    timeout: 5000
 - tapOn:
     id: btn-identity-continue
 

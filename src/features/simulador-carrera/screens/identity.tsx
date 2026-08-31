@@ -72,8 +72,14 @@ export default function IdentityScreen() {
           rompía `getByTestId('identity-screen')` por strict-mode
           (resolvía a 2 elementos: el wrapper `View` y este `ScrollView`).
           Lo quitamos para preservar un único nodo testeable. */}
+      {/* MGC-517: layout split — form scrollable arriba, footer fijo abajo.
+          Patrón mobile-first: el CTA primario nunca queda atrapado debajo
+          del soft keyboard. Antes el Continue estaba al final del ScrollView
+          y con teclado abierto quedaba fuera del fold visible. */}
       <ScrollView
-        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4] }]}
+        testID="identity-scroll"
+        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[6] }]}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
         <View style={{ gap: spacing[2] }}>
@@ -180,6 +186,8 @@ export default function IdentityScreen() {
               onPress={() => setNumber(profile.number - 1)}
               accessibilityRole="button"
               accessibilityLabel="Restar número"
+              testID="btn-number-minus"
+              hitSlop={12}
               {...onKeyActivate(() => setNumber(profile.number - 1))}
               style={[
                 styles.stepBtn,
@@ -212,6 +220,8 @@ export default function IdentityScreen() {
               onPress={() => setNumber(profile.number + 1)}
               accessibilityRole="button"
               accessibilityLabel="Sumar número"
+              testID="btn-number-plus"
+              hitSlop={12}
               {...onKeyActivate(() => setNumber(profile.number + 1))}
               style={[
                 styles.stepBtn,
@@ -424,6 +434,21 @@ export default function IdentityScreen() {
           </View>
         </Field>
 
+        </ScrollView>
+      {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
+          el soft keyboard esté abierto o el form se desplace. El botón
+          sigue siendo testeable por testID `btn-identity-continue` desde
+          el footer (el subtree ya no es scrollable). */}
+      <View
+        style={[
+          styles.footer,
+          {
+            backgroundColor: colors.bg,
+            borderTopColor: colors.border,
+            padding: spacing[4],
+          },
+        ]}
+      >
         <Button
           label="Continuar"
           onPress={onContinue}
@@ -432,9 +457,11 @@ export default function IdentityScreen() {
           fullWidth
           disabled={!canContinue}
           testID="btn-identity-continue"
+          accessible
+          importantForAccessibility="yes"
           accessibilityHint="Guarda la identidad y abre el dashboard"
         />
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -461,6 +488,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   container: {},
+  // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
+  // scrollable; el CTA primario permanece visible aunque el soft keyboard
+  // esté abierto. borderTop sutil separa visualmente del form scrollable.
+  footer: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   input: {
     borderWidth: 1,
   },
