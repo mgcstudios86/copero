@@ -145,14 +145,16 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
       return { ...state, profile };
     }
     case 'advance': {
-      // MGC-441: si la semana llega al rollover (week >= 38) y hay club
-      // asignado, delegamos a `advanceSeason` para acumular OP/OG/OA y
-      // demás stats anuales. Mantiene granularidad semanal fina para
-      // semanas 1..37 y anual para el cierre de temporada (recomendación
-      // CTO opción 1). Si no hay club, fallback a `advanceWeek` (no-op
-      // silencioso, marcado para fix UI en issue separada).
+      // MGC-441 / MGC-491: si la semana llega al rollover (week >= 38) y
+      // hay club asignado, delegamos al helper compartido de rollover
+      // (`applySeasonRollover`) para acumular OP/OG/OA y demás stats
+      // anuales. Mantiene granularidad semanal fina para semanas 1..37 y
+      // anual para el cierre de temporada (recomendación CTO opción 1).
+      // Si no hay club, fallback a `advanceWeek` (no-op silencioso para
+      // stats; el rollover cronológico de season/week/age sí ocurre, ver
+      // MGC-441 causa 2).
       if (state.profile.week >= 38 && state.profile.club) {
-        return step(state, { type: 'advanceSeason' });
+        return applySeasonRollover(state);
       }
       return { ...state, profile: advanceWeek(state.profile) };
     }
@@ -237,24 +239,15 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
       };
     }
     case 'advanceSeason': {
-      if (!state.profile.club) return state;
-      const baseSeed = state.seed ?? seedFromString(state.profile.name || 'copero');
-      const seed =
-        baseSeed +
-        state.profile.season * 1009 +
-        seedFromString(state.profile.name || 'copero');
-      const result = advanceSeason(state.profile, state.profile.club, createRng(seed));
-      const log = {
-        timeline: [...(state.log?.timeline ?? []), result.row],
-        events: [...(state.log?.events ?? []), ...result.events],
-      };
-      const stage: CareerStage = isRetired(result.profile) ? 'retirement' : 'season';
-      return {
-        ...state,
-        stage,
-        profile: result.profile,
-        log,
-      };
+      // MGC-491: delega al helper compartido para garantizar que la
+      // delegación desde `case 'advance'` (week >= 38 && club) y la
+      // acción explícita `advanceSeason` (botón "Jugar temporada")
+      // produzcan exactamente la misma transición de temporada, stats y
+      // timeline. Antes esto era recursión `step(state, {type: 'advanceSeason'})`
+      // — funcionaba, pero el código duplicado entre los dos paths
+      // dejaba margen a drift accidental en el seed o en el merge del
+      // log. Ahora es una sola función pura.
+      return applySeasonRollover(state);
     }
     case 'runCareerToRetirement': {
       if (!state.profile.club) return state;
@@ -273,6 +266,44 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
     default:
       return state;
   }
+}
+
+/**
+ * Helper compartido (MGC-491) — ejecuta la transición de temporada
+ * completa: corre `advanceSeason` con la semilla determinista,
+ * acumula stats OP/OG/OA, agrega fila a timeline y eventos al log, y
+ * actualiza `stage` a `'retirement'` si el jugador se retira.
+ *
+ * Es la única vía para que `advance()` (al llegar a week >= 38 con club)
+ * y la acción explícita `advanceSeason` produzcan exactamente la misma
+ * transición. Sin este helper compartido, los dos paths duplicaban el
+ * cálculo de seed + merge del log y un drift accidental entre ellos
+ * podría hacer que el botón "Siguiente semana" no acumulara stats
+ * mientras "Jugar temporada" sí (ver parent MGC-488).
+ *
+ * Si no hay club asignado, devuelve `state` sin cambios: la temporada
+ * no puede cerrarse sin club (no hay partidos que simular, no hay stats
+ * que acumular).
+ */
+export function applySeasonRollover(state: CareerSnapshot): CareerSnapshot {
+  if (!state.profile.club) return state;
+  const baseSeed = state.seed ?? seedFromString(state.profile.name || 'copero');
+  const seed =
+    baseSeed +
+    state.profile.season * 1009 +
+    seedFromString(state.profile.name || 'copero');
+  const result = advanceSeason(state.profile, state.profile.club, createRng(seed));
+  const log = {
+    timeline: [...(state.log?.timeline ?? []), result.row],
+    events: [...(state.log?.events ?? []), ...result.events],
+  };
+  const stage: CareerStage = isRetired(result.profile) ? 'retirement' : 'season';
+  return {
+    ...state,
+    stage,
+    profile: result.profile,
+    log,
+  };
 }
 
 /** Mezcla la PlayerCard en el PlayerProfile (MGC-208 §1 + §3). */
