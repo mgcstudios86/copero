@@ -229,81 +229,6 @@ export default function IdentityScreen() {
           />
         </Field>
 
-        {/* Number */}
-        <Field label="Número (1–99)">
-          {/* MGC-610: wrapper View collapsable=false + dimensiones explícitas
-              para garantizar bounds reales en uiautomator dump sobre
-              ZY22G728HN. PR-215-2 colapsaba el row a wrap_content=0 antes
-              del primer layout pass (memory copero-stepper-view-wrapper-bounds).
-              Mantenemos Pressable (no TouchableOpacity, que también colapsa
-              bounds — memory copero-touchable-opacity-stepper-regression). */}
-          <View
-            testID="btn-number-row"
-            collapsable={false}
-            style={{
-              flexDirection: 'row',
-              gap: spacing[3],
-              alignItems: 'center',
-              minHeight: 48,
-              width: '100%',
-              overflow: 'visible',
-            }}
-          >
-            <Pressable
-              onPress={() => setNumber(profile.number - 1)}
-              accessibilityRole="button"
-              accessibilityLabel="Restar número"
-              testID="btn-number-minus"
-              hitSlop={12}
-              collapsable={false}
-              {...onKeyActivate(() => setNumber(profile.number - 1))}
-              style={[
-                styles.stepBtn,
-                { borderColor: colors.borderStrong, borderRadius: radii.md },
-              ]}
-            >
-              <Text style={{ color: colors.text, fontSize: fontSize.lg }}>−</Text>
-            </Pressable>
-            <View
-              testID="btn-number-display"
-              collapsable={false}
-              style={[
-                styles.numberDisplay,
-                {
-                  borderColor: colors.borderStrong,
-                  borderRadius: radii.md,
-                  backgroundColor: colors.surface,
-                },
-              ]}
-            >
-              <Text
-                style={{
-                  color: colors.textStrong,
-                  fontSize: fontSize['2xl'],
-                  fontWeight: fontWeight.bold,
-                }}
-              >
-                {profile.number}
-              </Text>
-            </View>
-            <Pressable
-              onPress={() => setNumber(profile.number + 1)}
-              accessibilityRole="button"
-              accessibilityLabel="Sumar número"
-              testID="btn-number-plus"
-              hitSlop={12}
-              collapsable={false}
-              {...onKeyActivate(() => setNumber(profile.number + 1))}
-              style={[
-                styles.stepBtn,
-                { borderColor: colors.borderStrong, borderRadius: radii.md },
-              ]}
-            >
-              <Text style={{ color: colors.text, fontSize: fontSize.lg }}>+</Text>
-            </Pressable>
-          </View>
-        </Field>
-
         {/* Preferred foot */}
         <Field label="Pie hábil">
           <View style={{ flexDirection: 'row', gap: spacing[2] }}>
@@ -513,7 +438,16 @@ export default function IdentityScreen() {
           MGC-610: el footer se eleva con `translateY: -keyboardHeight`
           cuando el IME está abierto. Animamos con `useNativeDriver: true`
           (transform) para evitar reflows del ScrollView padre y mantener
-          60 fps durante la animación del teclado en ZY22G728HN. */}
+          60 fps durante la animación del teclado en ZY22G728HN.
+          MGC-621: el stepper vive ahora dentro del footer (no dentro del
+          ScrollView) para que el `translateY` eleve stepper+Continue como
+          una unidad sobre el IME. PR-228 mantenía el stepper dentro del
+          ScrollView con `collapsable=false` + `minHeight:48`, pero el
+          ancestor flex del ScrollView aplicaba `adjustResize` y medía
+          `height=0` para el wrapper en uiautomator dump (bounds
+          [40,1907][1040,1907]). Al sacarlo del ScrollView, el wrapper
+          mide dentro del flexbox del footer (sin clipping por ancestor),
+          garantizando bounds reales con/sin IME. */}
       <View
         style={[
           styles.footer,
@@ -521,10 +455,82 @@ export default function IdentityScreen() {
             backgroundColor: colors.bg,
             borderTopColor: colors.border,
             padding: spacing[4],
+            gap: spacing[3],
             transform: [{ translateY: -keyboardHeight }],
           },
         ]}
       >
+        {/* MGC-621: stepper movido desde ScrollView (PR-228 lo dejaba
+            colapsado en uiautomator). Wrapper View collapsable=false +
+            dimensiones explícitas — ahora mide dentro del footer flex
+            en vez del ScrollView (donde el ancestor flex aplicaba
+            adjustResize=0). Mantenemos Pressable (no TouchableOpacity,
+            memory copero-touchable-opacity-stepper-regression). */}
+        <View
+          testID="btn-number-row"
+          collapsable={false}
+          style={{
+            flexDirection: 'row',
+            gap: spacing[3],
+            alignItems: 'center',
+            minHeight: 48,
+            width: '100%',
+            overflow: 'visible',
+          }}
+        >
+          <Pressable
+            onPress={() => setNumber(profile.number - 1)}
+            accessibilityRole="button"
+            accessibilityLabel="Restar número"
+            testID="btn-number-minus"
+            hitSlop={12}
+            collapsable={false}
+            {...onKeyActivate(() => setNumber(profile.number - 1))}
+            style={[
+              styles.stepBtn,
+              { borderColor: colors.borderStrong, borderRadius: radii.md },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontSize: fontSize.lg }}>−</Text>
+          </Pressable>
+          <View
+            testID="btn-number-display"
+            collapsable={false}
+            style={[
+              styles.numberDisplay,
+              {
+                borderColor: colors.borderStrong,
+                borderRadius: radii.md,
+                backgroundColor: colors.surface,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                color: colors.textStrong,
+                fontSize: fontSize['2xl'],
+                fontWeight: fontWeight.bold,
+              }}
+            >
+              {profile.number}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => setNumber(profile.number + 1)}
+            accessibilityRole="button"
+            accessibilityLabel="Sumar número"
+            testID="btn-number-plus"
+            hitSlop={12}
+            collapsable={false}
+            {...onKeyActivate(() => setNumber(profile.number + 1))}
+            style={[
+              styles.stepBtn,
+              { borderColor: colors.borderStrong, borderRadius: radii.md },
+            ]}
+          >
+            <Text style={{ color: colors.text, fontSize: fontSize.lg }}>+</Text>
+          </Pressable>
+        </View>
         <Button
           label="Continuar"
           onPress={onContinue}
