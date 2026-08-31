@@ -198,29 +198,42 @@ export default function IdentityScreen() {
         </View>
 
         {/* Name */}
+        {/* MGC-674: input-name colapsado en uiautomator (bounds h=-53) en
+            build-PR-235-1-mgc632-098150e.apk → tap Maestro no aceptaba foco.
+            Mismo patrón wrapper View collapsable=false que btn-foot-row
+            (MGC-647 commit a587d82 / PR-228-2 sobre PR-227 commit 6be789c):
+            evita que RN-Android colapse el View en la jerarquía nativa y
+            mantiene bounds reales en el dump. Sin afectar el estilo visual
+            del TextInput. */}
         <Field label="Nombre">
-          <TextInput
-            value={profile.name}
-            onChangeText={setName}
-            placeholder="Ej. Mateo Romero"
-            placeholderTextColor={colors.textMuted}
-            autoCapitalize="words"
-            autoCorrect={false}
-            maxLength={24}
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                borderColor: colors.borderStrong,
-                borderRadius: radii.md,
-                paddingHorizontal: spacing[3],
-                paddingVertical: spacing[3],
-                fontSize: fontSize.base,
-              },
-            ]}
-            accessibilityLabel="Nombre del jugador"
-            testID="input-name"
-          />
+          <View
+            testID="input-name-wrapper"
+            collapsable={false}
+            style={{ minHeight: 48, width: '100%' }}
+          >
+            <TextInput
+              value={profile.name}
+              onChangeText={setName}
+              placeholder="Ej. Mateo Romero"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+              autoCorrect={false}
+              maxLength={24}
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  borderColor: colors.borderStrong,
+                  borderRadius: radii.md,
+                  paddingHorizontal: spacing[3],
+                  paddingVertical: spacing[3],
+                  fontSize: fontSize.base,
+                },
+              ]}
+              accessibilityLabel="Nombre del jugador"
+              testID="input-name"
+            />
+          </View>
         </Field>
 
         {/* MGC-585: el stepper +/- se renderiza ahora en un sticky footer
