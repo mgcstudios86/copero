@@ -231,9 +231,21 @@ export default function IdentityScreen() {
             alcanzaba porque la fila no entraba en la jerarquía accesible.
             Sticky garantiza bounds reales sin depender del estado del IME. */}
 
-        {/* Preferred foot */}
+        {/* Preferred foot — MGC-632: wrapper View collapsable=false + minHeight:48
+            garantiza bounds reales en uiautomator (PR-228-2 omitió este wrapper,
+            PR-229 c97604b tampoco llegó al APK). Patrón canónico MGC-594/PR-227
+            (commit 6be789c) replicado en foot-row radios Izquierdo/Derecho/Ambos. */}
         <Field label="Pie hábil">
-          <View style={{ flexDirection: 'row', gap: spacing[2] }}>
+          <View
+            testID="btn-foot-row"
+            collapsable={false}
+            style={{
+              flexDirection: 'row',
+              gap: spacing[2],
+              width: '100%',
+              minHeight: 48,
+            }}
+          >
             {(['left', 'right', 'both'] as Foot[]).map((f) => {
               const active = profile.preferredFoot === f;
               return (
