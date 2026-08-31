@@ -8,13 +8,15 @@ import { useTheme } from '@/design';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { clearCareerSave } from '@/features/career/persistence';
 
-const DEV_RESET_CARRERA_FLAG = 'EXPO_PUBLIC_DEV_RESET_CARRERA';
-
+/**
+ * Lee el flag dev-only. MGC-578: debe ser acceso literal
+ * `process.env.EXPO_PUBLIC_DEV_RESET_CARRERA` (no bracket access)
+ * para que `babel-plugin-transform-inline-environment-variables`
+ * de Expo inlinee el valor en built APK. Bracket access sobre
+ * variable local evade el plugin y `flag` queda `undefined`.
+ */
 export function shouldRenderResetButton(): boolean {
-  const env = (globalThis as { process?: { env?: Record<string, string | undefined> } })
-    .process;
-  if (!env?.env) return false;
-  const flag = env.env[DEV_RESET_CARRERA_FLAG];
+  const flag = process.env.EXPO_PUBLIC_DEV_RESET_CARRERA;
   return flag === '1' || flag === 'true';
 }
 
