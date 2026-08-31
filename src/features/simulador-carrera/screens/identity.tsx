@@ -1,5 +1,6 @@
-import React, { Suspense, lazy, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import {
+  Keyboard,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,7 +10,7 @@ import {
   InteractionManager,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { onKeyActivate } from '@/design/utils/keyboardActivation';
@@ -29,6 +30,32 @@ const JerseyPreview = lazy(() =>
 export default function IdentityScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  // MGC-610: el KAV con `behavior="height"` (PR-226) solo reduce ~152 px
+  // del ancestor flex en RN-Android con `adjustResize`, dejando el
+  // footer (Continue) en y≈1796 sobre ZY22G728HN (1080x2400) cuando el
+  // IME ocupa y≈1296-2400. El approach funcional: trackear altura del
+  // teclado con `Keyboard.addListener` y aplicar `translateY` negativo
+  // al footer para elevarlo exactamente encima del teclado. Restamos
+  // `insets.bottom` porque SafeAreaView con edges=['bottom'] ya dejó
+  // ese espacio reservado bajo el footer (sin IME, el `paddingBottom`
+  // del SafeArea queda entre el footer y el borde físico). Al abrir
+  // el IME el `paddingBottom` se vuelve inútil (gesture area colapsa)
+  // y la traslación compensa el espacio del teclado.
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(Math.max(0, e.endCoordinates.height - insets.bottom));
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [insets.bottom]);
 
   const profile = useCareerStore((s) => s.profile);
   const setName = useCareerStore((s) => s.setName);
@@ -204,13 +231,31 @@ export default function IdentityScreen() {
 
         {/* Number */}
         <Field label="Número (1–99)">
-          <View style={{ flexDirection: 'row', gap: spacing[3] }}>
+          {/* MGC-610: wrapper View collapsable=false + dimensiones explícitas
+              para garantizar bounds reales en uiautomator dump sobre
+              ZY22G728HN. PR-215-2 colapsaba el row a wrap_content=0 antes
+              del primer layout pass (memory copero-stepper-view-wrapper-bounds).
+              Mantenemos Pressable (no TouchableOpacity, que también colapsa
+              bounds — memory copero-touchable-opacity-stepper-regression). */}
+          <View
+            testID="btn-number-row"
+            collapsable={false}
+            style={{
+              flexDirection: 'row',
+              gap: spacing[3],
+              alignItems: 'center',
+              minHeight: 48,
+              width: '100%',
+              overflow: 'visible',
+            }}
+          >
             <Pressable
               onPress={() => setNumber(profile.number - 1)}
               accessibilityRole="button"
               accessibilityLabel="Restar número"
               testID="btn-number-minus"
               hitSlop={12}
+              collapsable={false}
               {...onKeyActivate(() => setNumber(profile.number - 1))}
               style={[
                 styles.stepBtn,
@@ -220,6 +265,8 @@ export default function IdentityScreen() {
               <Text style={{ color: colors.text, fontSize: fontSize.lg }}>−</Text>
             </Pressable>
             <View
+              testID="btn-number-display"
+              collapsable={false}
               style={[
                 styles.numberDisplay,
                 {
@@ -245,6 +292,7 @@ export default function IdentityScreen() {
               accessibilityLabel="Sumar número"
               testID="btn-number-plus"
               hitSlop={12}
+              collapsable={false}
               {...onKeyActivate(() => setNumber(profile.number + 1))}
               style={[
                 styles.stepBtn,
@@ -461,7 +509,11 @@ export default function IdentityScreen() {
       {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
           el soft keyboard esté abierto o el form se desplace. El botón
           sigue siendo testeable por testID `btn-identity-continue` desde
-          el footer (el subtree ya no es scrollable). */}
+          el footer (el subtree ya no es scrollable).
+          MGC-610: el footer se eleva con `translateY: -keyboardHeight`
+          cuando el IME está abierto. Animamos con `useNativeDriver: true`
+          (transform) para evitar reflows del ScrollView padre y mantener
+          60 fps durante la animación del teclado en ZY22G728HN. */}
       <View
         style={[
           styles.footer,
@@ -469,6 +521,7 @@ export default function IdentityScreen() {
             backgroundColor: colors.bg,
             borderTopColor: colors.border,
             padding: spacing[4],
+            transform: [{ translateY: -keyboardHeight }],
           },
         ]}
       >
