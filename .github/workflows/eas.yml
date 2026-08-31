@@ -94,7 +94,15 @@ jobs:
         run: |
           npm install -g eas-cli@latest
           if ! command -v infisical >/dev/null 2>&1; then
-            curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
+            # MGC-658: el script get-cli.sh upstream retorna 404 (movido a artifacts-cli).
+            # Nuevo flujo documentado: setup.deb.sh agrega repo APT oficial + apt-get install.
+            # Runner self-hosted corre como usuario `ubuntu` (no root); requiere sudo.
+            curl -1sLf https://artifacts-cli.infisical.com/setup.deb.sh | sudo -E bash
+            sudo apt-get update -qq && sudo apt-get install -y -qq infisical
+            command -v infisical >/dev/null 2>&1 || {
+              echo "ERROR: infisical no quedó instalado; abortando" >&2
+              exit 1
+            }
           fi
       - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
       # Patch SDK 57 expo-modules-core 57.0.12 executeSync→runSync bug (MGC-366).
@@ -182,7 +190,15 @@ jobs:
         run: |
           npm install -g eas-cli@latest
           if ! command -v infisical >/dev/null 2>&1; then
-            curl -sSfL https://raw.githubusercontent.com/infisical/infisical/main/cli/get-cli.sh | sh -s -- -b /usr/local/bin
+            # MGC-658: el script get-cli.sh upstream retorna 404 (movido a artifacts-cli).
+            # Nuevo flujo documentado: setup.deb.sh agrega repo APT oficial + apt-get install.
+            # Runner self-hosted corre como usuario `ubuntu` (no root); requiere sudo.
+            curl -1sLf https://artifacts-cli.infisical.com/setup.deb.sh | sudo -E bash
+            sudo apt-get update -qq && sudo apt-get install -y -qq infisical
+            command -v infisical >/dev/null 2>&1 || {
+              echo "ERROR: infisical no quedó instalado; abortando" >&2
+              exit 1
+            }
           fi
       - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
       # Patch SDK 57 expo-modules-core 57.0.12 executeSync→runSync bug (MGC-366).
