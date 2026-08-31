@@ -48,6 +48,7 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@/design/useTheme';
 import { Button } from '@/design/components/Button';
 import { JerseyPreview } from '@/design/components/JerseyPreview';
+import { onKeyActivate } from '@/design/utils/keyboardActivation';
 import { POSITIONS, POSITION_LABEL } from '@/features/career/positions';
 import {
   NATIONALITIES_FIFA,
@@ -336,6 +337,9 @@ export function HomepageCareerStarter(): React.ReactElement {
               onPress={() =>
                 setHeritageNationalityFifa(heritageNationalityFifa ? '' : heritageCountries[0]?.code ?? '')
               }
+              {...onKeyActivate(() =>
+                setHeritageNationalityFifa(heritageNationalityFifa ? '' : heritageCountries[0]?.code ?? ''),
+              )}
               accessibilityRole="button"
               accessibilityLabel="Nacionalidad de un familiar directo"
               accessibilityHint="Opcional, te habilita a jugar por otra selección"
@@ -618,6 +622,7 @@ function SegmentedField<T extends string>({
             <Pressable
               key={opt.value}
               onPress={() => onChange(opt.value)}
+              {...onKeyActivate(() => onChange(opt.value))}
               accessibilityRole="tab"
               accessibilityState={{ selected }}
               accessibilityLabel={opt.label}
@@ -711,6 +716,11 @@ function Picker({
           const next = options[(idx + 1) % options.length];
           onChange(next.value);
         }}
+        {...onKeyActivate(() => {
+          const idx = options.findIndex((o) => o.value === value);
+          const next = options[(idx + 1) % options.length];
+          onChange(next.value);
+        })}
         style={{
           padding: spacing[2],
           minHeight: 36,

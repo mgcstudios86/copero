@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
+import { onKeyActivate } from '@/design/utils/keyboardActivation';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { POSITIONS, GROUP_COLOR } from '@/features/career/positions';
 import { NATIONALITIES } from '@/features/career/nationalities';
@@ -179,6 +180,7 @@ export default function IdentityScreen() {
               onPress={() => setNumber(profile.number - 1)}
               accessibilityRole="button"
               accessibilityLabel="Restar número"
+              {...onKeyActivate(() => setNumber(profile.number - 1))}
               style={[
                 styles.stepBtn,
                 { borderColor: colors.borderStrong, borderRadius: radii.md },
@@ -210,6 +212,7 @@ export default function IdentityScreen() {
               onPress={() => setNumber(profile.number + 1)}
               accessibilityRole="button"
               accessibilityLabel="Sumar número"
+              {...onKeyActivate(() => setNumber(profile.number + 1))}
               style={[
                 styles.stepBtn,
                 { borderColor: colors.borderStrong, borderRadius: radii.md },
@@ -229,6 +232,7 @@ export default function IdentityScreen() {
                 <Pressable
                   key={f}
                   onPress={() => setPreferredFoot(f)}
+                  {...onKeyActivate(() => setPreferredFoot(f))}
                   style={{
                     flex: 1,
                     paddingVertical: spacing[3],
@@ -298,6 +302,7 @@ export default function IdentityScreen() {
                 <Pressable
                   key={pos.id}
                   onPress={() => setPosition(pos.id)}
+                  {...onKeyActivate(() => setPosition(pos.id))}
                   accessibilityRole="button"
                   accessibilityLabel={`Posición ${pos.label}`}
                   accessibilityState={{ selected: active }}
@@ -374,6 +379,10 @@ export default function IdentityScreen() {
                       setNationality(n.code);
                       setNationalityQuery('');
                     }}
+                    {...onKeyActivate(() => {
+                      setNationality(n.code);
+                      setNationalityQuery('');
+                    })}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',

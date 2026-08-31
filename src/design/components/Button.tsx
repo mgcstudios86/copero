@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../useTheme';
 import { useReducedMotion } from '../useReducedMotion';
+import { onKeyActivate } from '../utils/keyboardActivation';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -136,6 +137,10 @@ export function Button({
       accessibilityLabel={rest.accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: !!disabled, busy: !!loading }}
+      // MGC-461: Pressable en RN-Web NO dispara onPress con Enter/Space
+      // (sólo click de mouse). onKeyDown nativo en host element para que
+      // la spec a11y-keyboard.spec.ts pase con teclado puro sin mouse.
+      {...(disabled || loading ? {} : onKeyActivate(onPress))}
       android_ripple={
         Platform.OS === 'android' && !disabled && !loading
           ? { color: palette.bgPressed, borderless: false }
