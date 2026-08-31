@@ -65,7 +65,7 @@ tags:
     id: input-number
     text: "9"
 - tapOn:
-    id: btn-identity-confirm
+    id: btn-identity-continue
 
 # AC7.3 — Pantalla academy: pick club (primera tarjeta = Vélez).
 - assertVisible:
@@ -93,7 +93,7 @@ tags:
     times: 8
     commands:
       - tapOn:
-          id: btn-draft-pick
+          id: btn-draft-confirm
       - waitForAnimationToEnd
 
 # AC7.6 — Pantalla tu-jugador: confirmar que card fue generada con OVR.
@@ -104,7 +104,7 @@ tags:
 
 # AC7.7 — Pantalla club (post-draft): pick club y avanzar a temporada.
 - tapOn:
-    id: club-velez
+    id: club-pick-velez
 - assertVisible:
     text: "Firmar"
 - tapOn:
@@ -118,25 +118,22 @@ tags:
     times: 8
     commands:
       - tapOn:
-          id: btn-temporada-advance
+          id: btn-temporada-play
       - waitForAnimationToEnd
 
 # AC7.9 — Pantalla retirement: confirmar que la última temporada
 # disparó el cierre de loop. El snapshot persistido debe tener
 # `stage: 'retirement'` para que el relaunch hidrate correctamente.
 - assertVisible:
-    id: retirement-screen
+    id: temporada-last-season
 
 # AC7.10 — Force-stop del proceso vía adb. Aquí es donde el bug
 # histórico se manifestaba: un force-stop antes de que AsyncStorage
 # confirmara el `setItem` perdía el snapshot. Con C1+C2+C3+C4 en
 # el bridge, el snapshot ya está en disco.
 - evalScript: ${output.adbShell = adb -s ZY22G728HN shell am force-stop com.mgcstudios.copero}
-- runFlow:
-    when:
-      visible: false
-    commands:
-      - wait: 10000
+# Pausa fija de 10s para que el OS confirme el kill del proceso antes del relaunch.
+- wait: 10000
 
 # AC7.11 — Relaunch. La app debe abrir en home con CTA "Continuar"
 # (resume CTA post-relaunch con snapshot stage='retirement').
