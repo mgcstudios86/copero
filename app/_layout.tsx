@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, View, StyleSheet } from 'react-native';
-import { useEffect } from 'react';
+import { AppState, Platform, View, StyleSheet } from 'react-native';
+import { useEffect, useRef } from 'react';
 import { useFonts } from 'expo-font';
 import {
   Inter_400Regular,
@@ -28,7 +28,11 @@ import { LocaleProvider } from '@/i18n/locale-context';
 // en HMR o antes del mount — el OS mandaba la app a background antes
 // de que React registrara el useEffect, perdiendo la save.
 // MGC-394 — `SiteFooter` removido del root layout para limpiar la pantalla principal.
-import { useCareerStore, bootstrapPersistence } from '@/shared/store/careerStore';
+import {
+  useCareerStore,
+  bootstrapPersistence,
+  flushPendingSave,
+} from '@/shared/store/careerStore';
 
 /**
  * MGC-555 PR1 — carga tipográfica.
@@ -59,6 +63,27 @@ function ThemedShell() {
   useEffect(() => {
     bootstrapPersistence();
     void useCareerStore.getState().hydrateFromSave();
+  }, []);
+
+  // MGC-257 — al ir a background (app switcher, lockscreen, force-stop
+  // inminente), drenamos la save en curso contra AsyncStorage. Antes
+  // el `persistSnapshot` era fire-and-forget y un force-stop inmediato
+  // podía perder el snapshot. AC7: carrera persistida resiste kill.
+  const appStateRef = useRef(AppState.currentState);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      const prev = appStateRef.current;
+      appStateRef.current = next;
+      // Solo drenamos al pasar de activo/foreground a background/inactive.
+      // `active` repetido o transiciones foreground->foreground son no-op.
+      if (
+        (prev === 'active' || prev === 'unknown') &&
+        (next === 'background' || next === 'inactive')
+      ) {
+        void flushPendingSave();
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   // MGC-556 — copia el `colors.bg` al `<body>` y `<html>` en web para que

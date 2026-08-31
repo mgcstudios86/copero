@@ -251,7 +251,7 @@ function persistSnapshot(s: CareerStore): void {
  * sin await — la navegación post-step es local al dashboard y el
  * listener `AppState` (MGC-363) cubre la persistencia en background.
  */
-function persistAndFlush(s: CareerStore): Promise<void> {
+export function persistAndFlush(s: CareerStore): Promise<void> {
   persistSnapshot(s);
   return flushPendingSave();
 }

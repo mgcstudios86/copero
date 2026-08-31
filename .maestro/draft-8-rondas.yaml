@@ -1,0 +1,36 @@
+---
+name: draft-8-rondas
+# MGC-421 — Subflow reutilizable para el draft de leyendas (8 rondas).
+# Acepta que la pantalla draft esté visible al entrar. Tras la última
+# pick, debe haber pasado a la pantalla card y el caller hace
+# scrollUntilVisible + tap en `draft-card-continue`.
+
+appId: com.mgcstudios.copero
+tags:
+  - draft
+  - mgc-421
+  - subflow
+
+# Tap pickLegend 8 veces. El testID estable es `draft-pick-legend`
+# (mapeado en src/features/career/draft-screen.tsx + ui.tsx). El draft
+# elige automaticamente la leyenda de mayor OVR; el caller solo firma.
+- repeat:
+    times: 8
+    commands:
+      - tapOn:
+          id: draft-pick-legend
+          label: "Pick legend ronda #{index}"
+      - assertVisible:
+          id: draft-card-screen
+          label: "Card visible tras pick ronda #{index}"
+      - assertVisible:
+          id: draft-card-continue
+          label: "Botón continuar card ronda #{index}"
+      - tapOn:
+          id: draft-card-continue
+          label: "Tap continuar card ronda #{index}"
+      - extendedWaitUntil:
+          visible:
+            id: draft-screen
+          timeout: 5000
+          label: "Vuelta a draft screen tras continuar ronda #{index}"

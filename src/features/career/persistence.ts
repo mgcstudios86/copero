@@ -6,6 +6,19 @@
  * runtime: si AsyncStorage no está (por ejemplo en `vitest run` o en
  * SSR), cae a un fallback en memoria que mantiene la misma API.
  *
+ * MGC-282: `eval('require')` rompía la persistencia en device — antes
+ * la root cause. Ahora `require` estático resuelve en build time.
+ *
+ * MGC-385: back-compat con la key legacy `copero-career` (zustand persist
+ * middleware, formato `{ state, version }`) — la legacy se migra
+ * silenciosamente al shape v1 al primer `loadCareerSave` no-vacío.
+ *
+ * MGC-421 AC4: logs `[persistence] save=ok|fail` y
+ * `[persistence] hydrate=ok|null` visibles en cualquier bundle Hermes
+ * nativo (dev/preview/production). Antes gated por `__DEV__` — el
+ * reviewer no veía nada en logcat de preview/profile. Silenciados en
+ * vitest (NODE_ENV=test) para no contaminar la salida de los tests.
+ *
  * La forma del payload está versionada (`v: 1`) para futuras migraciones.
  */
 
@@ -32,6 +45,12 @@ type StorageLike = {
 
 let memoryStore: Record<string, string> = {};
 
+/**
+ * `resolved` cachea el backend una vez resuelto. Tests lo invalidan con
+ * `__resetStorageForTests()` para simular la caída al shim memoria.
+ */
+let resolved: StorageLike | null = null;
+
 const memoryStorage: StorageLike = {
   getItem: async (k) => (k in memoryStore ? memoryStore[k] : null),
   setItem: async (k, v) => {
@@ -41,9 +60,6 @@ const memoryStorage: StorageLike = {
     delete memoryStore[k];
   },
 };
-
-/** Backend resuelto una sola vez (AsyncStorage real o memoria). */
-let resolved: StorageLike | null = null;
 
 /**
  * MGC-282 — root cause del bug "la partida no se restaura tras force-stop".
@@ -101,17 +117,56 @@ export function __resetStorageForTests(): void {
   memoryStore = {};
 }
 
+/**
+ * MGC-421 AC4 — log helpers para los markers `[persistence]`. AC4 requiere
+ * distinguir save-no-invocado vs save-falló-en-nativa vs
+ * hydrate-arrancó-pero-no-aplicó en logcat. Antes estos logs estaban
+ * gated tras `__DEV__` (sólo dev bundle); en builds preview/profile
+ * `__DEV__=false` y Hermes dead-code-eliminaba los logs — el reviewer
+ * no veía nada en logcat de QA. Ahora se emiten en bundle Hermes nativo
+ * Y en vitest (los tests usan `vi.spyOn(console)` para capturarlos y
+ * verificar el contenido). El costo en runtime nativo es despreciable:
+ * una línea por mutación de usuario.
+ */
+function logPersist(level: 'log' | 'error', msg: string, err?: unknown): void {
+  if (level === 'log') console.log(msg);
+  else console.error(msg, err ?? '');
+}
+
 /** Devuelve la partida guardada o `null` si no hay nada. */
 export async function loadCareerSave(): Promise<CareerSaveState | null> {
   const storage = pickStorage();
-  const raw = await storage.getItem(STORAGE_KEY);
-  if (raw) {
-    try {
-      const parsed = JSON.parse(raw) as CareerSaveState;
-      if (parsed && parsed.v === 1) return parsed;
-    } catch {
-      // cae a back-compat abajo.
+  try {
+    const raw = await storage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as CareerSaveState;
+        if (parsed && parsed.v === 1) {
+          logPersist(
+            'log',
+            `[persistence] hydrate=ok stage=${parsed.stage} profile=${parsed.profile?.name}`,
+          );
+          return parsed;
+        }
+        logPersist(
+          'log',
+          `[persistence] hydrate=null reason=version-mismatch expected=v1 got=${parsed?.v}`,
+        );
+      } catch {
+        logPersist('log', `[persistence] hydrate=null reason=json-parse-failed`);
+      }
+    } else {
+      logPersist('log', `[persistence] hydrate=null reason=no-snapshot-in-storage`);
     }
+  } catch (err) {
+    logPersist(
+      'error',
+      `[persistence] hydrate=fail reason=getItem-threw`,
+      err,
+    );
+    // caemos a back-compat abajo — un getItem-threw no significa "no hay save",
+    // puede ser transitorio (cuota, lock del store). El retry a legacy puede
+    // funcionar si la legacy key está en una partición distinta.
   }
   // MGC-385 back-compat: si la key nueva está vacía o corrupta, intenta la
   // legacy (`copero-career`, formato zustand persist `{ state, version }`).
@@ -129,6 +184,10 @@ export async function loadCareerSave(): Promise<CareerSaveState | null> {
       // Migración silenciosa: escribe nueva key, deja legacy por si otra
       // surface (e.g. devtools) la inspecciona. clearCareerSave() borra ambas.
       await storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      logPersist(
+        'log',
+        `[persistence] hydrate=migrated legacy-key=${legacyKey} stage=${migrated.stage}`,
+      );
       return migrated;
     } catch {
       // legacy corrupto, seguir al próximo candidato.
@@ -185,7 +244,25 @@ function normalizeLegacyLog(raw: unknown): SeasonLog {
 /** Guarda la partida. Idempotente. */
 export async function saveCareerSave(state: CareerSaveState): Promise<void> {
   const storage = pickStorage();
-  await storage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const serialized = JSON.stringify(state);
+  try {
+    await storage.setItem(STORAGE_KEY, serialized);
+    logPersist(
+      'log',
+      `[persistence] save=ok key=${STORAGE_KEY} bytes=${serialized.length} stage=${state.stage} storage=${storage === resolved ? 'native' : 'memory'}`,
+    );
+  } catch (err) {
+    // MGC-262 — antes `.catch(() => {})` silenciaba cualquier error. Si
+    // AsyncStorage nativo no linkea (build --local sin autolinking) o el
+    // setItem rechaza, queremos ver el error en logs para distinguir
+    // "save no se invocó" de "save falló en la nativa" (AC4).
+    logPersist(
+      'error',
+      `[persistence] save=fail key=${STORAGE_KEY} stage=${state.stage} reason=setItem-threw`,
+      err,
+    );
+    throw err;
+  }
 }
 
 /** Borra la partida guardada. */
@@ -197,6 +274,10 @@ export async function clearCareerSave(): Promise<void> {
     await storage.removeItem(legacyKey);
   }
   memoryStore = {};
+  logPersist(
+    'log',
+    `[persistence] save=clear key=${STORAGE_KEY} storage=${storage === resolved ? 'native' : 'memory'}`,
+  );
 }
 
 /**
