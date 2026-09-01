@@ -578,17 +578,8 @@ if (isPersistentStorage && !isPersistentStorage()) {
   // saves se pierden en cada force-stop. Logueamos en `console.warn`
   // para que aparezca en `adb logcat *:S ReactNativeJS:V` y QA pueda
   // diagnosticarlo en el campo sin un dev build.
-  // eslint-disable-next-line no-console
-  console.warn(
-    '[copero:career] AsyncStorage no resolvió; persistencia en memoria (force-stop pierde la partida).',
-  );
-}
-
-if (isPersistentStorage && !isPersistentStorage()) {
-  // MGC-363 debug aid: si AsyncStorage cayó al fallback en memoria, las
-  // saves se pierden en cada force-stop. Logueamos en `console.warn`
-  // para que aparezca en `adb logcat *:S ReactNativeJS:V` y QA pueda
-  // diagnosticarlo en el campo sin un dev build.
+  // MGC-1195: este bloque estaba duplicado (warnings emitidos 2x); consolidado a
+  // una sola evaluación.
   // eslint-disable-next-line no-console
   console.warn(
     '[copero:career] AsyncStorage no resolvió; persistencia en memoria (force-stop pierde la partida).',
