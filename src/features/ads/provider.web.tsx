@@ -19,9 +19,24 @@ type BannerProps = {
 export const Banner = ({ slotId }: BannerProps) => {
   const { colors, spacing, fontSize } = useTheme();
   if (Platform.OS !== 'web') return null;
+  // MGC-889: el Banner es sibling del Stack en app/_layout.tsx. Cuando
+  // identity-screen (PR #269 / MGC-852) desborda su `flex:1` box con
+  // nationality + field-map + fixed-form + sticky-footer, los Pressables
+  // absolutos del field-map pintan sobre el Banner en viewport. pos-CAM
+  // (y≈629-665) solapa Banner (y≈636-720) por 29 px y Playwright reporta
+  // `<ins> intercepts pointer events` (mgc-317-qa.spec.ts:18,
+  // mgc-462-contrast.spec.ts:21).
+  //
+  // pointerEvents="none" en el View wrapper + redundante en el <ins>
+  // placeholder deja el Banner visualmente presente pero click-through.
+  // El placeholder no es interactivo (es el slot AdSense que inyectará
+  // un iframe propio cuando cargue AdSense real; ese iframe restaura
+  // pointer-events en su document context, así que el fix no rompe ads
+  // reales). Patrón estable: el Banner nunca recibe taps en producción.
   return (
     <View
       testID="ad-banner-web"
+      pointerEvents="none"
       importantForAccessibility="no-hide-descendants"
       accessibilityLabel="Espacio publicitario"
       style={{
@@ -36,7 +51,7 @@ export const Banner = ({ slotId }: BannerProps) => {
     >
       <ins
         className="adsbygoogle"
-        style={{ display: 'block', width: '100%', height: BANNER_HEIGHT }}
+        style={{ display: 'block', width: '100%', height: BANNER_HEIGHT, pointerEvents: 'none' }}
         data-ad-client={slotId ?? 'ca-pub-XXXXXXXXXXXXXXXX'}
         data-ad-slot="1234567890"
         data-ad-format="auto"
