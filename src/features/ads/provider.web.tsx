@@ -22,6 +22,25 @@ export const Banner = ({ slotId }: BannerProps) => {
   return (
     <View
       testID="ad-banner-web"
+      // MGC-889: pointerEvents="none" en el wrapper del Banner. En
+      // /simulador-carrera/identity (PR #269) la suma de
+      // nationality-section (338px) + field-map-section (378px) +
+      // identity-fixed-form (195px) + identity-sticky-footer (273px) +
+      // identity-footer (153px) desborda los 497px del identity-screen
+      // (flex:1); el field-map-wrapper termina en y=519-839 mientras el
+      // Banner está en y=636-720. Los Pressables pos-CAM (y=629-665) y
+      // pos-CB (y=765-801) solapan el banner en viewport y Playwright
+      // reporta "<ins> ... intercepts pointer events" sobre
+      // data-testid=ad-banner-web. pointerEvents="none" en el View wrapper
+      // cascadea al <ins> hijo via RN pointer events propagation, así que
+      // basta con declararlo una vez en el wrapper (no en el <ins>
+      // directamente — TS no expone `pointerEvents` en
+      // DetailedHTMLProps<InsHTMLAttributes<HTMLModElement>, HTMLModElement>
+      // y reproducir la doble declaración rompe typecheck). El script
+      // AdSense real (cuando se integre vía headContent) inyecta un
+      // <iframe> hijo con pointer-events restaurado en su propio document
+      // context, así el click sobre el anuncio sigue funcionando.
+      pointerEvents="none"
       importantForAccessibility="no-hide-descendants"
       accessibilityLabel="Espacio publicitario"
       style={{
