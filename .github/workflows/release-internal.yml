@@ -135,7 +135,9 @@ jobs:
 
   ios-internal:
     name: ios build + submit internal (simulator preview, best-effort) [MGC-360]
-    runs-on: [self-hosted, copero-ci, Linux]
+    # MGC-1132: mismo motivo que eas.yml preview-ios — iOS va al runner macOS ARM64
+    # (runner-02) y deja libre el slot Linux para el build Android de este workflow.
+    runs-on: [self-hosted, copero-ci, macOS]
     timeout-minutes: 60
     continue-on-error: true
     env:

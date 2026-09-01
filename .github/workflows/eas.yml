@@ -26,6 +26,12 @@ on:
       - 'test/**'
       - 'build/**'
       # NOTE: 'main' queda fuera; deploy main va por deploy.yml cuando exista.
+    # MGC-1132: un cambio que sólo toca CI/docs no puede cambiar el APK, pero antes
+    # encolaba el job `changes` en el único runner Linux y quedaba `pending` detrás de
+    # builds Android de ~30 min, bloqueando el merge de los propios fixes de pipeline.
+    paths-ignore:
+      - '.github/**'
+      - '**/*.md'
   pull_request:
     branches:
       - 'feat/**'
@@ -186,7 +192,13 @@ jobs:
 
   preview-ios:
     name: preview ios (eas build --local, simulator)
-    runs-on: [self-hosted, copero-ci, Linux]
+    # MGC-1132: el job iOS estaba pineado al runner Linux (runner-01), donde un build
+    # iOS no puede compilar y además consumía el único slot Linux durante ~8 min por
+    # run (npm ci + install eas-cli) antes de fallar. Con 6 runs en cola eso dejaba
+    # los builds Android en starvation (0 success en los últimos 30 runs de eas.yml).
+    # La label macOS enruta al runner-02 (Mac mini ARM64, con Xcode), que es el único
+    # que puede construir iOS y estaba idle. Coincide con el header de este workflow.
+    runs-on: [self-hosted, copero-ci, macOS]
     needs: changes
     if: needs.changes.outputs.ios == 'true' || needs.changes.outputs.core == 'true'
     steps:
