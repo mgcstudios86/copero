@@ -197,30 +197,44 @@ export default function IdentityScreen() {
           del soft keyboard. Antes el Continue estaba al final del ScrollView
           y con teclado abierto quedaba fuera del fold visible.
 
-          MGC-751: input-name-wrapper y btn-foot-row se extraen del
-          ScrollView (ver <View testID="identity-fixed-form"/> abajo). El
-          primer layout pass de RN-Android dentro de un ScrollView clipea
-          los bounds de los hijos al viewport visible (en ZY22G728HN 1080x2400
-          con SiteHeader + Banner arriba, viewport bottom ≈ y=1638). Resultado
-          QA MGC-711: input-name-wrapper h=-22 y btn-foot-row h=-270 aunque
-          wrapper tuviera collapsable={false} + minHeight:48 + overflow:visible.
-          Mismo patrón que PR #223 ea57f8b + PR #252 0b41800 que sacaron el
-          stepper +/- del ScrollView para resolver MGC-585 / MGC-744: el
-          stepper pasó de h=0 a bounds reales porque vive en un View fijo
-          entre ScrollView y footer, sin pasar por el measure pass del
-          ScrollView. Aquí replicamos ese patrón en los wrappers que QA
-          necesita testear por testID estable. */}
-      {/* MGC-1083 — fix outer ScrollView regression sobre feat/mgc955-identity-liga-selector.
-          QA MGC-1016 midió field-map-wrapper y league-selector-wrapper AUSENTES
-          del DOM bajo outer ScrollView flex:1 (commit 527f1a6 MGC-986 dentro
-          del lineage de esta branch). Replicar el patrón canónico MGC-969 /
-          PR-284 (commit 2be9c51) ya mergeado en main: remover el ScrollView
-          raíz, dejar Header + Jersey + Nacionalidad + league-selector-wrapper +
-          field-map-section + identity-fixed-form + identity-sticky-footer como
-          View fijos hermanos con flexShrink:0. Sin flex:1, sin outer
-          ScrollView, sin competencia por altura entre hermanos del
-          kavContent. El único ScrollView queda anidado en la lista de
-          nacionalidades con testID identity-scroll + collapsable={false}. */}
+      {/* MGC-1277: restaurar patrón MGC-1257 f6bfdc8 (outer ScrollView cubre TODO
+          el árbol scrollable). PR-302 (mergeCommit a9ee2fc) introdujo regresión
+          crítica sobre ZY22G728HN: el commit MGC-1272 e8d3b9b (parcial-revert
+          de MGC-1257) extrajo field-map-section como View fijo hermano del
+          ScrollView (height:380 fixed). El resultado es que ScrollView
+          (flexGrow:1 + minHeight:320) + field-map (380) + sticky-footer (240)
+          suma 940dp sobre kavContent 732dp de ZY22G728HN density 400: el
+          ScrollView empuja field-map-section y sticky-footer fuera del
+          viewport nativo. QA MGC-1273 midió league-selector-wrapper,
+          field-map-section, identity-fixed-form y identity-sticky-footer
+          AUSENTES del uiautomator dump, junto con input-name y btn-identity-
+          continue inalcanzables. Usuario no puede elegir liga, no puede
+          elegir posición, no puede tipear nombre, no puede apretar Continue.
+
+          Patrón definitivo (MGC-1257 / 433281f, restaurado acá): outer
+          ScrollView envuelve Header + Jersey + Nacionalidad + Liga +
+          Field-map + Identity-fixed-form (todos los wrappers que QA testea).
+          identity-sticky-footer queda como ÚNICO sibling flexBasis:240
+          flexGrow:0 flexShrink:0 del ScrollView, siempre visible al fondo
+          con stepper +/- y btn-identity-continue. El usuario scrollea dentro
+          del ScrollView para acceder a input-name + Pie hábil.
+
+          Belt-suspenders: field-map-section height:380 + flexBasis:380 +
+          flexGrow:0 (MGC-1236) garantiza que el wrapper interno 320dp no
+          shrinke aunque el ScrollView mida su contentContainer con padding.
+          identity-fixed-form flexBasis:160 + flexGrow:0 hace lo propio para
+          los 2 fields (name + foot). collapsable={false} +
+          removeClippedSubviews={false} en el ScrollView mantienen resource-id
+          estable en uiautomator dump. */}
+      <ScrollView
+        testID="identity-scroll"
+        collapsable={false}
+        style={styles.scroll}
+        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[4] }]}
+        keyboardShouldPersistTaps="handled"
+        removeClippedSubviews={false}
+        nestedScrollEnabled
+      >
       <View
         testID="identity-header"
         collapsable={false}
@@ -257,11 +271,13 @@ export default function IdentityScreen() {
         </View>
       </View>
 
-      {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
-          height:240 + maxHeight:240 + overflow:hidden fuerzan el clamp al
-          intrinsic height del JerseyPreview md (160x200) + padding + labels,
-          evitando que RN-Android lo expanda al tamaño del viewport y empuje
-          secciones inferiores fuera del dump. Patrón MGC-1005. */}
+      {/* Jersey preview — sección scrollable dentro del outer ScrollView
+          (MGC-1257). height:240 + maxHeight:240 + overflow:hidden fuerzan
+          el clamp al intrinsic height del JerseyPreview md (160x200) +
+          padding + labels, evitando que RN-Android lo expanda al tamaño
+          del viewport y empuje secciones inferiores fuera del dump.
+          Patrón MGC-1005. flexShrink:0 garantiza que el measure pass del
+          ScrollView no lo colipse. */}
       <View
         testID="jersey-preview-wrapper"
         collapsable={false}
@@ -318,34 +334,18 @@ export default function IdentityScreen() {
           {profile.position} · OVR 50
         </Text>
       </View>
-      {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
-          (sibling de `identity-fixed-form`). Patrón canónico MGC-751/PR-254
-          (commit 6be789c + 403b380) extendido al field map. Bajo el fold del
-          ScrollView (y1 > 1638 en ZY22G728HN 1080x2400) RN-Android clipea los
-          bounds al viewport visible y los wrappers collapsable={false} reportan
-          h negativo en el primer dump. QA MGC-806 midió field-map-wrapper
-          h=-538 dentro del ScrollView; el extracto a View fijo hermano
-          garantiza h >= 600 (aspectRatio 0.7 sobre ancho 1048 ≈ 700px) sin
-          depender del measure pass del ScrollView. Posicionado entre el
-          ScrollView y `identity-fixed-form` (MGC-751) para mantener el orden
-          visual original: Header + Jersey (scrollable) → Nacionalidad (fijo)
-          → Field map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se
-          mete dentro del translateY del `identity-sticky-footer` (MGC-754) — el
-          field map no esquiva IME (es tap target, no input de texto). */}
-      {/* MGC-843: nationality-section extraída del ScrollView a View fijo
-          hermano del ScrollView (sibling de field-map-section y
-          identity-fixed-form). Tras PR #260 (MGC-807) el field-map-section
-          ocupaba ~1500px del viewport (aspectRatio 0.7 sobre ancho 1048),
-          comprimiendo el ScrollView a ~250px de altura en ZY22G728HN 1080x2400
-          y dejando Nacionalidad, stepper y Continue clipeados del primer layout
-          pass (QA MGC-840 FAIL crítico: identity screen renderizaba SOLO
-          field-map + input-name). El listado interno de países mantiene su
-          propio ScrollView anidado con `nestedScrollEnabled` para no perder
-          scroll dentro del bloque, replicando el patrón canónico MGC-751/
-          PR-254 aplicado a Nacionalidad. NO se mete dentro del translateY
-          del identity-sticky-footer (MGC-754) — el campo de búsqueda de
-          país esquiva el IME solo si gana foco, vía KeyboardAvoidingView
-          del wrapper padre. */}
+      {/* MGC-1257: field-map-wrapper y nationality-section vuelven a estar
+          dentro del outer ScrollView (MGC-1178 / 433281f pattern). El
+          extracto a View fijo hermano del ScrollView (MGC-807 / MGC-843)
+          tenía sentido cuando el ScrollView cubría solo nationality→field-
+          map y el resto caía fuera del viewport nativo. Con el ScrollView
+          ampliado a TODO el árbol (MGC-1257), el field-map-wrapper y
+          nationality-section mantienen sus flexBasis + flexGrow:0 + height
+          explícitos para que el measure pass del ScrollView no los
+          colipse. El listado interno de países sigue con su ScrollView
+          anidado + nestedScrollEnabled. NO se mete dentro del translateY
+          del identity-sticky-footer (MGC-754) — el field map no esquiva
+          IME (es tap target, no input de texto). */}
       <View
         testID="nationality-section"
         collapsable={false}
@@ -635,9 +635,9 @@ export default function IdentityScreen() {
         testID="field-map-section"
         collapsable={false}
         style={{
-          height: 360,
-          minHeight: 360,
-          flexBasis: 360,
+          height: 380,
+          minHeight: 380,
+          flexBasis: 380,
           flexGrow: 0,
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
@@ -751,29 +751,33 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
-      {/* MGC-751: section fija fuera del ScrollView con los wrappers que QA
-          necesita testear (input-name-wrapper + btn-foot-row). Mismo patrón
-          que el stepper sticky de MGC-585/PR-223 (ea57f8b) y MGC-744/PR-252
-          (0b41800): vivir fuera del ScrollView evita el clipping del measure
-          pass de RN-Android que reportaba bounds h=-22 / h=-270 fresh-load
-          en ZY22G728HN 1080x2400. El View padre lleva collapsable={false}
-          para garantizar que el subtree entra en la jerarquía nativa
-          reportada por uiautomator, replicando el snippet canónico de
-          MGC-594/PR-227 (commit 6be789c) — ahora aplicado a la sección
-          completa, no solo al wrapper interno.
+      {/* MGC-1257: identity-fixed-form VUELVE a estar DENTRO del outer
+          ScrollView (MGC-1178 / 433281f pattern). El extracto a View fijo
+          hermano (MGC-751) tenía sentido cuando el ScrollView cubría
+          solo nationality→field-map y la idea era sacar input-name +
+          btn-foot-row del measure pass clipeante del ScrollView. Pero
+          bajo la arquitectura MGC-1222/MGC-1236 (ScrollView sobre Header
+          + Jersey + Nacionalidad + 4 secciones fixed siblings), el
+          total fixed (88+380+160+240=868dp) overfloweaba el kavContent
+          872dp de ZY22G728HN density 400: identity-fixed-form quedaba
+          fuera del viewport nativo con bounds h=0 y sus wrappers
+          AUSENTES del uiautomator dump (QA MGC-1248 sobre APK
+          build-MGC-1229-1-fa99ac4.apk).
 
-          Posicionado entre el ScrollView (Header + Jersey + Nacionalidad) y
-          el stepper sticky (número), de modo que el usuario ve:
-          Header+Jersey arriba → scroll para Nacionalidad → Field map (fijo)
-          → Name + Foot siempre visibles → Stepper + Continue. Los wrappers
-          quedan en zona fija (y ≥ 1660 según bounds del layout, fuera del
-          viewport bottom del ScrollView ~y=1638) donde el measure pass NO
-          clipea sus bounds.
+          Con el ScrollView ampliado (MGC-1257), identity-fixed-form
+          vuelve a estar dentro del ScrollView (sibling de Header + Jersey
+          + Nacionalidad + Liga + Field-map), pero ahora el ScrollView
+          ocupa todo el árbol scrollable y el usuario puede hacer scroll
+          para acceder a input-name + Pie hábil. El View padre lleva
+          collapsable={false} + flexBasis:160 + flexGrow:0 para que el
+          measure pass del ScrollView no lo colipse. Los wrappers
+          internos (input-name-wrapper + btn-foot-row) mantienen su
+          minHeight:48 + collapsable={false} por si acaso.
 
-          Queda FUERA del wrapper identity-sticky-footer (MGC-754) porque el
-          translateY de IME avoidance solo aplica al stepper+Continue; los
-          inputs Name/Foot no necesitan esquivar el teclado (su input foco
-          ya se gestiona vía KAV). */}
+          Queda FUERA del wrapper identity-sticky-footer (MGC-754) — el
+          translateY de IME avoidance solo aplica al stepper+Continue;
+          los inputs Name/Foot no necesitan esquivar el teclado (su
+          foco lo gestiona KAV). */}
       <View
         testID="identity-fixed-form"
         collapsable={false}
@@ -877,6 +881,7 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
+      </ScrollView>
       {/* MGC-754: wrap stepperSticky + footer en `identity-sticky-footer` para
           aplicar translateY simultáneo cuando IME abre. translateY es
           independiente del flex layout del padre y empuja los dos elementos
@@ -1082,8 +1087,26 @@ const styles = StyleSheet.create({
   // MGC-610: wrapper interior con paddingBottom dinamico (Android). El
   // padding empuja el stepper sticky + footer arriba del IME sin tocar
   // el SafeAreaView edges=['bottom'].
-  kavContent: { flex: 1 },
-  container: {},
+  kavContent: { flex: 1, flexDirection: 'column' },
+  // MGC-1277: outer ScrollView full tree (MGC-1257 pattern). flexGrow:1
+  // toma el sobrante del kavContent sin colapsar a h=0 cuando el ScrollView
+  // anidado de países mide contenido. minHeight:440 garantiza bounds
+  // reales en cold-start fresh-mount sobre ZY22G728HN 1080x2400 (evita
+  // "identity-scroll AUSENTE"). flexShrink:1 permite que KAV le robe
+  // altura cuando el IME abre.
+  scroll: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 'auto',
+    minHeight: 440,
+    width: '100%',
+  },
+  // MGC-1257: container del ScrollView raíz. Patrón MGC-937/PR-278.
+  // width:'100%' garantiza que el contentContainer ocupe todo el ancho
+  // del ScrollView padre en builds nativos RN-Android.
+  container: {
+    width: '100%',
+  },
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
   // esté abierto. borderTop sutil separa visualmente del form scrollable.
