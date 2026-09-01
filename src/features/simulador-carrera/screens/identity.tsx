@@ -192,6 +192,22 @@ export default function IdentityScreen() {
           necesita testear por testID estable. */}
       <ScrollView
         testID="identity-scroll"
+        // MGC-937: collapsable={false} explícito en ScrollView garantiza que
+        // el view manager nativo RN-Android emita el nodo accesible con
+        // resource-id=identity-scroll en el uiautomator dump. PR-275 (707940e)
+        // había aplicado collapsable al field-map-wrapper pero no al ScrollView
+        // raíz, y QA MGC-907 midió 2 ScrollViews en el dump ambos con
+        // resource-id="". Patrón canónico MGC-594/PR-227 (commit 6be789c)
+        // extendido del Pressable al ScrollView contenedor.
+        collapsable={false}
+        // MGC-900: flex:1 en `style` (no en contentContainerStyle) garantiza
+        // que el ScrollView ocupe el espacio sobrante del flex column del
+        // kavContent. Sin flex:1 el ScrollView quedaba con altura asignada 0
+        // y uiautomator dump omitía el testID `identity-scroll`. Esencial
+        // tras la extracción field-map/fixed-form/sticky-footer (los 3
+        // hermanos sin flex declarado) para que el flex cascade asigne
+        // correctamente la altura sobrante.
+        style={styles.scroll}
         contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[4] }]}
         keyboardShouldPersistTaps="handled"
         // MGC-863: removeClippedSubviews={false} evita que RN-Android
@@ -391,6 +407,8 @@ export default function IdentityScreen() {
             style={[
               styles.fieldMapWrapper,
               {
+                height: 320,
+                maxHeight: 320,
                 borderRadius: radii.lg,
                 borderColor: colors.borderStrong,
                 backgroundColor: colors.successSoft,
@@ -723,15 +741,18 @@ export default function IdentityScreen() {
       {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
           el soft keyboard esté abierto o el form se desplace. El botón
           sigue siendo testeable por testID `btn-identity-continue` desde
-          el footer (el subtree ya no es scrollable). MGC-863: doble
-          wrapper collapsable={false} (identity-footer + btn-identity-
-          continue-wrap) alrededor del Button. Patrón canónico 6be789c /
-          MGC-594 aplicado a Pressable: el Button hereda wrap_content del
-          Text label en el primer layout pass de RN-Android, ignorando la
-          minHeight del wrapper padre. El wrapper interno collapsable=
-          {false} + height:120 explícito rompe el ciclo de wrap_content y
-          garantiza bounds reales (h=120) en uiautomator para el subtree
-          del Pressable. */}
+          el footer (el subtree ya no es scrollable).
+
+          MGC-937: remover el doble wrapper collapsable (identity-footer +
+          btn-identity-continue-wrap). La combinación de MGC-927 (flexDirection
+          column explícito en kavContent) + flex:1 en ScrollView resuelve la
+          distribución de altura del flex column; el doble wrapper ya no es
+          necesario y de hecho generaba bounds clipped h=45 para el Button en
+          QA MGC-907 (el wrapper interno height:120 sin alignSelf:'stretch'
+          quedaba con width contenido y el subtree se aplastaba). El footer
+          mantiene minHeight:120 + collapsable={false} (MGC-863) y expone el
+          Button directamente, garantizando bounds reales height=120 del
+          subtree Continue en uiautomator. */}
       <View
         testID="identity-footer"
         collapsable={false}
@@ -744,27 +765,22 @@ export default function IdentityScreen() {
             minHeight: 120,
             overflow: 'visible',
             flexShrink: 0,
+            width: '100%',
           },
         ]}
       >
-        <View
-          testID="btn-identity-continue-wrap"
-          collapsable={false}
-          style={{ height: 120, overflow: 'visible', flexShrink: 0 }}
-        >
-          <Button
-            label="Continuar"
-            onPress={onContinue}
-            variant="primary"
-            size="lg"
-            fullWidth
-            disabled={!canContinue}
-            testID="btn-identity-continue"
-            accessible
-            importantForAccessibility="yes"
-            accessibilityHint="Guarda la identidad y abre el dashboard"
-          />
-        </View>
+        <Button
+          label="Continuar"
+          onPress={onContinue}
+          variant="primary"
+          size="lg"
+          fullWidth
+          disabled={!canContinue}
+          testID="btn-identity-continue"
+          accessible
+          importantForAccessibility="yes"
+          accessibilityHint="Guarda la identidad y abre el dashboard"
+        />
       </View>
       </View>
       </View>
@@ -801,7 +817,24 @@ const styles = StyleSheet.create({
   // MGC-610: wrapper interior con paddingBottom dinamico (Android). El
   // padding empuja el stepper sticky + footer arriba del IME sin tocar
   // el SafeAreaView edges=['bottom'].
-  kavContent: { flex: 1 },
+  // MGC-927: flexDirection:'column' explícito. RN default es column, pero
+  // forzar el valor garantiza que el flex cascade asigne altura al
+  // ScrollView (identity-scroll) en lugar de distribuir el espacio entre
+  // los 3 hermanos (field-map-section, identity-fixed-form, identity-
+  // sticky-footer) con flex:0 por default. Sin flexDirection explícito,
+  // algunas builds nativas del view manager pueden aplicar flexDirection
+  // heredado del padre KeyboardAvoidingView y dejar ScrollView con h=0 →
+  // uiautomator omite el testID `identity-scroll` Y, en el build web, el
+  // navegador solapa field-map-section sobre los Pressables de la lista
+  // nationality (Playwright MGC-444 step 2 reporta "<div data-testid=
+  // field-map-section> intercepts pointer events" sobre Argentina).
+  kavContent: { flex: 1, flexDirection: 'column' },
+  // MGC-937: ScrollView contenedor (identity-scroll) requiere flex:1 en
+  // `style` para que el flex column del kavContent le ceda la altura
+  // sobrante. Sin esto, typecheck rompe en TS2339 (style={styles.scroll}
+  // sin clave definida) y la cascada deja el ScrollView con altura
+  // asignada 0 (MGC-900 + MGC-594 extendido al wrapper ScrollView).
+  scroll: { flex: 1 },
   container: {},
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
