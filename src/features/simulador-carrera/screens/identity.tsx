@@ -194,6 +194,10 @@ export default function IdentityScreen() {
         testID="identity-scroll"
         contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[4] }]}
         keyboardShouldPersistTaps="handled"
+        // MGC-863: removeClippedSubviews={false} evita que RN-Android
+        // elimine del árbol nativo accesible los hijos del ScrollView
+        // cuando se abre/cierra el IME. Patrón canónico PR #253 (b21e8f6).
+        removeClippedSubviews={false}
       >
         {/* Header */}
         <View style={{ gap: spacing[2] }}>
@@ -267,16 +271,7 @@ export default function IdentityScreen() {
           </Text>
         </View>
 
-        {/* MGC-807: field-map-wrapper extraído del ScrollView a View fijo
-            hermano (sibling) de `identity-fixed-form` (ver más abajo).
-            Bajo el fold del ScrollView (y1 > 1638 en ZY22G728HN 1080x2400)
-            RN-Android clipea los bounds al viewport visible y los wrappers
-            collapsable={false} reportan h negativo en el primer dump
-            (QA MGC-806 midió field-map-wrapper h=-538 dentro del ScrollView).
-            Patrón canónico MGC-751/PR-254 (commit 6be789c) extendido al
-            field map. */}
-
-        {/* Nationality search */}
+        {/* Nationality search (DENTRO del ScrollView — patrón canónico MGC-863). */}
         <Field label="Nacionalidad">
           <TextInput
             value={nationalityQuery}
@@ -364,20 +359,23 @@ export default function IdentityScreen() {
         </Field>
 
         </ScrollView>
-      {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
-          (sibling de `identity-fixed-form`). Patrón canónico MGC-751/PR-254
-          (commit 6be789c + 403b380) extendido al field map. Bajo el fold del
-          ScrollView (y1 > 1638 en ZY22G728HN 1080x2400) RN-Android clipea los
-          bounds al viewport visible y los wrappers collapsable={false} reportan
-          h negativo en el primer dump. QA MGC-806 midió field-map-wrapper
-          h=-538 dentro del ScrollView; el extracto a View fijo hermano
-          garantiza h >= 600 (aspectRatio 0.7 sobre ancho 1048 ≈ 700px) sin
-          depender del measure pass del ScrollView. Posicionado entre el
-          ScrollView y `identity-fixed-form` (MGC-751) para mantener el orden
-          visual original: Header + Jersey + Nacionalidad (scrollable) → Field
-          map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se mete
-          dentro del translateY del `identity-sticky-footer` (MGC-754) — el
-          field map no esquiva IME (es tap target, no input de texto). */}
+      {/* MGC-863: field-map-wrapper extraído a View fijo hermano del
+          ScrollView (sibling de `identity-fixed-form` debajo). Patrón
+          canónico d0d9dc0 / MGC-826: el field map vivía dentro del
+          ScrollView y bajo el fold (y1 > scroll y2 en ZY22G728HN) RN-Android
+          clipeaba los bounds al viewport visible en el primer layout pass
+          (QA MGC-840 midió pos-XX bounds invertidos height=-538 a -1094).
+          Extrayéndolo a View fijo con height:320 + maxHeight:320
+          garantizamos bounds reales sin depender del measure pass del
+          ScrollView. Posicionado entre el ScrollView y `identity-fixed-form`
+          para mantener el orden visual: Header + Jersey + Nacionalidad
+          (scrollable) → Field map (fijo) → Nombre + Foot (fijo) → Stepper
+          (fijo) → Continue (fijo). NO se mete dentro del translateY del
+          `identity-sticky-footer` (MGC-754) — el field map no esquiva IME
+          (es tap target, no input de texto).
+          BorderColor/backgroundColor se aplican inline para no perderlos
+          (regresión MGC-828 / bf88e58). styles.fieldMapWrapper define
+          height:320 + maxHeight:320 + flexShrink:0 SIN alignSelf:stretch. */}
       <View
         testID="field-map-section"
         collapsable={false}
@@ -393,17 +391,16 @@ export default function IdentityScreen() {
           <View
             testID="field-map-wrapper"
             collapsable={false}
-            style={{
-              aspectRatio: 0.7,
-              width: '100%',
-              minHeight: 200,
-              borderRadius: radii.lg,
-              borderWidth: 2,
-              borderColor: colors.borderStrong,
-              backgroundColor: colors.successSoft,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
+            style={[
+              styles.fieldMapWrapper,
+              {
+                borderRadius: radii.lg,
+                borderWidth: 2,
+                borderColor: colors.borderStrong,
+                backgroundColor: colors.successSoft,
+                position: 'relative',
+              },
+            ]}
             accessibilityLabel="Mapa del campo con posiciones"
           >
             {/* Líneas del campo */}
@@ -728,29 +725,48 @@ export default function IdentityScreen() {
       {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
           el soft keyboard esté abierto o el form se desplace. El botón
           sigue siendo testeable por testID `btn-identity-continue` desde
-          el footer (el subtree ya no es scrollable). */}
+          el footer (el subtree ya no es scrollable). MGC-863: doble
+          wrapper collapsable={false} (identity-footer + btn-identity-
+          continue-wrap) alrededor del Button. Patrón canónico 6be789c /
+          MGC-594 aplicado a Pressable: el Button hereda wrap_content del
+          Text label en el primer layout pass de RN-Android, ignorando la
+          minHeight del wrapper padre. El wrapper interno collapsable=
+          {false} + height:120 explícito rompe el ciclo de wrap_content y
+          garantiza bounds reales (h=120) en uiautomator para el subtree
+          del Pressable. */}
       <View
+        testID="identity-footer"
+        collapsable={false}
         style={[
           styles.footer,
           {
             backgroundColor: colors.bg,
             borderTopColor: colors.border,
             padding: spacing[4],
+            minHeight: 120,
+            overflow: 'visible',
+            flexShrink: 0,
           },
         ]}
       >
-        <Button
-          label="Continuar"
-          onPress={onContinue}
-          variant="primary"
-          size="lg"
-          fullWidth
-          disabled={!canContinue}
-          testID="btn-identity-continue"
-          accessible
-          importantForAccessibility="yes"
-          accessibilityHint="Guarda la identidad y abre el dashboard"
-        />
+        <View
+          testID="btn-identity-continue-wrap"
+          collapsable={false}
+          style={{ height: 120, overflow: 'visible', flexShrink: 0 }}
+        >
+          <Button
+            label="Continuar"
+            onPress={onContinue}
+            variant="primary"
+            size="lg"
+            fullWidth
+            disabled={!canContinue}
+            testID="btn-identity-continue"
+            accessible
+            importantForAccessibility="yes"
+            accessibilityHint="Guarda la identidad y abre el dashboard"
+          />
+        </View>
       </View>
       </View>
       </View>
@@ -822,5 +838,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // MGC-863: field-map-wrapper extraído a View fijo fuera del ScrollView
+  // (sibling de identity-fixed-form, hermano del ScrollView). Patrón
+  // canónico d0d9dc0 / MGC-826. height:320 + maxHeight:320 + overflow:
+  // hidden + flexShrink:0 + width:100% — SIN alignSelf:'stretch' (causa
+  // crecimiento vertical raro en flex column del kavContent). BorderColor
+  // / backgroundColor se aplican inline sobre el wrapper para no perderlos
+  // (regresión MGC-828 / bf88e58 documentada).
+  fieldMapWrapper: {
+    width: '100%',
+    height: 320,
+    maxHeight: 320,
+    overflow: 'hidden',
+    flexShrink: 0,
   },
 });
