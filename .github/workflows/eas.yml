@@ -1,4 +1,4 @@
-# eas.yml — Copero (MGC-290, MGC-379)
+# eas.yml — Copero (MGC-290, MGC-379, MGC-1206)
 # Preview builds cuando se pushea a feature branches (cualquier rama que NO sea main).
 # Política §8.3: builds --local. Plataforma Android + iOS.
 # Runner self-hosted con label copero-ci (MGC-379): el runner-01 (Linux x64) corre
@@ -11,6 +11,12 @@
 #   - sólo Android: 'android/**' → android
 #   - sólo iOS:     'ios/**'     → ios
 #   - default (App.tsx, src/**, etc.) → ambas plataformas
+#
+# Provenance gate (MGC-1206): el job android termina verificando que el APK generado
+# corresponda al commit del PR y que su index.android.bundle contenga los testIDs
+# canónicos declarados en .github/provenance-expected.json. Contrato y script:
+#   .github/provenance-expected.json  — qué strings son canónicos
+#   scripts/provenance-check.mjs      — el gate (SHA256 APK + bundle, frescura, commit)
 
 name: eas-preview (copero)
 
@@ -174,6 +180,7 @@ jobs:
             }
           fi
       - name: eas build --local (android, profile=preview)
+        id: build
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
           # MGC-836: JAVA_HOME lo exporta actions/setup-java@v4 (Temurin 17) instalado
@@ -188,7 +195,39 @@ jobs:
             echo "ERROR: JAVA_HOME ausente o inválido ('${JAVA_HOME:-}'); actions/setup-java@v4 falló" >&2
             exit 1
           fi
-          eas build --local --platform android --profile preview --non-interactive
+          # Provenance (MGC-1206): el runner es self-hosted y reusa el workspace, asi que
+          # un APK viejo puede sobrevivir entre runs. Se borra el residuo y se marca el
+          # instante de inicio para que el gate pueda probar que el artefacto es de este run.
+          rm -rf dist
+          mkdir -p dist
+          echo "build_started_at=$(date +%s)" >> "$GITHUB_OUTPUT"
+          # --output fija el path del artefacto: sin esto el gate tendria que adivinar.
+          eas build --local --platform android --profile preview --non-interactive \
+            --output dist/copero-preview.apk
+
+      # Provenance gate (MGC-1206, origen MGC-957): impide que un APK etiquetado con el
+      # commit del PR embeba un index.android.bundle viejo. Valida frescura del artefacto,
+      # commit fuente y presencia de los testIDs canonicos dentro del bundle.
+      # Corre en el mismo job que el build a proposito: el pool copero-ci esta saturado y
+      # un job extra implicaria rebuildear el APK. Los checks se adjuntan al SHA, por lo que
+      # el resultado aparece igual en el PR contra main.
+      - name: Provenance gate (SHA256 APK + bundle, testIDs canonicos)
+        env:
+          PROVENANCE_ARTIFACT: dist/copero-preview.apk
+          PROVENANCE_EXPECTED_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          PROVENANCE_BUILD_STARTED_AT: ${{ steps.build.outputs.build_started_at }}
+          PROVENANCE_OUT: provenance/provenance-android.json
+        run: node scripts/provenance-check.mjs
+
+      # QA valida el SHA256 antes de instalar el APK (acceptance criteria MGC-1206).
+      - name: Subir manifiesto de provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provenance-android-${{ github.run_id }}
+          path: provenance/provenance-android.json
+          if-no-files-found: warn
+          retention-days: 30
 
   preview-ios:
     name: preview ios (eas build --local, simulator)
