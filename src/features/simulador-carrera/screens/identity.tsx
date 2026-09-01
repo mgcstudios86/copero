@@ -411,13 +411,16 @@ export default function IdentityScreen() {
           bounds al viewport visible y los wrappers collapsable={false} reportan
           h negativo en el primer dump. QA MGC-806 midió field-map-wrapper
           h=-538 dentro del ScrollView; el extracto a View fijo hermano
-          garantiza h >= 600 (aspectRatio 0.7 sobre ancho 1048 ≈ 700px) sin
-          depender del measure pass del ScrollView. Posicionado entre el
-          ScrollView y `identity-fixed-form` (MGC-751) para mantener el orden
-          visual original: Header + Jersey + Nacionalidad (scrollable) → Field
-          map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se mete
-          dentro del translateY del `identity-sticky-footer` (MGC-754) — el
-          field map no esquiva IME (es tap target, no input de texto). */}
+          garantiza bounds reales sin depender del measure pass del ScrollView.
+          MGC-853: height ahora fijo a 320px via styles.fieldMapWrapper (antes
+          aspectRatio: 0.7 → 1497px que empujaba identity-fixed-form + identity-
+          footer fuera de pantalla y los dejaba AUSENTES del uiautomator dump).
+          Posicionado entre el ScrollView y `identity-fixed-form` (MGC-751) para
+          mantener el orden visual original: Header + Jersey + Nacionalidad
+          (scrollable) → Field map (fijo) → Nombre + Pie (fijo) → Stepper +
+          Continue. NO se mete dentro del translateY del `identity-sticky-
+          footer` (MGC-754) — el field map no esquiva IME (es tap target, no
+          input de texto). */}
       <View
         testID="field-map-section"
         collapsable={false}
@@ -433,17 +436,16 @@ export default function IdentityScreen() {
           <View
             testID="field-map-wrapper"
             collapsable={false}
-            style={{
-              aspectRatio: 0.7,
-              width: '100%',
-              minHeight: 200,
-              borderRadius: radii.lg,
-              borderWidth: 2,
-              borderColor: colors.borderStrong,
-              backgroundColor: colors.successSoft,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
+            style={[
+              styles.fieldMapWrapper,
+              {
+                borderRadius: radii.lg,
+                borderWidth: 2,
+                borderColor: colors.borderStrong,
+                backgroundColor: colors.successSoft,
+                position: 'relative',
+              },
+            ]}
             accessibilityLabel="Mapa del campo con posiciones"
           >
             {/* Líneas del campo */}
@@ -888,5 +890,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // MGC-853: field-map-wrapper ya NO usa aspectRatio: 0.7 (producía
+  // height = width / 0.7 = 1497px que empujaba identity-fixed-form y
+  // identity-footer fuera de pantalla → AUSENTES del uiautomator dump).
+  // Patrón canónico MGC-826 / d0d9dc0: height fijo + overflow:hidden +
+  // flexShrink:0 + alignSelf:stretch. BorderColor/backgroundColor se
+  // aplican inline para no perderlos (regresión MGC-828 / bf88e58).
+  fieldMapWrapper: {
+    width: '100%',
+    height: 320,
+    overflow: 'hidden',
+    flexShrink: 0,
+    alignSelf: 'stretch',
   },
 });
