@@ -138,11 +138,23 @@ export type Nationality = {
   flag: string; // emoji del país (placeholder hasta que lleguen assets reales)
 };
 
+/** MGC-955: liga de origen del jugador (opcional en identidad). */
+export type League = {
+  /** Código estable usado por el store y los flows downstream. */
+  code: string;
+  /** Nombre legible en UI (es-AR). */
+  name: string;
+  /** ISO alpha-2 del país rector. Útil para filtrar por nacionalidad. */
+  countryCode: string;
+};
+
 export type PlayerProfile = {
   name: string;
   number: number;
   position: Position;
   nationalityCode: string;
+  /** MGC-955: código de liga ('' si sin selección). */
+  leagueCode: string;
   preferredFoot: Foot;
   age: number;
   club: Club | null;

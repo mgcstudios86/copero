@@ -28,6 +28,7 @@ export const initialProfile: PlayerProfile = {
   number: 9,
   position: 'ST',
   nationalityCode: 'AR',
+  leagueCode: '',
   preferredFoot: 'right',
   age: 16,
   club: null,
@@ -92,6 +93,15 @@ export const setNationality = (
 ): CareerSnapshot => ({
   ...state,
   profile: { ...state.profile, nationalityCode: code },
+});
+
+/** MGC-955: setter puro para la liga de origen. Sin tocar motor. */
+export const setLeague = (
+  state: CareerSnapshot,
+  code: string,
+): CareerSnapshot => ({
+  ...state,
+  profile: { ...state.profile, leagueCode: code },
 });
 
 export const setPreferredFoot = (
