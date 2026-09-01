@@ -90,6 +90,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      # MGC-836: el runner copero-ci es Linux x64 (mgcstudios-01, user=ubuntu).
+      # Antes se hardcodeaba JAVA_HOME=/opt/homebrew/opt/openjdk@17 (path macOS),
+      # lo que dejaba gradle sin JDK en el runner. actions/setup-java@v4 con Temurin
+      # 17 es portable: instala JDK 17 en el runner y exporta JAVA_HOME automáticamente.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       - name: Instalar eas-cli + infisical CLI
         run: |
           bash scripts/install-eas-cli.sh
@@ -162,15 +170,17 @@ jobs:
       - name: eas build --local (android, profile=preview)
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
-          JAVA_HOME: /opt/homebrew/opt/openjdk@17
+          # MGC-836: JAVA_HOME lo exporta actions/setup-java@v4 (Temurin 17) instalado
+          # más arriba. Removido el path macOS hardcoded /opt/homebrew/opt/openjdk@17
+          # que dejaba gradle sin JDK en el runner Linux.
           # SDK 57 expo-modules-core 57.0.12 declara peer dep ^0.10.0 para worklets,
           # pero su C++ (WorkletJSCallInvoker.cpp) llama executeSync que requiere 0.12+.
           # Bug interno SDK 57. Skip el check de version de doctor hasta que se arregle upstream.
           EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
         run: |
-          if [[ ! -d "${JAVA_HOME}" ]]; then
-            echo "WARN: JAVA_HOME=${JAVA_HOME} no existe; usando default del runner" >&2
-            unset JAVA_HOME
+          if [[ -z "${JAVA_HOME}" || ! -d "${JAVA_HOME}" ]]; then
+            echo "ERROR: JAVA_HOME ausente o inválido ('${JAVA_HOME:-}'); actions/setup-java@v4 falló" >&2
+            exit 1
           fi
           eas build --local --platform android --profile preview --non-interactive
 
@@ -294,6 +304,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      # MGC-836:同样的 fix portable de JAVA_HOME para el gate Maestro del device físico.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       - name: Localizar APK built por preview-android
         env:
           ARTIFACT_DIR: ${{ github.workspace }}
@@ -323,10 +338,12 @@ jobs:
       - name: Correr flow Maestro AC7 force-stop
         env:
           DEVICE_SERIAL: ${{ vars.QA_DEVICE_SERIAL || 'ZY22G728HN' }}
-          JAVA_HOME: /opt/homebrew/opt/openjdk@17
+          # MGC-836: JAVA_HOME lo exporta actions/setup-java@v4 (Temurin 17) instalado
+          # más arriba. Antes hardcodeaba /opt/homebrew/opt/openjdk@17 (path macOS) y fallaba
+          # en runners Linux.
         run: |
-          if [[ ! -d "${JAVA_HOME}" ]]; then
-            echo "ERROR: JAVA_HOME=${JAVA_HOME} no existe; ver .maestro/README.md §1" >&2
+          if [[ -z "${JAVA_HOME}" || ! -d "${JAVA_HOME}" ]]; then
+            echo "ERROR: JAVA_HOME ausente o inválido ('${JAVA_HOME:-}'); actions/setup-java@v4 falló" >&2
             exit 1
           fi
           maestro test .maestro/ac7-force-stop.yaml --device "$DEVICE_SERIAL"
