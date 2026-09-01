@@ -125,12 +125,15 @@ function ThemedShell() {
       */}
       <SiteHeader />
       <Stack
+        initialRouteName="index"
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
           animation: 'fade',
         }}
       >
+        {/* MGC-534 — `initialRouteName="index"` simétrico a las variantes
+            `.native.tsx` / `.web.tsx`; mantiene coherencia entre bundles. */}
         <Stack.Screen name="index" />
         {/*
           MGC-782 code-split: las 4 screens del juego viven en
