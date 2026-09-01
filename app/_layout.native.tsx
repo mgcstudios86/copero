@@ -152,6 +152,20 @@ function ThemedShell() {
           // @ts-expect-error Expo Router 57 typings omiten getComponent.
           getComponent={() => import('@/features/game/screens/compass').then((m) => m.default)}
         />
+        {/*
+          MGC-1160 — `simulador-carrera/identity` se resuelve via file-based
+          route `app/simulador-carrera/identity.tsx` (MGC-379 + MGC-429 +
+          MGC-771). No registrar acá: la registration explícita en root
+          Stack con `name="simulador-carrera/identity"` provoca "Unmatched
+          Route" en pm clear + cold start sobre ZY22G728HN 1080x2400
+          (resource-id `expo-router-unmatched`, logcat `nested children
+          [index, simulador-carrera]` — `simulador-carrera/identity` no
+          matchea). PR-295 original (c15dc43) + MGC-1147 (f689b9b)
+          intentaron fix via root registration + wrapper fuera de `app/`
+          pero el child fantasma del Stack.Screen con nested path sigue
+          sin resolver. File-based route es el patrón probado en MGC-919
+          PASS (build-MGC-919-1-8eb411b.apk).
+        */}
         <Stack.Screen name="simulador-carrera" />
       </Stack>
       {/*

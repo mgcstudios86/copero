@@ -163,6 +163,11 @@ function ThemedShell() {
           // @ts-expect-error Expo Router 57 typings omiten getComponent.
           getComponent={() => import('@/features/game/screens/compass').then((m) => m.default)}
         />
+        {/*
+          MGC-1160 — ver comentario paralelo en `_layout.native.tsx`.
+          `simulador-carrera/identity` resuelve via file-based route,
+          NO via root Stack.Screen (provoca Unmatched Route, MGC-1158).
+        */}
         <Stack.Screen name="simulador-carrera" />
       </Stack>
       {/*
