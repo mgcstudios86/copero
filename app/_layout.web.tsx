@@ -131,12 +131,16 @@ function ThemedShell() {
       <StatusBar style={mode === 'dark' || mode === 'copero' ? 'light' : 'dark'} />
       <SiteHeader />
       <Stack
+        initialRouteName="index"
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
           animation: 'fade',
         }}
       >
+        {/* MGC-534 — `initialRouteName="index"` simétrico a la variante
+            native; evita que el primer render en web resuelva
+            `simulador-carrera` cuando AsyncStorage está vacío. */}
         <Stack.Screen name="index" />
         {/* MGC-782 code-split — ver comentario en app/_layout.tsx */}
         <Stack.Screen

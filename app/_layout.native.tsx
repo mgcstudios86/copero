@@ -116,12 +116,20 @@ function ThemedShell() {
       */}
       <SiteHeader />
       <Stack
+        initialRouteName="index"
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
           animation: 'fade',
         }}
       >
+        {/* MGC-534 — `initialRouteName="index"` fuerza al cold-start nativo
+            (post `pm clear` + `am start`) a montar `app/index.tsx` (home,
+            `testID=btn-career`). Sin esto, Expo Router 57 puede resolver
+            `simulador-carrera` como entry point cuando AsyncStorage está
+            vacío, lo que dispara el `<Redirect>` de
+            `app/simulador-carrera/index.tsx` → `/simulador-carrera/identity`
+            e invalida el primer assert del Maestro flow. */}
         <Stack.Screen name="index" />
         {/* MGC-782 code-split — ver comentario en app/_layout.tsx */}
         <Stack.Screen
