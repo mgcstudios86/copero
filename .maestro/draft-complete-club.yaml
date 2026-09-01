@@ -190,6 +190,10 @@ tags:
     label: "Elegir club de origen"
 
 # 9) Pantalla club con 4 clubes visibles (MGC-249 spec).
+# MGC-1195 T7: en ZY22G728HN 1080x2400 con ad-banner nativo arriba, Temperley
+# y Morón pueden quedar bajo el fold del viewport visible (~2250px según
+# bug MGC-832). Insertamos scrollUntilVisible antes de cada assert para
+# garantizar que las 4 tarjetas entran en el viewport testeable.
 - assertVisible:
     id: club-screen
     label: "Pantalla selector de club visible"
@@ -199,9 +203,21 @@ tags:
 - assertVisible:
     text: "BOCA JUNIORS"
     label: "Tarjeta Boca Juniors visible"
+- scrollUntilVisible:
+    element:
+      text: "TEMPERLEY"
+    direction: DOWN
+    timeout: 5000
+    label: "Scroll club-screen a tarjeta Temperley"
 - assertVisible:
     text: "TEMPERLEY"
     label: "Tarjeta Temperley visible"
+- scrollUntilVisible:
+    element:
+      text: "MORÓN"
+    direction: DOWN
+    timeout: 5000
+    label: "Scroll club-screen a tarjeta Morón"
 - assertVisible:
     text: "MORÓN"
     label: "Tarjeta Morón visible"
