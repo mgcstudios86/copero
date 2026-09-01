@@ -59,6 +59,7 @@ export const initialProfile: PlayerProfile = {
   number: 9,
   position: 'ST',
   nationalityCode: 'AR',
+  leagueCode: '',
   preferredFoot: 'right',
   age: 16,
   club: null,

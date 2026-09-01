@@ -46,6 +46,8 @@ type CareerStore = CareerSnapshot & {
   setNumber: (number: number) => void;
   setPosition: (position: Position) => void;
   setNationality: (code: string) => void;
+  /** MGC-955: setter de liga de origen (selector de identidad). */
+  setLeague: (code: string) => void;
   setPreferredFoot: (foot: Foot) => void;
   commitIdentity: () => void;
   /**
@@ -292,6 +294,10 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       applyAndPersist((s) => ({ ...s, profile: { ...s.profile, position } })),
     setNationality: (code) =>
       applyAndPersist((s) => ({ ...s, profile: { ...s.profile, nationalityCode: code } })),
+    // MGC-955: setter liviano, mismo patrón que setNationality. Persiste
+    // junto al resto del profile; el avance a dashboard lo arrastra.
+    setLeague: (code) =>
+      applyAndPersist((s) => ({ ...s, profile: { ...s.profile, leagueCode: code } })),
     setPreferredFoot: (foot) =>
       applyAndPersist((s) => ({ ...s, profile: { ...s.profile, preferredFoot: foot } })),
     // Transiciones de stage: pure helpers sin motor. Síncronas para
