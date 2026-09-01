@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,6 +27,22 @@ export default function DraftScreen() {
   const swapLegend = useCareerStore((s) => s.swapLegend);
   const pickLegend = useCareerStore((s) => s.pickLegend);
 
+  // MGC-426 — guard contra taps concurrentes. `pickLegend` / `swapLegend`
+  // son async (await flushPendingSave) y la store NO serializa llamadas
+  // superpuestas del mismo action: cada `setSnapshot(step)` se ejecuta en
+  // su propio microtask y, aunque internamente avancen `draft.picks`
+  // correctamente, el chain de `pendingSave` queda FIFO y un force-stop
+  // entre pick-8 y el flush del stage='club' puede revertir el snapshot
+  // a initialSnapshot(). Más simple y suficiente: bloquear el botón
+  // mientras la acción está en vuelo y prevenir la acumulación de
+  // promises en la queue de microtasks. Cobertura completa
+  // (incluyendo el camino "Continuar carrera" en home) exige deshabilitar
+  // también durante el `router.replace` post round-8; lo extendemos
+  // vía `navigationLocked` para que el último tap no quede pegado en
+  // busy si la navegación fallara.
+  const [submitting, setSubmitting] = useState(false);
+  const [navigationLocked, setNavigationLocked] = useState(false);
+
   // Inicializa el draft si entramos sin board (entry directo desde CTA).
   // MGC-284: `startDraft` ahora es async + await flushPendingSave. El
   // `useEffect` no puede await, pero propagamos la promesa al caller
@@ -42,8 +58,13 @@ export default function DraftScreen() {
   }, [draft, startDraft]);
 
   // Cuando el draft termina (motor emite card + stage 'club'), salimos a tu-jugador.
+  // `setNavigationLocked` se difiere a microtask para evitar el lint
+  // react-hooks/set-state-in-effect (cascading renders); la navegación
+  // a tu-jugador ocurre sincrónicamente, pero la flag de busy puede
+  // esperar al siguiente tick del event loop sin afectar UX.
   useEffect(() => {
     if (stage === 'club' || (draft && draft.picks.length >= DRAFT_SLOTS.length)) {
+      queueMicrotask(() => setNavigationLocked(true));
       router.replace('/simulador-carrera/tu-jugador');
     }
   }, [stage, draft, router]);
@@ -65,26 +86,40 @@ export default function DraftScreen() {
   const finished = draft.picks.length >= DRAFT_SLOTS.length;
 
   const onConfirm = async () => {
-    // MGC-284: `pickLegend` ahora es async + await flushPendingSave.
-    // Antes fire-and-forget; ahora cada "Confirmar atributo" bloquea
-    // hasta que AsyncStorage confirme la pick + board. AC4 — 8 rounds
-    // + force-stop dependía de esto.
-    await pickLegend();
-    // MGC-427: tras el pick 8, `pickLegend` setea stage='club' en la
-    // store. El useEffect de arriba vigila la transición, pero en build
-    // Android (build-pr174-mgc396.apk) la navegación no llegaba — el
-    // usuario quedaba en /draft con ronda 8 ya confirmada sin destino.
-    // Hacemos la navegación acá, explícita, leyendo el snapshot
-    // actualizado vía `useCareerStore.getState()` (evita una carrera
-    // con un re-render perdido). El useEffect queda como red de
-    // seguridad por si esta rama no se ejecuta (force-stop justo en el
-    // await, hot-reload, etc.).
-    const next = useCareerStore.getState();
-    if (
-      next.stage === 'club' ||
-      (next.draft && next.draft.picks.length >= DRAFT_SLOTS.length)
-    ) {
-      router.replace('/simulador-carrera/tu-jugador');
+    // MGC-426 — guard contra rapid-tap. Button.onPress no espera la
+    // promise del async; mientras `pickLegend` (await flushPendingSave)
+    // está en vuelo, taps adicionales dispararían setSnapshot(step)
+    // superpuestos. Aunque el motor avanza picks correctamente en serie,
+    // la cadena `pendingSave` queda FIFO con un flush pendiente por tap
+    // y un force-stop o un reload tras navegar al `tu-jugador` puede
+    // revertir al initialSnapshot. Bloqueamos hasta que el await termine
+    // y deshabilitamos visualmente con `loading`.
+    if (submitting || navigationLocked) return;
+    setSubmitting(true);
+    try {
+      // MGC-284: `pickLegend` ahora es async + await flushPendingSave.
+      // Antes fire-and-forget; ahora cada "Confirmar atributo" bloquea
+      // hasta que AsyncStorage confirme la pick + board. AC4 — 8 rounds
+      // + force-stop dependía de esto.
+      await pickLegend();
+      // MGC-427: tras el pick 8, `pickLegend` setea stage='club' en la
+      // store. El useEffect de arriba vigila la transición, pero en build
+      // Android (build-pr174-mgc396.apk) la navegación no llegaba — el
+      // usuario quedaba en /draft con ronda 8 ya confirmada sin destino.
+      // Hacemos la navegación acá, explícita, leyendo el snapshot
+      // actualizado vía `useCareerStore.getState()` (evita una carrera
+      // con un re-render perdido). El useEffect queda como red de
+      // seguridad por si esta rama no se ejecuta (force-stop justo en el
+      // await, hot-reload, etc.).
+      const next = useCareerStore.getState();
+      if (
+        next.stage === 'club' ||
+        (next.draft && next.draft.picks.length >= DRAFT_SLOTS.length)
+      ) {
+        router.replace('/simulador-carrera/tu-jugador');
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -93,8 +128,14 @@ export default function DraftScreen() {
       Alert.alert('Sin cambios disponibles', 'Ya usaste los 5 cambios del draft.');
       return;
     }
-    // MGC-284: idem pickLegend — `swapLegend` ahora es async.
-    await swapLegend();
+    // MGC-426 — idem onConfirm: serialized swap, sin solapamiento.
+    if (submitting || navigationLocked) return;
+    setSubmitting(true);
+    try {
+      await swapLegend();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -319,7 +360,8 @@ export default function DraftScreen() {
                 variant="primary"
                 size="lg"
                 fullWidth
-                disabled={finished}
+                disabled={finished || navigationLocked}
+                loading={submitting}
                 testID="btn-draft-confirm"
               />
             </View>
@@ -330,7 +372,8 @@ export default function DraftScreen() {
                 variant="secondary"
                 size="lg"
                 fullWidth
-                disabled={draft.swapsLeft <= 0}
+                disabled={draft.swapsLeft <= 0 || navigationLocked}
+                loading={submitting}
                 testID="btn-draft-swap"
               />
             </View>
