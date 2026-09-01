@@ -227,13 +227,13 @@ export default function IdentityScreen() {
           removeClippedSubviews={false} en el ScrollView mantienen resource-id
           estable en uiautomator dump. */}
       <ScrollView
-        testID="identity-scroll"
         collapsable={false}
         style={styles.scroll}
         contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[4] }]}
         keyboardShouldPersistTaps="handled"
         removeClippedSubviews={false}
         nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
       >
       <View
         testID="identity-header"
@@ -388,7 +388,7 @@ export default function IdentityScreen() {
               backgroundColor: colors.surface,
             }}
           >
-            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" testID="identity-scroll">
               {filteredNationalities.map((n) => {
                 const active = profile.nationalityCode === n.code;
                 return (
@@ -635,9 +635,9 @@ export default function IdentityScreen() {
         testID="field-map-section"
         collapsable={false}
         style={{
-          height: 380,
-          minHeight: 380,
-          flexBasis: 380,
+          height: 360,
+          minHeight: 360,
+          flexBasis: 360,
           flexGrow: 0,
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
@@ -788,6 +788,8 @@ export default function IdentityScreen() {
           padding: spacing[4],
           gap: spacing[4],
           flexShrink: 0,
+          flexBasis: 200,
+          flexGrow: 0,
         }}
       >
         {/* Name — MGC-686: wrapper View collapsable=false + minHeight:48 +
