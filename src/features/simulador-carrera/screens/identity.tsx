@@ -267,82 +267,14 @@ export default function IdentityScreen() {
           </Text>
         </View>
 
-        {/* Field map */}
-        <Field label="Posición (tap en el campo)">
-          <View
-            style={{
-              aspectRatio: 0.7,
-              width: '100%',
-              borderRadius: radii.lg,
-              borderWidth: 2,
-              borderColor: colors.borderStrong,
-              backgroundColor: colors.successSoft,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-            accessibilityLabel="Mapa del campo con posiciones"
-          >
-            {/* Líneas del campo */}
-            <View
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: 0,
-                right: 0,
-                height: 1,
-                backgroundColor: colors.border,
-              }}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: 0,
-                bottom: 0,
-                width: 1,
-                backgroundColor: colors.border,
-              }}
-            />
-            {POSITIONS.map((pos) => {
-              const active = profile.position === pos.id;
-              return (
-                <Pressable
-                  key={pos.id}
-                  onPress={() => setPosition(pos.id)}
-                  {...onKeyActivate(() => setPosition(pos.id))}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Posición ${pos.label}`}
-                  accessibilityState={{ selected: active }}
-                  testID={`pos-${pos.id}`}
-                  style={{
-                    position: 'absolute',
-                    left: `${pos.x * 100}%`,
-                    top: `${pos.y * 100}%`,
-                    transform: [{ translateX: -18 }, { translateY: -18 }],
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    borderWidth: 2,
-                    borderColor: active ? colors.textStrong : colors.border,
-                    backgroundColor: active ? GROUP_COLOR[pos.group] : colors.surface,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: active ? '#0A120E' : colors.text,
-                      fontSize: fontSize.xs,
-                      fontWeight: fontWeight.bold,
-                    }}
-                  >
-                    {pos.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Field>
+        {/* MGC-807: field-map-wrapper extraído del ScrollView a View fijo
+            hermano (sibling) de `identity-fixed-form` (ver más abajo).
+            Bajo el fold del ScrollView (y1 > 1638 en ZY22G728HN 1080x2400)
+            RN-Android clipea los bounds al viewport visible y los wrappers
+            collapsable={false} reportan h negativo en el primer dump
+            (QA MGC-806 midió field-map-wrapper h=-538 dentro del ScrollView).
+            Patrón canónico MGC-751/PR-254 (commit 6be789c) extendido al
+            field map. */}
 
         {/* Nationality search */}
         <Field label="Nacionalidad">
@@ -432,6 +364,111 @@ export default function IdentityScreen() {
         </Field>
 
         </ScrollView>
+      {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
+          (sibling de `identity-fixed-form`). Patrón canónico MGC-751/PR-254
+          (commit 6be789c + 403b380) extendido al field map. Bajo el fold del
+          ScrollView (y1 > 1638 en ZY22G728HN 1080x2400) RN-Android clipea los
+          bounds al viewport visible y los wrappers collapsable={false} reportan
+          h negativo en el primer dump. QA MGC-806 midió field-map-wrapper
+          h=-538 dentro del ScrollView; el extracto a View fijo hermano
+          garantiza h >= 600 (aspectRatio 0.7 sobre ancho 1048 ≈ 700px) sin
+          depender del measure pass del ScrollView. Posicionado entre el
+          ScrollView y `identity-fixed-form` (MGC-751) para mantener el orden
+          visual original: Header + Jersey + Nacionalidad (scrollable) → Field
+          map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se mete
+          dentro del translateY del `identity-sticky-footer` (MGC-754) — el
+          field map no esquiva IME (es tap target, no input de texto). */}
+      <View
+        testID="field-map-section"
+        collapsable={false}
+        style={{
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          padding: spacing[4],
+          flexShrink: 0,
+        }}
+      >
+        <Field label="Posición (tap en el campo)">
+          <View
+            testID="field-map-wrapper"
+            collapsable={false}
+            style={{
+              aspectRatio: 0.7,
+              width: '100%',
+              minHeight: 200,
+              borderRadius: radii.lg,
+              borderWidth: 2,
+              borderColor: colors.borderStrong,
+              backgroundColor: colors.successSoft,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+            accessibilityLabel="Mapa del campo con posiciones"
+          >
+            {/* Líneas del campo */}
+            <View
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                right: 0,
+                height: 1,
+                backgroundColor: colors.border,
+              }}
+            />
+            <View
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: 0,
+                bottom: 0,
+                width: 1,
+                backgroundColor: colors.border,
+              }}
+            />
+            {POSITIONS.map((pos) => {
+              const active = profile.position === pos.id;
+              return (
+                <Pressable
+                  key={pos.id}
+                  onPress={() => setPosition(pos.id)}
+                  {...onKeyActivate(() => setPosition(pos.id))}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Posición ${pos.label}`}
+                  accessibilityState={{ selected: active }}
+                  testID={`pos-${pos.id}`}
+                  collapsable={false}
+                  style={{
+                    position: 'absolute',
+                    left: `${pos.x * 100}%`,
+                    top: `${pos.y * 100}%`,
+                    transform: [{ translateX: -18 }, { translateY: -18 }],
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    borderWidth: 2,
+                    borderColor: active ? colors.textStrong : colors.border,
+                    backgroundColor: active ? GROUP_COLOR[pos.group] : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: active ? '#0A120E' : colors.text,
+                      fontSize: fontSize.xs,
+                      fontWeight: fontWeight.bold,
+                    }}
+                  >
+                    {pos.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Field>
+      </View>
       {/* MGC-751: section fija fuera del ScrollView con los wrappers que QA
           necesita testear (input-name-wrapper + btn-foot-row). Mismo patrón
           que el stepper sticky de MGC-585/PR-223 (ea57f8b) y MGC-744/PR-252
@@ -443,10 +480,10 @@ export default function IdentityScreen() {
           MGC-594/PR-227 (commit 6be789c) — ahora aplicado a la sección
           completa, no solo al wrapper interno.
 
-          Posicionado entre el ScrollView (Header + Jersey + Posición +
-          Nacionalidad) y el stepper sticky (número), de modo que el usuario
-          ve: Header+Jersey arriba → scroll para Posición+Nacionalidad →
-          Name + Foot siempre visibles → Stepper + Continue. Los wrappers
+          Posicionado entre el ScrollView (Header + Jersey + Nacionalidad) y
+          el stepper sticky (número), de modo que el usuario ve:
+          Header+Jersey arriba → scroll para Nacionalidad → Field map (fijo)
+          → Name + Foot siempre visibles → Stepper + Continue. Los wrappers
           quedan en zona fija (y ≥ 1660 según bounds del layout, fuera del
           viewport bottom del ScrollView ~y=1638) donde el measure pass NO
           clipea sus bounds.
