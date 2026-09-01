@@ -133,13 +133,31 @@ jobs:
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
         run: |
-          if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
-            echo "ERROR: INFISICAL_TOKEN ausente. Configurar en GitHub repo secrets." >&2
-            exit 1
-          fi
           if [[ -z "${INFISICAL_PROJECT_ID:-}" ]]; then
             echo "ERROR: INFISICAL_PROJECT_ID ausente. Configurar en GitHub repo secrets." >&2
+            exit 1
+          fi
+          # Prefer universal-auth (MGC-1227): emite un JWT fresco por run a partir de
+          # client_credentials, evitando la caducidad del secret estático INFISICAL_TOKEN.
+          # Fallback al token estático solo si los client credentials no están seteados.
+          if [[ -n "${INFISICAL_CLIENT_ID:-}" && -n "${INFISICAL_CLIENT_SECRET:-}" ]]; then
+            echo "[eas-preview] usando universal-auth (INFISICAL_CLIENT_ID/SECRET)"
+            INFISICAL_TOKEN=$(infisical login --method universal-auth \
+              --client-id "${INFISICAL_CLIENT_ID}" \
+              --client-secret "${INFISICAL_CLIENT_SECRET}" \
+              --plain 2>/dev/null | tail -1)
+            if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
+              echo "ERROR: universal-auth no emitió JWT; abortando" >&2
+              exit 1
+            fi
+            export INFISICAL_TOKEN
+          elif [[ -n "${INFISICAL_TOKEN:-}" ]]; then
+            echo "[eas-preview] usando INFISICAL_TOKEN estático (legacy; considerar migrar a universal-auth)"
+          else
+            echo "ERROR: ni INFISICAL_TOKEN ni INFISICAL_CLIENT_ID/SECRET presentes en repo secrets." >&2
             exit 1
           fi
           mkdir -p .infisical-tmp
@@ -270,13 +288,31 @@ jobs:
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
         run: |
-          if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
-            echo "ERROR: INFISICAL_TOKEN ausente. Configurar en GitHub repo secrets." >&2
-            exit 1
-          fi
           if [[ -z "${INFISICAL_PROJECT_ID:-}" ]]; then
             echo "ERROR: INFISICAL_PROJECT_ID ausente. Configurar en GitHub repo secrets." >&2
+            exit 1
+          fi
+          # Prefer universal-auth (MGC-1227): emite un JWT fresco por run a partir de
+          # client_credentials, evitando la caducidad del secret estático INFISICAL_TOKEN.
+          # Fallback al token estático solo si los client credentials no están seteados.
+          if [[ -n "${INFISICAL_CLIENT_ID:-}" && -n "${INFISICAL_CLIENT_SECRET:-}" ]]; then
+            echo "[eas-preview] usando universal-auth (INFISICAL_CLIENT_ID/SECRET)"
+            INFISICAL_TOKEN=$(infisical login --method universal-auth \
+              --client-id "${INFISICAL_CLIENT_ID}" \
+              --client-secret "${INFISICAL_CLIENT_SECRET}" \
+              --plain 2>/dev/null | tail -1)
+            if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
+              echo "ERROR: universal-auth no emitió JWT; abortando" >&2
+              exit 1
+            fi
+            export INFISICAL_TOKEN
+          elif [[ -n "${INFISICAL_TOKEN:-}" ]]; then
+            echo "[eas-preview] usando INFISICAL_TOKEN estático (legacy; considerar migrar a universal-auth)"
+          else
+            echo "ERROR: ni INFISICAL_TOKEN ni INFISICAL_CLIENT_ID/SECRET presentes en repo secrets." >&2
             exit 1
           fi
           mkdir -p .infisical-tmp
