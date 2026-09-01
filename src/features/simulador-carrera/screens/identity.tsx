@@ -878,6 +878,26 @@ export default function IdentityScreen() {
         testID="identity-sticky-footer"
         collapsable={false}
         style={[
+          // MGC-1309 — restaurar flexBasis:240 + flexGrow:0 + flexShrink:0 sobre
+          // identity-sticky-footer (canónico MGC-1283 / 883ac79 cherry-pick de
+          // MGC-1257 f6bfdc8). Sin estas props el sticky-footer compite con el
+          // outer ScrollView por la altura del kavContent flex:1 column y Yoga
+          // reporta wrappers con top > bottom (bounds invertidos) en ZY22G728HN
+          // fresh-mount — patrón MGC-1035 / MGC-751. PR-324 (602a5a7) omitió
+          // este flexBasis al restaurar field-map h=320dp, regresionando el
+          // identity-scroll a h=92dp colapsado y empujando todos los hijos del
+          // ScrollView (jersey, nationality, league, fixed-form, fixed-field-map)
+          // a bounds bottom < top. QA MGC-1307 midió:
+          //   identity-scroll bounds=[0,418][1080,659] h=92dp
+          //   jersey-preview-wrapper bounds=[40,772][1040,659] (bottom<top)
+          //   jersey-name bounds=[365,1038][715,659] (bottom<top)
+          //   input-name bounds=[40,2079][1040,659] (bottom<top)
+          // flexBasis:240 fija el alto del sticky-footer (stepperSticky minHeight
+          // 120 + footer Button lg ~56 + padding ~32 = ~240dp) para que el
+          // ScrollView quede con altura estable y Yoga calcule bounds positivos
+          // para los hijos. flexShrink:0 belt-suspenders para que el OS no lo
+          // comprima en measure pass.
+          { flexBasis: 240, flexGrow: 0, flexShrink: 0 },
           Platform.OS === 'android' && keyboardOffset > 0
             ? { transform: [{ translateY: -keyboardOffset }] }
             : null,
