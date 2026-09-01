@@ -190,30 +190,50 @@ export default function IdentityScreen() {
           entre ScrollView y footer, sin pasar por el measure pass del
           ScrollView. Aquí replicamos ese patrón en los wrappers que QA
           necesita testear por testID estable. */}
-      <ScrollView
-        testID="identity-scroll"
-        // MGC-937: collapsable={false} explícito en ScrollView garantiza que
-        // el view manager nativo RN-Android emita el nodo accesible con
-        // resource-id=identity-scroll en el uiautomator dump. PR-275 (707940e)
-        // había aplicado collapsable al field-map-wrapper pero no al ScrollView
-        // raíz, y QA MGC-907 midió 2 ScrollViews en el dump ambos con
-        // resource-id="". Patrón canónico MGC-594/PR-227 (commit 6be789c)
-        // extendido del Pressable al ScrollView contenedor.
+      {/* MGC-969 — refactor mayor: eliminar el ScrollView externo del
+          identity-screen. El patrón previo (MGC-517 → MGC-863 → MGC-937)
+          envolvía Header + Jersey + Nacionalidad en un ScrollView raíz con
+          `flex:1` y dejaba los wrappers (field-map-section, identity-fixed-
+          form, identity-sticky-footer) como hermanos flexShrink:0 del
+          kavContent. Ese modelo contenía además un ScrollView anidado
+          (lista de países) — dos ScrollViews en la misma pantalla. El
+          flex cascade de RN-Android no resuelve de forma estable flex:1
+          en el ScrollView raíz cuando el ScrollView anidado está midiendo
+          contenido: QA MGC-957 sobre ZY22G728HN 1080x2400 midió ScrollView
+          raíz colapsado a h=0 (omitía testID `identity-scroll` del
+          uiautomator dump) y hermanos flexShrink:0 con alturas
+          incorrectas (field-map-wrapper h=800, identity-footer h=86,
+          btn-identity-continue h=45). 8+ iteraciones mobile-developer
+          (MGC-826/827/828, MGC-846/848/852, MGC-868/869, MGC-914,
+          MGC-926/927/937, PR-280 altura numérica) parchearon flex:1,
+          flexDirection:'column', aspectRatio, alignSelf:'stretch' y
+          altura numérica sin resolver el rootcause.
+
+          Decisión CTO MGC-969: remover el ScrollView redundante. Arquitectura
+          canónica = columna flex de secciones fijas, sin flex:1 en ningún
+          hijo, sin ScrollView raíz compitiendo por altura. El único
+          ScrollView de la pantalla queda como el anidado de la lista de
+          nacionalidades (maxHeight:220), que pasa a llevar el testID
+          `identity-scroll` + collapsable={false} para que uiautomator
+          lo registre con resource-id estable. Cada sección del kavContent
+          lleva flexShrink:0 + altura explícita para que el flex cascade
+          no redistribuya altura entre ellas: Header (~110) + Jersey
+          (~340) + Nacionalidad TextInput (48) + Nacionalidad ScrollView
+          (220) + field-map-section (320 + padding) + identity-fixed-form
+          (48+48+padding) + identity-sticky-footer (120+120+padding) suman
+          ~1500px y entran en el viewport de ZY22G728HN 1080x2400 (chrome
+          SiteHeader+Banner ~210px → ~2190 disponibles).
+
+          Migramos desde el patrón MGC-517 + MGC-863 + MGC-937 al modelo
+          "sección fija en columna" para resolver la no convergencia de
+          las 8 iteraciones previas (MGC-957 / parent MGC-946). */}
+      {/* Header — sección fija sibling del kavContent (sin ScrollView).
+          collapsable={false} garantiza que el ViewGroup entre en la
+          jerarquía accesible de uiautomator dump. */}
+      <View
+        testID="identity-header"
         collapsable={false}
-        // MGC-900: flex:1 en `style` (no en contentContainerStyle) garantiza
-        // que el ScrollView ocupe el espacio sobrante del flex column del
-        // kavContent. Sin flex:1 el ScrollView quedaba con altura asignada 0
-        // y uiautomator dump omitía el testID `identity-scroll`. Esencial
-        // tras la extracción field-map/fixed-form/sticky-footer (los 3
-        // hermanos sin flex declarado) para que el flex cascade asigne
-        // correctamente la altura sobrante.
-        style={styles.scroll}
-        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[4] }]}
-        keyboardShouldPersistTaps="handled"
-        // MGC-863: removeClippedSubviews={false} evita que RN-Android
-        // elimine del árbol nativo accesible los hijos del ScrollView
-        // cuando se abre/cierra el IME. Patrón canónico PR #253 (b21e8f6).
-        removeClippedSubviews={false}
+        style={{ gap: spacing[2], padding: spacing[4], flexShrink: 0 }}
       >
         {/* Header */}
         <View style={{ gap: spacing[2] }}>
@@ -244,20 +264,27 @@ export default function IdentityScreen() {
             Tu jugador empieza con 16 años, OVR 50 y sin club. Elegí nombre, número y posición.
           </Text>
         </View>
+      </View>
 
-        {/* Jersey preview */}
-        <View
-          testID="jersey-preview-wrapper"
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radii.lg,
-            padding: spacing[4],
-            borderWidth: 1,
-            borderColor: colors.border,
-            alignItems: 'center',
-            gap: spacing[3],
-          }}
-        >
+      {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
+          Extraído del ScrollView raíz MGC-517 en MGC-969. collapsable={false}
+          garantiza jerarquía accesible estable para uiautomator dump. */}
+      <View
+        testID="jersey-preview-wrapper"
+        collapsable={false}
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: radii.lg,
+          marginHorizontal: spacing[4],
+          marginBottom: spacing[3],
+          padding: spacing[4],
+          borderWidth: 1,
+          borderColor: colors.border,
+          alignItems: 'center',
+          gap: spacing[3],
+          flexShrink: 0,
+        }}
+      >
           <Text style={{ color: colors.textMuted, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
             VISTA PREVIA DE CAMISETA
           </Text>
@@ -287,7 +314,25 @@ export default function IdentityScreen() {
           </Text>
         </View>
 
-        {/* Nationality search (DENTRO del ScrollView — patrón canónico MGC-863). */}
+      {/* MGC-969: sección Nacionalidad como View fijo sibling del kavContent.
+          Antes vivía dentro del ScrollView raíz (MGC-517 + MGC-863); al
+          refactor mayor, sale del ScrollView raíz junto con Header + Jersey.
+          El único ScrollView de la pantalla queda acá dentro (lista de
+          países), con testID `identity-scroll` + collapsable={false} para
+          que uiautomator dump emita resource-id estable. flexShrink:0 evita
+          que el kavContent le robe altura. */}
+      <View
+        testID="identity-nationality"
+        collapsable={false}
+        style={{
+          padding: spacing[4],
+          gap: spacing[2],
+          flexShrink: 0,
+        }}
+      >
+        {/* Nationality search — patrón MGC-863: la lista de países vive dentro
+            de un ScrollView con maxHeight:220 para permitir scroll interno
+            sobre los ~50 países sin desbordar la pantalla. */}
         <Field label="Nacionalidad">
           <TextInput
             value={nationalityQuery}
@@ -317,9 +362,23 @@ export default function IdentityScreen() {
               borderWidth: 1,
               borderColor: colors.border,
               backgroundColor: colors.surface,
+              overflow: 'hidden',
             }}
           >
-            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            {/* MGC-969 — único ScrollView de la pantalla. testID
+                `identity-scroll` + collapsable={false} + style explícito
+                con height:220 + flexShrink:0 garantiza que uiautomator
+                dump registre el nodo accesible con resource-id estable,
+                sin depender del flex cascade del kavContent (sin flex:1,
+                sin competencia con los hermanos). */}
+            <ScrollView
+              testID="identity-scroll"
+              collapsable={false}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+              removeClippedSubviews={false}
+              style={styles.scroll}
+            >
               {filteredNationalities.map((n) => {
                 const active = profile.nationalityCode === n.code;
                 return (
@@ -374,7 +433,9 @@ export default function IdentityScreen() {
           </View>
         </Field>
 
-        </ScrollView>
+      {/* MGC-969: cierre de identity-nationality (sección fija sibling del
+          kavContent). El Field Nacionalidad vive dentro. */}
+      </View>
       {/* MGC-916: field-map-wrapper extraído a View fijo hermano del
           ScrollView (sibling de `identity-fixed-form` debajo). Patrón
           canónico 0141fb0 / MGC-826: el field map vivía dentro del
@@ -829,13 +890,17 @@ const styles = StyleSheet.create({
   // nationality (Playwright MGC-444 step 2 reporta "<div data-testid=
   // field-map-section> intercepts pointer events" sobre Argentina).
   kavContent: { flex: 1, flexDirection: 'column' },
-  // MGC-937: ScrollView contenedor (identity-scroll) requiere flex:1 en
-  // `style` para que el flex column del kavContent le ceda la altura
-  // sobrante. Sin esto, typecheck rompe en TS2339 (style={styles.scroll}
-  // sin clave definida) y la cascada deja el ScrollView con altura
-  // asignada 0 (MGC-900 + MGC-594 extendido al wrapper ScrollView).
-  scroll: { flex: 1 },
-  container: {},
+  // MGC-969: el ScrollView de la lista de países (identity-scroll) ya no es
+  // hijo flex:1 del kavContent — vive dentro de identity-nationality con
+  // maxHeight:220 en su View padre. height: 220 + width: '100%' + flexShrink:0
+  // fijan dimensiones explícitas para que uiautomator emita bounds reales
+  // sin depender del flex cascade. Sin flex:1, sin competencia con los
+  // hermanos del kavContent (rootcause del bug MGC-957).
+  scroll: {
+    height: 220,
+    width: '100%',
+    flexShrink: 0,
+  },
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
   // esté abierto. borderTop sutil separa visualmente del form scrollable.
