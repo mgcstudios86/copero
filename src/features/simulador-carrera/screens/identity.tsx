@@ -194,6 +194,17 @@ export default function IdentityScreen() {
         testID="identity-scroll"
         contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[4] }]}
         keyboardShouldPersistTaps="handled"
+        // MGC-852: removeClippedSubviews={false} evita que RN-Android
+        // elimine del árbol nativo accesible los hijos del ScrollView
+        // cuando se abre/cierra el IME con softwareKeyboardLayoutMode="pan".
+        // Sin este flag, el header/jersey del primer layout pass quedan
+        // fuera del uiautomator dump tras dismiss del teclado (QA MGC-840
+        // reprodujo input-nationality-search ausente del DOM). PR #253
+        // (b21e8f6) ya había cerrado este rootcause exacto para MGC-751;
+        // el rewrite de identity.tsx en PR #260 (MGC-807) lo omitió por
+        // accidente y PR #267 (cf9ad6f) lo reintrodujo correctamente. Patrón
+        // canónico documentado en memory `copero-mgc751-pr253-removeclipped-density`.
+        removeClippedSubviews={false}
       >
         {/* Header */}
         <View style={{ gap: spacing[2] }}>
@@ -276,7 +287,37 @@ export default function IdentityScreen() {
             Patrón canónico MGC-751/PR-254 (commit 6be789c) extendido al
             field map. */}
 
-        {/* Nationality search */}
+        </ScrollView>
+      {/* MGC-852: nationality-section extraída a View fijo hermano del
+          ScrollView (entre ScrollView y field-map-section). Mismo patrón
+          canónico MGC-751/PR-254 (commit 6be789c) aplicado a Nacionalidad
+          que MGC-807 aplicó al field-map: bajo el fold del ScrollView
+          (y1 > 1638 en ZY22G728HN 1080x2400) RN-Android clipea los bounds
+          de los wrappers collapsable={false} al viewport visible y reporta
+          h negativo en el primer layout pass (QA MGC-840 midió
+          input-nationality-search AUSENTE del DOM tras tap input-name +
+          cerrar IME). Extrayendo nationality-section como sibling fijo
+          entre el ScrollView (Header + Jersey) y field-map-section
+          garantizamos bounds reales para el TextInput + la lista de países.
+
+          El ScrollView interno anidado de la lista de países mantiene
+          `nestedScrollEnabled` para preservar scroll vertical dentro del
+          bloque de selección (patrón idéntico a MGC-751/PR-254 sobre
+          btn-foot-row: el View padre es fijo pero el contenido scrolleable
+          interno sigue funcionando).
+       */}
+      <View
+        testID="nationality-section"
+        collapsable={false}
+        style={{
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          padding: spacing[4],
+          gap: spacing[3],
+          flexShrink: 0,
+        }}
+      >
         <Field label="Nacionalidad">
           <TextInput
             value={nationalityQuery}
@@ -362,8 +403,7 @@ export default function IdentityScreen() {
             </ScrollView>
           </View>
         </Field>
-
-        </ScrollView>
+      </View>
       {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
           (sibling de `identity-fixed-form`). Patrón canónico MGC-751/PR-254
           (commit 6be789c + 403b380) extendido al field map. Bajo el fold del
@@ -730,15 +770,40 @@ export default function IdentityScreen() {
           sigue siendo testeable por testID `btn-identity-continue` desde
           el footer (el subtree ya no es scrollable). */}
       <View
+        testID="identity-footer"
+        collapsable={false}
         style={[
           styles.footer,
           {
             backgroundColor: colors.bg,
             borderTopColor: colors.border,
             padding: spacing[4],
+            minHeight: 120,
+            overflow: 'visible',
           },
         ]}
       >
+        {/* MGC-852: wrapper interno con collapsable={false} + height:120
+            alrededor del Button. El componente Button (Pressable) hereda
+            wrap_content del Text label en el primer layout pass de
+            RN-Android, ignorando la minHeight del wrapper padre (QA MGC-840
+            midió Button h=16 aunque identity-footer h=120). El wrapper
+            interno collapsable={false} + height explícito rompe el ciclo
+            de wrap_content y garantiza bounds reales para el subtree del
+            Pressable. Patrón idéntico a commit 6be789c (PR #244 / MGC-594)
+            sobre btn-number-row, que probó ser la única forma robusta contra
+            el colapso a ViewGroup h=0 en cold-start.
+
+            MGC-852: Button.tsx no acepta `collapsable` directo en sus
+            props tipados, por eso se wrappea con un View adicional en lugar
+            de mutar el componente compartido. Patrón sostenido por la
+            memory `copero-mgc594-pr227-wrapper-view-fix` y replicado por
+            `copero-stepper-view-wrapper-bounds` (commit f48360f). */}
+        <View
+          testID="btn-identity-continue-wrap"
+          collapsable={false}
+          style={{ height: 120, overflow: 'visible' }}
+        >
         <Button
           label="Continuar"
           onPress={onContinue}
@@ -751,6 +816,7 @@ export default function IdentityScreen() {
           importantForAccessibility="yes"
           accessibilityHint="Guarda la identidad y abre el dashboard"
         />
+        </View>
       </View>
       </View>
       </View>
