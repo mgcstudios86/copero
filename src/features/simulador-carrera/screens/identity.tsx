@@ -509,7 +509,7 @@ export default function IdentityScreen() {
           <View
             testID="input-name-wrapper"
             collapsable={false}
-            style={{ minHeight: 48, width: '100%' }}
+            style={{ height: 48, minHeight: 48, width: '100%', overflow: 'visible' }}
           >
             <TextInput
               value={profile.name}
@@ -552,7 +552,10 @@ export default function IdentityScreen() {
               flexDirection: 'row',
               gap: spacing[2],
               width: '100%',
+              height: 48,
               minHeight: 48,
+              overflow: 'visible',
+              alignItems: 'center',
             }}
           >
             {(['left', 'right', 'both'] as Foot[]).map((f) => {

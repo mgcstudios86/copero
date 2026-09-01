@@ -143,6 +143,11 @@ export default function DraftScreen() {
       <ScrollView
         contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4] }]}
         testID="draft-screen"
+        // MGC-751: removeClippedSubviews={false} evita que el ScrollView
+        // recorte wrappers/Pressable fuera del viewport en cold-start, lo
+        // que producía bounds h=-63 para btn-draft-confirm/btn-draft-swap
+        // en uiautomator dump (MGC-793).
+        removeClippedSubviews={false}
       >
         {/* Header */}
         <View style={{ gap: spacing[2] }}>
@@ -351,9 +356,26 @@ export default function DraftScreen() {
             </View>
           </View>
 
-          {/* Actions */}
+          {/* Actions — MGC-793: snippet canónico MGC-594/PR-227 + MGC-751/PR-253
+              aplicado a los wrappers de btn-draft-confirm y btn-draft-swap.
+              El View padre colapsa en el view tree nativo de Android
+              (bounds=[103,1933][525,1870] h=-63 en uiautomator); wrapper
+              collapsable={false} + height/minHeight explícitos +
+              overflow:visible + alignItems/justifyContent:center garantiza
+              bounds reales y tap-ability para los Pressable internos. */}
           <View style={{ flexDirection: 'row', gap: spacing[3] }}>
-            <View style={{ flex: 1 }}>
+            <View
+              testID="btn-draft-confirm-wrap"
+              collapsable={false}
+              style={{
+                flex: 1,
+                height: 48,
+                minHeight: 48,
+                overflow: 'visible',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Button
                 label="Confirmar atributo"
                 onPress={onConfirm}
@@ -365,7 +387,18 @@ export default function DraftScreen() {
                 testID="btn-draft-confirm"
               />
             </View>
-            <View style={{ flex: 1 }}>
+            <View
+              testID="btn-draft-swap-wrap"
+              collapsable={false}
+              style={{
+                flex: 1,
+                height: 48,
+                minHeight: 48,
+                overflow: 'visible',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Button
                 label={`Cambiar leyenda · ${draft.swapsLeft}`}
                 onPress={onSwap}
