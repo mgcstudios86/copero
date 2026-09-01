@@ -763,23 +763,26 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
-      {/* MGC-811: field-map-wrapper extraído del ScrollView al mismo nivel
-          que identity-fixed-form. PR-259/a936f72 solo aplicó collapsable=false
-          pero el View seguía bajo el ScrollView, donde RN-Android clipea los
-          bounds al viewport visible en el primer layout pass (y1=1660 > fold
-          y2=1122 en ZY22G728HN 1080x2400) — uiautomator reportaba
-          field-map-wrapper h=-538 y pos-XX h=-668/-753/-1094 invertidos.
+      {/* MGC-1310: identity-fixed-field-map re-mergeado DENTRO del ScrollView
+          para resolver ScrollView colapsado 92dp con bounds internos invertidos.
+          PR-325 (aa75612) lo había extraído fuera como sibling entre ScrollView
+          y sticky-footer para arreglar MGC-1303 (field-map-wrapper bounds
+          h=-96px invertidos sobre ebe3214), pero la extracción consumió
+          ~380dp + sticky-footer ~180dp del kavContent → ScrollView flexGrow:1
+          colapsó a h=92dp y el contenido interno (jersey + form) terminó bajo
+          el fold con bounds INVERTIDOS (bottom < top) en uiautomator fresh-mount.
 
-          Aplicamos el patrón canónico MGC-751/PR-254 (commit 6be789c): wrapper
-          padre collapsable=false con dimensiones explícitas para garantizar
-          que el subtree entra en la jerarquía nativa reportada por
-          uiautomator. Vive entre identity-fixed-form (Name+Foot, MGC-751) y
-          identity-sticky-footer (Stepper+Continue, MGC-754): no sobrecargamos
-          identity-fixed-form con un 3er field para mantener cohesión, y
-          queda fuera del wrapper identity-sticky-footer porque el translateY
-          de IME avoidance solo aplica a stepper+Continue. flexShrink:0 evita
-          que la zona fija se comprima cuando el ScrollView compite por altura.
-          Queda fuera del flujo IME (no necesita translateY). */}
+          Revertir al patrón canónico MGC-1257/MGC-1286/PR-320 (c79e4e6):
+          ScrollView cubre TODO el árbol scrollable, sticky-footer único
+          sibling. ScrollView toma todo el alto disponible menos sticky-footer
+          (flexGrow:1, flexShrink:1) y deja que su contenido se desplace con
+          scroll nativo. Con removeClippedSubviews={false} (MGC-1286 belt),
+          uiautomator mide bounds reales del content container (no del viewport
+          visible) — sin inversión de bounds.
+
+          field-map-wrapper mantiene height:320 + flexBasis:320 + flexShrink:0
+          + alignSelf:stretch (belt-suspenders ebe3214 / MGC-1295) para no
+          regresar a la regresión 380dp que MGC-1294 reportó sobre PR-320. */}
       <View
         testID="identity-fixed-field-map"
         collapsable={false}
