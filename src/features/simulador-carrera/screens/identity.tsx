@@ -205,6 +205,18 @@ export default function IdentityScreen() {
         // accidente y PR #267 (cf9ad6f) lo reintrodujo correctamente. Patrón
         // canónico documentado en memory `copero-mgc751-pr253-removeclipped-density`.
         removeClippedSubviews={false}
+        // MGC-859: axe-a11y en Chromium reporta wcag2.1.1 + wcag2.1.3 serious
+        // sobre <div data-testid=identity-scroll>: "Element should have
+        // focusable content" + "Element should be focusable". Tras extraer
+        // nationality-section como View sibling (MGC-852 commit 00cbb3d),
+        // el ScrollView solo envuelve Header + Jersey (decorativos) y axe
+        // interpreta el contenedor como landmark interactivo sin focusables.
+        // accessible={false} + importantForAccessibility="no-hide-descendants"
+        // lo saca del árbol a11y (Web/Chromium y RN-Android). Los focusables
+        // reales viven en nationality-section + field-map-section +
+        // identity-fixed-form + identity-footer (todos siblings).
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
       >
         {/* Header */}
         <View style={{ gap: spacing[2] }}>
