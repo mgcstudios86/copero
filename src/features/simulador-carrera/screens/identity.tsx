@@ -903,12 +903,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // MGC-853: field-map-wrapper ya NO usa aspectRatio: 0.7 (producía
-  // height = width / 0.7 = 1497px que empujaba identity-fixed-form y
-  // identity-footer fuera de pantalla → AUSENTES del uiautomator dump).
+  // MGC-853 + MGC-860: field-map-wrapper ya NO usa aspectRatio: 0.7
+  // (producía height = width / 0.7 = 1497px que empujaba identity-fixed-form
+  // y identity-footer fuera de pantalla → AUSENTES del uiautomator dump).
   // Patrón canónico MGC-826 / d0d9dc0: height fijo + overflow:hidden +
   // flexShrink:0 + alignSelf:stretch. BorderColor/backgroundColor se
   // aplican inline para no perderlos (regresión MGC-828 / bf88e58).
+  //
+  // MGC-860: APK build-PR-269-d26a09e.apk midió field-map-wrapper h=800
+  // (target h<=320) e identity-fixed-form h=25 colapsado sin children,
+  // pese a que d26a09e ya contenía los fixes. Diagnóstico: bundle stale
+  // pre-d26a09e. Re-pushear bf2a1eb1 (incluye MGC-859 a11y commit) +
+  // este commit fuerza rebundle limpio + APK fresh sobre el SHA actual.
   fieldMapWrapper: {
     width: '100%',
     height: 320,
