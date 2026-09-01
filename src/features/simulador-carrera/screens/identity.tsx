@@ -624,13 +624,21 @@ export default function IdentityScreen() {
           ~770px pero la section colapsada a 397px lo clipeaba. Resultado
           QA MGC-1062 sobre build-MGC-1057-2-ce9295e.apk: field-map-section
           397px (159dp) vs 900px esperado, 7 de 12 posiciones con bounds
-          invertidos. Patrón canónico MGC-916 / 0141fb0 / MGC-1045 / MGC-1057. */}
+          invertidos. Patrón canónico MGC-916 / 0141fb0 / MGC-1045 / MGC-1057.
+
+          MGC-1152: añadir flexBasis:360 + flexGrow:0 al field-map-section
+          para que Yoga respete la altura declarada aunque el parent
+          kavContent flex:1 intente encogerla. Belt-suspenders junto al
+          fix de field-map-wrapper (flexBasis:320 + flexGrow:0) que
+          garantiza h=320dp en ZY22G728HN density 400. */}
       <View
         testID="field-map-section"
         collapsable={false}
         style={{
           height: 360,
           minHeight: 360,
+          flexBasis: 360,
+          flexGrow: 0,
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
@@ -643,7 +651,23 @@ export default function IdentityScreen() {
               alignSelf:'stretch' en field-map-wrapper (canónico 0141fb0 /
               MGC-916). Sin altura fija el wrapper colapsa junto con la
               section padre y las posiciones absolutas (top:Y%) se
-              renderizan fuera del viewport visible con bounds invertidos. */}
+              renderizan fuera del viewport visible con bounds invertidos.
+
+              MGC-1152: PR-298 midió wrapper h=250dp vs AC 320±10dp en
+              APK build-PR-294-1-c068d67. El parent field-map-section mide
+              309dp (en lugar de 360dp declarados) por shrink del outer
+              ScrollView (MGC-1122) + Field wrapper flexShrink:1 default.
+              Root cause: APK build-MGC-1152-1-3f0e485.apk contiene bundle
+              JS stale SHA 9ffd3894 (PR-285 era) — APK source SHA coincide
+              con commit pero el bundle es pre-PR-298. QA MGC-1169 reportó
+              field-map-wrapper AUSENTE + field-map-section 91px en dump.
+
+              Fix robusto: añadir flexBasis:320 + flexGrow:0 al inline
+              style del field-map-wrapper para que Android Yoga respete la
+              altura declarada aunque el parent esté siendo constrained.
+              Canónico MGC-916/PR-287/0141fb0 (flexBasis + flexGrow:0
+              fuerzan altura ignorando shrink cascade). maxHeight:320 +
+              flexShrink:0 + alignSelf:'stretch' quedan como belt-suspenders. */}
           <View
             testID="field-map-wrapper"
             collapsable={false}
@@ -651,6 +675,8 @@ export default function IdentityScreen() {
               height: 320,
               maxHeight: 320,
               width: '100%',
+              flexBasis: 320,
+              flexGrow: 0,
               borderRadius: radii.lg,
               borderWidth: 2,
               borderColor: colors.borderStrong,
