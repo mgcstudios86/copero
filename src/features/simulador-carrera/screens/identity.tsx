@@ -616,141 +616,6 @@ export default function IdentityScreen() {
           ) : null}
         </Field>
       </View>
-      {/* MGC-1086: restaurar MGC-1057 — height:360 + minHeight:360 explícitos
-          en field-map-section. MGC-1073 (92e9975) revirtió el fix MGC-1057
-          removiendo height:360 + minHeight:360 y reemplazando height:320
-          del wrapper por aspectRatio:1.4, lo que producía bounds
-          dependientes del ancho. En ZY22G728HN 1080px el wrapper medía
-          ~770px pero la section colapsada a 397px lo clipeaba. Resultado
-          QA MGC-1062 sobre build-MGC-1057-2-ce9295e.apk: field-map-section
-          397px (159dp) vs 900px esperado, 7 de 12 posiciones con bounds
-          invertidos. Patrón canónico MGC-916 / 0141fb0 / MGC-1045 / MGC-1057.
-
-          MGC-1152: añadir flexBasis:360 + flexGrow:0 al field-map-section
-          para que Yoga respete la altura declarada aunque el parent
-          kavContent flex:1 intente encogerla. Belt-suspenders junto al
-          fix de field-map-wrapper (flexBasis:320 + flexGrow:0) que
-          garantiza h=320dp en ZY22G728HN density 400. */}
-      <View
-        testID="field-map-section"
-        collapsable={false}
-        style={{
-          height: 360,
-          minHeight: 360,
-          flexBasis: 360,
-          flexGrow: 0,
-          backgroundColor: colors.bg,
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          padding: spacing[4],
-          flexShrink: 0,
-        }}
-      >
-        <Field label="Posición (tap en el campo)">
-          {/* MGC-1086: restaurar MGC-1057 — height:320 + flexShrink:0 +
-              alignSelf:'stretch' en field-map-wrapper (canónico 0141fb0 /
-              MGC-916). Sin altura fija el wrapper colapsa junto con la
-              section padre y las posiciones absolutas (top:Y%) se
-              renderizan fuera del viewport visible con bounds invertidos.
-
-              MGC-1152: PR-298 midió wrapper h=250dp vs AC 320±10dp en
-              APK build-PR-294-1-c068d67. El parent field-map-section mide
-              309dp (en lugar de 360dp declarados) por shrink del outer
-              ScrollView (MGC-1122) + Field wrapper flexShrink:1 default.
-              Root cause: APK build-MGC-1152-1-3f0e485.apk contiene bundle
-              JS stale SHA 9ffd3894 (PR-285 era) — APK source SHA coincide
-              con commit pero el bundle es pre-PR-298. QA MGC-1169 reportó
-              field-map-wrapper AUSENTE + field-map-section 91px en dump.
-
-              Fix robusto: añadir flexBasis:320 + flexGrow:0 al inline
-              style del field-map-wrapper para que Android Yoga respete la
-              altura declarada aunque el parent esté siendo constrained.
-              Canónico MGC-916/PR-287/0141fb0 (flexBasis + flexGrow:0
-              fuerzan altura ignorando shrink cascade). maxHeight:320 +
-              flexShrink:0 + alignSelf:'stretch' quedan como belt-suspenders. */}
-          <View
-            testID="field-map-wrapper"
-            collapsable={false}
-            style={{
-              height: 320,
-              maxHeight: 320,
-              width: '100%',
-              flexBasis: 320,
-              flexGrow: 0,
-              borderRadius: radii.lg,
-              borderWidth: 2,
-              borderColor: colors.borderStrong,
-              backgroundColor: colors.successSoft,
-              position: 'relative',
-              overflow: 'hidden',
-              flexShrink: 0,
-              alignSelf: 'stretch',
-            }}
-            accessibilityLabel="Mapa del campo con posiciones"
-          >
-            {/* Líneas del campo */}
-            <View
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: 0,
-                right: 0,
-                height: 1,
-                backgroundColor: colors.border,
-              }}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: 0,
-                bottom: 0,
-                width: 1,
-                backgroundColor: colors.border,
-              }}
-            />
-            {POSITIONS.map((pos) => {
-              const active = profile.position === pos.id;
-              return (
-                <Pressable
-                  key={pos.id}
-                  onPress={() => setPosition(pos.id)}
-                  {...onKeyActivate(() => setPosition(pos.id))}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Posición ${pos.label}`}
-                  accessibilityState={{ selected: active }}
-                  testID={`pos-${pos.id}`}
-                  collapsable={false}
-                  style={{
-                    position: 'absolute',
-                    left: `${pos.x * 100}%`,
-                    top: `${pos.y * 100}%`,
-                    transform: [{ translateX: -18 }, { translateY: -18 }],
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    borderWidth: 2,
-                    borderColor: active ? colors.textStrong : colors.border,
-                    backgroundColor: active ? GROUP_COLOR[pos.group] : colors.surface,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: active ? '#0A120E' : colors.text,
-                      fontSize: fontSize.xs,
-                      fontWeight: fontWeight.bold,
-                    }}
-                  >
-                    {pos.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Field>
-      </View>
       {/* MGC-751: section fija fuera del ScrollView con los wrappers que QA
           necesita testear (input-name-wrapper + btn-foot-row). Mismo patrón
           que el stepper sticky de MGC-585/PR-223 (ea57f8b) y MGC-744/PR-252
@@ -870,6 +735,105 @@ export default function IdentityScreen() {
                     }}
                   >
                     {f === 'left' ? 'Izquierdo' : f === 'right' ? 'Derecho' : 'Ambos'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Field>
+      </View>
+      {/* MGC-811: field-map-wrapper extraído del ScrollView al mismo nivel
+          que identity-fixed-form. PR-259/a936f72 solo aplicó collapsable=false
+          pero el View seguía bajo el ScrollView, donde RN-Android clipea los
+          bounds al viewport visible en el primer layout pass (y1=1660 > fold
+          y2=1122 en ZY22G728HN 1080x2400) — uiautomator reportaba
+          field-map-wrapper h=-538 y pos-XX h=-668/-753/-1094 invertidos.
+
+          Aplicamos el patrón canónico MGC-751/PR-254 (commit 6be789c): wrapper
+          padre collapsable=false con dimensiones explícitas para garantizar
+          que el subtree entra en la jerarquía nativa reportada por
+          uiautomator. Vive entre identity-fixed-form (Name+Foot, MGC-751) y
+          identity-sticky-footer (Stepper+Continue, MGC-754): no sobrecargamos
+          identity-fixed-form con un 3er field para mantener cohesión, y
+          queda fuera del wrapper identity-sticky-footer porque el translateY
+          de IME avoidance solo aplica a stepper+Continue. flexShrink:0 evita
+          que la zona fija se comprima cuando el ScrollView compite por altura.
+          Queda fuera del flujo IME (no necesita translateY). */}
+      <View
+        testID="identity-fixed-field-map"
+        collapsable={false}
+        style={styles.fixedFieldMap}
+      >
+        <Field label="Posición (tap en el campo)">
+          <View
+            testID="field-map-wrapper"
+            collapsable={false}
+            style={[
+              styles.fieldMapWrapper,
+              {
+                backgroundColor: colors.successSoft,
+                borderColor: colors.borderStrong,
+                borderRadius: radii.lg,
+              },
+            ]}
+            accessibilityLabel="Mapa del campo con posiciones"
+          >
+            {/* Líneas del campo */}
+            <View
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                right: 0,
+                height: 1,
+                backgroundColor: colors.border,
+              }}
+            />
+            <View
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: 0,
+                bottom: 0,
+                width: 1,
+                backgroundColor: colors.border,
+              }}
+            />
+            {POSITIONS.map((pos) => {
+              const active = profile.position === pos.id;
+              return (
+                <Pressable
+                  key={pos.id}
+                  onPress={() => setPosition(pos.id)}
+                  {...onKeyActivate(() => setPosition(pos.id))}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Posición ${pos.label}`}
+                  accessibilityState={{ selected: active }}
+                  testID={`pos-${pos.id}`}
+                  collapsable={false}
+                  style={{
+                    position: 'absolute',
+                    left: `${pos.x * 100}%`,
+                    top: `${pos.y * 100}%`,
+                    transform: [{ translateX: -18 }, { translateY: -18 }],
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    borderWidth: 2,
+                    borderColor: active ? colors.textStrong : colors.border,
+                    backgroundColor: active ? GROUP_COLOR[pos.group] : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: active ? '#0A120E' : colors.text,
+                      fontSize: fontSize.xs,
+                      fontWeight: fontWeight.bold,
+                    }}
+                  >
+                    {pos.label}
                   </Text>
                 </Pressable>
               );
@@ -1118,4 +1082,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // MGC-811: wrapper fijo para field-map (Posición) fuera del ScrollView.
+  // flexShrink:0 garantiza que no se comprima cuando compite con el
+  // ScrollView + identity-fixed-form + identity-sticky-footer. padding
+  // uniforme mantiene cohesión visual con identity-fixed-form.
+  fixedFieldMap: {
+    backgroundColor: 'transparent',
+    borderTopColor: 'transparent',
+    padding: 16,
+    gap: 8,
+    flexShrink: 0,
+  },
+  // MGC-821: aspectRatio 0.7 + width 100% generaba ~1497px de alto en
+  // ZY22G728HN 1080x2400, empujando identity-sticky-footer debajo del
+  // viewport y ocultando nationality/sticky-stepper/btn-identity-continue.
+  // Nuevo aspectRatio 1.6 (landscape ancho:alto) → height ≈ 1048/1.6 ≈ 655px,
+  // encaja dentro del presupuesto vertical disponible
+  // (2400 - identity-scroll 418 - identity-fixed-form 497 - identity-sticky-footer 120 - ad-banner 150 ≈ 1215px).
+  // overflow:visible garantiza que pos-XX Pressables con translateX/Y -18
+  // no se clipeen dentro del wrapper parent bounds.
+  fieldMapWrapper: {
+    aspectRatio: 1.6,
+    width: '100%',
+    borderWidth: 2,
+    position: 'relative',
+    overflow: 'visible',
+    flexShrink: 0,
+  },
+  // MGC-831: colores del wrapper se aplican inline (StyleSheet.create
+  // corre a module-scope, fuera del alcance de useTheme() — colors/radii
+  // solo viven dentro del componente).
 });
