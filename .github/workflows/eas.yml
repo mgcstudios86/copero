@@ -1,22 +1,24 @@
-# eas.yml — Copero (MGC-290, MGC-379, MGC-1206)
-# Preview builds cuando se pushea a feature branches (cualquier rama que NO sea main).
-# Política §8.3: builds --local. Plataforma Android + iOS.
-# Runner self-hosted con label copero-ci (MGC-379): el runner-01 (Linux x64) corre
-# Android; el runner-02 (macOS ARM64) corre iOS. Ambos comparten label copero-ci.
-# EXPO_TOKEN viene de Infisical path=/copero env=prod (no de GH secret) — cargado
-# al shell y exportado a $GITHUB_ENV para que los steps siguientes lo hereden.
+# eas.yml — Copero (MGC-290, MGC-379, MGC-1206, MGC-1263)
 #
-# El job decide plataforma según qué paths cambiaron (paths-filter):
-#   - 'app.json' / 'package.json' / 'eas.json' cambiados → ambas plataformas
-#   - sólo Android: 'android/**' → android
-#   - sólo iOS:     'ios/**'     → ios
-#   - default (App.tsx, src/**, etc.) → ambas plataformas
+# Política vigente desde MGC-1263 (opción C CEO MGC-1150):
+#   - APK QA **NO** se produce en CI. La job android se transformó en smoke
+#     (lint + typecheck + config validate). El artefacto sale de
+#     `eas build --local` ejecutado en el Mac por mobile-developer con el SHA
+#     pineado (ver CLAUDE.md §"Política de APK QA").
+#   - El runner-01 (VPS mgcstudios-01, 954 MB / 2 vCPU) no sostiene builds
+#     Android: 30 runs históricos = 0 success / 26 cancelled por supersede.
+#     Por eso **ningún job de este workflow** corre `eas build` sobre Linux.
+#   - iOS sigue construyendo en el runner-02 (Mac mini ARM64, label
+#     `copero-ci, macOS`) con profile `preview-ios-sim` — único job que sí
+#     produce artefacto (`eas build --local --platform ios`).
 #
-# Provenance gate (MGC-1206): el job android termina verificando que el APK generado
-# corresponda al commit del PR y que su index.android.bundle contenga los testIDs
-# canónicos declarados en .github/provenance-expected.json. Contrato y script:
-#   .github/provenance-expected.json  — qué strings son canónicos
-#   scripts/provenance-check.mjs      — el gate (SHA256 APK + bundle, frescura, commit)
+# Cambios MGC-1263:
+#   1. `preview-android` → `smoke-android`. Sin `eas build`, sin artefacto,
+#      sin provenance gate, sin `qa-ac7-force-stop`.
+#   2. Trigger `push`/`pull_request` ya no encola build de Android — solo
+#      smoke barato (~2 min).
+#   3. `workflow_dispatch` removido: no hay build Android que disparar
+#      manualmente; el APK se hace en Mac local.
 
 name: eas-preview (copero)
 
@@ -31,10 +33,7 @@ on:
       - 'docs/**'
       - 'test/**'
       - 'build/**'
-      # NOTE: 'main' queda fuera; deploy main va por deploy.yml cuando exista.
-    # MGC-1132: un cambio que sólo toca CI/docs no puede cambiar el APK, pero antes
-    # encolaba el job `changes` en el único runner Linux y quedaba `pending` detrás de
-    # builds Android de ~30 min, bloqueando el merge de los propios fixes de pipeline.
+      # NOTE: 'main' queda fuera; los merges a main disparan ci.yml.
     paths-ignore:
       - '.github/**'
       - '**/*.md'
@@ -42,7 +41,6 @@ on:
     branches:
       - 'feat/**'
       - 'fix/**'
-  workflow_dispatch:
 
 concurrency:
   group: eas-preview-copero-${{ github.event.pull_request.number || github.ref }}
@@ -90,8 +88,11 @@ jobs:
               - 'eas.json'
               - 'tsconfig*.json'
 
-  preview-android:
-    name: preview android (eas build --local)
+  smoke-android:
+    # MGC-1263: este job NO produce APK. Es solo el smoke que antes convivía
+    # dentro de `preview-android` (lint + typecheck + config validate).
+    # El APK viene de `eas --local` en Mac (mobile-developer), ver CLAUDE.md.
+    name: smoke android (lint + typecheck + config validate)
     runs-on: [self-hosted, copero-ci, Linux]
     needs: changes
     if: needs.changes.outputs.android == 'true' || needs.changes.outputs.core == 'true'
@@ -102,159 +103,65 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      # MGC-836: el runner copero-ci es Linux x64 (mgcstudios-01, user=ubuntu).
-      # Antes se hardcodeaba JAVA_HOME=/opt/homebrew/opt/openjdk@17 (path macOS),
-      # lo que dejaba gradle sin JDK en el runner. actions/setup-java@v4 con Temurin
-      # 17 es portable: instala JDK 17 en el runner y exporta JAVA_HOME automáticamente.
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Instalar eas-cli + infisical CLI
+      - name: Validar eas.json (JSON parse + perfiles requeridos)
         run: |
-          bash scripts/install-eas-cli.sh
-          if ! command -v infisical >/dev/null 2>&1; then
-            # MGC-658: el script get-cli.sh upstream retorna 404 (movido a artifacts-cli).
-            # Nuevo flujo documentado: setup.deb.sh agrega repo APT oficial + apt-get install.
-            # Runner self-hosted corre como usuario `ubuntu` (no root); requiere sudo.
-            curl -1sLf https://artifacts-cli.infisical.com/setup.deb.sh | sudo -E bash
-            sudo apt-get update -qq && sudo apt-get install -y -qq infisical
-            command -v infisical >/dev/null 2>&1 || {
-              echo "ERROR: infisical no quedó instalado; abortando" >&2
-              exit 1
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('eas.json', 'utf8'));
+            const profiles = Object.keys(cfg.build || {});
+            for (const p of ['preview', 'preview-ios-sim', 'production']) {
+              if (!profiles.includes(p)) {
+                console.error('ERROR: eas.json falta perfil requerido: ' + p);
+                process.exit(1);
+              }
             }
+            if (!cfg.cli || cfg.cli.appVersionSource !== 'remote') {
+              console.error('ERROR: eas.json cli.appVersionSource debe ser \"remote\"');
+              process.exit(1);
+            }
+            console.log('[smoke] eas.json OK — perfiles: ' + profiles.join(', '));
+          "
+      - name: Validar app.config.js (load + extraer projectId)
+        run: |
+          node -e "
+            const cfg = require('./app.config.js')({});
+            if (!cfg.extra || !cfg.extra.eas || !cfg.extra.eas.projectId) {
+              console.error('ERROR: app.config.js extra.eas.projectId ausente');
+              process.exit(1);
+            }
+            if (!cfg.android || !cfg.android.package) {
+              console.error('ERROR: app.config.js android.package ausente');
+              process.exit(1);
+            }
+            if (!cfg.ios || !cfg.ios.bundleIdentifier) {
+              console.error('ERROR: app.config.js ios.bundleIdentifier ausente');
+              process.exit(1);
+            }
+            console.log('[smoke] app.config.js OK — projectId=' + cfg.extra.eas.projectId);
+          "
+      - name: Prohibir triggers Android automáticos (defensa en profundidad)
+        # MGC-1263: este workflow no debe contener `eas build` en ningún step.
+        # Si alguien agrega un build step por accidente, este check falla.
+        run: |
+          if grep -nE 'eas[[:space:]]+build' .github/workflows/eas.yml; then
+            echo 'ERROR: eas.yml contiene un eas build step. Política MGC-1263: este workflow es smoke-only.' >&2
+            exit 1
           fi
+          echo '[smoke] sin eas build step en eas.yml — política MGC-1263 OK'
       - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
-      # Patch SDK 57 expo-modules-core 57.0.12 executeSync→runSync bug (MGC-366).
-      # Se ejecuta aparte porque npm ci arriba usa --ignore-scripts.
       - name: Patch expo-modules-core (worklets executeSync → runSync)
         run: node scripts/patch-expo-modules-core.js
-      - name: Cargar secretos (Infisical path=/copero env=prod)
-        env:
-          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
-          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
-          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
-        run: |
-          if [[ -z "${INFISICAL_PROJECT_ID:-}" ]]; then
-            echo "ERROR: INFISICAL_PROJECT_ID ausente. Configurar en GitHub repo secrets." >&2
-            exit 1
-          fi
-          # Prefer universal-auth (MGC-1227): emite un JWT fresco por run a partir de
-          # client_credentials, evitando la caducidad del secret estático INFISICAL_TOKEN.
-          # Fallback al token estático solo si los client credentials no están seteados.
-          if [[ -n "${INFISICAL_CLIENT_ID:-}" && -n "${INFISICAL_CLIENT_SECRET:-}" ]]; then
-            echo "[eas-preview] usando universal-auth (INFISICAL_CLIENT_ID/SECRET)"
-            INFISICAL_TOKEN=$(infisical login --method universal-auth \
-              --client-id "${INFISICAL_CLIENT_ID}" \
-              --client-secret "${INFISICAL_CLIENT_SECRET}" \
-              --plain 2>/dev/null | tail -1)
-            if [[ -z "${INFISICAL_TOKEN:-}" ]]; then
-              echo "ERROR: universal-auth no emitió JWT; abortando" >&2
-              exit 1
-            fi
-            export INFISICAL_TOKEN
-          elif [[ -n "${INFISICAL_TOKEN:-}" ]]; then
-            echo "[eas-preview] usando INFISICAL_TOKEN estático (legacy; considerar migrar a universal-auth)"
-          else
-            echo "ERROR: ni INFISICAL_TOKEN ni INFISICAL_CLIENT_ID/SECRET presentes en repo secrets." >&2
-            exit 1
-          fi
-          mkdir -p .infisical-tmp
-          if ! infisical export \
-              --projectId="${INFISICAL_PROJECT_ID}" \
-              --env=prod --path=/copero --format=dotenv > .env; then
-            echo "ERROR: infisical export falló; abortando build" >&2
-            exit 1
-          fi
-          if ! grep -q '^EXPO_TOKEN=' .env; then
-            echo "ERROR: EXPO_TOKEN ausente en Infisical /copero env=prod (placeholder o no seteado)." >&2
-            exit 1
-          fi
-          set -a
-          # shellcheck disable=SC1091
-          source .env
-          set +a
-          if [[ "${EXPO_TOKEN}" == "test" || "${EXPO_TOKEN}" == "placeholder" ]]; then
-            echo "ERROR: EXPO_TOKEN es placeholder ('${EXPO_TOKEN}'); cargar valor real en Infisical /copero env=prod." >&2
-            exit 1
-          fi
-          {
-            echo "expo_token_len=${#EXPO_TOKEN}"
-            echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
-          }
-          echo "[eas-preview] EXPO_TOKEN cargado desde Infisical (longitud=${#EXPO_TOKEN})"
-      - name: eas init (link proyecto no-interactive)
-        env:
-          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
-        run: |
-          # EAS CLI 21+ requiere projectId en eas.json top-level o app.config.js extra.eas.
-          # Si eas.json NO tiene projectId, linkeamos con --id (fix MGC-412).
-          if grep -q '"projectId"' eas.json; then
-            echo "eas.json ya tiene projectId; skip init"
-          else
-            eas init --id 27354a3b-2ab8-46c1-8ed2-2d5448b0e71a --non-interactive || {
-              echo "WARN: eas init fallo, intentando continuar con extra.eas.projectId"
-            }
-          fi
-      - name: eas build --local (android, profile=preview)
-        id: build
-        env:
-          EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
-          # MGC-836: JAVA_HOME lo exporta actions/setup-java@v4 (Temurin 17) instalado
-          # más arriba. Removido el path macOS hardcoded /opt/homebrew/opt/openjdk@17
-          # que dejaba gradle sin JDK en el runner Linux.
-          # SDK 57 expo-modules-core 57.0.12 declara peer dep ^0.10.0 para worklets,
-          # pero su C++ (WorkletJSCallInvoker.cpp) llama executeSync que requiere 0.12+.
-          # Bug interno SDK 57. Skip el check de version de doctor hasta que se arregle upstream.
-          EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
-        run: |
-          if [[ -z "${JAVA_HOME}" || ! -d "${JAVA_HOME}" ]]; then
-            echo "ERROR: JAVA_HOME ausente o inválido ('${JAVA_HOME:-}'); actions/setup-java@v4 falló" >&2
-            exit 1
-          fi
-          # Provenance (MGC-1206): el runner es self-hosted y reusa el workspace, asi que
-          # un APK viejo puede sobrevivir entre runs. Se borra el residuo y se marca el
-          # instante de inicio para que el gate pueda probar que el artefacto es de este run.
-          rm -rf dist
-          mkdir -p dist
-          echo "build_started_at=$(date +%s)" >> "$GITHUB_OUTPUT"
-          # --output fija el path del artefacto: sin esto el gate tendria que adivinar.
-          eas build --local --platform android --profile preview --non-interactive \
-            --output dist/copero-preview.apk
-
-      # Provenance gate (MGC-1206, origen MGC-957): impide que un APK etiquetado con el
-      # commit del PR embeba un index.android.bundle viejo. Valida frescura del artefacto,
-      # commit fuente y presencia de los testIDs canonicos dentro del bundle.
-      # Corre en el mismo job que el build a proposito: el pool copero-ci esta saturado y
-      # un job extra implicaria rebuildear el APK. Los checks se adjuntan al SHA, por lo que
-      # el resultado aparece igual en el PR contra main.
-      - name: Provenance gate (SHA256 APK + bundle, testIDs canonicos)
-        env:
-          PROVENANCE_ARTIFACT: dist/copero-preview.apk
-          PROVENANCE_EXPECTED_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
-          PROVENANCE_BUILD_STARTED_AT: ${{ steps.build.outputs.build_started_at }}
-          PROVENANCE_OUT: provenance/provenance-android.json
-        run: node scripts/provenance-check.mjs
-
-      # QA valida el SHA256 antes de instalar el APK (acceptance criteria MGC-1206).
-      - name: Subir manifiesto de provenance
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: provenance-android-${{ github.run_id }}
-          path: provenance/provenance-android.json
-          if-no-files-found: warn
-          retention-days: 30
+      - name: Lint (src/**/*.{ts,tsx})
+        run: npm run lint
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck
 
   preview-ios:
+    # Único job de este workflow que aún produce artefacto. Corre en el
+    # runner-02 (Mac mini ARM64) con profile preview-ios-sim (no requiere
+    # distribution cert). Migrado en MGC-1132 (PR #296 f19052c) tras
+    # starvation del runner-01.
     name: preview ios (eas build --local, simulator)
-    # MGC-1132: el job iOS estaba pineado al runner Linux (runner-01), donde un build
-    # iOS no puede compilar y además consumía el único slot Linux durante ~8 min por
-    # run (npm ci + install eas-cli) antes de fallar. Con 6 runs en cola eso dejaba
-    # los builds Android en starvation (0 success en los últimos 30 runs de eas.yml).
-    # La label macOS enruta al runner-02 (Mac mini ARM64, con Xcode), que es el único
-    # que puede construir iOS y estaba idle. Coincide con el header de este workflow.
     runs-on: [self-hosted, copero-ci, macOS]
     needs: changes
     if: needs.changes.outputs.ios == 'true' || needs.changes.outputs.core == 'true'
@@ -269,9 +176,6 @@ jobs:
         run: |
           bash scripts/install-eas-cli.sh
           if ! command -v infisical >/dev/null 2>&1; then
-            # MGC-658: el script get-cli.sh upstream retorna 404 (movido a artifacts-cli).
-            # Nuevo flujo documentado: setup.deb.sh agrega repo APT oficial + apt-get install.
-            # Runner self-hosted corre como usuario `ubuntu` (no root); requiere sudo.
             curl -1sLf https://artifacts-cli.infisical.com/setup.deb.sh | sudo -E bash
             sudo apt-get update -qq && sudo apt-get install -y -qq infisical
             command -v infisical >/dev/null 2>&1 || {
@@ -280,8 +184,6 @@ jobs:
             }
           fi
       - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
-      # Patch SDK 57 expo-modules-core 57.0.12 executeSync→runSync bug (MGC-366).
-      # Se ejecuta aparte porque npm ci arriba usa --ignore-scripts.
       - name: Patch expo-modules-core (worklets executeSync → runSync)
         run: node scripts/patch-expo-modules-core.js
       - name: Cargar secretos (Infisical path=/copero env=prod)
@@ -340,8 +242,6 @@ jobs:
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
-          # EAS CLI 21+ requiere projectId en eas.json top-level o app.config.js extra.eas.
-          # Si eas.json NO tiene projectId, linkeamos con --id (fix MGC-412).
           if grep -q '"projectId"' eas.json; then
             echo "eas.json ya tiene projectId; skip init"
           else
@@ -350,87 +250,8 @@ jobs:
             }
           fi
       - name: eas build --local (ios, profile=preview-ios-sim)
-        # CI preview usa simulator: no requiere distribution cert ni provisioning profile.
-        # El profile 'preview' (internal distribution) exige credenciales iOS no disponibles
-        # en modo no-interactive en la cuenta mgcstudios (ver MGC-360).
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
-          # SDK 57 expo-modules-core 57.0.12 peer dep bug; ver comentario en preview-android.
           EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: '1'
         run: |
           eas build --local --platform ios --profile preview-ios-sim --non-interactive
-
-  qa-ac7-force-stop:
-    # MGC-421 AC7 — gate de E2E post force-stop. Este job bloquea el
-    # merge a `main` si el flow Maestro `ac7-force-stop.yaml` falla
-    # sobre el APK built por `preview-android`.
-    #
-    # Runner requerido: self-hosted con label `copero-ci-android-device`
-    # (host con el device físico ZY22G728HN conectado vía adb). Si
-    # el label no existe en el repo, GitHub Actions saltea el job
-    # silenciosamente (no hay runner match) — el CI verde NO implica
-    # que este gate haya corrido.
-    #
-    # Política actual: el device es propiedad de QA (AGENTS.md §"Ownership
-    # exclusivo del hardware de testing"). Mobile-developer no debe
-    # tocar ZY22G728HN. El QA agent puede wire-ear el runner
-    # copero-ci-android-device cuando lo considere necesario.
-    #
-    # Mientras el runner no esté wired, QA corre el flow manualmente
-    # siguiendo las instrucciones en `.maestro/ac7-force-stop.yaml` y
-    # postea evidencia (logcat + screenshot del relaunch) en el
-    # ticket MGC-421.
-    name: qa AC7 force-stop (Maestro)
-    runs-on: [self-hosted, copero-ci-android-device]
-    needs: [preview-android]
-    if: needs.preview-android.result == 'success'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      # MGC-836:同样的 fix portable de JAVA_HOME para el gate Maestro del device físico.
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Localizar APK built por preview-android
-        env:
-          ARTIFACT_DIR: ${{ github.workspace }}
-        run: |
-          # El job preview-android deja el .apk en el cwd del runner
-          # (eas build --local output). El path exacto depende del
-          # runner; si el output no existe, fallamos explícito.
-          shopt -s nullglob
-          APKS=("$ARTIFACT_DIR"/*.apk)
-          if [[ ${#APKS[@]} -eq 0 ]]; then
-            echo "ERROR: no se encontró ningún APK en $ARTIFACT_DIR" >&2
-            exit 1
-          fi
-          echo "APK_PATH=${APKS[0]}" >> "$GITHUB_ENV"
-          echo "[qa-ac7] usando APK: ${APKS[0]}"
-      - name: Instalar APK en device
-        env:
-          APK_PATH: ${{ env.APK_PATH }}
-          DEVICE_SERIAL: ${{ vars.QA_DEVICE_SERIAL || 'ZY22G728HN' }}
-        run: |
-          adb -s "$DEVICE_SERIAL" install -r "$APK_PATH"
-      - name: Limpiar AsyncStorage previo
-        env:
-          DEVICE_SERIAL: ${{ vars.QA_DEVICE_SERIAL || 'ZY22G728HN' }}
-        run: |
-          adb -s "$DEVICE_SERIAL" shell pm clear com.mgcstudios.copero
-      - name: Correr flow Maestro AC7 force-stop
-        env:
-          DEVICE_SERIAL: ${{ vars.QA_DEVICE_SERIAL || 'ZY22G728HN' }}
-          # MGC-836: JAVA_HOME lo exporta actions/setup-java@v4 (Temurin 17) instalado
-          # más arriba. Antes hardcodeaba /opt/homebrew/opt/openjdk@17 (path macOS) y fallaba
-          # en runners Linux.
-        run: |
-          if [[ -z "${JAVA_HOME}" || ! -d "${JAVA_HOME}" ]]; then
-            echo "ERROR: JAVA_HOME ausente o inválido ('${JAVA_HOME:-}'); actions/setup-java@v4 falló" >&2
-            exit 1
-          fi
-          maestro test .maestro/ac7-force-stop.yaml --device "$DEVICE_SERIAL"

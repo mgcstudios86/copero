@@ -34,6 +34,39 @@ Razón: el org `mgcstudios` tiene la facturación de GH Actions suspendida por f
 - `design/` — sistema visual (arquetipos, tokens).
 - `docs/` — `runner-bootstrap.md` para aprovisionar nuevos runners.
 
+## Política de APK QA (MGC-1263 — opción C CEO MGC-1150)
+
+**El APK de QA sale de `eas build --local` ejecutado en el Mac por mobile-developer**, NO del CI. `.github/workflows/eas.yml` quedó reducido a smoke (lint + typecheck + config validate) para Android; el único job que aún produce artefacto es `preview-ios` sobre el runner-02 macOS.
+
+Razón: el runner-01 (VPS `mgcstudios-01`, 954 MB / 2 vCPU) no sostiene builds Android. 30 runs históricos = 0 success / 26 cancelled por supersede. Cualquier intento de `eas build` sobre Linux queda en starvation y bloquea el resto del pool `copero-ci`.
+
+**Flujo canónico (mobile-developer → QA):**
+
+1. Mobile-developer commitea el fix y abre PR contra `main`.
+2. CI verde en el SHA del merge (gate §8.1 `engineering-workflow`).
+3. Mobile-developer ejecuta local en su Mac:
+
+   ```bash
+   eas build --local --platform android --profile preview --non-interactive \
+     --output ~/Desktop/mgcstudios/impostor/qa/builds/build-<PR>-<versionCode>-<shortSHA>.apk
+   ```
+
+   SHA pineado al commit que se va a mergear. **No** se rebuilda contra `main` post-merge (la fuente de verdad es el commit del PR).
+4. Mobile-developer crea ticket `MGC-{NUEVO}-[ejecutar-QA-PR-{N}]` asignado a QA con path absoluto del APK.
+5. QA corre Maestro sobre ese APK (ver `qa/AGENTS.md`).
+
+**Lo que el CI hace (y NO hace) por Android:**
+
+- ✅ Detecta paths Android, corre `npm ci`, valida `eas.json` (perfiles `preview`/`preview-ios-sim`/`production`, `cli.appVersionSource: remote`), valida `app.config.js` (`extra.eas.projectId`, `android.package`, `ios.bundleIdentifier`), corre `npm run lint`, corre `npm run typecheck`.
+- ❌ NO corre `eas build --local --platform android`.
+- ❌ NO publica APK como artifact.
+- ❌ NO corre `provenance-check.mjs` (provenance requería el APK).
+- ❌ NO corre `qa-ac7-force-stop` (gate Maestro sobre device físico, depende del APK).
+
+**Defensa en profundidad:** el job `smoke-android` grepea `eas build` en `.github/workflows/eas.yml` y falla el job si alguien lo reintroduce. Si alguien necesita legítimamente un build Android en CI, debe pasar por la mesa de presupuesto (CEO + CTO).
+
+**Fuera de alcance (pendiente operador):** escalar el VPS a ≥8 GB / 4 vCPU (opción A) o agregar un segundo runner Linux (opción B). Hasta entonces, el patrón Mac local es la fuente única de APK.
+
 ## Tickets de referencia
 
 - MGC-286 — track padre del proyecto.
@@ -42,3 +75,7 @@ Razón: el org `mgcstudios` tiene la facturación de GH Actions suspendida por f
 - MGC-308 — migración a runner self-hosted (MERGED).
 - MGC-359 — fix cache `setup-node` (MERGED).
 - MGC-379 — eas-preview a runner copero-ci + EXPO_TOKEN via Infisical.
+- MGC-1132 — runner-01 starvation iOS→macOS (PR #296 f19052c MERGED).
+- MGC-1150 — decisión CEO: opción C APK = Mac local.
+- MGC-1206 — provenance gate (RETIRADO por MGC-1263, requería APK).
+- MGC-1263 — formalización APK local Mac + eas.yml como smoke.
