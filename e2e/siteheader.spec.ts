@@ -92,7 +92,11 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
   }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
+    // MGC-1188: el dispatcher redirige a /simulador-carrera/identity (sin
+    // carrera persistida). El SiteHeader vive en el root layout, así que
+    // persiste a través del redirect.
+    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 15_000 });
+    await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('copero-site-header')).toBeVisible();
     await expect(page.getByTestId('copero-site-header-nav')).toBeVisible();
     // CTA Jugar con fondo primario (verde). El testID basta para asegurar
@@ -194,7 +198,9 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
   }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
+    // MGC-1188: el dispatcher redirige a /simulador-carrera/identity.
+    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 15_000 });
+    await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('copero-site-header')).toBeVisible();
 
     // En compact (<720) la nav inline se oculta, sólo queda el toggle.
@@ -262,7 +268,8 @@ test.describe('Copero — SiteHeader + LanguageSwitcher parity (MGC-676)', () =>
     // >= 720: nav inline visible.
     await page.setViewportSize({ width: 720, height: 900 });
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
+    // MGC-1188: el dispatcher redirige a /simulador-carrera/identity.
+    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 15_000 });
     await expect(page.getByTestId('copero-site-header-nav')).toBeVisible();
 
     // < 720: nav colapsada, toggle visible.

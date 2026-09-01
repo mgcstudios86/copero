@@ -6,13 +6,12 @@ import AxeBuilder from '@axe-core/playwright';
  *
  * AC: "axe DevTools: 0 violations critical/serious".
  *
- * Las rutas son client-side (Expo Router SPA). Por eso esperamos
- * a `home-screen` y luego navegamos con clicks en vez de `goto`
- * directo a /simulador-carrera/identity (404 en static export).
+ * Las rutas son client-side (Expo Router SPA). Tras MGC-1188, el home
+ * queda como dispatcher puro (`<Redirect>` desde `/`); sin carrera
+ * persistida aterriza en /simulador-carrera/identity.
  *
- * MGC-505: el home expone sólo el CTA `btn-career` que lleva al
- * simulador de carrera (identity o dashboard). El viejo juego
- * "Juego de palabras" ya no se linkea desde el home.
+ * MGC-1188: el home es un dispatcher invisible. Validamos axe sobre el
+ * identity screen (landing del dispatcher) en lugar del splash viejo.
  *
  * Visita cada ruta principal y corre WCAG 2.1 AA + best-practices.
  * Falla si encuentra critical o serious.
@@ -47,27 +46,31 @@ async function scanRoute(page: any, label: string) {
 }
 
 test.describe('Copero — axe-core scan (web)', () => {
-  test('axe /: 0 critical/serious', async ({ page }, testInfo) => {
+  test('axe /: 0 critical/serious (landing tras dispatcher = identity)', async ({
+    page,
+  }, testInfo) => {
     test.setTimeout(90_000);
+    // MGC-1188: el dispatcher de `/` redirige a /simulador-carrera/identity
+    // porque no hay perfil persistido. axe scan corre sobre el landing.
     await page.goto('/', { waitUntil: 'load' });
-    const { total, blockers } = await scanRoute(page, 'home-screen');
-    await page.screenshot({ path: testInfo.outputPath('axe-home.png'), fullPage: true });
-    expect(blockers.length, 'critical/serious en home').toBe(0);
-    // eslint-disable-next-line no-console
-    console.log(`[axe /] ${total} violations totales (sin critical/serious)`);
-  });
-
-  test('axe /simulador-carrera/identity: 0 critical/serious', async ({ page }, testInfo) => {
-    test.setTimeout(90_000);
-    await page.goto('/', { waitUntil: 'load' });
-    await page.waitForSelector('[data-testid="home-screen"]', { timeout: 10_000 });
-    // MGC-505: home → btn-career → /simulador-carrera/identity
-    await page.locator('[data-testid="btn-career"]').click();
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
+    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
     const { total, blockers } = await scanRoute(page, 'identity-screen');
     await page.screenshot({ path: testInfo.outputPath('axe-identity.png'), fullPage: true });
     expect(blockers.length, 'critical/serious en identity').toBe(0);
     // eslint-disable-next-line no-console
     console.log(`[axe /identity] ${total} violations totales (sin critical/serious)`);
+  });
+
+  test('axe /simulador-carrera/identity: 0 critical/serious (goto directo)', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(90_000);
+    await page.goto('/', { waitUntil: 'load' });
+    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
+    const { total, blockers } = await scanRoute(page, 'identity-screen');
+    await page.screenshot({ path: testInfo.outputPath('axe-identity-direct.png'), fullPage: true });
+    expect(blockers.length, 'critical/serious en identity').toBe(0);
+    // eslint-disable-next-line no-console
+    console.log(`[axe /identity direct] ${total} violations totales (sin critical/serious)`);
   });
 });

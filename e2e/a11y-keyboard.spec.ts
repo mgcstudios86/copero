@@ -5,9 +5,10 @@ import { test, expect } from '@playwright/test';
  *
  * AC: "Teclado puro navega el simulador de carrera en web".
  *
- * Flujo (todo con Tab/Enter, sin click ni touch) sobre el home
- * rediseñado MGC-505 (un solo CTA `btn-career`):
- *  1. /  → Tab hasta btn-career → Enter → /simulador-carrera/identity
+ * Flujo (todo con Tab/Enter, sin click ni touch) tras MGC-1188:
+ *  1. /  → el dispatcher redirige a /simulador-carrera/identity
+ *     (sin carrera persistida). El focus cae sobre el primer focuseable
+ *     del identity screen (típicamente el input-name).
  *  2. /simulador-carrera/identity → Tab al input-name → tipeo nombre
  *     → Tab al primer pos-{id} → Enter → Tab nationality → escribir → Enter
  *     → Tab btn-identity-continue → Enter → /simulador-carrera/dashboard
@@ -15,33 +16,19 @@ import { test, expect } from '@playwright/test';
  *
  * Sin mouse. Sin .click(). Sin .tap(). Sólo .press() y .keyboard.press().
  *
- * MGC-505: el viejo juego "Juego de palabras" /categoria-/ronda-/fin fue
- * removido del home. Este spec cubre el único flujo accesible desde el
- * landing post-rediseño.
+ * MGC-1188: el home es ahora un dispatcher invisible que resuelve a la
+ * ruta del simulador en el mismo render (los testIDs del splash viejo
+ * fueron removidos junto con la pantalla inicial).
  */
 test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
   test('teclado puro navega home → identity → dashboard sin mouse', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
 
-    // 1) HOME — Tab hasta el CTA btn-career.
+    // 1) DISPATCHER — `/` redirige a /simulador-carrera/identity.
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('[data-testid="home-screen"]', { timeout: 15_000 });
-    await page.screenshot({ path: testInfo.outputPath('kbd-1-home.png'), fullPage: true });
-
-    await page.keyboard.press('Tab');
-    const btnCareer = page.locator('[data-testid="btn-career"]');
-    await expect(btnCareer).toBeVisible();
-    for (let i = 0; i < 40; i += 1) {
-      const isFocused = await btnCareer.evaluate(
-        (el) => el === document.activeElement || el.contains(document.activeElement),
-      );
-      if (isFocused) break;
-      await page.keyboard.press('Tab');
-    }
-    await page.keyboard.press('Enter');
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
-    await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
-    await page.screenshot({ path: testInfo.outputPath('kbd-2-identity.png'), fullPage: true });
+    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 15_000 });
+    await page.screenshot({ path: testInfo.outputPath('kbd-1-identity.png'), fullPage: true });
 
     // 2) IDENTITY — input-name por teclado, luego posición, nacionalidad y continue.
     const inputName = page.locator('[data-testid="input-name"]');
