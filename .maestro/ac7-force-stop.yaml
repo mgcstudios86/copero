@@ -59,6 +59,15 @@ tags:
 # AC7.2 — Pantalla identity: completar form.
 - assertVisible:
     id: identity-screen
+# MGC-1139: con Play Protect habilitado el viewport efectivo se reduce y
+# input-name queda debajo del fold en cold-start. Hacemos scroll primero;
+# si no hay ScrollView padre (caso MGC-969 architectural) Maestro completa
+# el comando sin error.
+- scrollUntilVisible:
+    element:
+      id: input-name
+    direction: down
+    timeout: 5000
 - inputText:
     id: input-name
     text: "Mateo AC7"
@@ -68,6 +77,9 @@ tags:
 # explícito para que QA vea la intención y pueda parametrizar el número.
 - assertVisible:
     id: btn-number-plus
+# MGC-1139: idem input-name — garantizar que el footer sticky con el
+# stepper y Continue quede visible antes del tap (idempotente con Play
+# Protect arriba o teclado in-app).
 - scrollUntilVisible:
     element:
       id: btn-identity-continue
