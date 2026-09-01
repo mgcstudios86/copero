@@ -22,24 +22,26 @@ export const Banner = ({ slotId }: BannerProps) => {
   return (
     <View
       testID="ad-banner-web"
-      // MGC-889: pointerEvents="none" en el wrapper del Banner. En
-      // /simulador-carrera/identity (PR #269) la suma de
-      // nationality-section (338px) + field-map-section (378px) +
-      // identity-fixed-form (195px) + identity-sticky-footer (273px) +
-      // identity-footer (153px) desborda los 497px del identity-screen
-      // (flex:1); el field-map-wrapper termina en y=519-839 mientras el
-      // Banner está en y=636-720. Los Pressables pos-CAM (y=629-665) y
-      // pos-CB (y=765-801) solapan el banner en viewport y Playwright
-      // reporta "<ins> ... intercepts pointer events" sobre
-      // data-testid=ad-banner-web. pointerEvents="none" en el View wrapper
-      // cascadea al <ins> hijo via RN pointer events propagation, así que
-      // basta con declararlo una vez en el wrapper (no en el <ins>
-      // directamente — TS no expone `pointerEvents` en
+      // MGC-890: PR #271 (MGC-889) declaró pointerEvents="none" solo en el
+      // wrapper View. Eso NO resuelve el problema real: box-none / pointer-
+      // events="none" en RN View afecta solo el hit-testing del View en sí,
+      // no cascadea a los hijos HTML nativos como <ins class="adsbygoogle">.
+      // El <ins> sigue siendo un elemento DOM interactivo y Playwright
+      // strict-mode continúa reportando "<ins> ... intercepts pointer
+      // events" sobre el banner (8/35 specs FAIL).
+      //
+      // Root cause fix: aplicar style.pointerEvents="none" directamente
+      // sobre el <ins>. Usamos `style` (CSS pointer-events) en lugar del
+      // prop `pointerEvents` porque TS no expone `pointerEvents` en
       // DetailedHTMLProps<InsHTMLAttributes<HTMLModElement>, HTMLModElement>
-      // y reproducir la doble declaración rompe typecheck). El script
-      // AdSense real (cuando se integre vía headContent) inyecta un
-      // <iframe> hijo con pointer-events restaurado en su propio document
-      // context, así el click sobre el anuncio sigue funcionando.
+      // y la doble declaración en <ins> rompe typecheck. style es CSS puro
+      // y aplica pointer-events al elemento <ins> en el DOM resultante, que
+      // es lo que el navegador hit-testea. Cuando AdSense cargue un script
+      // real e inyecte un <iframe> hijo del <ins>, ese iframe recibe sus
+      // propios pointer-events:auto via el script AdSense (inline style en
+      // el iframe generado), por lo que el click sobre el anuncio real
+      // sigue funcionando — el wrapper View mantiene pointerEvents="none"
+      // para que RN no considere el banner hit-testable desde el exterior.
       pointerEvents="none"
       importantForAccessibility="no-hide-descendants"
       accessibilityLabel="Espacio publicitario"
@@ -55,7 +57,12 @@ export const Banner = ({ slotId }: BannerProps) => {
     >
       <ins
         className="adsbygoogle"
-        style={{ display: 'block', width: '100%', height: BANNER_HEIGHT }}
+        style={{
+          display: 'block',
+          width: '100%',
+          height: BANNER_HEIGHT,
+          pointerEvents: 'none',
+        }}
         data-ad-client={slotId ?? 'ca-pub-XXXXXXXXXXXXXXXX'}
         data-ad-slot="1234567890"
         data-ad-format="auto"
