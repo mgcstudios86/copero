@@ -89,17 +89,17 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
    *     en src/features/career/engine.test.ts.)
    */
   test('CALVO/10/Derecho/AR/ST → dashboard → academy → Vélez', async ({ page }, testInfo) => {
-    // ── 1. HOME: navegar al CTA simulador-carrera ──────────────────────
+    // ── 1. DISPATCHER: cold-start → /simulador-carrera/identity ────────
+    // MGC-1188: el home es un dispatcher puro (`<Redirect>` desde `/`).
+    // Sin carrera persistida, aterriza directo en /simulador-carrera/identity.
+    // El goto intermedio al dispatcher garantiza que el dev server terminó
+    // de hidratar el chunk lazy del simulador antes de navegar a /identity.
     // MGC-405: navegamos directo a /identity vía SPA (serve-spa.py hace
-    // fallback a index.html). Evita race con btn-career click + posible
-    // fallback a SiteHeader "Simulador de carrera" → /simulador-carrera
-    // (sin subpath), que expo-router resolvía a /simulador-carrera/club
-    // (en lugar de /identity) cuando btn-career no estaba visible aún.
-    // Mantener el assert de home-screen arriba del walk garantiza que el
-    // dev server terminó de hidratar el chunk lazy de HomepageCareerStarter.
+    // fallback a index.html) para evitar el fallback del SiteHeader a
+    // /simulador-carrera (sin subpath) que expo-router resolvía a
+    // /simulador-carrera/club en lugar de /identity.
     await page.goto(`${BASE}/`);
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-    await page.goto(`${BASE}/simulador-carrera/identity`);
+    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 15_000 });
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
 
     // ── 2. IDENTITY: completar los 5 campos del AC ────────────────────

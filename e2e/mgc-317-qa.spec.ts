@@ -6,15 +6,18 @@ import path from 'node:path';
  *
  * Reemplaza el spec MGC-317 original (validaba emoji 🍕 en /categoria,
  * timer de ronda, persistencia de highScore). Ese flujo fue removido del
- * home en MGC-505: el único camino accesible desde el landing es
- * `btn-career` → /simulador-carrera/identity.
+ * home en MGC-505.
  *
- * AC MGC-505:
- *  - Home muestra el H1 multi-línea del simulador + CTA carrera.
- *  - Home NO expone botones viejos (btn-play / btn-compass) — esos
- *    routes persisten como deep-links pero el landing no los linkea.
- *  - Tap en btn-career navega al simulador de carrera y el identity
- *    screen renderiza el JerseyPreview con los 4 grupos pos-{id}.
+ * MGC-1188: el home deja de ser visible y queda como dispatcher puro
+ * (`<Redirect>` desde `/`). Sin carrera persistida aterriza directo en
+ * `/simulador-carrera/identity` con su JerseyPreview y los 4 grupos
+ * pos-{id} del field map. Este spec ahora arranca ahí directamente,
+ * sin pasar por el splash del home.
+ *
+ * AC MGC-505 (actualizados):
+ *  - El cold-start de `/` aterriza en /simulador-carrera/identity
+ *    (sin carrera persistida).
+ *  - El identity screen renderiza el JerseyPreview con los 4 grupos pos-{id}.
  */
 
 const OUT_DIR = path.join(__dirname, '.results', 'mgc-505');
@@ -24,7 +27,9 @@ test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
     require('node:fs').mkdirSync(OUT_DIR, { recursive: true });
   });
 
-  test('home rediseñado + navegación a simulador-carrera/identity', async ({ page }, testInfo) => {
+  test('dispatcher `/` → /simulador-carrera/identity + JerseyPreview pos-{id}', async ({
+    page,
+  }, testInfo) => {
     test.setTimeout(90_000);
 
     // Estado limpio: cookies + storage.
@@ -40,17 +45,12 @@ test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
     });
     await page.reload({ waitUntil: 'domcontentloaded' });
 
-    // 1) HOME rediseñado
-    await page.waitForSelector('[data-testid="home-screen"]', { timeout: 15_000 });
-    await page.screenshot({ path: path.join(OUT_DIR, '01-home-mgc505.png'), fullPage: true });
-
-    const homeText = await page.locator('[data-testid="home-screen"]').innerText();
-    // MGC-394 (#174) reemplazó el home por splash + botón Jugar con copy
-    // "copero · simulador de carrera / convertite en leyenda / jugar".
-    // home.spec.ts:41 ya asserta el copy actual; este spec alinea con la
-    // nueva presentación visual.
-    expect(homeText.toLowerCase()).toContain('simulador de carrera');
-    expect(homeText.toLowerCase()).toContain('convertite en leyenda');
+    // 1) MGC-1188: el dispatcher de `/` redirige a /simulador-carrera/identity
+    // porque no hay perfil persistido. Capturamos el landing para mantener
+    // el artefacto histórico del spec.
+    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 15_000 });
+    await page.screenshot({ path: path.join(OUT_DIR, '01-identity-mgc505.png'), fullPage: true });
 
     // Garantizar que NO están los botones del viejo flujo.
     const btnPlayCount = await page.locator('[data-testid="btn-play"]').count();
@@ -58,13 +58,7 @@ test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
     expect(btnPlayCount, 'home no debe exponer btn-play (MGC-505)').toBe(0);
     expect(btnCompassCount, 'home no debe exponer btn-compass (MGC-505)').toBe(0);
 
-    // CTA único al simulador de carrera.
-    await expect(page.locator('[data-testid="btn-career"]')).toBeVisible();
-
-    // 2) Navegación al simulador-carrera/identity.
-    await page.locator('[data-testid="btn-career"]').click();
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
-    await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
+    // 2) JerseyPreview del identity screen con los 4 grupos pos-{id}.
     await page.waitForSelector('[data-testid="identity-jersey-preview"]', { timeout: 10_000 });
     await page.screenshot({ path: path.join(OUT_DIR, '02-identity-mgc505.png'), fullPage: true });
 
@@ -83,8 +77,8 @@ test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
 
     // Adjuntar el screenshot principal al report de Playwright.
     testInfo.attachments.push({
-      name: 'mgc-505-home',
-      path: path.join(OUT_DIR, '01-home-mgc505.png'),
+      name: 'mgc-505-identity',
+      path: path.join(OUT_DIR, '01-identity-mgc505.png'),
       contentType: 'image/png',
     });
   });

@@ -37,11 +37,10 @@ test.beforeEach(async ({ context }) => {
 async function completeIdentity(page: any, name: string) {
   // SPA navigation: python3 -m http.server en qa.yml NO hace fallback de
   // rutas desconocidas a index.html, así que page.goto('/simulador-carrera/identity')
-  // devuelve 404. Hay que entrar por / y luego navegar via click.
+  // devuelve 404. Hay que entrar por `/` y el dispatcher (MGC-1188) redirige
+  // a /simulador-carrera/identity porque no hay perfil persistido.
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-  await page.getByTestId('btn-career').click();
-  await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 10_000 });
+  await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 15_000 });
   await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
   await page.getByTestId('input-name').fill(name);
   await page.locator('[data-testid^="pos-"]').first().click();
@@ -69,11 +68,12 @@ async function scanRoute(page: any, testId: string, label: string) {
 }
 
 test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
-  test('1) home → CTA Simulador → identity', async ({ page }, testInfo) => {
+  test('1) dispatcher `/` → identity (MGC-1188)', async ({ page }, testInfo) => {
+    // MGC-1188: el home es un dispatcher puro. Sin carrera persistida, el
+    // redirect lleva directo a /simulador-carrera/identity. No hay pantalla
+    // propia para el dispatcher (es un `<Redirect>` invisible).
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-    await page.getByTestId('btn-career').click();
-    await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 10_000 });
+    await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 15_000 });
     await expect(page.getByTestId('identity-screen')).toBeVisible();
     await page.screenshot({
       path: testInfo.outputPath('mgc444-01-identity.png'),
@@ -123,22 +123,15 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
     });
   });
 
-  test('4) axe-core: 0 critical/serious en 3 pantallas (dark mode)', async ({ page }, testInfo) => {
+  test('4) axe-core: 0 critical/serious en 2 pantallas (dark mode)', async ({ page }, testInfo) => {
     test.setTimeout(120_000);
-    // home
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-    const axeHome = await scanRoute(page, 'home-screen', 'home');
-    await page.screenshot({
-      path: testInfo.outputPath('mgc444-05-axe-home.png'),
-      fullPage: true,
-    });
+    // MGC-1188: el home es un dispatcher invisible, así que ya no hay una
+    // pantalla `home` propia para escanear. El landing del dispatcher es
+    // el identity screen, que ya cubrimos como segundo axe scan.
 
-    // identity (estado limpio) — vía SPA, no page.goto directo (404)
+    // identity (estado limpio) — vía dispatcher de `/`, no page.goto directo (404)
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
-    await page.getByTestId('btn-career').click();
-    await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 10_000 });
+    await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 15_000 });
     const axeIdentity = await scanRoute(page, 'identity-screen', 'identity');
     await page.screenshot({
       path: testInfo.outputPath('mgc444-06-axe-identity.png'),
@@ -153,7 +146,6 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
       fullPage: true,
     });
 
-    expect(axeHome.blockers.length, 'home critical/serious').toBe(0);
     expect(axeIdentity.blockers.length, 'identity critical/serious').toBe(0);
     expect(axeDashboard.blockers.length, 'dashboard critical/serious').toBe(0);
   });

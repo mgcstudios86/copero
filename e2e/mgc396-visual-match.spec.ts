@@ -14,17 +14,15 @@ const OUT = '/tmp/mgc396';
 test.describe('MGC-396 — capturas post-fix verde primario', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test('home + identity (post-fix verde)', async ({ page }) => {
+  test('identity (post-fix verde) tras dispatcher de /', async ({ page }) => {
     test.setTimeout(90_000);
     mkdirSync(OUT, { recursive: true });
 
+    // MGC-1188: el dispatcher de `/` redirige a /simulador-carrera/identity
+    // porque no hay perfil persistido. Capturamos el landing directamente
+    // (no hay home splash visible para MGC-396).
     await page.goto('/', { waitUntil: 'load' });
-    await page.waitForSelector('[data-testid="home-screen"]', { timeout: 15_000 });
-    await page.waitForTimeout(500);
-    await page.screenshot({ path: `${OUT}/01-home.png`, fullPage: true });
-
-    await page.locator('[data-testid="btn-career"]').click();
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
+    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${OUT}/02-identity.png`, fullPage: true });
@@ -34,11 +32,9 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     test.setTimeout(180_000);
     mkdirSync(OUT, { recursive: true });
 
-    // 1) Entrar por home → identity
+    // 1) Entrar al dispatcher → identity (MGC-1188)
     await page.goto('/', { waitUntil: 'load' });
-    await page.waitForSelector('[data-testid="home-screen"]', { timeout: 15_000 });
-    await page.locator('[data-testid="btn-career"]').click();
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
+    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
 
     // 2) Llenar el form mínimo (testIDs canónicos de e2e/simulador-carrera.spec.ts)
