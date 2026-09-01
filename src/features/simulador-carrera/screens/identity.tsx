@@ -210,17 +210,35 @@ export default function IdentityScreen() {
           entre ScrollView y footer, sin pasar por el measure pass del
           ScrollView. Aquí replicamos ese patrón en los wrappers que QA
           necesita testear por testID estable. */}
-      {/* MGC-1083 — fix outer ScrollView regression sobre feat/mgc955-identity-liga-selector.
-          QA MGC-1016 midió field-map-wrapper y league-selector-wrapper AUSENTES
-          del DOM bajo outer ScrollView flex:1 (commit 527f1a6 MGC-986 dentro
-          del lineage de esta branch). Replicar el patrón canónico MGC-969 /
-          PR-284 (commit 2be9c51) ya mergeado en main: remover el ScrollView
-          raíz, dejar Header + Jersey + Nacionalidad + league-selector-wrapper +
-          field-map-section + identity-fixed-form + identity-sticky-footer como
-          View fijos hermanos con flexShrink:0. Sin flex:1, sin outer
-          ScrollView, sin competencia por altura entre hermanos del
-          kavContent. El único ScrollView queda anidado en la lista de
-          nacionalidades con testID identity-scroll + collapsable={false}. */}
+      {/* MGC-1274 — fix outer ScrollView tree clipping sobre PR-302 (a9ee2fc).
+          QA MGC-1273 midió identity-screen bounds h=1832 y TOTAL natural height
+          ~1300dp > viewport disponible 709dp en ZY22G728HN 1080×2400 density
+          400 (1080×960dp). Sin scroll, las secciones debajo del fold
+          (league-selector-wrapper, field-map-section, identity-fixed-form,
+          identity-sticky-footer) quedaban clipeadas del render tree y AUSENTES
+          del UIAutomator dump. Patrón canónico MGC-1257 (commit f6bfdc8,
+          APK 03d898fb...d94526, bundle 56ba46ab...c8f7c923, ref MGC-1178
+          433281f/fa99ac4): outer ScrollView flexGrow:1 cubre TODO el árbol
+          scrollable (identity-header + Jersey + nationality-section +
+          league-selector-wrapper + field-map-section + identity-fixed-form);
+          `identity-sticky-footer` flexBasis:240 flexGrow:0 flexShrink:0 es el
+          ÚNICO sibling del ScrollView — siempre visible al fondo con stepper
+          +/- y Continue. collapsable={false} + removeClippedSubviews={false}
+          en el ScrollView para mantener resource-id estable en UIAutomator.
+          field-map-section (MGC-1274) lleva height:380 + flexBasis:380 +
+          flexGrow:0 como belt-suspenders contra shrink cascade del measure
+          pass del ScrollView. Refs: [[mgc1257-outer-scrollview-tree]],
+          MGC-711, MGC-751, MGC-806, MGC-807, MGC-811, MGC-840, MGC-843,
+          MGC-1016, MGC-1086, MGC-1222. */}
+      <ScrollView
+        testID="identity-scroll"
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        collapsable={false}
+        removeClippedSubviews={false}
+      >
       <View
         testID="identity-header"
         collapsable={false}
@@ -841,6 +859,7 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
+      </ScrollView>
       {/* MGC-754: wrap stepperSticky + footer en `identity-sticky-footer` para
           aplicar translateY simultáneo cuando IME abre. translateY es
           independiente del flex layout del padre y empuja los dos elementos
@@ -1047,6 +1066,11 @@ const styles = StyleSheet.create({
   // padding empuja el stepper sticky + footer arriba del IME sin tocar
   // el SafeAreaView edges=['bottom'].
   kavContent: { flex: 1 },
+  // MGC-1274: outer ScrollView flexGrow:1 vive dentro del kavContent. Toma
+  // todo el alto disponible dejando identity-sticky-footer (flexBasis:240
+  // flexShrink:0) como único sibling siempre visible.
+  scroll: { flexGrow: 1, flexShrink: 1 },
+  scrollContent: { flexGrow: 1 },
   container: {},
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
@@ -1104,6 +1128,9 @@ const styles = StyleSheet.create({
   fieldMapWrapper: {
     aspectRatio: 1.6,
     width: '100%',
+    height: 380,
+    flexBasis: 380,
+    flexGrow: 0,
     borderWidth: 2,
     position: 'relative',
     overflow: 'visible',
