@@ -24,7 +24,9 @@ import type {
   PlayerProfile,
   SeasonLog,
   TimelineSeason,
+  YearlyPlan,
 } from '@/types/career';
+import { YEARLY_PLAN_MODIFIERS } from '@/types/career';
 import { recomputeReputation } from './reputation';
 import type { Rng } from './rng';
 
@@ -48,6 +50,17 @@ function injuryChanceForAge(age: number, _rng: Rng): number {
   if (age >= 30) p += (age - 29) * 0.04;
   if (age <= 18) p += 0.03;
   return p;
+}
+
+/** Multiplicador de drift OVR + lesión según el `yearlyPlan` elegido (MGC-1017). */
+function yearlyPlanModifiers(profile: PlayerProfile): {
+  drift: number;
+  injury: number;
+} {
+  const plan: YearlyPlan | undefined = profile.career.yearlyPlan;
+  if (!plan) return { drift: 1, injury: 1 };
+  const m = YEARLY_PLAN_MODIFIERS[plan];
+  return { drift: m.drift, injury: m.injury };
 }
 
 /** Stats de partido por temporada según OVR y minutos disponibles. */
@@ -116,7 +129,10 @@ export function advanceSeason(
   const headroom = Math.max(0, potencial - profile.ovr);
   // Drift base depende del arquetipo; se reduce si ya casi tocamos techo.
   const baseDrift = GROWTH_PER_ARCHETYPE[archetype] * rng.next();
-  const drift = baseDrift * Math.min(1, headroom / 6 + 0.3);
+  // MGC-1017: el plan anual elegido al cierre de la temporada pasada
+  // modifica el drift. 'agresivo' lo boostea; 'cuidarse' lo reduce.
+  const planMod = yearlyPlanModifiers(profile);
+  const drift = baseDrift * Math.min(1, headroom / 6 + 0.3) * planMod.drift;
   // Drift decae con la edad: a partir de 30 cuesta subir.
   const ageDamp = age >= 30 ? Math.max(0.3, 1 - (age - 29) * 0.15) : 1;
   const baseOvr = profile.ovr;
@@ -139,7 +155,9 @@ export function advanceSeason(
     ...profile.career,
     lesion: { kind: 'ninguna', fechasOut: 0 },
   };
-  if (rng.chance(injuryChanceForAge(age, rng))) {
+  // MGC-1017: el plan anual también afecta la chance de lesión.
+  const injuryChance = injuryChanceForAge(age, rng) * planMod.injury;
+  if (rng.chance(injuryChance)) {
     const kind = rng.chance(0.7) ? 'leve' : rng.chance(0.6) ? 'media' : 'grave';
     const fechasOut = kind === 'leve' ? rng.int(2, 4) : kind === 'media' ? rng.int(6, 10) : rng.int(14, 24);
     career = { ...career, lesion: { kind, fechasOut } };
@@ -206,7 +224,11 @@ export function advanceSeason(
     week: 1,
     stats,
     attrs: { ...profile.attrs },
-    career: { ...career, reputation },
+    // MGC-1017: tras aplicar el plan anual, lo reseteamos para que el
+    // usuario elija uno nuevo en cada cierre de temporada. Sin esto, el
+    // primer plan persistiría para siempre y el loop se volvería
+    // determinista entre temporadas (no habría decisiones anuales).
+    career: { ...career, reputation, yearlyPlan: undefined },
     club,
   };
 

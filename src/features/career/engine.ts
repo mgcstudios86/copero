@@ -7,6 +7,7 @@ import type {
   PlayerProfile,
   Position,
   StrategyId,
+  YearlyPlan,
 } from '@/types/career';
 import { applyChoice, advanceWeek } from './simulation';
 import { createRng, seedFromString } from './rng';
@@ -43,6 +44,7 @@ export type CareerAction =
   | { type: 'openAcademy' }
   | { type: 'acceptClub'; club: Club }
   | { type: 'decide'; strategyId: StrategyId; choiceId: string }
+  | { type: 'setYearlyPlan'; plan: YearlyPlan }
   | { type: 'advance' }
   | { type: 'startDraft'; seed?: number }
   | { type: 'swapLegend' }
@@ -143,6 +145,25 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
         createRng(seed),
       );
       return { ...state, profile };
+    }
+    case 'setYearlyPlan': {
+      // MGC-1017: el usuario elige un plan anual al cierre de cada
+      // temporada. Se persiste en `profile.career.yearlyPlan` y se
+      // CONSUME en el próximo `advanceSeason` (que lo resetea a
+      // `undefined` después de aplicar el modifier). Esto garantiza
+      // que el loop requiera decisión cada año.
+      if (state.stage !== 'season' && state.stage !== 'club' && state.stage !== 'clubStart') {
+        // El plan sólo aplica una vez iniciada la vida de carrera
+        // profesional; antes del primer partido lo ignoramos.
+        return state;
+      }
+      return {
+        ...state,
+        profile: {
+          ...state.profile,
+          career: { ...state.profile.career, yearlyPlan: action.plan },
+        },
+      };
     }
     case 'advance': {
       // MGC-441 / MGC-491: si la semana llega al rollover (week >= 38) y

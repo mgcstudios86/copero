@@ -7,6 +7,7 @@ import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { RETIREMENT_AGE } from '@/features/career/season';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
+import { YEARLY_PLAN_MODIFIERS, type YearlyPlan } from '@/types/career';
 
 /**
  * MGC-209 [5/6] — TEMPORADA.
@@ -30,6 +31,9 @@ export default function TemporadaScreen() {
   // semana y rotar season cada 38 semanas. Botón "Siguiente semana"
   // abre el loop fino que QA necesita para validar feedback bar.
   const advance = useCareerStore((s) => s.advance);
+  // MGC-1017: acción para fijar el plan anual (UI picker abajo).
+  const setYearlyPlan = useCareerStore((s) => s.setYearlyPlan);
+  const currentPlan = profile.career.yearlyPlan;
 
   const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
 
@@ -269,6 +273,17 @@ export default function TemporadaScreen() {
             />
           ) : null}
         </View>
+
+        {/* MGC-1017 — Decisión anual. Tres planes (agresivo / mantener /
+            cuidarse) que modifican el drift OVR y la chance de lesión del
+            PRÓXIMO advanceSeason. Aparece siempre que NO estamos en
+            retiro; si ya hay un plan elegido se muestra como confirmación
+            + permite re-cambiarlo antes de avanzar. */}
+        <YearlyPlanPicker
+          currentPlan={currentPlan}
+          disabled={stage === 'retirement'}
+          onPick={setYearlyPlan}
+        />
 
         {/* MGC-251 — Resumen del último partido/temporada jugada. Se muestra
             cuando hay al menos una fila en el timeline: partidos, goles y
@@ -528,6 +543,98 @@ function Stat({ icon, value, label }: { icon: string; value: number; label: stri
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[1] }}>
       <Text style={{ fontSize: fontSize.base }}>{icon}</Text>
       <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>{value} {label}</Text>
+    </View>
+  );
+}
+
+/**
+ * MGC-1017 — YearlyPlanPicker. Tres opciones (agresivo / mantener /
+ * cuidarse). La elección se persiste en `profile.career.yearlyPlan` y
+ * la consume el próximo `advanceSeason`. Si ya hay plan elegido, los
+ * botones resaltan la opción activa.
+ *
+ * Acceptance criteria del parent (MGC-1017):
+ * - Dos carreras con planes distintos -> timelines distintos.
+ * - La decisión se exige antes de avanzar de temporada (UX gating).
+ */
+function YearlyPlanPicker({
+  currentPlan,
+  disabled,
+  onPick,
+}: {
+  currentPlan: YearlyPlan | undefined;
+  disabled: boolean;
+  onPick: (p: YearlyPlan) => void | Promise<void>;
+}) {
+  const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
+  const plans: YearlyPlan[] = ['agresivo', 'mantener', 'cuidarse'];
+
+  return (
+    <View
+      testID="temporada-yearly-plan"
+      style={{
+        borderRadius: radii.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.surface,
+        padding: spacing[4],
+        gap: spacing[3],
+      }}
+    >
+      <Text
+        style={{
+          color: colors.textMuted,
+          fontSize: 10,
+          fontWeight: fontWeight.bold,
+          letterSpacing: 2,
+        }}
+      >
+        DECISIÓN ANUAL
+      </Text>
+      <Text
+        style={{
+          color: colors.textStrong,
+          fontSize: fontSize.md,
+          fontWeight: fontWeight.bold,
+        }}
+      >
+        ¿CÓMO ENCARAR EL AÑO QUE VIENE?
+      </Text>
+      <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
+        Tu plan modifica el drift OVR y la chance de lesión del próximo
+        ciclo. Se resetea al cierre de cada temporada para que elijas de
+        nuevo.
+      </Text>
+      <View style={{ gap: spacing[2] }}>
+        {plans.map((p) => {
+          const m = YEARLY_PLAN_MODIFIERS[p];
+          const isSelected = currentPlan === p;
+          return (
+            <Button
+              key={p}
+              label={`${m.label}${isSelected ? ' ✓' : ''}`}
+              onPress={() => onPick(p)}
+              variant={isSelected ? 'primary' : 'secondary'}
+              size="md"
+              fullWidth
+              testID={`btn-yearly-plan-${p}`}
+              disabled={disabled}
+              accessibilityHint={m.copy}
+            />
+          );
+        })}
+      </View>
+      {currentPlan ? (
+        <Text
+          style={{
+            color: colors.primary,
+            fontSize: fontSize.xs,
+            fontWeight: fontWeight.bold,
+          }}
+        >
+          {YEARLY_PLAN_MODIFIERS[currentPlan].copy}
+        </Text>
+      ) : null}
     </View>
   );
 }

@@ -68,6 +68,41 @@ export type Injury = {
   fechasOut: number;
 };
 
+/**
+ * Plan anual elegido al cierre de cada temporada (MGC-1017).
+ *
+ * Modifica el `drift` de OVR y la chance de lesión para el año
+ * siguiente. El default es `'mantener'` (1.0× drift, baseline).
+ * Persistido dentro de `CareerStats` para que QA pueda validar que
+ * dos carreras con planes distintos produzcan timelines distintas.
+ */
+export type YearlyPlan = 'agresivo' | 'mantener' | 'cuidarse';
+
+/** Multiplicadores de drift + injury asociados al plan anual. */
+export const YEARLY_PLAN_MODIFIERS: Record<
+  YearlyPlan,
+  { drift: number; injury: number; label: string; copy: string }
+> = {
+  agresivo: {
+    drift: 1.25,
+    injury: 1.4,
+    label: 'PLAN AGRESIVO',
+    copy: '+25% drift OVR · +40% chance de lesión',
+  },
+  mantener: {
+    drift: 1.0,
+    injury: 1.0,
+    label: 'MANTENER RITMO',
+    copy: 'baseline · equilibrio drift/lesión',
+  },
+  cuidarse: {
+    drift: 0.8,
+    injury: 0.6,
+    label: 'PLAN CUIDADOS',
+    copy: '-20% drift OVR · -40% chance de lesión',
+  },
+};
+
 /** Stats globales del jugador (MGC-439 §sistema de stats). */
 export type CareerStats = {
   presupuesto: number; // €
@@ -77,6 +112,8 @@ export type CareerStats = {
   racha: number; // victorias consecutivas (negativa = derrotas)
   lesion: Injury;
   reputation: Reputation;
+  /** Plan elegido al cierre de la temporada anterior (MGC-1017). */
+  yearlyPlan?: YearlyPlan;
 };
 
 export type Club = {
