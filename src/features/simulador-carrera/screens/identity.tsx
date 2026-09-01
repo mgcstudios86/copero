@@ -225,11 +225,14 @@ export default function IdentityScreen() {
           ÚNICO sibling del ScrollView — siempre visible al fondo con stepper
           +/- y Continue. collapsable={false} + removeClippedSubviews={false}
           en el ScrollView para mantener resource-id estable en UIAutomator.
-          field-map-section (MGC-1274) lleva height:380 + flexBasis:380 +
-          flexGrow:0 como belt-suspenders contra shrink cascade del measure
-          pass del ScrollView. Refs: [[mgc1257-outer-scrollview-tree]],
-          MGC-711, MGC-751, MGC-806, MGC-807, MGC-811, MGC-840, MGC-843,
-          MGC-1016, MGC-1086, MGC-1222. */}
+          field-map-wrapper (MGC-916/MGC-1152 canónico) lleva height:320 +
+          flexBasis:320 + flexGrow:0 contra shrink cascade del measure pass
+          del ScrollView. Spec MGC-1143 320±10dp. MGC-1299 revierte el
+          height:380 que PR-320 (MGC-1286) había introducido como
+          belt-suspenders — 380dp queda 60dp por encima del spec histórico.
+          Refs: [[mgc1257-outer-scrollview-tree]], MGC-711, MGC-751, MGC-806,
+          MGC-807, MGC-811, MGC-840, MGC-843, MGC-1016, MGC-1086, MGC-1222,
+          MGC-1299. */}
       <ScrollView
         testID="identity-scroll"
         style={styles.scroll}
@@ -1120,16 +1123,18 @@ const styles = StyleSheet.create({
   // MGC-821: aspectRatio 0.7 + width 100% generaba ~1497px de alto en
   // ZY22G728HN 1080x2400, empujando identity-sticky-footer debajo del
   // viewport y ocultando nationality/sticky-stepper/btn-identity-continue.
-  // Nuevo aspectRatio 1.6 (landscape ancho:alto) → height ≈ 1048/1.6 ≈ 655px,
-  // encaja dentro del presupuesto vertical disponible
-  // (2400 - identity-scroll 418 - identity-fixed-form 497 - identity-sticky-footer 120 - ad-banner 150 ≈ 1215px).
-  // overflow:visible garantiza que pos-XX Pressables con translateX/Y -18
-  // no se clipeen dentro del wrapper parent bounds.
+  // MGC-1299: PR-320 (MGC-1286) reintrodujo ScrollView outer y declaró
+  // height:380 + flexBasis:380 como belt-suspenders — pero el spec histórico
+  // (MGC-1143/MGC-1152) espera field-map-wrapper h=320±10dp. Restauramos
+  // 320dp explícito + flexBasis:320 + flexGrow:0 para canónico. aspectRatio
+  // queda como fallback (ignorado cuando hay height explícito). Mantener
+  // overflow:visible — pos-XX Pressables con translateX/Y -18 no se clipean
+  // dentro del wrapper parent bounds.
   fieldMapWrapper: {
     aspectRatio: 1.6,
     width: '100%',
-    height: 380,
-    flexBasis: 380,
+    height: 320,
+    flexBasis: 320,
     flexGrow: 0,
     borderWidth: 2,
     position: 'relative',
