@@ -221,29 +221,19 @@ export default function IdentityScreen() {
           ScrollView, sin competencia por altura entre hermanos del
           kavContent. El único ScrollView queda anidado en la lista de
           nacionalidades con testID identity-scroll + collapsable={false}. */}
-      {/* MGC-1222: outer ScrollView restaurado sobre Header + Jersey +
-          nationality. flexGrow:1 (NO flex:1) toma el sobrante del
-          kavContent sin colapsar a h=0 cuando el ScrollView anidado de
-          países mide contenido. minHeight:440 garantiza bounds reales
-          en cold-start fresh-mount sobre ZY22G728HN 1080x2400.
-          collapsable={false} + removeClippedSubviews={false} mantienen
-          resource-id estable en uiautomator dump. Las secciones
-          inferiores (league-selector-wrapper, field-map-section,
-          identity-fixed-form, identity-sticky-footer) quedan como
-          siblings flexShrink:0 del ScrollView. Sin este ScrollView, el
-          kavContent flex:1 colapsa la distribución y las secciones
-          inferiores (input-name-wrapper, btn-foot-row,
-          identity-sticky-footer, identity-footer) quedan fuera del
-          viewport nativo con bounds h=0. */}
-      <ScrollView
-        testID="identity-scroll"
-        collapsable={false}
-        style={styles.scroll}
-        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4], paddingBottom: spacing[4] }]}
-        keyboardShouldPersistTaps="handled"
-        removeClippedSubviews={false}
-        nestedScrollEnabled
-      >
+      {/* MGC-1246: outer ScrollView removido. Regresión sobre arqu. MGC-969
+          canónica (commit 2be9c51, PR-284 ya mergeado en main). QA MGC-1243
+          midió 2 outer ScrollViews (re-introducidos por MGC-1178/1222/1229)
+          que cortaban el árbol en field-map-wrapper: identity-fixed-form,
+          input-name-wrapper, btn-foot-row, identity-sticky-footer,
+          btn-number-sticky/-minus/-display/-plus, btn-identity-continue
+          quedaban AUSENTES del uiautomator dump porque vivían fuera del
+          outer ScrollView que el measure pass de RN-Android colapsaba.
+          Patrón canónico MGC-969 = las 7 secciones son hijos DIRECTOS del
+          kavContent (NO outer ScrollView). Cada sección con flexShrink:0 +
+          collapsable={false}. Único ScrollView legítimo queda el anidado
+          en nationality-section (testID identity-scroll) para la lista
+          de países. Mismo patrón para league-selector (testID league-list). */}
       <View
         testID="identity-header"
         collapsable={false}
@@ -411,7 +401,7 @@ export default function IdentityScreen() {
               backgroundColor: colors.surface,
             }}
           >
-            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" testID="identity-scroll">
               {filteredNationalities.map((n) => {
                 const active = profile.nationalityCode === n.code;
                 return (
@@ -471,7 +461,6 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
-      </ScrollView>
       {/* MGC-981: league-selector-wrapper colapsado a height:88 explícito.
           Yoga reporta h=220 sin height (Field label + Pressable minHeight:56
           + padding spacing[4] suma >220 en fresh-mount Android). Patrón
@@ -1110,26 +1099,12 @@ const styles = StyleSheet.create({
   // padding empuja el stepper sticky + footer arriba del IME sin tocar
   // el SafeAreaView edges=['bottom'].
   kavContent: { flex: 1, flexDirection: 'column' },
-  // MGC-1222: outer ScrollView restaurado sobre Header + Jersey +
-  // nationality. flexGrow:1 (NO flex:1) toma el sobrante del
-  // kavContent sin colapsar a h=0 cuando el ScrollView anidado de
-  // países mide contenido. minHeight:440 garantiza bounds reales en
-  // cold-start fresh-mount sobre ZY22G728HN 1080x2400 (evita
-  // "identity-scroll AUSENTE"). flexShrink:1 permite que KAV le robe
-  // altura cuando el IME abre.
-  scroll: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 'auto',
-    minHeight: 440,
-    width: '100%',
-  },
-  // MGC-1222: container del ScrollView raíz. Patrón MGC-937/PR-278.
-  // width:'100%' garantiza que el contentContainer ocupe todo el
-  // ancho del ScrollView padre en builds nativos RN-Android.
-  container: {
-    width: '100%',
-  },
+  // MGC-1246: styles.scroll / styles.container removidos. No hay outer
+  // ScrollView; arquitectura canónica MGC-969/PR-284 (commit 2be9c51) deja
+  // que las 7 secciones sean hijos directos del kavContent con flexShrink:0.
+  // Los únicos ScrollViews legítimos son los anidados dentro de
+  // nationality-section (testID identity-scroll) y league-selector (testID
+  // league-list), con sus propios styles inline.
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
   // esté abierto. borderTop sutil separa visualmente del form scrollable.
