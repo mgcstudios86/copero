@@ -9,6 +9,9 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Provenance gate (MGC-1206): manifiesto generado en CI, se sube como artifact.
+provenance/
+
 # Native
 .kotlin/
 *.orig.*

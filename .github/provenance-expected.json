@@ -1,0 +1,23 @@
+{
+  "$comment": [
+    "Contrato de provenance del bundle Android (MGC-1206, origen MGC-957).",
+    "canonicalStrings: testIDs que DEBEN viajar dentro de index.android.bundle.",
+    "Regla de enforcement (modo auto, default): si el string existe en sourceDirs,",
+    "es OBLIGATORIO en el bundle. Si no existe en source todavia, se reporta",
+    "'pending' sin fallar el job. Asi el gate detecta bundle stale sin romper CI",
+    "por testIDs que mobile-developer todavia no mergeo.",
+    "PROVENANCE_STRICT=1 exige los 4 strings siempre (usar en release)."
+  ],
+  "canonicalStrings": [
+    "field-map-wrapper",
+    "identity-fixed-form",
+    "identity-footer",
+    "btn-identity-continue"
+  ],
+  "sourceDirs": ["src", "app"],
+  "sourceExtensions": [".ts", ".tsx", ".js", ".jsx"],
+  "bundleEntries": [
+    "assets/index.android.bundle",
+    "base/assets/index.android.bundle"
+  ]
+}
