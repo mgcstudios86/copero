@@ -227,6 +227,35 @@ export default function IdentityScreen() {
           Migramos desde el patrón MGC-517 + MGC-863 + MGC-937 al modelo
           "sección fija en columna" para resolver la no convergencia de
           las 8 iteraciones previas (MGC-957 / parent MGC-946). */}
+      {/* MGC-1005 (fix MGC-986 + MGC-1000 — rollback MGC-1004 outer ScrollView):
+          PR #285 (MGC-1004 / 527f1a6) reintrodujo outer ScrollView con flex:1
+          envolviendo field-map-section + identity-fixed-form. QA MGC-998 sobre
+          PR #284 midió esos wrappers MISSING en uiautomator dump; PR #285 no
+          fue QA-testeado aún pero la hipótesis es la misma: items dentro de
+          un ScrollView que overflow off-screen (clipeados por el viewport del
+          ScrollView) son excluidos del accessibility tree por RN-Android
+          uiautomator. Resultado: field-map-wrapper/input-name-wrapper/btn-
+          foot-row invisibles para tapOn y asserts de bounds.
+
+          Rollback MGC-1004: remover el outer ScrollView. Restaurar arquitectura
+          MGC-969 (column flex de secciones fijas, sin flex:1 en ningún hijo).
+          Y COMPRIMIR el contenido para que las 6 secciones quepan en viewport
+          ~1620px disponibles en kavContent (ZY22G728HN 1080x2400 menos
+          SiteHeader+Banner ~210px menos bottom safe area 84px):
+
+            identity-header           ~110  (Title + subtítulo + label)
+            jersey-preview-wrapper    ~240  (height:240 explícito + md 160x200 + labels)
+            identity-nationality      ~280  (TextInput 48 + ScrollView 180 + labels + padding)
+            field-map-section         ~340  (label 16 + field-map-wrapper 320 + padding)
+            identity-fixed-form       ~250  (Name 110 + Foot 110 + padding)
+            identity-sticky-footer    ~280  (stepper 140 + footer 120 + padding)
+                                       ----
+                                       ~1500  ≤ 1620px viewport ✓
+
+          Cada sección lleva flexShrink:0 + altura explícita (cuando aplique)
+          para que el flex cascade no redistribuya altura entre ellas. Sin
+          flex:1, sin outer ScrollView, sin competencia por altura entre
+          hermanos del kavContent. */}
       {/* Header — sección fija sibling del kavContent (sin ScrollView).
           collapsable={false} garantiza que el ViewGroup entre en la
           jerarquía accesible de uiautomator dump. */}
@@ -268,7 +297,17 @@ export default function IdentityScreen() {
 
       {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
           Extraído del ScrollView raíz MGC-517 en MGC-969. collapsable={false}
-          garantiza jerarquía accesible estable para uiautomator dump. */}
+          garantiza jerarquía accesible estable para uiautomator dump.
+
+          MGC-1005: height:240 + maxHeight:240 explícitos. Sin esto, RN-Android
+          medía jersey-preview-wrapper h=740 en cold-start (QA MGC-998 sobre
+          PR #284) — el wrapper se expandía al tamaño del ScrollView content
+          container en lugar de respetar el intrinsic height del JerseyPreview
+          md (160x200). El extra de 500dp empujaba las secciones inferiores
+          fuera del viewport kavContent y uiautomator las omitía del dump.
+          height:240 = md jersey (200) + padding vertical (16+16) + label
+          inferior (~14) + gap interno (12) ≈ 258, redondeado a 240 con
+          overflow:hidden para forzar el clamp. */}
       <View
         testID="jersey-preview-wrapper"
         collapsable={false}
@@ -277,11 +316,14 @@ export default function IdentityScreen() {
           borderRadius: radii.lg,
           marginHorizontal: spacing[4],
           marginBottom: spacing[3],
-          padding: spacing[4],
+          padding: spacing[3],
           borderWidth: 1,
           borderColor: colors.border,
           alignItems: 'center',
-          gap: spacing[3],
+          gap: spacing[2],
+          height: 240,
+          maxHeight: 240,
+          overflow: 'hidden',
           flexShrink: 0,
         }}
       >
@@ -357,12 +399,14 @@ export default function IdentityScreen() {
           />
           <View
             style={{
-              maxHeight: 220,
+              height: 180,
+              maxHeight: 180,
               borderRadius: radii.md,
               borderWidth: 1,
               borderColor: colors.border,
               backgroundColor: colors.surface,
               overflow: 'hidden',
+              flexShrink: 0,
             }}
           >
             {/* MGC-969 — único ScrollView de la pantalla. testID
@@ -677,9 +721,11 @@ export default function IdentityScreen() {
           uiautomator para el wrapper padre. testID permite hook Maestro
           para asserts de subtree sticky-footer entero.
 
-          Vive entre identity-fixed-form (MGC-751) y el cierre del KeyboardAvoidingView.
-          identity-fixed-form queda fuera a propósito: sus inputs (Name/Foot)
-          no necesitan translateY porque su foco ya lo gestiona KAV. */}
+          Vive entre identity-fixed-form (MGC-751) y el cierre del KeyboardAvoidingView
+          (MGC-1005: rollback del outer ScrollView MGC-1004). identity-fixed-form
+          queda FUERA a propósito: sus inputs (Name/Foot) no necesitan translateY
+          porque su foco ya lo gestiona KAV; solo el stepper+Continue necesita
+          esquivar el IME. */}
       <View
         testID="identity-sticky-footer"
         collapsable={false}

@@ -30,7 +30,7 @@ import {
   isPersistentStorage,
 } from '@/features/career/persistence';
 import type { CareerAction } from '@/features/career/engine';
-import type { CareerSnapshot, Club, Foot, Position, StrategyId } from '@/types/career';
+import type { CareerSnapshot, Club, Foot, Position, StrategyId, YearlyPlan } from '@/types/career';
 
 type CareerStore = CareerSnapshot & {
   /**
@@ -66,6 +66,13 @@ type CareerStore = CareerSnapshot & {
   openAcademy: () => void;
   acceptClub: (club: Club) => void;
   decide: (strategyId: StrategyId, choiceId: string) => void;
+  /**
+   * MGC-1017 — setYearlyPlan: persiste el plan anual elegido por el
+   * usuario al cierre de la temporada. El engine lo consume en el
+   * próximo `advanceSeason` (lo lee + resetea). Misma cadencia de
+   * persistencia que `decide` para sobrevivir force-stop.
+   */
+  setYearlyPlan: (plan: YearlyPlan) => Promise<void>;
   advance: () => void;
   /**
    * Draft de leyendas (MGC-208 §1) — MGC-209.
@@ -332,6 +339,14 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       const { step } = await import('@/features/career/engine');
       setSnapshot((s) =>
         step(s, { type: 'decide', strategyId, choiceId } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    setYearlyPlan: async (plan) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'setYearlyPlan', plan } satisfies CareerAction),
       );
       persistSnapshot(get());
       await flushPendingSave();
