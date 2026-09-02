@@ -225,11 +225,14 @@ export default function IdentityScreen() {
           ÚNICO sibling del ScrollView — siempre visible al fondo con stepper
           +/- y Continue. collapsable={false} + removeClippedSubviews={false}
           en el ScrollView para mantener resource-id estable en UIAutomator.
-          field-map-section (MGC-1274) lleva height:380 + flexBasis:380 +
-          flexGrow:0 como belt-suspenders contra shrink cascade del measure
-          pass del ScrollView. Refs: [[mgc1257-outer-scrollview-tree]],
-          MGC-711, MGC-751, MGC-806, MGC-807, MGC-811, MGC-840, MGC-843,
-          MGC-1016, MGC-1086, MGC-1222. */}
+          field-map-wrapper (MGC-916/MGC-1152 canónico) lleva height:320 +
+          flexBasis:320 + flexGrow:0 contra shrink cascade del measure pass
+          del ScrollView. Spec MGC-1143 320±10dp. MGC-1299 revierte el
+          height:380 que PR-320 (MGC-1286) había introducido como
+          belt-suspenders — 380dp queda 60dp por encima del spec histórico.
+          Refs: [[mgc1257-outer-scrollview-tree]], MGC-711, MGC-751, MGC-806,
+          MGC-807, MGC-811, MGC-840, MGC-843, MGC-1016, MGC-1086, MGC-1222,
+          MGC-1299. */}
       <ScrollView
         testID="identity-scroll"
         style={styles.scroll}
@@ -634,6 +637,7 @@ export default function IdentityScreen() {
           ) : null}
         </Field>
       </View>
+      </ScrollView>
       {/* MGC-751: section fija fuera del ScrollView con los wrappers que QA
           necesita testear (input-name-wrapper + btn-foot-row). Mismo patrón
           que el stepper sticky de MGC-585/PR-223 (ea57f8b) y MGC-744/PR-252
@@ -760,23 +764,44 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
-      {/* MGC-811: field-map-wrapper extraído del ScrollView al mismo nivel
-          que identity-fixed-form. PR-259/a936f72 solo aplicó collapsable=false
-          pero el View seguía bajo el ScrollView, donde RN-Android clipea los
-          bounds al viewport visible en el primer layout pass (y1=1660 > fold
-          y2=1122 en ZY22G728HN 1080x2400) — uiautomator reportaba
-          field-map-wrapper h=-538 y pos-XX h=-668/-753/-1094 invertidos.
+      {/* MGC-1314: cierre del ScrollView externo tras league-selector-wrapper.
+          identity-fixed-form e identity-fixed-field-map NO son hijos del
+          ScrollView — viven como siblings (líneas 786+) entre el ScrollView y
+          identity-sticky-footer. Causa raíz MGC-1309 / MGC-1035: en fresh-mount
+          ZY22G728HN 1080×2400 density 400, RN-Android clipea los bounds de
+          los hijos del ScrollView al viewport visible (≈445dp). Wrappers que
+          se medían naturalmente por debajo del fold del ScrollView
+          (identity-fixed-form input-name a y≈2151, identity-fixed-field-map
+          a y≈1697, field-map-wrapper a y≈1805) reportaban bounds con
+          top=natural_y > bottom=viewport_bottom=1530 → bounds invertidos
+          h=-248dp / -67dp / -110dp. Tap input-name → focused=NONE porque el
+          hit-box resuelto por uiautomator estaba en coordenadas inválidas.
 
-          Aplicamos el patrón canónico MGC-751/PR-254 (commit 6be789c): wrapper
-          padre collapsable=false con dimensiones explícitas para garantizar
-          que el subtree entra en la jerarquía nativa reportada por
-          uiautomator. Vive entre identity-fixed-form (Name+Foot, MGC-751) y
-          identity-sticky-footer (Stepper+Continue, MGC-754): no sobrecargamos
-          identity-fixed-form con un 3er field para mantener cohesión, y
-          queda fuera del wrapper identity-sticky-footer porque el translateY
-          de IME avoidance solo aplica a stepper+Continue. flexShrink:0 evita
-          que la zona fija se comprima cuando el ScrollView compite por altura.
-          Queda fuera del flujo IME (no necesita translateY). */}
+          Cherry-pick f832115 (MGC-1309 / MGC-1283 883ac79) añadió flexBasis:240
+          + flexGrow:0 + flexShrink:0 sobre identity-sticky-footer para
+          reservar 240dp al fondo, pero solo restauró ScrollView h=445dp (no
+          h=92dp colapsado como antes). NO resolvió los bounds invertidos
+          porque la causa raíz NO era sticky-footer sino la pertenencia de
+          los wrappers al subtree del ScrollView.
+
+          Patrón canónico: MGC-751/PR-254 (extraer input-name-wrapper +
+          btn-foot-row) + MGC-811/PR-261 (extraer field-map-wrapper) +
+          MGC-1305/PR-325 (extraer identity-fixed-field-map). El extracto a
+          View fijo hermano del ScrollView saca los wrappers del measure
+          pass del contentContainer y Yoga reporta bounds reales positivos
+          en uiautomator fresh-mount, sin depender del scroll position.
+
+          ScrollView conserva flexGrow:1 + flexShrink:1 (MGC-1286/PR-320) y
+          removeClippedSubviews={false} (MGC-1286 belt) sobre las 4 secciones
+          scrollables: identity-header + jersey-preview-wrapper +
+          nationality-section + league-selector-wrapper. ScrollView cubre
+          TODO el alto disponible menos identity-fixed-form (auto) +
+          identity-fixed-field-map (auto) + identity-sticky-footer (240).
+
+          field-map-wrapper mantiene height:320 + flexBasis:320 + flexShrink:0
+          (MGC-1143 spec / MGC-1299 restore / MGC-1309 belt) sin la
+          regresión 380dp que MGC-1294 reportó sobre PR-320.
+          */}
       <View
         testID="identity-fixed-field-map"
         collapsable={false}
@@ -859,7 +884,6 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
-      </ScrollView>
       {/* MGC-754: wrap stepperSticky + footer en `identity-sticky-footer` para
           aplicar translateY simultáneo cuando IME abre. translateY es
           independiente del flex layout del padre y empuja los dos elementos
@@ -875,6 +899,26 @@ export default function IdentityScreen() {
         testID="identity-sticky-footer"
         collapsable={false}
         style={[
+          // MGC-1309 — restaurar flexBasis:240 + flexGrow:0 + flexShrink:0 sobre
+          // identity-sticky-footer (canónico MGC-1283 / 883ac79 cherry-pick de
+          // MGC-1257 f6bfdc8). Sin estas props el sticky-footer compite con el
+          // outer ScrollView por la altura del kavContent flex:1 column y Yoga
+          // reporta wrappers con top > bottom (bounds invertidos) en ZY22G728HN
+          // fresh-mount — patrón MGC-1035 / MGC-751. PR-324 (602a5a7) omitió
+          // este flexBasis al restaurar field-map h=320dp, regresionando el
+          // identity-scroll a h=92dp colapsado y empujando todos los hijos del
+          // ScrollView (jersey, nationality, league, fixed-form, fixed-field-map)
+          // a bounds bottom < top. QA MGC-1307 midió:
+          //   identity-scroll bounds=[0,418][1080,659] h=92dp
+          //   jersey-preview-wrapper bounds=[40,772][1040,659] (bottom<top)
+          //   jersey-name bounds=[365,1038][715,659] (bottom<top)
+          //   input-name bounds=[40,2079][1040,659] (bottom<top)
+          // flexBasis:240 fija el alto del sticky-footer (stepperSticky minHeight
+          // 120 + footer Button lg ~56 + padding ~32 = ~240dp) para que el
+          // ScrollView quede con altura estable y Yoga calcule bounds positivos
+          // para los hijos. flexShrink:0 belt-suspenders para que el OS no lo
+          // comprima en measure pass.
+          { flexBasis: 240, flexGrow: 0, flexShrink: 0 },
           Platform.OS === 'android' && keyboardOffset > 0
             ? { transform: [{ translateY: -keyboardOffset }] }
             : null,
@@ -1065,7 +1109,11 @@ const styles = StyleSheet.create({
   // MGC-610: wrapper interior con paddingBottom dinamico (Android). El
   // padding empuja el stepper sticky + footer arriba del IME sin tocar
   // el SafeAreaView edges=['bottom'].
-  kavContent: { flex: 1 },
+  // MGC-1314 belt MGC-927: explicitar flexDirection: 'column' para que el
+  // view manager nativo del kavContent herede column del padre
+  // KeyboardAvoidingView y NO colapse el ScrollView a h=0 mid measure pass
+  // cuando el sticky-footer toma altura por translateY (IME avoidance).
+  kavContent: { flex: 1, flexDirection: 'column' },
   // MGC-1274: outer ScrollView flexGrow:1 vive dentro del kavContent. Toma
   // todo el alto disponible dejando identity-sticky-footer (flexBasis:240
   // flexShrink:0) como único sibling siempre visible.
@@ -1120,16 +1168,18 @@ const styles = StyleSheet.create({
   // MGC-821: aspectRatio 0.7 + width 100% generaba ~1497px de alto en
   // ZY22G728HN 1080x2400, empujando identity-sticky-footer debajo del
   // viewport y ocultando nationality/sticky-stepper/btn-identity-continue.
-  // Nuevo aspectRatio 1.6 (landscape ancho:alto) → height ≈ 1048/1.6 ≈ 655px,
-  // encaja dentro del presupuesto vertical disponible
-  // (2400 - identity-scroll 418 - identity-fixed-form 497 - identity-sticky-footer 120 - ad-banner 150 ≈ 1215px).
-  // overflow:visible garantiza que pos-XX Pressables con translateX/Y -18
-  // no se clipeen dentro del wrapper parent bounds.
+  // MGC-1299: PR-320 (MGC-1286) reintrodujo ScrollView outer y declaró
+  // height:380 + flexBasis:380 como belt-suspenders — pero el spec histórico
+  // (MGC-1143/MGC-1152) espera field-map-wrapper h=320±10dp. Restauramos
+  // 320dp explícito + flexBasis:320 + flexGrow:0 para canónico. aspectRatio
+  // queda como fallback (ignorado cuando hay height explícito). Mantener
+  // overflow:visible — pos-XX Pressables con translateX/Y -18 no se clipean
+  // dentro del wrapper parent bounds.
   fieldMapWrapper: {
     aspectRatio: 1.6,
     width: '100%',
-    height: 380,
-    flexBasis: 380,
+    height: 320,
+    flexBasis: 320,
     flexGrow: 0,
     borderWidth: 2,
     position: 'relative',
