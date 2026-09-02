@@ -294,10 +294,18 @@ export default function IdentityScreen() {
       </View>
 
       {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
-          height:240 + maxHeight:240 + overflow:hidden fuerzan el clamp al
-          intrinsic height del JerseyPreview md (160x200) + padding + labels,
-          evitando que RN-Android lo expanda al tamaño del viewport y empuje
-          secciones inferiores fuera del dump. Patrón MGC-1005. */}
+          height:300 + maxHeight:300 + overflow:hidden fuerzan el clamp al
+          intrinsic height del JerseyPreview md (160x200) + título + label
+          + padding + gaps (≈ 276px), evitando que RN-Android lo expanda al
+          tamaño del viewport y empuje secciones inferiores fuera del dump.
+          Patrón MGC-1005.
+          MGC-1435 — bump 240→300 sobre PR-348. En PR-347 QA reportó
+          jersey-preview bounds=[340,873][740,1249] h=376px overfloweando el
+          wrapper 240px con overflow:hidden → SVG del país clippeado en la
+          mitad inferior. 300px acomoda 200 (jersey) + 20 (title) + 16 (label)
+          + 24 (padding) + 16 (gaps) = 276px con 24px slack. Mantener
+          overflow:hidden como belt para que RN-Android no expanda el
+          wrapper al viewport completo. */}
       <View
         testID="jersey-preview-wrapper"
         collapsable={false}
@@ -311,8 +319,8 @@ export default function IdentityScreen() {
           borderColor: colors.border,
           alignItems: 'center',
           gap: spacing[2],
-          height: 240,
-          maxHeight: 240,
+          height: 300,
+          maxHeight: 300,
           overflow: 'hidden',
           flexShrink: 0,
         }}
@@ -1192,14 +1200,17 @@ const styles = StyleSheet.create({
   // debajo del viewport natural y RN-Android clipea sus bounds contra el
   // sticky-footer top y=1530 → bottom < top (invertido). Spec MGC-1411
   // opción B: outer ScrollView + sticky-footer sibling + paddingBottom:240.
-  // MGC-1432 — intento-5 opción B fiel. paddingBottom:240 (sticky-footer
-  // overlap) sin flexGrow:1. Con flexGrow:1 + content natural ~4500dp >
-  // viewport 1832px, RN-Android medía el ScrollView al contenido intrínseco
-  // y lo colapsaba a h≈831px (QA MGC-1429 sobre 5dbdd95). Sin flexGrow:1 el
-  // contentContainer respeta su natural, ScrollView toma TODO el kavContent
-  // (1832px = 732.8dp viewport completo, opción B fiel) y los hijos se
-  // miden por measure pass del contentContainer con bounds reales.
-  scrollContent: { paddingBottom: 240 },
+  // MGC-1435 — fix sobre PR-348 (intento-5 FAIL QA). RESTAURAR flexGrow:1
+  // en scrollContent (estaba en PR-346 PASS 7e4280f y PR-348 lo quitó
+  // intentando evitar un collapse distinto). Causa raíz: sin flexGrow:1,
+  // RN-Android mide el ScrollView contra el contentContainer (wrap_content
+  // ≈ 831px) en lugar del flex:1 del kavContent (732.8dp). country-CO
+  // (último país) cae fuera del viewport y queda con bottom clippeado al
+  // scroll bottom → bounds invertidos (QA MGC-1435 sobre SHA 17d592a).
+  // Con flexGrow:1 + paddingBottom:240, contentContainer ocupa TODO el
+  // viewport del ScrollView (1832px = 732.8dp), permitiendo scroll completo
+  // hasta country-CO sin invertir bounds. Patrón canónico PR-346 PASS.
+  scrollContent: { flexGrow: 1, paddingBottom: 240 },
   container: {},
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
