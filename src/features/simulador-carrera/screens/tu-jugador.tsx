@@ -48,7 +48,20 @@ export default function TuJugadorScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['bottom']}>
       <ScrollView
-        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4] }]}
+        contentContainerStyle={[
+          styles.container,
+          {
+            gap: spacing[5],
+            padding: spacing[4],
+            // MGC-1194 (reopen post PR-325/326): el player card tiene 2 filas
+            // de 4 tiles (DEF/PHY/SKL/WF). La segunda fila quedaba recortada
+            // contra el AdMob banner porque el ScrollView no reservaba espacio
+            // inferior. paddingBottom 156dp (60dp banner + 24dp aire) saca la
+            // segunda fila arriba del banner — patrón idéntico a club.tsx
+            // MGC-832 / temporada.tsx (este mismo PR).
+            paddingBottom: spacing[4] + 156,
+          },
+        ]}
         testID="tu-jugador-screen"
       >
         {/* Header */}
