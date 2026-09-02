@@ -25,6 +25,14 @@ import { LEAGUES, leagueNameByCode } from '@/features/career/leagues';
 import { isIdentityComplete } from '@/features/career/identity-state';
 import type { Foot } from '@/types/career';
 
+// MGC-1448 — filas de nacionalidad visibles sin query. Ver el presupuesto de
+// contenido documentado en `filteredNationalities`: con las 33 inline el árbol
+// del scroll sumaba ≈8570px y dejaba league-selector-wrapper +
+// identity-fixed-field-map ≈6000px bajo el fold (fuera del alcance de
+// cualquier swipe fijo y del hierarchy dump de QA). Las 5 primeras cubren los
+// testIDs del contrato E2E: country-ARG / BR / UY / CL / CO.
+const NATIONALITY_FRESH_LIMIT = 5;
+
 // Lazy-load JerseyPreview (MGC-482): separa el SVG patterns (~10 KB)
 // del chunk inicial de /identity. Mejora LCP sin cambiar UX
 // (placeholder mientras carga).
@@ -93,11 +101,32 @@ export default function IdentityScreen() {
   const [nationalityQuery, setNationalityQuery] = useState('');
   const filteredNationalities = useMemo(() => {
     const q = nationalityQuery.trim().toLowerCase();
-    if (!q) return NATIONALITIES;
+    if (!q) {
+      // MGC-1448 — sin query mostramos solo las 5 primeras (AR/BR/UY/CL/CO)
+      // + la seleccionada. Presupuesto de contenido medido en ZY22G728HN
+      // (viewport del scroll = 1832px = 732.8dp @ density 400):
+      //   header 150 + jersey 300 + nationality (32 pad + 20 label + 56 input
+      //   + N*57 por fila) + league 88 + field-map 320 + form 340 + pad 240.
+      // Con las 33 nacionalidades inline el contenido suma ≈3430dp ≈8570px:
+      // league-selector-wrapper e identity-fixed-field-map caen ≈6000px por
+      // debajo del fold, así que NINGÚN swipe fijo de 900px los trae al dump
+      // (QA MGC-1450/1452 los reportó AUSENTES: estaban renderizados, pero a
+      // 7 swipes de distancia). PR-350 capeó a 12 → seguían a 2+ swipes y el
+      // walk volvió a fallar. Con 5 filas el contenido baja a ≈1830dp:
+      // league-selector y field-map quedan a UN swipe del fold y el form
+      // entero es alcanzable con scrollUntilVisible en 1-2 pasos.
+      // El search sigue cubriendo las 33 al tipear (query no vacía → filtro
+      // completo), que es el flujo real del usuario.
+      const head = NATIONALITIES.slice(0, NATIONALITY_FRESH_LIMIT);
+      const selected = NATIONALITIES.find((n) => n.code === profile.nationalityCode);
+      return selected && !head.some((n) => n.code === selected.code)
+        ? [...head, selected]
+        : head;
+    }
     return NATIONALITIES.filter(
       (n) => n.name.toLowerCase().includes(q) || n.code.toLowerCase().includes(q),
     );
-  }, [nationalityQuery]);
+  }, [nationalityQuery, profile.nationalityCode]);
 
   // MGC-955: toggle del listado de ligas. Patrón collapsed-button → tap
   // abre ScrollView anidado. Mantener el wrapper collapsable={false} +
@@ -185,6 +214,28 @@ export default function IdentityScreen() {
         keyboardVerticalOffset={0}
       >
       <View style={[styles.kavContent]}>
+      {/* MGC-1452 — rootcause fix sobre PR-352 FAIL (MGC-1450). PR-352
+          (commit 39b5bdf, build-PR-352-1-39b5bdf.apk) mantuvo el patrón
+          flex:1 ScrollView + sticky-footer absolute + contentContainer
+          flexGrow:1 paddingBottom:240 — pero el measure pass de RN-Android
+          colapsó el ScrollView wrapper a h=1431px en ZY22G728HN 1080×2400
+          (gap 401px vs viewport 1832px), dejando identity-fixed-field-map
+          y league-selector-wrapper AUSENTES del hierarchy dump fresh-mount
+          (clipping de hijos bajo el measure pass). countries-CL/US
+          INVERTIDOS porque caen en el overlap del sticky-footer top
+          y=1607 (altura real 209.2dp, no 240dp esperado).
+          Patrón PR-351 (b52c341, MGC-1440 PASS): anclar ScrollView con
+          position:absolute top:0/left:0/right:0/bottom:0 dentro de un
+          kavContent position:relative garantiza que el wrapper del
+          ScrollView ocupe EXACTAMENTE los 1832px del kavContent,
+          independientemente del measure pass del contentContainer.
+          Saca identity-fixed-field-map y league-selector-wrapper del
+          ScrollView (siblings) para garantizar su presencia en el
+          hierarchy dump fresh-mount sin depender de la posición del
+          scroll — patrón MGC-751/811/807 original. countries-* siguen
+          como hijos directos del scroll (Option B fiel MGC-1411) con
+          paddingBottom:240 que despeja el overlap del footer para
+          country-CO/CL/US accesibles tras scroll completo. */}
       {/* MGC-429: el testID `identity-screen` vive en el wrapper
           (`app/simulador-carrera/identity.tsx`) que monta sincrónicamente
           antes de que el chunk lazy de este componente termine de cargar.
@@ -250,7 +301,7 @@ export default function IdentityScreen() {
           que country-CO (último país) no invierta bounds contra el footer top. */}
       <ScrollView
         testID="identity-scroll"
-        style={{ flex: 1 }}
+        style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -294,10 +345,18 @@ export default function IdentityScreen() {
       </View>
 
       {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
-          height:240 + maxHeight:240 + overflow:hidden fuerzan el clamp al
-          intrinsic height del JerseyPreview md (160x200) + padding + labels,
-          evitando que RN-Android lo expanda al tamaño del viewport y empuje
-          secciones inferiores fuera del dump. Patrón MGC-1005. */}
+          height:300 + maxHeight:300 + overflow:hidden fuerzan el clamp al
+          intrinsic height del JerseyPreview md (160x200) + título + label
+          + padding + gaps (≈ 276px), evitando que RN-Android lo expanda al
+          tamaño del viewport y empuje secciones inferiores fuera del dump.
+          Patrón MGC-1005.
+          MGC-1435 — bump 240→300 sobre PR-348. En PR-347 QA reportó
+          jersey-preview bounds=[340,873][740,1249] h=376px overfloweando el
+          wrapper 240px con overflow:hidden → SVG del país clippeado en la
+          mitad inferior. 300px acomoda 200 (jersey) + 20 (title) + 16 (label)
+          + 24 (padding) + 16 (gaps) = 276px con 24px slack. Mantener
+          overflow:hidden como belt para que RN-Android no expanda el
+          wrapper al viewport completo. */}
       <View
         testID="jersey-preview-wrapper"
         collapsable={false}
@@ -311,8 +370,8 @@ export default function IdentityScreen() {
           borderColor: colors.border,
           alignItems: 'center',
           gap: spacing[2],
-          height: 240,
-          maxHeight: 240,
+          height: 300,
+          maxHeight: 300,
           overflow: 'hidden',
           flexShrink: 0,
         }}
@@ -488,6 +547,21 @@ export default function IdentityScreen() {
               </Text>
             ) : null}
           </View>
+          {/* MGC-1448 — con la lista capada a NATIONALITY_FRESH_LIMIT el resto
+              del mundo sigue disponible por search; el hint lo hace explícito
+              (sin él, el cap se lee como "faltan países"). */}
+          {!nationalityQuery.trim() ? (
+            <Text
+              testID="nationality-search-hint"
+              style={{
+                color: colors.textMuted,
+                fontSize: fontSize.sm,
+                marginTop: spacing[2],
+              }}
+            >
+              Escribí para buscar entre las {NATIONALITIES.length} nacionalidades.
+            </Text>
+          ) : null}
         </Field>
       </View>
       {/* MGC-981: league-selector-wrapper colapsado a height:88 explícito.
@@ -970,6 +1044,28 @@ export default function IdentityScreen() {
           disponible. scrollContent.paddingBottom:240 reserva el area del
           overlap para que el último hijo (country-CO) sea accesible tras
           scroll completo. */}
+      {/* MGC-1448 — banda del footer determinista y opaca.
+          Causa raíz AC5 FAIL (QA MGC-1445 sobre PR-350 / 8a4da64): el footer
+          absolute overlapea los últimos 240dp del viewport, pero SIN height
+          explícito su alto medido dependía del contenido (QA MGC-1441 midió
+          209.2dp; MGC-1445 midió 600px=240dp) y el wrapper capturaba el touch
+          en TODA su caja. country-ARG quedaba dibujado debajo del footer
+          (bounds [43,1673][1038,1813] vs footer top y=1530) y el tap de QA en
+          (540,1743) lo comía el footer: RN-Android hit-testea el view más
+          alto en z-order y sube por el árbol (nunca baja al Pressable de
+          abajo) → Argentina no se seleccionaba, el input quedaba con el
+          composing text del IME y Continuar seguía deshabilitado.
+          Fix: height:240 explícito (= scrollContent.paddingBottom:240, la
+          banda reservada) + justifyContent:'flex-end' + backgroundColor
+          opaco. Contrato resultante, verificable por QA:
+            footerTop = 2130 - 600 = 1530px en ZY22G728HN density 400.
+            Todo lo dibujado con y >= footerTop está TAPADO y no es tappable;
+            todo lo visible es tappable (banda opaca, sin huecos
+            transparentes que muestren contenido intocable).
+          Por eso los country-* se tapean SIEMPRE tras scrollUntilVisible
+          dejándolos con bottom < footerTop, nunca sobre bounds crudos del
+          dump fresh-mount. NO usar pointerEvents='box-none' acá: haría
+          tappable contenido tapado por la banda opaca (peor que el bug). */}
       <View
         testID="identity-sticky-footer"
         collapsable={false}
@@ -979,6 +1075,9 @@ export default function IdentityScreen() {
             left: 0,
             right: 0,
             bottom: 0,
+            height: 240,
+            justifyContent: 'flex-end',
+            backgroundColor: colors.bg,
           },
           Platform.OS === 'android' && keyboardOffset > 0
             ? { transform: [{ translateY: -keyboardOffset }] }
@@ -1182,24 +1281,27 @@ const styles = StyleSheet.create({
   // view manager nativo del kavContent herede column del padre
   // KeyboardAvoidingView y NO colapse el ScrollView a h=0 mid measure pass
   // cuando el sticky-footer toma altura por translateY (IME avoidance).
-  kavContent: { flex: 1, flexDirection: 'column' },
+  kavContent: { flex: 1, flexDirection: 'column', position: 'relative' },
   // MGC-1274: outer ScrollView flexGrow:1 vive dentro del kavContent. Toma
   // todo el alto disponible dejando identity-sticky-footer (flexBasis:240
   // flexShrink:0) como único sibling siempre visible.
-  scroll: { flexGrow: 1, flexShrink: 1 },
+  scroll: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   // MGC-1428 — paddingBottom:240 para reservar el alto del sticky-footer al
   // fondo del ScrollView. Sin esto, los últimos países (country-CO) caen
   // debajo del viewport natural y RN-Android clipea sus bounds contra el
   // sticky-footer top y=1530 → bottom < top (invertido). Spec MGC-1411
   // opción B: outer ScrollView + sticky-footer sibling + paddingBottom:240.
-  // MGC-1432 — intento-5 opción B fiel. paddingBottom:240 (sticky-footer
-  // overlap) sin flexGrow:1. Con flexGrow:1 + content natural ~4500dp >
-  // viewport 1832px, RN-Android medía el ScrollView al contenido intrínseco
-  // y lo colapsaba a h≈831px (QA MGC-1429 sobre 5dbdd95). Sin flexGrow:1 el
-  // contentContainer respeta su natural, ScrollView toma TODO el kavContent
-  // (1832px = 732.8dp viewport completo, opción B fiel) y los hijos se
-  // miden por measure pass del contentContainer con bounds reales.
-  scrollContent: { paddingBottom: 240 },
+  // MGC-1435 — fix sobre PR-348 (intento-5 FAIL QA). RESTAURAR flexGrow:1
+  // en scrollContent (estaba en PR-346 PASS 7e4280f y PR-348 lo quitó
+  // intentando evitar un collapse distinto). Causa raíz: sin flexGrow:1,
+  // RN-Android mide el ScrollView contra el contentContainer (wrap_content
+  // ≈ 831px) en lugar del flex:1 del kavContent (732.8dp). country-CO
+  // (último país) cae fuera del viewport y queda con bottom clippeado al
+  // scroll bottom → bounds invertidos (QA MGC-1435 sobre SHA 17d592a).
+  // Con flexGrow:1 + paddingBottom:240, contentContainer ocupa TODO el
+  // viewport del ScrollView (1832px = 732.8dp), permitiendo scroll completo
+  // hasta country-CO sin invertir bounds. Patrón canónico PR-346 PASS.
+  scrollContent: { flexGrow: 1, paddingBottom: 240 },
   container: {},
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
