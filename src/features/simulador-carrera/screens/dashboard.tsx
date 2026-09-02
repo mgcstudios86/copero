@@ -79,8 +79,15 @@ export default function DashboardScreen() {
   // 'clubStart' (no vuelve a 'dashboard'). Incluyo clubStart en el show
   // para que el CTA "Empezar draft de leyendas" sea visible y el flow AC7
   // (identity → dashboard → academy → clubStart → draft) no quede atrapado.
-  const showDraftCta =
-    stage === 'dashboard' || stage === 'identity' || stage === 'clubStart';
+  // MGC-1393: la heurística basada sólo en `stage` se rompe cuando el
+  // usuario entra a academy y vuelve via `academy_back_cta` — el back no
+  // revierte stage='academy', entonces el dashboard re-renderizaba con
+  // showDraftCta=false y ocultaba el CTA. La nueva heurística usa estado
+  // global de carrera (`profile.club`): el CTA queda visible mientras el
+  // jugador no haya fichado por un club, más el caso especial `clubStart`
+  // (MGC-698). Stages post-draft caen fuera porque `profile.club` ya quedó
+  // seteado por `acceptClub`/`pickClub`.
+  const showDraftCta = !profile.club || stage === 'clubStart';
   const onDraftPress = async () => {
     await startDraft();
     router.push('/simulador-carrera/draft');
@@ -351,11 +358,41 @@ export default function DashboardScreen() {
           <RecommendedStrategy profile={profile} testID="dashboard-recommended" />
         </Suspense>
 
+        {/* MGC-565 — affordance dev-only para reset de carrera. Solo
+            visible bajo `__DEV__` o env flag; sin gate no renderiza. */}
+        <ResetCareerButton />
+      </ScrollView>
+      {/* MGC-1388 — Sibling extract del bloque de CTAs a un footer fijo
+          con alto reservado. Patrón validado en PR-337 (MGC-1381 temporada):
+          `flexBasis` + `flexGrow:0` + `flexShrink:0` + `collapsable={false}`
+          garantiza que UIAutomator reporte bounds reales para los botones
+          sin scrollUntilVisible. MGC-1393 fix dentro del footer (no del
+          ScrollView) con `size="md"` para mantener la altura 132dp reservada.
+          PR-339 (e16571a) había movido los botones DENTRO del ScrollView con
+          `size="lg"` para ocultar el CTA post-academy-back — eso eliminó el
+          wrapper `dashboard-cta-footer` y rompió todos los flows Maestro que
+          dependían de él. */}
+      <View
+        testID="dashboard-cta-footer"
+        collapsable={false}
+        style={{
+          height: 132,
+          flexBasis: 132,
+          flexGrow: 0,
+          flexShrink: 0,
+          gap: spacing[2],
+          paddingHorizontal: spacing[4],
+          paddingVertical: spacing[2],
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+        }}
+      >
         <Button
           label={copy.resolve('dashboard_cta_match')}
           onPress={onAcademyPress}
           variant="primary"
-          size="lg"
+          size="md"
           fullWidth
           testID="btn-dashboard-academy"
           accessibilityHint={copy.resolve('academy_h1')}
@@ -365,16 +402,13 @@ export default function DashboardScreen() {
             label="Empezar draft de leyendas"
             onPress={onDraftPress}
             variant="secondary"
-            size="lg"
+            size="md"
             fullWidth
             testID="btn-dashboard-draft"
             accessibilityHint="Inicia el draft de 8 rondas con leyendas"
           />
         ) : null}
-        {/* MGC-565 — affordance dev-only para reset de carrera. Solo
-            visible bajo `__DEV__` o env flag; sin gate no renderiza. */}
-        <ResetCareerButton />
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
