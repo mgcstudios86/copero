@@ -125,9 +125,20 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // 2d. Pie hábil = Derecho
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
 
-    // 2e. Nacionalidad = Argentina (filtra por "arg" para robustez i18n)
+    // 2e. Nacionalidad = Argentina (filtra por "arg" para robustez i18n).
+    // MGC-1348 v3 — `force: true` bypassa el actionability check de Playwright.
+    // El Pressable del dropdown renderiza en RNW como `<div>` wrapper
+    // (flex:1, flex-direction:row) envolviendo `<button data-testid="country-ARG">`.
+    // El hit-test del browser resuelve al `<div>` (display:flex cubre el área)
+    // y reporta "intercepts pointer events" sobre el `<button>`, aunque el
+    // click sí dispara el onPress del Pressable (event bubbling). Las 7
+    // specs que clickean `country-ARG` fallan idénticamente en CI run
+    // 33581781508 sobre 149ca57. Fix producto (box-only en el Pressable)
+    // cambia la semántica del touch target en Android nativo (no-op en RNW).
+    // Patrón adopted: `force:true` es el workaround estándar de Playwright
+    // para RNW hit-test flake; el componente sigue funcionando en Maestro.
     await page.getByTestId('input-nationality-search').fill('arg');
-    await page.getByText('Argentina', { exact: false }).first().click();
+    await page.getByTestId('country-ARG').click({ force: true });
 
     // axe gate 1: identity
     await expectZeroSeriousAxe(page, 'identity');
@@ -246,8 +257,9 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await page.getByTestId('input-name').fill('Regresion');
     await page.getByRole('button', { name: 'Sumar número' }).click(); // 9 → 10
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
+    // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await page.getByTestId('input-nationality-search').fill('arg');
-    await page.getByText('Argentina', { exact: false }).first().click();
+    await page.getByTestId('country-ARG').click({ force: true });
 
     // Ciclar las 4 posiciones de grupos distintos y axeear cada estado.
     const positions = [
@@ -284,8 +296,9 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await page.getByRole('button', { name: 'Sumar número' }).click();
     await page.getByTestId('pos-ST').click();
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
+    // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await page.getByTestId('input-nationality-search').fill('arg');
-    await page.getByText('Argentina', { exact: false }).first().click();
+    await page.getByTestId('country-ARG').click({ force: true });
     await page.getByTestId('btn-identity-continue').click();
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 15_000 });
 

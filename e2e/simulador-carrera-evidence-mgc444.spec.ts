@@ -45,8 +45,8 @@ async function completeIdentity(page: any, name: string) {
   await page.getByTestId('input-name').fill(name);
   await page.locator('[data-testid^="pos-"]').first().click();
   await page.getByTestId('input-nationality-search').fill('arg');
-  // Selector por texto: Argentina
-  await page.getByRole('button', { name: /Argentina/i }).first().click();
+  // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e en simulador-carrera.spec.ts).
+  await page.getByRole('button', { name: /Argentina/i }).first().click({ force: true });
   await page.getByTestId('btn-identity-continue').click();
   await page.waitForURL(/\/simulador-carrera\/dashboard/, { timeout: 10_000 });
   await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 10_000 });
