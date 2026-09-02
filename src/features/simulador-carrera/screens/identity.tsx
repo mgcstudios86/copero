@@ -978,6 +978,28 @@ export default function IdentityScreen() {
           disponible. scrollContent.paddingBottom:240 reserva el area del
           overlap para que el último hijo (country-CO) sea accesible tras
           scroll completo. */}
+      {/* MGC-1448 — banda del footer determinista y opaca.
+          Causa raíz AC5 FAIL (QA MGC-1445 sobre PR-350 / 8a4da64): el footer
+          absolute overlapea los últimos 240dp del viewport, pero SIN height
+          explícito su alto medido dependía del contenido (QA MGC-1441 midió
+          209.2dp; MGC-1445 midió 600px=240dp) y el wrapper capturaba el touch
+          en TODA su caja. country-ARG quedaba dibujado debajo del footer
+          (bounds [43,1673][1038,1813] vs footer top y=1530) y el tap de QA en
+          (540,1743) lo comía el footer: RN-Android hit-testea el view más
+          alto en z-order y sube por el árbol (nunca baja al Pressable de
+          abajo) → Argentina no se seleccionaba, el input quedaba con el
+          composing text del IME y Continuar seguía deshabilitado.
+          Fix: height:240 explícito (= scrollContent.paddingBottom:240, la
+          banda reservada) + justifyContent:'flex-end' + backgroundColor
+          opaco. Contrato resultante, verificable por QA:
+            footerTop = 2130 - 600 = 1530px en ZY22G728HN density 400.
+            Todo lo dibujado con y >= footerTop está TAPADO y no es tappable;
+            todo lo visible es tappable (banda opaca, sin huecos
+            transparentes que muestren contenido intocable).
+          Por eso los country-* se tapean SIEMPRE tras scrollUntilVisible
+          dejándolos con bottom < footerTop, nunca sobre bounds crudos del
+          dump fresh-mount. NO usar pointerEvents='box-none' acá: haría
+          tappable contenido tapado por la banda opaca (peor que el bug). */}
       <View
         testID="identity-sticky-footer"
         collapsable={false}
@@ -987,6 +1009,9 @@ export default function IdentityScreen() {
             left: 0,
             right: 0,
             bottom: 0,
+            height: 240,
+            justifyContent: 'flex-end',
+            backgroundColor: colors.bg,
           },
           Platform.OS === 'android' && keyboardOffset > 0
             ? { transform: [{ translateY: -keyboardOffset }] }
