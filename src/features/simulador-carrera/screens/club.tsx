@@ -102,7 +102,22 @@ export default function SeleccionClubScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['bottom']}>
       <ScrollView
-        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4] }]}
+        contentContainerStyle={[
+          styles.container,
+          {
+            gap: spacing[5],
+            padding: spacing[4],
+            // MGC-832: el <Banner /> montado en app/_layout.native.tsx cubre
+            // los últimos ~150px (60dp en ZY22G728HN 1080x2400). El último
+            // card (Morón para positionGroup=midfield/attack) queda debajo
+            // del banner sin paddingBottom extra, y `assertVisible` de
+            // Maestro no autoscroll. Sumamos `+ 156` (60dp banner + 24dp
+            // aire) al contentContainer para que el scroll natural llegue
+            // a mostrar la CTA "Firmar con {club}" del último card arriba
+            // del banner. Mismo patrón que identity.tsx MGC-968.
+            paddingBottom: spacing[4] + 156,
+          },
+        ]}
         testID="club-screen"
       >
         {/* Header — copy i18n con count dinámico (MGC-232) */}

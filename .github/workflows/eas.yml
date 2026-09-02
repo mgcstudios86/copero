@@ -140,14 +140,19 @@ jobs:
             console.log('[smoke] app.config.js OK — projectId=' + cfg.extra.eas.projectId);
           "
       - name: Prohibir triggers Android automáticos (defensa en profundidad)
-        # MGC-1263: este workflow no debe contener `eas build` en ningún step.
-        # Si alguien agrega un build step por accidente, este check falla.
+        # MGC-1263: este workflow no debe contener `eas build` de Android en
+        # ningún step. MGC-832: el patrón original (`eas[[:space:]]+build`)
+        # matcheaba sus propios comentarios y el step iOS legítimo
+        # (`eas build --local --platform ios`), por lo que el job fallaba
+        # siempre. Restringimos a invocaciones reales de Android: líneas no
+        # comentadas con `eas build ... --platform android`.
         run: |
-          if grep -nE 'eas[[:space:]]+build' .github/workflows/eas.yml; then
-            echo 'ERROR: eas.yml contiene un eas build step. Política MGC-1263: este workflow es smoke-only.' >&2
+          if grep -vE '^[[:space:]]*#' .github/workflows/eas.yml \
+               | grep -nE 'eas[[:space:]]+build.*--platform[[:space:]]+android'; then
+            echo 'ERROR: eas.yml contiene un eas build de Android. Política MGC-1263: este workflow es smoke-only para Android.' >&2
             exit 1
           fi
-          echo '[smoke] sin eas build step en eas.yml — política MGC-1263 OK'
+          echo '[smoke] sin eas build android en eas.yml — política MGC-1263 OK'
       - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
       - name: Patch expo-modules-core (worklets executeSync → runSync)
         run: node scripts/patch-expo-modules-core.js

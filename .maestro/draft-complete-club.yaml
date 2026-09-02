@@ -197,6 +197,10 @@ tags:
 - assertVisible:
     id: club-screen
     label: "Pantalla selector de club visible"
+# MGC-832: Boca + Vélez quedan above-the-fold; Temperley + Morón quedan
+# cubiertos por el ad-banner-native (bounds [0,2250][1080,2400] en
+# ZY22G728HN 1080x2400). Maestro 2.x `assertVisible` no autoscroll,
+# así que scrolleamos antes del assert de cada tarjeta oculta.
 - assertVisible:
     text: "VÉLEZ SARSFIELD"
     label: "Tarjeta Vélez Sarsfield visible"
