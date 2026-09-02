@@ -857,9 +857,11 @@ export default function IdentityScreen() {
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          // MGC-1339 — overshoot fix: padding spacing[1]=4 → spacing[0]=0
-          // (-8dp). Compactación preservada al mover dentro del scroll.
-          padding: spacing[0],
+          // MGC-1347 — paddingHorizontal spacing[1]=4dp; paddingVertical 0
+          // preserva alto 112.4dp de MGC-1339 (overshoot -8dp) y restaura
+          // gutter horizontal en input-name y 3 Pressables Pie hábil.
+          paddingHorizontal: spacing[1],
+          paddingVertical: 0,
           gap: spacing[1],
           flexShrink: 0,
         }}
