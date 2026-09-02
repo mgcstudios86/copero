@@ -85,7 +85,18 @@ export default function TemporadaScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['bottom']}>
       <ScrollView
-        contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4] }]}
+        contentContainerStyle={[
+          styles.container,
+          {
+            gap: spacing[5],
+            padding: spacing[4],
+            // MGC-1194 (reopen post PR-325/326): el <Banner /> cubre los últimos
+            // ~150dp sobre ZY22G728HN. Sin paddingBottom extra el último card
+            // (incluido el CTA secundario "Jugar temporada") queda recortado
+            // contra el banner — patrón idéntico a club.tsx MGC-832.
+            paddingBottom: spacing[4] + 156,
+          },
+        ]}
         testID="temporada-screen"
       >
         {/* Hero block */}
@@ -231,46 +242,58 @@ export default function TemporadaScreen() {
             la carrera hasta el retiro + navega al resumen de fin de carrera.
             MGC-249: agregamos "Siguiente semana" como loop semanal fino
             antes del botón anual. QA valida feedback bar con advance(). */}
-        <View style={{ gap: spacing[3] }}>
-          <Button
-            label={`Siguiente semana (${profile.week}/38)`}
-            onPress={onNextWeek}
-            variant="primary"
-            size="lg"
-            fullWidth
-            testID="btn-temporada-next-week"
-            disabled={stage === 'retirement'}
-            accessibilityHint="Avanza una semana de la temporada: drena lesión y rota eventos semanales"
-          />
-          <Button
-            label="Jugar temporada"
-            onPress={onAdvance}
-            variant="secondary"
-            size="lg"
-            fullWidth
-            testID="btn-temporada-play"
-            disabled={stage === 'retirement'}
-            accessibilityHint="Simula una temporada de partidos y evoluciona OVR, edad y stats"
-          />
-          <Button
-            label="Retirarme"
-            onPress={onRunAll}
-            variant="secondary"
-            size="lg"
-            fullWidth
-            testID="btn-temporada-retire"
-            disabled={stage === 'retirement'}
-            accessibilityHint="Cierra la carrera y abre el resumen final con partidos, goles, asist y OVR final"
-          />
-          {stage === 'retirement' ? (
+        {/* MGC-1194 (reopen): flexDirection column explícito + flexShrink:0
+            en cada hijo evita que el botón secondary "Jugar temporada" se
+            colapse a 9dp cuando el contenedor gap compite con el outer
+            ScrollView. Mismo patrón que field-map-wrapper MGC-1324. */}
+        <View style={{ flexDirection: 'column', gap: spacing[3] }}>
+          <View style={{ flexShrink: 0 }}>
             <Button
-              label="Ver fin de carrera"
-              onPress={onRetire}
+              label={`Siguiente semana (${profile.week}/38)`}
+              onPress={onNextWeek}
               variant="primary"
               size="lg"
               fullWidth
-              testID="btn-temporada-retire-summary"
+              testID="btn-temporada-next-week"
+              disabled={stage === 'retirement'}
+              accessibilityHint="Avanza una semana de la temporada: drena lesión y rota eventos semanales"
             />
+          </View>
+          <View style={{ flexShrink: 0 }}>
+            <Button
+              label="Jugar temporada"
+              onPress={onAdvance}
+              variant="secondary"
+              size="lg"
+              fullWidth
+              testID="btn-temporada-play"
+              disabled={stage === 'retirement'}
+              accessibilityHint="Simula una temporada de partidos y evoluciona OVR, edad y stats"
+            />
+          </View>
+          <View style={{ flexShrink: 0 }}>
+            <Button
+              label="Retirarme"
+              onPress={onRunAll}
+              variant="secondary"
+              size="lg"
+              fullWidth
+              testID="btn-temporada-retire"
+              disabled={stage === 'retirement'}
+              accessibilityHint="Cierra la carrera y abre el resumen final con partidos, goles, asist y OVR final"
+            />
+          </View>
+          {stage === 'retirement' ? (
+            <View style={{ flexShrink: 0 }}>
+              <Button
+                label="Ver fin de carrera"
+                onPress={onRetire}
+                variant="primary"
+                size="lg"
+                fullWidth
+                testID="btn-temporada-retire-summary"
+              />
+            </View>
           ) : null}
         </View>
 
