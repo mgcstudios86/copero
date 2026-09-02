@@ -277,68 +277,6 @@ export default function IdentityScreen() {
           </Text>
         </View>
       </View>
-
-      {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
-          height:240 + maxHeight:240 + overflow:hidden fuerzan el clamp al
-          intrinsic height del JerseyPreview md (160x200) + padding + labels,
-          evitando que RN-Android lo expanda al tamaño del viewport y empuje
-          secciones inferiores fuera del dump. Patrón MGC-1005. */}
-      <View
-        testID="jersey-preview-wrapper"
-        collapsable={false}
-        style={{
-          backgroundColor: colors.surface,
-          borderRadius: radii.lg,
-          marginHorizontal: spacing[4],
-          marginBottom: spacing[3],
-          padding: spacing[3],
-          borderWidth: 1,
-          borderColor: colors.border,
-          alignItems: 'center',
-          gap: spacing[2],
-          height: 240,
-          maxHeight: 240,
-          overflow: 'hidden',
-          flexShrink: 0,
-        }}
-      >
-        <Text style={{ color: colors.textMuted, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
-          VISTA PREVIA DE CAMISETA
-        </Text>
-        {/* JerseyPreview renderiza SVG del país con dorsal + apellido.
-            Contraste dorsal/jersey verificado AA WCAG por MGC-465.
-            Lazy-loaded (MGC-482) para code-split fuera del chunk inicial.
-            Placeholder mantiene dimensiones fijas para evitar CLS. */}
-        <Suspense
-          fallback={
-            <View
-              testID="jersey-preview-fallback"
-              accessibilityElementsHidden
-              style={{ width: 160, height: 200, borderRadius: 18, backgroundColor: colors.surface2 }}
-            />
-          }
-        >
-          <JerseyPreview
-            countryCode={profile.nationalityCode}
-            number={profile.number}
-            name={profile.name}
-            size="md"
-            testID="identity-jersey-preview"
-          />
-        </Suspense>
-        <Text
-          style={{
-            color: colors.textMuted,
-            fontSize: fontSize.sm,
-            lineHeight: 16,
-            height: 16,
-            minHeight: 16,
-            includeFontPadding: false,
-          }}
-        >
-          {profile.position} · OVR 50
-        </Text>
-      </View>
       {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
           (sibling de `identity-fixed-form`). Patrón canónico MGC-751/PR-254
           (commit 6be789c + 403b380) extendido al field map. Bajo el fold del
@@ -353,127 +291,6 @@ export default function IdentityScreen() {
           → Field map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se
           mete dentro del translateY del `identity-sticky-footer` (MGC-754) — el
           field map no esquiva IME (es tap target, no input de texto). */}
-      {/* MGC-843: nationality-section extraída del ScrollView a View fijo
-          hermano del ScrollView (sibling de field-map-section y
-          identity-fixed-form). Tras PR #260 (MGC-807) el field-map-section
-          ocupaba ~1500px del viewport (aspectRatio 0.7 sobre ancho 1048),
-          comprimiendo el ScrollView a ~250px de altura en ZY22G728HN 1080x2400
-          y dejando Nacionalidad, stepper y Continue clipeados del primer layout
-          pass (QA MGC-840 FAIL crítico: identity screen renderizaba SOLO
-          field-map + input-name). El listado interno de países mantiene su
-          propio ScrollView anidado con `nestedScrollEnabled` para no perder
-          scroll dentro del bloque, replicando el patrón canónico MGC-751/
-          PR-254 aplicado a Nacionalidad. NO se mete dentro del translateY
-          del identity-sticky-footer (MGC-754) — el campo de búsqueda de
-          país esquiva el IME solo si gana foco, vía KeyboardAvoidingView
-          del wrapper padre. */}
-      <View
-        testID="nationality-section"
-        collapsable={false}
-        style={{
-          backgroundColor: colors.bg,
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          padding: spacing[4],
-          flexShrink: 0,
-        }}
-      >
-        <Field label="Nacionalidad">
-          <TextInput
-            value={nationalityQuery}
-            onChangeText={setNationalityQuery}
-            placeholder="Buscar país…"
-            placeholderTextColor={colors.textMuted}
-            autoCorrect={false}
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                borderColor: colors.borderStrong,
-                borderRadius: radii.md,
-                paddingHorizontal: spacing[3],
-                paddingVertical: spacing[3],
-                fontSize: fontSize.base,
-                marginBottom: spacing[2],
-              },
-            ]}
-            accessibilityLabel="Buscar nacionalidad"
-            testID="input-nationality-search"
-          />
-          <View
-            style={{
-              maxHeight: 220,
-              borderRadius: radii.md,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.surface,
-            }}
-          >
-            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-              {filteredNationalities.map((n) => {
-                const active = profile.nationalityCode === n.code;
-                return (
-                  <Pressable
-                    key={n.code}
-                    onPress={() => {
-                      setNationality(n.code);
-                      setNationalityQuery('');
-                    }}
-                    {...onKeyActivate(() => {
-                      setNationality(n.code);
-                      setNationalityQuery('');
-                    })}
-                    collapsable={false}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: spacing[3],
-                      paddingHorizontal: spacing[3],
-                      paddingVertical: spacing[3],
-                      minHeight: 56,
-                      borderBottomWidth: 1,
-                      borderBottomColor: colors.border,
-                      backgroundColor: active ? colors.primarySoft : 'transparent',
-                    }}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
-                    // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
-                    // `getByTestId('country-ARG')`. Alias solo para AR;
-                    // resto del mundo mantiene FIFA code como testID
-                    // (no hay specs pendientes que asuman otro esquema).
-                    testID={`country-${n.code === 'AR' ? 'ARG' : n.code}`}
-                  >
-                    <Text style={{ fontSize: 22, lineHeight: 28, includeFontPadding: false }}>{n.flag}</Text>
-                    <Text
-                      style={{
-                        color: active ? colors.primary : colors.text,
-                        fontSize: fontSize.base,
-                        fontWeight: active ? fontWeight.semibold : fontWeight.regular,
-                        lineHeight: 22,
-                        includeFontPadding: false,
-                      }}
-                    >
-                      {n.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-              {filteredNationalities.length === 0 ? (
-                <Text
-                  style={{
-                    color: colors.textMuted,
-                    padding: spacing[3],
-                    fontSize: fontSize.sm,
-                  }}
-                >
-                  Sin coincidencias.
-                </Text>
-              ) : null}
-            </ScrollView>
-          </View>
-        </Field>
-      </View>
       {/* MGC-981: league-selector-wrapper colapsado a height:88 explícito.
           Yoga reporta h=220 sin height (Field label + Pressable minHeight:56
           + padding spacing[4] suma >220 en fresh-mount Android). Patrón
@@ -643,6 +460,191 @@ export default function IdentityScreen() {
         </Field>
       </View>
       </ScrollView>
+      {/* MGC-1404: jersey-preview-wrapper extraído del ScrollView a View fijo
+          hermano del ScrollView (sibling de nationality-section +
+          identity-fixed-form + identity-fixed-field-map). Patrón canónico
+          MGC-1005 + MGC-1314/PR-327 aplicado al Jersey: vivir fuera del
+          measure pass del ScrollView evita el clipping del viewport
+          visible en ZY22G728HN 1080x2400 density 400 (MGC-1396 FAIL 3/4 AC
+          sobre APK 516d735). height:240 + maxHeight:240 + overflow:hidden
+          + flexShrink:0 mantienen el clamp al intrinsic height del
+          JerseyPreview md (160x200) + padding + labels. NO se reintroduce
+          aspectRatio / flexBasis / flexGrow (lección MGC-1290 PR-334 —
+          reintroducir aspectRatio en el wrapper fijo empuja field-map fuera
+          del viewport). */}
+      <View
+        testID="jersey-preview-wrapper"
+        collapsable={false}
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: radii.lg,
+          marginHorizontal: spacing[4],
+          marginBottom: spacing[3],
+          padding: spacing[3],
+          borderWidth: 1,
+          borderColor: colors.border,
+          alignItems: 'center',
+          gap: spacing[2],
+          height: 240,
+          maxHeight: 240,
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}
+      >
+        <Text style={{ color: colors.textMuted, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
+          VISTA PREVIA DE CAMISETA
+        </Text>
+        {/* JerseyPreview renderiza SVG del país con dorsal + apellido.
+            Contraste dorsal/jersey verificado AA WCAG por MGC-465.
+            Lazy-loaded (MGC-482) para code-split fuera del chunk inicial.
+            Placeholder mantiene dimensiones fijas para evitar CLS. */}
+        <Suspense
+          fallback={
+            <View
+              testID="jersey-preview-fallback"
+              accessibilityElementsHidden
+              style={{ width: 160, height: 200, borderRadius: 18, backgroundColor: colors.surface2 }}
+            />
+          }
+        >
+          <JerseyPreview
+            countryCode={profile.nationalityCode}
+            number={profile.number}
+            name={profile.name}
+            size="md"
+            testID="identity-jersey-preview"
+          />
+        </Suspense>
+        <Text
+          style={{
+            color: colors.textMuted,
+            fontSize: fontSize.sm,
+            lineHeight: 16,
+            height: 16,
+            minHeight: 16,
+            includeFontPadding: false,
+          }}
+        >
+          {profile.position} · OVR 50
+        </Text>
+      </View>
+      {/* MGC-1404: nationality-section extraída del ScrollView a View fijo
+          hermano del ScrollView (sibling de jersey-preview-wrapper +
+          identity-fixed-form + identity-fixed-field-map). Patrón MGC-751/
+          PR-254 + MGC-1314/PR-327 extendido a Nacionalidad: bajo el fold
+          del ScrollView (y1 > 1638 en ZY22G728HN 1080x2400) RN-Android
+          clipea los bounds de los wrappers collapsable={false} al viewport
+          visible (MGC-1396 FAIL: nationality-section invisible en uidump
+          fresh-mount pese a PR-332 516d735c). El extracto a View fijo
+          hermano del ScrollView garantiza bounds positivos en uiautomator
+          sin depender del scroll position. El listado interno de países
+          mantiene su propio ScrollView anidado con `nestedScrollEnabled`
+          para no perder scroll dentro del bloque. NO se mete dentro del
+          translateY del identity-sticky-footer (MGC-754) — el campo de
+          búsqueda de país esquiva el IME solo si gana foco, vía
+          KeyboardAvoidingView del wrapper padre. */}
+      <View
+        testID="nationality-section"
+        collapsable={false}
+        style={{
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          padding: spacing[4],
+          flexShrink: 0,
+        }}
+      >
+        <Field label="Nacionalidad">
+          <TextInput
+            value={nationalityQuery}
+            onChangeText={setNationalityQuery}
+            placeholder="Buscar país…"
+            placeholderTextColor={colors.textMuted}
+            autoCorrect={false}
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+                borderColor: colors.borderStrong,
+                borderRadius: radii.md,
+                paddingHorizontal: spacing[3],
+                paddingVertical: spacing[3],
+                fontSize: fontSize.base,
+                marginBottom: spacing[2],
+              },
+            ]}
+            accessibilityLabel="Buscar nacionalidad"
+            testID="input-nationality-search"
+          />
+          <View
+            style={{
+              maxHeight: 220,
+              borderRadius: radii.md,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+            }}
+          >
+            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+              {filteredNationalities.map((n) => {
+                const active = profile.nationalityCode === n.code;
+                return (
+                  <Pressable
+                    key={n.code}
+                    onPress={() => {
+                      setNationality(n.code);
+                      setNationalityQuery('');
+                    }}
+                    {...onKeyActivate(() => {
+                      setNationality(n.code);
+                      setNationalityQuery('');
+                    })}
+                    collapsable={false}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: spacing[3],
+                      paddingHorizontal: spacing[3],
+                      paddingVertical: spacing[3],
+                      minHeight: 56,
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.border,
+                      backgroundColor: active ? colors.primarySoft : 'transparent',
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    testID={`country-${n.code === 'AR' ? 'ARG' : n.code}`}
+                  >
+                    <Text style={{ fontSize: 22, lineHeight: 28, includeFontPadding: false }}>{n.flag}</Text>
+                    <Text
+                      style={{
+                        color: active ? colors.primary : colors.text,
+                        fontSize: fontSize.base,
+                        fontWeight: active ? fontWeight.semibold : fontWeight.regular,
+                        lineHeight: 22,
+                        includeFontPadding: false,
+                      }}
+                    >
+                      {n.name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+              {filteredNationalities.length === 0 ? (
+                <Text
+                  style={{
+                    color: colors.textMuted,
+                    padding: spacing[3],
+                    fontSize: fontSize.sm,
+                  }}
+                >
+                  Sin coincidencias.
+                </Text>
+              ) : null}
+            </ScrollView>
+          </View>
+        </Field>
+      </View>
       {/* MGC-751: section fija fuera del ScrollView con los wrappers que QA
           necesita testear (input-name-wrapper + btn-foot-row). Mismo patrón
           que el stepper sticky de MGC-585/PR-223 (ea57f8b) y MGC-744/PR-252
