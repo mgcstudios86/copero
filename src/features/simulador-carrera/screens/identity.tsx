@@ -233,9 +233,24 @@ export default function IdentityScreen() {
           Refs: [[mgc1257-outer-scrollview-tree]], MGC-711, MGC-751, MGC-806,
           MGC-807, MGC-811, MGC-840, MGC-843, MGC-1016, MGC-1086, MGC-1222,
           MGC-1299. */}
+      {/* MGC-1428 — opción B (MGC-1411) re-aplicada fielmente. outer ScrollView
+          cubre TODO el árbol scrollable. field-map-section es SIBLING directo
+          del outer scroll (hermano visible), nationality sin ScrollView anidado
+          (lista plana, maxHeight controlada, países como hijos directos del
+          scroll padre), paddingBottom:240 para que country-CO no invierta
+          bounds contra el sticky-footer (y=1530). Sin padding, los últimos
+          países caen fuera del viewport natural del ScrollView y RN-Android
+          clipea sus bounds contra el sticky-footer top → bottom < top. */}
+      {/* MGC-1428 — ScrollView flex:1 (no flexShrink:1) + sticky-footer
+          position:absolute bottom:0 (overlap, no consume flex). Spec MGC-1411
+          opción B fiel: outer ScrollView reclama TODO el alto del kavContent
+          (flexBasis:0 con {flex:1}) antes que Yoga distribuya entre siblings.
+          sticky-footer absolute no compite por altura, solo overlapea.
+          paddingBottom:240 en scrollContent despeja el area del overlap para
+          que country-CO (último país) no invierta bounds contra el footer top. */}
       <ScrollView
         testID="identity-scroll"
-        style={styles.scroll}
+        style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -400,77 +415,78 @@ export default function IdentityScreen() {
             accessibilityLabel="Buscar nacionalidad"
             testID="input-nationality-search"
           />
+          {/* MGC-1428 — lista plana de países (sin ScrollView anidado). Países
+              son hijos directos del outer ScrollView para evitar el clipping
+              de RN-Android sobre bounds anidados. flexWrap mantiene orden
+              vertical, maxHeight acotado por el outer ScrollView + paddingBottom:240. */}
           <View
             style={{
-              maxHeight: 220,
               borderRadius: radii.md,
               borderWidth: 1,
               borderColor: colors.border,
               backgroundColor: colors.surface,
+              overflow: 'hidden',
             }}
           >
-            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-              {filteredNationalities.map((n) => {
-                const active = profile.nationalityCode === n.code;
-                return (
-                  <Pressable
-                    key={n.code}
-                    onPress={() => {
-                      setNationality(n.code);
-                      setNationalityQuery('');
-                    }}
-                    {...onKeyActivate(() => {
-                      setNationality(n.code);
-                      setNationalityQuery('');
-                    })}
-                    collapsable={false}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: spacing[3],
-                      paddingHorizontal: spacing[3],
-                      paddingVertical: spacing[3],
-                      minHeight: 56,
-                      borderBottomWidth: 1,
-                      borderBottomColor: colors.border,
-                      backgroundColor: active ? colors.primarySoft : 'transparent',
-                    }}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
-                    // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
-                    // `getByTestId('country-ARG')`. Alias solo para AR;
-                    // resto del mundo mantiene FIFA code como testID
-                    // (no hay specs pendientes que asuman otro esquema).
-                    testID={`country-${n.code === 'AR' ? 'ARG' : n.code}`}
-                  >
-                    <Text style={{ fontSize: 22, lineHeight: 28, includeFontPadding: false }}>{n.flag}</Text>
-                    <Text
-                      style={{
-                        color: active ? colors.primary : colors.text,
-                        fontSize: fontSize.base,
-                        fontWeight: active ? fontWeight.semibold : fontWeight.regular,
-                        lineHeight: 22,
-                        includeFontPadding: false,
-                      }}
-                    >
-                      {n.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-              {filteredNationalities.length === 0 ? (
-                <Text
-                  style={{
-                    color: colors.textMuted,
-                    padding: spacing[3],
-                    fontSize: fontSize.sm,
+            {filteredNationalities.map((n) => {
+              const active = profile.nationalityCode === n.code;
+              return (
+                <Pressable
+                  key={n.code}
+                  onPress={() => {
+                    setNationality(n.code);
+                    setNationalityQuery('');
                   }}
+                  {...onKeyActivate(() => {
+                    setNationality(n.code);
+                    setNationalityQuery('');
+                  })}
+                  collapsable={false}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing[3],
+                    paddingHorizontal: spacing[3],
+                    paddingVertical: spacing[3],
+                    minHeight: 56,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                    backgroundColor: active ? colors.primarySoft : 'transparent',
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
+                  // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
+                  // `getByTestId('country-ARG')`. Alias solo para AR;
+                  // resto del mundo mantiene FIFA code como testID.
+                  testID={`country-${n.code === 'AR' ? 'ARG' : n.code}`}
                 >
-                  Sin coincidencias.
-                </Text>
-              ) : null}
-            </ScrollView>
+                  <Text style={{ fontSize: 22, lineHeight: 28, includeFontPadding: false }}>{n.flag}</Text>
+                  <Text
+                    style={{
+                      color: active ? colors.primary : colors.text,
+                      fontSize: fontSize.base,
+                      fontWeight: active ? fontWeight.semibold : fontWeight.regular,
+                      lineHeight: 22,
+                      includeFontPadding: false,
+                    }}
+                  >
+                    {n.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            {filteredNationalities.length === 0 ? (
+              <Text
+                style={{
+                  color: colors.textMuted,
+                  padding: spacing[3],
+                  fontSize: fontSize.sm,
+                }}
+              >
+                Sin coincidencias.
+              </Text>
+            ) : null}
           </View>
         </Field>
       </View>
@@ -642,61 +658,133 @@ export default function IdentityScreen() {
           ) : null}
         </Field>
       </View>
-      </ScrollView>
-      {/* MGC-751: section fija fuera del ScrollView con los wrappers que QA
-          necesita testear (input-name-wrapper + btn-foot-row). Mismo patrón
-          que el stepper sticky de MGC-585/PR-223 (ea57f8b) y MGC-744/PR-252
-          (0b41800): vivir fuera del ScrollView evita el clipping del measure
-          pass de RN-Android que reportaba bounds h=-22 / h=-270 fresh-load
-          en ZY22G728HN 1080x2400. El View padre lleva collapsable={false}
-          para garantizar que el subtree entra en la jerarquía nativa
-          reportada por uiautomator, replicando el snippet canónico de
-          MGC-594/PR-227 (commit 6be789c) — ahora aplicado a la sección
-          completa, no solo al wrapper interno.
-
-          Posicionado entre el ScrollView (Header + Jersey + Nacionalidad) y
-          el stepper sticky (número), de modo que el usuario ve:
-          Header+Jersey arriba → scroll para Nacionalidad → Field map (fijo)
-          → Name + Foot siempre visibles → Stepper + Continue. Los wrappers
-          quedan en zona fija (y ≥ 1660 según bounds del layout, fuera del
-          viewport bottom del ScrollView ~y=1638) donde el measure pass NO
-          clipea sus bounds.
-
-          Queda FUERA del wrapper identity-sticky-footer (MGC-754) porque el
-          translateY de IME avoidance solo aplica al stepper+Continue; los
-          inputs Name/Foot no necesitan esquivar el teclado (su input foco
-          ya se gestiona vía KAV). */}
+      {/* MGC-1428 — field-map-section RE-INGRESADO al outer ScrollView como
+          SIBLING visible dentro del scroll (opción B MGC-1411 fiel). Antes
+          vivía como View fijo hermano entre identity-fixed-form y
+          identity-sticky-footer (MGC-1305/MGC-1314) pero eso AUSENTABA
+          identity-fixed-field-map del hierarchy dump fresh-mount. Padding
+          interno spacing[4] arriba/abajo para mantener cohesión visual con
+          el resto del scroll. flexShrink:0 garantiza que el ScrollView no lo
+          comprima contra el sticky-footer (que vive como sibling fuera del
+          scroll). */}
+      <View
+        testID="identity-fixed-field-map"
+        collapsable={false}
+        style={{
+          paddingHorizontal: spacing[4],
+          paddingTop: spacing[4],
+          paddingBottom: spacing[4],
+          gap: spacing[2],
+          flexShrink: 0,
+        }}
+      >
+        <Field label="Posición (tap en el campo)">
+          <View
+            testID="field-map-wrapper"
+            collapsable={false}
+            style={[
+              styles.fieldMapWrapper,
+              {
+                backgroundColor: colors.successSoft,
+                borderColor: colors.borderStrong,
+                borderRadius: radii.lg,
+              },
+            ]}
+            accessibilityLabel="Mapa del campo con posiciones"
+          >
+            {/* Líneas del campo */}
+            <View
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                right: 0,
+                height: 1,
+                backgroundColor: colors.border,
+              }}
+            />
+            <View
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: 0,
+                bottom: 0,
+                width: 1,
+                backgroundColor: colors.border,
+              }}
+            />
+            {POSITIONS.map((pos) => {
+              const active = profile.position === pos.id;
+              return (
+                <Pressable
+                  key={pos.id}
+                  onPress={() => setPosition(pos.id)}
+                  {...onKeyActivate(() => setPosition(pos.id))}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Posición ${pos.label}`}
+                  accessibilityState={{ selected: active }}
+                  testID={`pos-${pos.id}`}
+                  collapsable={false}
+                  style={{
+                    position: 'absolute',
+                    left: `${pos.x * 100}%`,
+                    top: `${pos.y * 100}%`,
+                    transform: [{ translateX: -18 }, { translateY: -18 }],
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    borderWidth: 2,
+                    borderColor: active ? colors.textStrong : colors.border,
+                    backgroundColor: active ? GROUP_COLOR[pos.group] : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: active ? '#0A120E' : colors.text,
+                      fontSize: fontSize.xs,
+                      fontWeight: fontWeight.bold,
+                    }}
+                  >
+                    {pos.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Field>
+      </View>
+      {/* MGC-1432 — intento-5 opción B fiel. identity-fixed-form RE-INGRESADO
+          al outer ScrollView como SIBLING visible (hermano directo, último
+          hijo antes del paddingBottom:240). En intentos previos (5dbdd95
+          attempt-4, d592a2c attempt-5 spec) identity-fixed-form vivía como
+          View fijo hermano entre ScrollView y identity-sticky-footer,
+          consumiendo ~280px del kavContent y dejando ScrollView con
+          1552px en vez de 1832px (viewport completo 732.8dp). El
+          sticky-footer absolute overlap tampoco despejaba los bounds
+          porque el form estaba en zona fija, no en el scroll. Con form
+          DENTRO del scroll, el outer ScrollView reclama TODO el kavContent
+          (único flex child, sticky-footer absolute) y el último hijo
+          (input-name-wrapper / btn-foot-row) cae dentro del paddingBottom
+          zone, accesible tras scroll completo sin quedar tapado por el
+          footer overlap. pointerEvents='box-none' mantiene el spec MGC-1348
+          para que el wrapper no intercepte clicks de country-* Pressables
+          que viven más arriba en el scroll. */}
       <View
         testID="identity-fixed-form"
         collapsable={false}
-        // MGC-1348 — Playwright web flake: el wrapper captura pointer events
-        // del dropdown Nacionalidad que se renderiza dentro del ScrollView
-        // (sibling anterior en flex column). Síntoma: hit-test de RNW hace
-        // pasar "Argentina" como primer match, pero un `<Text>` hijo del
-        // wrapper (label NOMBRE / Pie hábil) intercepta el click porque en
-        // web el área vacía del wrapper (background + padding 0) participa
-        // del hit-test. pointerEvents='box-none' deja el box del wrapper
-        // transparente a clicks (no captura) mientras los hijos siguen
-        // recibiendo eventos normalmente (Name input, Foot Pressables).
-        // No afecta Android: en native pointerEvents es no-op cuando el
-        // wrapper tiene content que ocupa su área visible. Belt-and-suspenders
-        // junto al cambio de selector del spec a getByTestId('country-ARG').
+        // MGC-1348 v2 — Playwright web flake: box-none evita que el wrapper
+        // capture clicks de los country-* Pressables que viven más arriba en
+        // el scroll (RNW hit-test pasaba por el wrapper vacío). En Android
+        // box-none es no-op cuando el wrapper tiene content visible.
         pointerEvents="box-none"
         style={{
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
           // MGC-1339 — overshoot fix: padding spacing[1]=4 → spacing[0]=0
-          // (-8dp). QA MGC-1337 midió identity-fixed-form 120.4dp vs CTO
-          // opción C MGC-1332 target 113dp (+7.4dp over budget). El overshoot
-          // forzaba identity-fixed-form + identity-fixed-field-map (499.6dp)
-          // > 499.6dp disponibles antes del sticky-footer → footer 240dp se
-          // clipeaba a 233.2dp (QA FAIL -6.8dp). Compactando padding a 0,
-          // form queda en 112.4dp ≤ 113dp; suma siblings 112.4 + 379.2 +
-          // 240 = 731.6dp ≤ 732.8dp viewport ✓ → footer ya no se clipea y
-          // Yoga respeta height:240 + flexBasis:240. AC testIDs (input-name,
-          // input-foot-izq/der/ambos) intactos; accesibilidad (hit-box ≥36dp)
-          // intacta en inputs (minHeight 40) y Pressables de btn-foot-row.
+          // (-8dp). Compactación preservada al mover dentro del scroll.
           padding: spacing[0],
           gap: spacing[1],
           flexShrink: 0,
@@ -813,6 +901,7 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
+      </ScrollView>
       {/* MGC-1314: cierre del ScrollView externo tras league-selector-wrapper.
           identity-fixed-form e identity-fixed-field-map NO son hijos del
           ScrollView — viven como siblings (líneas 786+) entre el ScrollView y
@@ -850,89 +939,13 @@ export default function IdentityScreen() {
           field-map-wrapper mantiene height:320 + flexBasis:320 + flexShrink:0
           (MGC-1143 spec / MGC-1299 restore / MGC-1309 belt) sin la
           regresión 380dp que MGC-1294 reportó sobre PR-320.
-          */}
-      <View
-        testID="identity-fixed-field-map"
-        collapsable={false}
-        style={styles.fixedFieldMap}
-      >
-        <Field label="Posición (tap en el campo)">
-          <View
-            testID="field-map-wrapper"
-            collapsable={false}
-            style={[
-              styles.fieldMapWrapper,
-              {
-                backgroundColor: colors.successSoft,
-                borderColor: colors.borderStrong,
-                borderRadius: radii.lg,
-              },
-            ]}
-            accessibilityLabel="Mapa del campo con posiciones"
-          >
-            {/* Líneas del campo */}
-            <View
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: 0,
-                right: 0,
-                height: 1,
-                backgroundColor: colors.border,
-              }}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: 0,
-                bottom: 0,
-                width: 1,
-                backgroundColor: colors.border,
-              }}
-            />
-            {POSITIONS.map((pos) => {
-              const active = profile.position === pos.id;
-              return (
-                <Pressable
-                  key={pos.id}
-                  onPress={() => setPosition(pos.id)}
-                  {...onKeyActivate(() => setPosition(pos.id))}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Posición ${pos.label}`}
-                  accessibilityState={{ selected: active }}
-                  testID={`pos-${pos.id}`}
-                  collapsable={false}
-                  style={{
-                    position: 'absolute',
-                    left: `${pos.x * 100}%`,
-                    top: `${pos.y * 100}%`,
-                    transform: [{ translateX: -18 }, { translateY: -18 }],
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    borderWidth: 2,
-                    borderColor: active ? colors.textStrong : colors.border,
-                    backgroundColor: active ? GROUP_COLOR[pos.group] : colors.surface,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: active ? '#0A120E' : colors.text,
-                      fontSize: fontSize.xs,
-                      fontWeight: fontWeight.bold,
-                    }}
-                  >
-                    {pos.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Field>
-      </View>
+
+          MGC-1428 — field-map-section RE-INGRESADO al outer ScrollView como
+          hijo directo (sibling visible dentro del scroll, opción B fiel).
+          El bloque que existía aquí como View fijo hermano fue removido y
+          movido dentro del ScrollView, donde el measure pass del
+          contentContainer lo reporta bounds positivos en el hierarchy dump
+          fresh-mount y no queda AUSENTE. */}
       {/* MGC-754: wrap stepperSticky + footer en `identity-sticky-footer` para
           aplicar translateY simultáneo cuando IME abre. translateY es
           independiente del flex layout del padre y empuja los dos elementos
@@ -944,43 +957,29 @@ export default function IdentityScreen() {
           Vive entre identity-fixed-form (MGC-751) y el cierre del KeyboardAvoidingView.
           identity-fixed-form queda fuera a propósito: sus inputs (Name/Foot)
           no necesitan translateY porque su foco ya lo gestiona KAV. */}
+      {/* MGC-1428 — identity-sticky-footer pasa a position:absolute bottom:0
+          (overlap) en lugar de flex sibling con height:240. Spec MGC-1411
+          opción B: el footer overlapea el bottom del kavContent y NO consume
+          espacio flex del ScrollView. translateY IME avoidance se mantiene
+          sobre el wrapper absolute (Android only).
+          Razón del cambio: el patrón anterior (height/flexBasis:240 + flex
+          sibling) competía con el outer ScrollView por la altura del
+          kavContent; combinado con scroll {flexShrink:1} provocaba Yoga
+          collapse (ver MGC-1416 FAIL diag). Con position:absolute, el footer
+          queda fuera del flex layout y el ScrollView toma TODO el alto
+          disponible. scrollContent.paddingBottom:240 reserva el area del
+          overlap para que el último hijo (country-CO) sea accesible tras
+          scroll completo. */}
       <View
         testID="identity-sticky-footer"
         collapsable={false}
         style={[
-          // MGC-1309 — restaurar flexBasis:240 + flexGrow:0 + flexShrink:0 sobre
-          // identity-sticky-footer (canónico MGC-1283 / 883ac79 cherry-pick de
-          // MGC-1257 f6bfdc8). Sin estas props el sticky-footer compite con el
-          // outer ScrollView por la altura del kavContent flex:1 column y Yoga
-          // reporta wrappers con top > bottom (bounds invertidos) en ZY22G728HN
-          // fresh-mount — patrón MGC-1035 / MGC-751. PR-324 (602a5a7) omitió
-          // este flexBasis al restaurar field-map h=320dp, regresionando el
-          // identity-scroll a h=92dp colapsado y empujando todos los hijos del
-          // ScrollView (jersey, nationality, league, fixed-form, fixed-field-map)
-          // a bounds bottom < top. QA MGC-1307 midió:
-          //   identity-scroll bounds=[0,418][1080,659] h=92dp
-          //   jersey-preview-wrapper bounds=[40,772][1040,659] (bottom<top)
-          //   jersey-name bounds=[365,1038][715,659] (bottom<top)
-          //   input-name bounds=[40,2079][1040,659] (bottom<top)
-          // flexBasis:240 fija el alto del sticky-footer (stepperSticky minHeight
-          // 120 + footer Button lg ~56 + padding ~32 = ~240dp) para que el
-          // ScrollView quede con altura estable y Yoga calcule bounds positivos
-          // para los hijos. flexShrink:0 belt-suspenders para que el OS no lo
-          // comprima en measure pass.
-          //
-          // MGC-1333 — belt-suspenders height:240 explícito. QA MGC-1328 sobre
-          // PR-329 (build-MGC-1326-2212b97) midió identity-sticky-footer 154.8dp
-          // en cold-start sin IME (btn-number-sticky 120 + btn-identity-continue
-          // 18.4 + padding residual 16.4) en vez de 240dp. Con IME abierto el
-          // footer sí llegaba a 240dp. Sospecha: en fresh-mount sin keyboardOffset,
-          // el outer ScrollView flexGrow:1 absorbe toda la altura del kavContent
-          // y Yoga colapsa flexBasis:240 al contenido intrínseco (≈154.8dp). Con
-          // IME abierto, keyboardOffset>0 dispara translateY y re-measure pass
-          // que sí respeta flexBasis. height:240 fuerza el alto nominal
-          // independientemente del flex algorithm — Yoga prioriza height sobre
-          // flexBasis en colisión. Spec CTO MGC-1332 opción C: form 113dp +
-          // field-map 320dp + footer 240dp = 732.2 ≤ 732.8dp (slack 0.6dp).
-          { height: 240, flexBasis: 240, flexGrow: 0, flexShrink: 0 },
+          {
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+          },
           Platform.OS === 'android' && keyboardOffset > 0
             ? { transform: [{ translateY: -keyboardOffset }] }
             : null,
@@ -1188,7 +1187,19 @@ const styles = StyleSheet.create({
   // todo el alto disponible dejando identity-sticky-footer (flexBasis:240
   // flexShrink:0) como único sibling siempre visible.
   scroll: { flexGrow: 1, flexShrink: 1 },
-  scrollContent: { flexGrow: 1 },
+  // MGC-1428 — paddingBottom:240 para reservar el alto del sticky-footer al
+  // fondo del ScrollView. Sin esto, los últimos países (country-CO) caen
+  // debajo del viewport natural y RN-Android clipea sus bounds contra el
+  // sticky-footer top y=1530 → bottom < top (invertido). Spec MGC-1411
+  // opción B: outer ScrollView + sticky-footer sibling + paddingBottom:240.
+  // MGC-1432 — intento-5 opción B fiel. paddingBottom:240 (sticky-footer
+  // overlap) sin flexGrow:1. Con flexGrow:1 + content natural ~4500dp >
+  // viewport 1832px, RN-Android medía el ScrollView al contenido intrínseco
+  // y lo colapsaba a h≈831px (QA MGC-1429 sobre 5dbdd95). Sin flexGrow:1 el
+  // contentContainer respeta su natural, ScrollView toma TODO el kavContent
+  // (1832px = 732.8dp viewport completo, opción B fiel) y los hijos se
+  // miden por measure pass del contentContainer con bounds reales.
+  scrollContent: { paddingBottom: 240 },
   container: {},
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
@@ -1224,17 +1235,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // MGC-811: wrapper fijo para field-map (Posición) fuera del ScrollView.
-  // flexShrink:0 garantiza que no se comprima cuando compite con el
-  // ScrollView + identity-fixed-form + identity-sticky-footer. padding
-  // uniforme mantiene cohesión visual con identity-fixed-form.
-  fixedFieldMap: {
-    backgroundColor: 'transparent',
-    borderTopColor: 'transparent',
-    padding: 16,
-    gap: 8,
-    flexShrink: 0,
-  },
   // MGC-821: aspectRatio 0.7 + width 100% generaba ~1497px de alto en
   // ZY22G728HN 1080x2400, empujando identity-sticky-footer debajo del
   // viewport y ocultando nationality/sticky-stepper/btn-identity-continue.
@@ -1256,6 +1256,9 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     flexShrink: 0,
   },
+  // MGC-1428 — fixedFieldMap style retirado: identity-fixed-field-map ya no
+  // vive fuera del ScrollView. El wrapper ahora es hijo directo del outer
+  // scroll y su padding/gap se aplican inline en el JSX (ver bloque arriba).
   // MGC-831: colores del wrapper se aplican inline (StyleSheet.create
   // corre a module-scope, fuera del alcance de useTheme() — colors/radii
   // solo viven dentro del componente).
