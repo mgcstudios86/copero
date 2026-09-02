@@ -1,8 +1,13 @@
-# release-internal.yml — Copero (MGC-250, skill expo-cicd-workflows §release-internal)
+# release-internal.yml — Copero (MGC-250, MGC-1374, skill expo-cicd-workflows §release-internal)
 # Pipeline canónico: merge a main → build --local Android + iOS → submit --track internal.
 # Política §8.3 (engineering-workflow): builds --local; runner self-hosted (copero-ci).
 # Sólo `internal` como destino. Promoción a alpha/production la hace el operador a mano.
-# CLAUDE.md §Regla dura: TODOS los jobs usan runs-on: [self-hosted, copero-ci, Linux].
+#
+# MGC-1374: el job android-internal se movió a runner-02 (copero-ci, macOS).
+# El runner-01 (VPS mgcstudios-01, 954 MB / 2 vCPU) no sostiene Android:
+# historial 0/30 success — mismo motivo que sacó Android de eas.yml en MGC-1263.
+# Los self-hosted runners son single-job; mover Android al mismo runner que iOS
+# libera runner-01 para que ci.yml y eas.yml puedan respirar sin starvation.
 
 name: release-internal (copero)
 
@@ -21,7 +26,12 @@ permissions:
 jobs:
   android-internal:
     name: android build + submit internal (eas build --local)
-    runs-on: [self-hosted, copero-ci, Linux]
+    # MGC-1374: Android migrado de Linux a macOS (runner-02). Historial 0/30 success
+    # sobre runner-01 (954 MB / 2 vCPU); mismo argumento que sacó Android de eas.yml
+    # en MGC-1263. Concurrency cancel-in-progress ya está arriba; con un único job
+    # por runner self-hosted, no hay contención cruzada entre android-internal e
+    # ios-internal porque la job ios usa el mismo label y se serializa naturalmente.
+    runs-on: [self-hosted, copero-ci, macOS]
     timeout-minutes: 60
     env:
       # Skill local-build §Java setup: en el runner copero-ci JDK 17 está disponible vía default.

@@ -1,4 +1,4 @@
-# eas.yml — Copero (MGC-290, MGC-379, MGC-1206, MGC-1263)
+# eas.yml — Copero (MGC-290, MGC-379, MGC-1206, MGC-1263, MGC-1374)
 #
 # Política vigente desde MGC-1263 (opción C CEO MGC-1150):
 #   - APK QA **NO** se produce en CI. La job android se transformó en smoke
@@ -54,6 +54,10 @@ jobs:
   changes:
     name: detect changed paths
     runs-on: [self-hosted, copero-ci, Linux]
+    # MGC-1374: el runner-01 es single-job self-hosted; un checkout colgado o un
+    # paths-filter trabado bloquea todo el FIFO detrás. 10 min es generoso para
+    # checkout + paths-filter sobre el árbol de Copero.
+    timeout-minutes: 10
     outputs:
       android: ${{ steps.filter.outputs.android }}
       ios: ${{ steps.filter.outputs.ios }}
@@ -92,8 +96,11 @@ jobs:
     # MGC-1263: este job NO produce APK. Es solo el smoke que antes convivía
     # dentro de `preview-android` (lint + typecheck + config validate).
     # El APK viene de `eas --local` en Mac (mobile-developer), ver CLAUDE.md.
+    # MGC-1374: timeout explícito. Históricamente un `npm ci` se colgaba al
+    # final del job y bloqueaba el runner horas (run 33572157012 + 6 más FIFO).
     name: smoke android (lint + typecheck + config validate)
     runs-on: [self-hosted, copero-ci, Linux]
+    timeout-minutes: 20
     needs: changes
     if: needs.changes.outputs.android == 'true' || needs.changes.outputs.core == 'true'
     steps:
@@ -166,8 +173,12 @@ jobs:
     # runner-02 (Mac mini ARM64) con profile preview-ios-sim (no requiere
     # distribution cert). Migrado en MGC-1132 (PR #296 f19052c) tras
     # starvation del runner-01.
+    # MGC-1374: timeout 50 min. eas build --local + simulador iOS puede
+    # demorar 25-35 min en cold cache; 50 deja margen sin quedar colgado
+    # indefinidamente si la queue de EAS no responde.
     name: preview ios (eas build --local, simulator)
     runs-on: [self-hosted, copero-ci, macOS]
+    timeout-minutes: 50
     needs: changes
     if: needs.changes.outputs.ios == 'true' || needs.changes.outputs.core == 'true'
     steps:
