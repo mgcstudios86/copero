@@ -668,20 +668,41 @@ export default function IdentityScreen() {
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          padding: spacing[4],
-          gap: spacing[4],
+          // MGC-1339 — overshoot fix: padding spacing[1]=4 → spacing[0]=0
+          // (-8dp). QA MGC-1337 midió identity-fixed-form 120.4dp vs CTO
+          // opción C MGC-1332 target 113dp (+7.4dp over budget). El overshoot
+          // forzaba identity-fixed-form + identity-fixed-field-map (499.6dp)
+          // > 499.6dp disponibles antes del sticky-footer → footer 240dp se
+          // clipeaba a 233.2dp (QA FAIL -6.8dp). Compactando padding a 0,
+          // form queda en 112.4dp ≤ 113dp; suma siblings 112.4 + 379.2 +
+          // 240 = 731.6dp ≤ 732.8dp viewport ✓ → footer ya no se clipea y
+          // Yoga respeta height:240 + flexBasis:240. AC testIDs (input-name,
+          // input-foot-izq/der/ambos) intactos; accesibilidad (hit-box ≥36dp)
+          // intacta en inputs (minHeight 40) y Pressables de btn-foot-row.
+          padding: spacing[0],
+          gap: spacing[1],
           flexShrink: 0,
         }}
       >
-        {/* Name — MGC-686: wrapper View collapsable=false + minHeight:48 +
-            TextInput collapsable=false. El patrón snippet completo vive
-            ahora en zona fija (no ScrollView) para bounds reales en
-            uiautomator fresh-load. */}
-        <Field label="Nombre">
+        {/* MGC-1330: compactación para liberar 86dp de budget vertical.
+            viewport 732.8dp = identity-fixed-form (113dp target) +
+            identity-fixed-field-map 320dp (ancla MGC-1324) +
+            identity-sticky-footer 240dp (ancla MGC-1286) + 59.6dp slack.
+            Cambios: padding form 16→4, gap form 16→4, Field label gap 8→0,
+            inputs minHeight 48→40, TextInput/Pressable paddingV 12→8,
+            label fontSize 14→12. Total estimado ~105dp. Patrón preserva:
+            field wrapper collapsable=false, label accessibilityRole=text,
+            input hit-box via minHeight:40 + paddingV:8 + border. Refs:
+            [[mgc1330-form-budget]], MGC-632, MGC-686, MGC-1286, MGC-1324. */}
+        <Field
+          label="Nombre"
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
           <View
             testID="input-name-wrapper"
             collapsable={false}
-            style={{ minHeight: 48, width: '100%' }}
+            style={{ minHeight: 40, width: '100%' }}
           >
             <TextInput
               value={profile.name}
@@ -699,7 +720,7 @@ export default function IdentityScreen() {
                   borderColor: colors.borderStrong,
                   borderRadius: radii.md,
                   paddingHorizontal: spacing[3],
-                  paddingVertical: spacing[3],
+                  paddingVertical: spacing[2],
                   fontSize: fontSize.base,
                 },
               ]}
@@ -716,7 +737,11 @@ export default function IdentityScreen() {
             stepper). Si QA reporta flake en los Pressables individuales
             (Izquierdo/Derecho/Ambos), replicar el patrón canónico del
             stepper (collapsable={false} en cada Pressable hijo). */}
-        <Field label="Pie hábil">
+        <Field
+          label="Pie hábil"
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
           <View
             testID="btn-foot-row"
             collapsable={false}
@@ -724,7 +749,7 @@ export default function IdentityScreen() {
               flexDirection: 'row',
               gap: spacing[2],
               width: '100%',
-              minHeight: 48,
+              minHeight: 40,
             }}
           >
             {(['left', 'right', 'both'] as Foot[]).map((f) => {
@@ -738,7 +763,7 @@ export default function IdentityScreen() {
                   collapsable={false}
                   style={{
                     flex: 1,
-                    paddingVertical: spacing[3],
+                    paddingVertical: spacing[2],
                     borderRadius: radii.md,
                     borderWidth: 1,
                     borderColor: active ? colors.primary : colors.borderStrong,
@@ -918,7 +943,20 @@ export default function IdentityScreen() {
           // ScrollView quede con altura estable y Yoga calcule bounds positivos
           // para los hijos. flexShrink:0 belt-suspenders para que el OS no lo
           // comprima en measure pass.
-          { flexBasis: 240, flexGrow: 0, flexShrink: 0 },
+          //
+          // MGC-1333 — belt-suspenders height:240 explícito. QA MGC-1328 sobre
+          // PR-329 (build-MGC-1326-2212b97) midió identity-sticky-footer 154.8dp
+          // en cold-start sin IME (btn-number-sticky 120 + btn-identity-continue
+          // 18.4 + padding residual 16.4) en vez de 240dp. Con IME abierto el
+          // footer sí llegaba a 240dp. Sospecha: en fresh-mount sin keyboardOffset,
+          // el outer ScrollView flexGrow:1 absorbe toda la altura del kavContent
+          // y Yoga colapsa flexBasis:240 al contenido intrínseco (≈154.8dp). Con
+          // IME abierto, keyboardOffset>0 dispara translateY y re-measure pass
+          // que sí respeta flexBasis. height:240 fuerza el alto nominal
+          // independientemente del flex algorithm — Yoga prioriza height sobre
+          // flexBasis en colisión. Spec CTO MGC-1332 opción C: form 113dp +
+          // field-map 320dp + footer 240dp = 732.2 ≤ 732.8dp (slack 0.6dp).
+          { height: 240, flexBasis: 240, flexGrow: 0, flexShrink: 0 },
           Platform.OS === 'android' && keyboardOffset > 0
             ? { transform: [{ translateY: -keyboardOffset }] }
             : null,
