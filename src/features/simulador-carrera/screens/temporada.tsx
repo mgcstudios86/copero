@@ -82,19 +82,30 @@ export default function TemporadaScreen() {
     }
   }, [stage, router]);
 
+  // MGC-1381 — presupuesto vertical exacto del `temporada-cta-footer`.
+  // Cada `Button size="lg"` mide minHeight = max(52, tapTarget) = 52dp
+  // (ver src/design/components/Button.tsx#dims). Reservamos
+  // n*52 + (n-1)*gap(8) + paddingVertical(8)*2 para que Yoga NO tenga que
+  // medir el contenido: sin height explícito el sibling fijo vuelve a
+  // depender del measure pass y reaparece el clipping (MGC-1339).
+  const CTA_HEIGHT = 52;
+  const ctaCount = stage === 'retirement' ? 4 : 3;
+  const ctaFooterHeight =
+    ctaCount * CTA_HEIGHT + (ctaCount - 1) * spacing[2] + spacing[2] * 2;
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['bottom']}>
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={[
           styles.container,
           {
             gap: spacing[5],
             padding: spacing[4],
-            // MGC-1194 (reopen post PR-325/326): el <Banner /> cubre los últimos
-            // ~150dp sobre ZY22G728HN. Sin paddingBottom extra el último card
-            // (incluido el CTA secundario "Jugar temporada") queda recortado
-            // contra el banner — patrón idéntico a club.tsx MGC-832.
-            paddingBottom: spacing[4] + 156,
+            // MGC-1381: el paddingBottom +156 de PR-336 ya no hace falta —
+            // los CTAs salieron del ScrollView a `temporada-cta-footer`
+            // (sibling fijo), así que no hay nada que rescatar del borde
+            // inferior del viewport. Queda el padding simétrico.
           },
         ]}
         testID="temporada-screen"
@@ -237,65 +248,10 @@ export default function TemporadaScreen() {
           ))}
         </View>
 
-        {/* MGC-251 — CTAs del loop. "Jugar temporada" avanza 1 temporada
-            (simula partidos, evoluciona OVR año a año) y "Retirarme" corre
-            la carrera hasta el retiro + navega al resumen de fin de carrera.
-            MGC-249: agregamos "Siguiente semana" como loop semanal fino
-            antes del botón anual. QA valida feedback bar con advance(). */}
-        {/* MGC-1194 (reopen): flexDirection column explícito + flexShrink:0
-            en cada hijo evita que el botón secondary "Jugar temporada" se
-            colapse a 9dp cuando el contenedor gap compite con el outer
-            ScrollView. Mismo patrón que field-map-wrapper MGC-1324. */}
-        <View style={{ flexDirection: 'column', gap: spacing[3] }}>
-          <View style={{ flexShrink: 0 }}>
-            <Button
-              label={`Siguiente semana (${profile.week}/38)`}
-              onPress={onNextWeek}
-              variant="primary"
-              size="lg"
-              fullWidth
-              testID="btn-temporada-next-week"
-              disabled={stage === 'retirement'}
-              accessibilityHint="Avanza una semana de la temporada: drena lesión y rota eventos semanales"
-            />
-          </View>
-          <View style={{ flexShrink: 0 }}>
-            <Button
-              label="Jugar temporada"
-              onPress={onAdvance}
-              variant="secondary"
-              size="lg"
-              fullWidth
-              testID="btn-temporada-play"
-              disabled={stage === 'retirement'}
-              accessibilityHint="Simula una temporada de partidos y evoluciona OVR, edad y stats"
-            />
-          </View>
-          <View style={{ flexShrink: 0 }}>
-            <Button
-              label="Retirarme"
-              onPress={onRunAll}
-              variant="secondary"
-              size="lg"
-              fullWidth
-              testID="btn-temporada-retire"
-              disabled={stage === 'retirement'}
-              accessibilityHint="Cierra la carrera y abre el resumen final con partidos, goles, asist y OVR final"
-            />
-          </View>
-          {stage === 'retirement' ? (
-            <View style={{ flexShrink: 0 }}>
-              <Button
-                label="Ver fin de carrera"
-                onPress={onRetire}
-                variant="primary"
-                size="lg"
-                fullWidth
-                testID="btn-temporada-retire-summary"
-              />
-            </View>
-          ) : null}
-        </View>
+        {/* MGC-1381: los CTAs del loop viven ahora en
+            `temporada-cta-footer`, sibling fijo del ScrollView (abajo del
+            cierre de este ScrollView). Ver comentario allá para la causa
+            raíz del colapso a 9dp. */}
 
         {/* MGC-1017 — Decisión anual. Tres planes (agresivo / mantener /
             cuidarse) que modifican el drift OVR y la chance de lesión del
@@ -495,6 +451,92 @@ export default function TemporadaScreen() {
           })}
         </View>
       </ScrollView>
+
+      {/* MGC-251 — CTAs del loop. "Jugar temporada" avanza 1 temporada
+          (simula partidos, evoluciona OVR año a año) y "Retirarme" corre
+          la carrera hasta el retiro + navega al resumen de fin de carrera.
+          MGC-249: "Siguiente semana" es el loop semanal fino previo al
+          botón anual.
+
+          MGC-1381 — CAUSA RAÍZ del colapso a 9dp. PR-336 (0ac3c76) intentó
+          arreglarlo con `flexDirection: column` + `flexShrink: 0` en cada
+          hijo DENTRO del ScrollView y QA MGC-1378 volvió a medir
+          `btn-temporada-play` en [40,2121][1040,2130] (h=9dp). El
+          `flexShrink` no puede ser la causa: `Button` fuerza
+          `minHeight: max(52, tapTarget)` = 52dp, así que 9dp no es un
+          layout válido de Yoga — es el clipping de RN-Android sobre los
+          descendientes del ScrollView cuya y1 cae más allá del borde
+          inferior del viewport (UIAutomator reporta
+          `getBoundsInScreen()` recortado, no la altura medida). El
+          `paddingBottom: +156` de PR-336 alargaba el contenido pero no
+          movía el botón dentro del viewport, y el `<Banner />` del root
+          layout (`app/_layout.native.tsx`) es un sibling flex — no
+          superpone, así que ese padding era espacio muerto.
+
+          Fix = mismo patrón probado en identity (MGC-807 field-map-section,
+          MGC-843 nationality-section, MGC-1351 identity-fixed-form): sacar
+          el bloque del ScrollView y montarlo como sibling fijo con
+          `height` + `flexBasis` + `flexGrow: 0` + `flexShrink: 0` para que
+          Yoga reserve el alto exacto y los bounds no dependan del measure
+          pass del ScrollView ni de la posición de scroll. Los CTAs quedan
+          siempre visibles y tappables arriba del Banner. */}
+      <View
+        testID="temporada-cta-footer"
+        collapsable={false}
+        style={{
+          height: ctaFooterHeight,
+          flexBasis: ctaFooterHeight,
+          flexGrow: 0,
+          flexShrink: 0,
+          gap: spacing[2],
+          paddingHorizontal: spacing[4],
+          paddingVertical: spacing[2],
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+        }}
+      >
+        <Button
+          label={`Siguiente semana (${profile.week}/38)`}
+          onPress={onNextWeek}
+          variant="primary"
+          size="lg"
+          fullWidth
+          testID="btn-temporada-next-week"
+          disabled={stage === 'retirement'}
+          accessibilityHint="Avanza una semana de la temporada: drena lesión y rota eventos semanales"
+        />
+        <Button
+          label="Jugar temporada"
+          onPress={onAdvance}
+          variant="secondary"
+          size="lg"
+          fullWidth
+          testID="btn-temporada-play"
+          disabled={stage === 'retirement'}
+          accessibilityHint="Simula una temporada de partidos y evoluciona OVR, edad y stats"
+        />
+        <Button
+          label="Retirarme"
+          onPress={onRunAll}
+          variant="secondary"
+          size="lg"
+          fullWidth
+          testID="btn-temporada-retire"
+          disabled={stage === 'retirement'}
+          accessibilityHint="Cierra la carrera y abre el resumen final con partidos, goles, asist y OVR final"
+        />
+        {stage === 'retirement' ? (
+          <Button
+            label="Ver fin de carrera"
+            onPress={onRetire}
+            variant="primary"
+            size="lg"
+            fullWidth
+            testID="btn-temporada-retire-summary"
+          />
+        ) : null}
+      </View>
     </SafeAreaView>
   );
 }
@@ -664,5 +706,9 @@ function YearlyPlanPicker({
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+  // MGC-1381: el ScrollView comparte el viewport con `temporada-cta-footer`.
+  // flex:1 + flexShrink:1 le deja tomar el remanente después de que el
+  // footer reserva su alto fijo.
+  scroll: { flex: 1, flexShrink: 1 },
   container: {},
 });
