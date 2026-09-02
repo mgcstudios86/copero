@@ -437,7 +437,12 @@ export default function IdentityScreen() {
                     }}
                     accessibilityRole="button"
                     accessibilityState={{ selected: active }}
-                    testID={`country-${n.code}`}
+                    // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
+                    // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
+                    // `getByTestId('country-ARG')`. Alias solo para AR;
+                    // resto del mundo mantiene FIFA code como testID
+                    // (no hay specs pendientes que asuman otro esquema).
+                    testID={`country-${n.code === 'AR' ? 'ARG' : n.code}`}
                   >
                     <Text style={{ fontSize: 22, lineHeight: 28, includeFontPadding: false }}>{n.flag}</Text>
                     <Text
@@ -664,6 +669,19 @@ export default function IdentityScreen() {
       <View
         testID="identity-fixed-form"
         collapsable={false}
+        // MGC-1348 — Playwright web flake: el wrapper captura pointer events
+        // del dropdown Nacionalidad que se renderiza dentro del ScrollView
+        // (sibling anterior en flex column). Síntoma: hit-test de RNW hace
+        // pasar "Argentina" como primer match, pero un `<Text>` hijo del
+        // wrapper (label NOMBRE / Pie hábil) intercepta el click porque en
+        // web el área vacía del wrapper (background + padding 0) participa
+        // del hit-test. pointerEvents='box-none' deja el box del wrapper
+        // transparente a clicks (no captura) mientras los hijos siguen
+        // recibiendo eventos normalmente (Name input, Foot Pressables).
+        // No afecta Android: en native pointerEvents es no-op cuando el
+        // wrapper tiene content que ocupa su área visible. Belt-and-suspenders
+        // junto al cambio de selector del spec a getByTestId('country-ARG').
+        pointerEvents="box-none"
         style={{
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
@@ -702,6 +720,9 @@ export default function IdentityScreen() {
           <View
             testID="input-name-wrapper"
             collapsable={false}
+            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
+            // clicks, el TextInput hijo sí. Patrón recursivo Field wrapper.
+            pointerEvents="box-none"
             style={{ minHeight: 40, width: '100%' }}
           >
             <TextInput
@@ -745,6 +766,9 @@ export default function IdentityScreen() {
           <View
             testID="btn-foot-row"
             collapsable={false}
+            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
+            // clicks, los 3 Pressables hijos sí. Patrón recursivo Field wrapper.
+            pointerEvents="box-none"
             style={{
               flexDirection: 'row',
               gap: spacing[2],
@@ -1119,7 +1143,15 @@ function Field({
 }) {
   const { colors, spacing, fontSize, fontWeight } = useTheme();
   return (
-    <View style={[{ gap: spacing[2] }, wrapperStyle]}>
+    // MGC-1348 v2 — pointerEvents='box-none' en el View wrapper de Field.
+    // El wrapper en sí no necesita capturar clicks (su label es solo texto);
+    // sus children (TextInput / Pressable / ScrollView con Pressables) sí
+    // reciben eventos normalmente porque box-none solo afecta al bounding
+    // box del View actual, NO a sus hijos. Necesario para que el label
+    // <Text> interno (que en RNW es un <div>) no intercepte clicks del
+    // dropdown Nacionalidad cuando el wrapper padre identity-fixed-form
+    // lo contiene — patrón QA MGC-1350 / PR-332 v2.
+    <View pointerEvents="box-none" style={[{ gap: spacing[2] }, wrapperStyle]}>
       <Text
         style={[
           {
