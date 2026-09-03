@@ -874,7 +874,12 @@ export default function IdentityScreen() {
           borderTopWidth: StyleSheet.hairlineWidth,
           // MGC-1339 — overshoot fix: padding spacing[1]=4 → spacing[0]=0
           // (-8dp). Compactación preservada al mover dentro del scroll.
-          padding: spacing[0],
+          // MGC-1347 — restaurar paddingHorizontal spacing[1]=4dp para que
+          // TextInput Nombre y Pressables Pie hábil no peguen contra el
+          // borde lateral. paddingVertical=0 explícito para preservar el
+          // budget vertical de 113dp del AC MGC-1341.
+          paddingHorizontal: spacing[1],
+          paddingVertical: 0,
           gap: spacing[1],
           flexShrink: 0,
         }}
