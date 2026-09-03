@@ -98,6 +98,26 @@ jobs:
           echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
           echo "[release-internal] EXPO_TOKEN cargado (length=${#EXPO_TOKEN})"
 
+          # MGC-1494: cargar PLAY_STORE_SERVICE_ACCOUNT_KEY desde Infisical /mgcstudios/playconsole env=prod
+          # y materializar ./secrets/play-store-service-account.json para eas submit.
+          # Double-jq: 1) extrae string JSON del array, 2) parsea y re-emite con \n reales.
+          mkdir -p secrets
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "ERROR: jq no instalado en runner. POLICIES §3: escalar al CTO." >&2
+            exit 1
+          fi
+          infisical export \
+            --projectId "${INFISICAL_PROJECT_ID}" \
+            --env=prod --path=/mgcstudios/playconsole --format=json \
+            --token "${INFISICAL_JWT}" 2>/dev/null \
+            | jq -r '.[] | select(.key=="PLAY_STORE_SERVICE_ACCOUNT_KEY") | .value' \
+            | jq -r . > secrets/play-store-service-account.json
+          if [[ ! -s secrets/play-store-service-account.json ]] || ! jq -e . secrets/play-store-service-account.json >/dev/null 2>&1; then
+            echo "ERROR: PLAY_STORE_SERVICE_ACCOUNT_KEY ausente o inválido en Infisical /mgcstudios/playconsole env=prod." >&2
+            exit 1
+          fi
+          echo "[release-internal] service-account.json (size=$(stat -f %z secrets/play-store-service-account.json))"
+
       - name: eas init (link proyecto no-interactive)
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
