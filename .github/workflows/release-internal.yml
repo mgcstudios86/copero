@@ -132,6 +132,59 @@ jobs:
           echo "aab_path=${ARTIFACT}" >> "$GITHUB_OUTPUT"
           echo "artifact: ${ARTIFACT}"
 
+      - name: Provision Play Store service account JSON (MGC-1494)
+        # eas.json submit.production.android.serviceAccountKeyPath apunta a
+        # ./secrets/play-store-service-account.json. eas submit lee ese path
+        # al momento de subir a Play Console internal; sin él, fall con
+        # "File ./secrets/play-store-service-account.json doesnt exist" (run 33785111961).
+        #
+        # El JSON de service account vive en Infisical en
+        # /mgcstudios/playconsole env=prod, secret PLAY_STORE_SERVICE_ACCOUNT_KEY
+        # (mismo principal que el shell local — ver MGC-428 / path memory).
+        # Lo exportamos con --format=json (Infisical lo devuelve crudo) y lo
+        # escribimos a ./secrets/play-store-service-account.json con mode 0600.
+        # ./secrets/ ya está gitignored (línea 51-56 de .gitignore).
+        env:
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          INFISICAL_JWT=$(infisical login --method universal-auth \
+            --client-id "${INFISICAL_CLIENT_ID}" \
+            --client-secret "${INFISICAL_CLIENT_SECRET}" \
+            --plain --silent 2>/dev/null | tail -1)
+          if [[ -z "${INFISICAL_JWT}" ]]; then
+            echo "ERROR: universal-auth login falló (JWT vacío). Escalar al CTO." >&2
+            exit 1
+          fi
+          # --format=json devuelve un array de {key, value, ...}. Filtramos por
+          # key PLAY_STORE_SERVICE_ACCOUNT_KEY para evitar falsos positivos del
+          # gotcha de la API raw (ver memory copero-playstore-service-account-path).
+          SA_JSON=$(infisical export \
+            --projectId "${INFISICAL_PROJECT_ID}" \
+            --env=prod --path=/mgcstudios/playconsole --format=json \
+            --token "${INFISICAL_JWT}" 2>/dev/null \
+            | python3 -c 'import json,sys
+          data=json.load(sys.stdin)
+          match=[s["value"] for s in data if s.get("key")=="PLAY_STORE_SERVICE_ACCOUNT_KEY"]
+          if not match:
+            sys.stderr.write("ERROR: PLAY_STORE_SERVICE_ACCOUNT_KEY no encontrado en /mgcstudios/playconsole env=prod.\n")
+            sys.exit(1)
+          sys.stdout.write(match[0])')
+          if [[ -z "${SA_JSON}" || "${SA_JSON}" == "placeholder" ]]; then
+            echo "ERROR: PLAY_STORE_SERVICE_ACCOUNT_KEY ausente o placeholder." >&2
+            exit 1
+          fi
+          # Validar que es JSON parseable antes de escribirlo al disco.
+          printf '%s' "${SA_JSON}" | python3 -c 'import json,sys; json.load(sys.stdin)' >/dev/null \
+            || { echo "ERROR: PLAY_STORE_SERVICE_ACCOUNT_KEY no es JSON válido." >&2; exit 1; }
+          mkdir -p secrets
+          printf '%s' "${SA_JSON}" > secrets/play-store-service-account.json
+          chmod 600 secrets/play-store-service-account.json
+          SIZE=$(stat -f %z secrets/play-store-service-account.json 2>/dev/null || stat -c %s secrets/play-store-service-account.json)
+          echo "[release-internal] secrets/play-store-service-account.json provisionado (size=${SIZE} bytes)"
+
       - name: Submit to internal (Android)
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
