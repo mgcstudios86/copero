@@ -76,7 +76,9 @@ module.exports = ({ config } = {}) => ({
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
-  newArchEnabled: true,
+  experiments: {
+    newArchEnabled: true,
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.mgcstudios.copero',
@@ -109,6 +111,14 @@ module.exports = ({ config } = {}) => ({
   },
   plugins: [
     'expo-router',
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/splash.png',
+        resizeMode: 'contain',
+        backgroundColor: '#0B1320',
+      },
+    ],
     ...admobPlugin,
   ],
   // Variables `extra` quedan accesibles via `expo-constants` en runtime.
