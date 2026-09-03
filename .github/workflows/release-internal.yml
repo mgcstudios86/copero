@@ -133,9 +133,9 @@ jobs:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
           mkdir -p dist
-          # MGC-1492: eas build --local escribe por default a /var/folders/.../T/eas-build-local-nodejs/.../
-          # Forzar --output dist/app-release.apk para que Locate AAB pueda encontrarlo.
-          eas build --local --platform android --profile preview --non-interactive --output dist/app-release.apk
+          # MGC-1492 + MGC-1495: preview profile produce app-bundle (.aab, no .apk).
+          # Forzar --output dist/app-release.aab para que Locate AAB pueda encontrarlo.
+          eas build --local --platform android --profile preview --non-interactive --output dist/app-release.aab
 
       - name: Locate AAB/Android APK
         # MGC-1491: eas build --local --profile preview produce app-release.apk por default
@@ -209,9 +209,8 @@ jobs:
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
-          # MGC-1493: eas-cli removió --track; track ahora vive en submit profile (eas.json).
-          # submit.production.android.track=internal. --path apunta al APK localizado.
-          eas submit -p android -e production --path dist/app-release.apk --non-interactive
+          # MGC-1493 + MGC-1495: track viene del submit profile. --path apunta al .aab localizado.
+          eas submit -p android -e production --path dist/app-release.aab --non-interactive
 
       - name: Resumen + SHA256 del artefacto Android
         if: always()
