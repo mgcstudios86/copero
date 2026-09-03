@@ -115,17 +115,20 @@ jobs:
           mkdir -p dist
           eas build --local --platform android --profile preview --non-interactive
 
-      - name: Locate AAB Android
+      - name: Locate AAB/Android APK
+        # MGC-1491: eas build --local --profile preview produce app-release.apk por default
+        # (preview profile no setea android.buildType=app-bundle). Aceptamos *.aab o *.apk
+        # para que Submit to internal (Android) reciba el artefacto firmado real.
         id: locate
         run: |
-          AAB=$(find dist -maxdepth 3 -name '*.aab' -type f | head -1 || true)
-          if [[ -z "${AAB}" ]]; then
-            echo "ERROR: no se encontró AAB Android en dist/" >&2
-            find . -maxdepth 5 -name '*.aab' -type f 2>/dev/null
+          ARTIFACT=$(find dist -maxdepth 3 \( -name '*.aab' -o -name '*.apk' \) -type f | head -1 || true)
+          if [[ -z "${ARTIFACT}" ]]; then
+            echo "ERROR: no se encontró AAB/APK Android en dist/" >&2
+            find . -maxdepth 5 \( -name '*.aab' -o -name '*.apk' \) -type f 2>/dev/null
             exit 1
           fi
-          echo "aab_path=${AAB}" >> "$GITHUB_OUTPUT"
-          echo "AAB: ${AAB}"
+          echo "aab_path=${ARTIFACT}" >> "$GITHUB_OUTPUT"
+          echo "artifact: ${ARTIFACT}"
 
       - name: Submit to internal (Android)
         env:
@@ -133,7 +136,7 @@ jobs:
         run: |
           eas submit --platform android --track internal --non-interactive
 
-      - name: Resumen + SHA256 del AAB Android
+      - name: Resumen + SHA256 del artefacto Android
         if: always()
         run: |
           set -euo pipefail
@@ -142,7 +145,7 @@ jobs:
             SHA=$(sha256sum "${AAB}" | awk '{print $1}')
             SIZE=$(stat -c %s "${AAB}")
             {
-              echo "## AAB Android firmado (copero)"
+              echo "## Artefacto Android firmado (copero)"
               echo "- path: ${AAB}"
               echo "- sha256: ${SHA}"
               echo "- size: ${SIZE} bytes"
@@ -151,7 +154,7 @@ jobs:
               echo "- workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             } >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "WARN: no se encontró AAB; revisa el step locate." >&2
+            echo "WARN: no se encontró artefacto; revisa el step locate." >&2
           fi
 
   ios-internal:
