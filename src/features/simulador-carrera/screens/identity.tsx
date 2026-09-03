@@ -344,103 +344,35 @@ export default function IdentityScreen() {
         </View>
       </View>
 
-      {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
-          height:300 + maxHeight:300 + overflow:hidden fuerzan el clamp al
-          intrinsic height del JerseyPreview md (160x200) + título + label
-          + padding + gaps (≈ 276px), evitando que RN-Android lo expanda al
-          tamaño del viewport y empuje secciones inferiores fuera del dump.
-          Patrón MGC-1005.
-          MGC-1435 — bump 240→300 sobre PR-348. En PR-347 QA reportó
-          jersey-preview bounds=[340,873][740,1249] h=376px overfloweando el
-          wrapper 240px con overflow:hidden → SVG del país clippeado en la
-          mitad inferior. 300px acomoda 200 (jersey) + 20 (title) + 16 (label)
-          + 24 (padding) + 16 (gaps) = 276px con 24px slack. Mantener
-          overflow:hidden como belt para que RN-Android no expanda el
-          wrapper al viewport completo. */}
-      <View
-        testID="jersey-preview-wrapper"
-        collapsable={false}
-        style={{
-          backgroundColor: colors.surface,
-          borderRadius: radii.lg,
-          marginHorizontal: spacing[4],
-          marginBottom: spacing[3],
-          padding: spacing[3],
-          borderWidth: 1,
-          borderColor: colors.border,
-          alignItems: 'center',
-          gap: spacing[2],
-          height: 300,
-          maxHeight: 300,
-          overflow: 'hidden',
-          flexShrink: 0,
-        }}
-      >
-        <Text style={{ color: colors.textMuted, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
-          VISTA PREVIA DE CAMISETA
-        </Text>
-        {/* JerseyPreview renderiza SVG del país con dorsal + apellido.
-            Contraste dorsal/jersey verificado AA WCAG por MGC-465.
-            Lazy-loaded (MGC-482) para code-split fuera del chunk inicial.
-            Placeholder mantiene dimensiones fijas para evitar CLS. */}
-        <Suspense
-          fallback={
-            <View
-              testID="jersey-preview-fallback"
-              accessibilityElementsHidden
-              style={{ width: 160, height: 200, borderRadius: 18, backgroundColor: colors.surface2 }}
-            />
-          }
-        >
-          <JerseyPreview
-            countryCode={profile.nationalityCode}
-            number={profile.number}
-            name={profile.name}
-            size="md"
-            testID="identity-jersey-preview"
-          />
-        </Suspense>
-        <Text
-          style={{
-            color: colors.textMuted,
-            fontSize: fontSize.sm,
-            lineHeight: 16,
-            height: 16,
-            minHeight: 16,
-            includeFontPadding: false,
-          }}
-        >
-          {profile.position} · OVR 50
-        </Text>
-      </View>
-      {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
-          (sibling de `identity-fixed-form`). Patrón canónico MGC-751/PR-254
-          (commit 6be789c + 403b380) extendido al field map. Bajo el fold del
-          ScrollView (y1 > 1638 en ZY22G728HN 1080x2400) RN-Android clipea los
-          bounds al viewport visible y los wrappers collapsable={false} reportan
-          h negativo en el primer dump. QA MGC-806 midió field-map-wrapper
-          h=-538 dentro del ScrollView; el extracto a View fijo hermano
-          garantiza h >= 600 (aspectRatio 0.7 sobre ancho 1048 ≈ 700px) sin
-          depender del measure pass del ScrollView. Posicionado entre el
-          ScrollView y `identity-fixed-form` (MGC-751) para mantener el orden
-          visual original: Header + Jersey (scrollable) → Nacionalidad (fijo)
-          → Field map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se
-          mete dentro del translateY del `identity-sticky-footer` (MGC-754) — el
-          field map no esquiva IME (es tap target, no input de texto). */}
-      {/* MGC-843: nationality-section extraída del ScrollView a View fijo
-          hermano del ScrollView (sibling de field-map-section y
-          identity-fixed-form). Tras PR #260 (MGC-807) el field-map-section
-          ocupaba ~1500px del viewport (aspectRatio 0.7 sobre ancho 1048),
-          comprimiendo el ScrollView a ~250px de altura en ZY22G728HN 1080x2400
-          y dejando Nacionalidad, stepper y Continue clipeados del primer layout
-          pass (QA MGC-840 FAIL crítico: identity screen renderizaba SOLO
-          field-map + input-name). El listado interno de países mantiene su
-          propio ScrollView anidado con `nestedScrollEnabled` para no perder
-          scroll dentro del bloque, replicando el patrón canónico MGC-751/
-          PR-254 aplicado a Nacionalidad. NO se mete dentro del translateY
-          del identity-sticky-footer (MGC-754) — el campo de búsqueda de
-          país esquiva el IME solo si gana foco, vía KeyboardAvoidingView
-          del wrapper padre. */}
+      {/* MGC-1474 — nationality-section REPOSICIONADA como segundo hijo del
+          outer ScrollView (entre identity-header y jersey-preview-wrapper).
+          Causa raíz AC4 FAIL sobre PR-352 (MGC-1473 sobre APK 395aeb9e):
+          en scroll natural order, nationality-section arrancaba en y=1552px
+          con country-ARG y=1823-1963, totalmente overlay por
+          identity-sticky-footer top=1530 → bounds invertidos, no tappable
+          sin scrollUntilVisible. Reordenando, nationality-section queda
+          inmediatamente bajo el header (y≈150dp = y≈375px), country-ARG
+          a y≈420dp = y≈1050px, sobre footer top=1530 → tappable en fresh
+          scroll position sin scrollUntilVisible.
+
+          Layout resultante en ZY22G728HN 1080×2400 density 400:
+            identity-header         y=0     → y=150dp   (375px)
+            nationality-section     y=150dp → y=500dp   (1250px) ← country-ARG @ 1050px
+            jersey-preview-wrapper  y=500dp → y=800dp   (2000px) ← bajo fold, scroll
+            league-selector-wrapper y=800dp → y=888dp   (2220px)
+            identity-fixed-field-map y=888dp → y=1208dp
+            identity-fixed-form     y=1208dp → y=1548dp
+            scrollContent.paddingBottom:240 despeja el footer top y=1530.
+
+          Mantener: cap NATIONALITY_FRESH_LIMIT=5 (MGC-1448), search hint
+          "Escribí para buscar entre las N nacionalidades", testID alias
+          AR→ARG (MGC-1348 v2), lista plana sin ScrollView anidado
+          (MGC-1428 intento-7). NO reintroducir ScrollView anidado.
+          NO extraer nationality del ScrollView a sibling externo — eso
+          reintroduce los problemas de measure pass / clipping que MGC-807
+          / MGC-843 / MGC-1428 ya cerraron. Reordenar dentro del scroll es
+          la mínima superficie de cambio y resuelve AC4 sin tocar contrato
+          ni el cap de 5. */}
       <View
         testID="nationality-section"
         collapsable={false}
@@ -564,6 +496,89 @@ export default function IdentityScreen() {
           ) : null}
         </Field>
       </View>
+      {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
+          height:300 + maxHeight:300 + overflow:hidden fuerzan el clamp al
+          intrinsic height del JerseyPreview md (160x200) + título + label
+          + padding + gaps (≈ 276px), evitando que RN-Android lo expanda al
+          tamaño del viewport y empuje secciones inferiores fuera del dump.
+          Patrón MGC-1005.
+          MGC-1435 — bump 240→300 sobre PR-348. En PR-347 QA reportó
+          jersey-preview bounds=[340,873][740,1249] h=376px overfloweando el
+          wrapper 240px con overflow:hidden → SVG del país clippeado en la
+          mitad inferior. 300px acomoda 200 (jersey) + 20 (title) + 16 (label)
+          + 24 (padding) + 16 (gaps) = 276px con 24px slack. Mantener
+          overflow:hidden como belt para que RN-Android no expanda el
+          wrapper al viewport completo. */}
+      <View
+        testID="jersey-preview-wrapper"
+        collapsable={false}
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: radii.lg,
+          marginHorizontal: spacing[4],
+          marginBottom: spacing[3],
+          padding: spacing[3],
+          borderWidth: 1,
+          borderColor: colors.border,
+          alignItems: 'center',
+          gap: spacing[2],
+          height: 300,
+          maxHeight: 300,
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}
+      >
+        <Text style={{ color: colors.textMuted, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
+          VISTA PREVIA DE CAMISETA
+        </Text>
+        {/* JerseyPreview renderiza SVG del país con dorsal + apellido.
+            Contraste dorsal/jersey verificado AA WCAG por MGC-465.
+            Lazy-loaded (MGC-482) para code-split fuera del chunk inicial.
+            Placeholder mantiene dimensiones fijas para evitar CLS. */}
+        <Suspense
+          fallback={
+            <View
+              testID="jersey-preview-fallback"
+              accessibilityElementsHidden
+              style={{ width: 160, height: 200, borderRadius: 18, backgroundColor: colors.surface2 }}
+            />
+          }
+        >
+          <JerseyPreview
+            countryCode={profile.nationalityCode}
+            number={profile.number}
+            name={profile.name}
+            size="md"
+            testID="identity-jersey-preview"
+          />
+        </Suspense>
+        <Text
+          style={{
+            color: colors.textMuted,
+            fontSize: fontSize.sm,
+            lineHeight: 16,
+            height: 16,
+            minHeight: 16,
+            includeFontPadding: false,
+          }}
+        >
+          {profile.position} · OVR 50
+        </Text>
+      </View>
+      {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
+          (sibling de `identity-fixed-form`). Patrón canónico MGC-751/PR-254
+          (commit 6be789c + 403b380) extendido al field map. Bajo el fold del
+          ScrollView (y1 > 1638 en ZY22G728HN 1080x2400) RN-Android clipea los
+          bounds al viewport visible y los wrappers collapsable={false} reportan
+          h negativo en el primer dump. QA MGC-806 midió field-map-wrapper
+          h=-538 dentro del ScrollView; el extracto a View fijo hermano
+          garantiza h >= 600 (aspectRatio 0.7 sobre ancho 1048 ≈ 700px) sin
+          depender del measure pass del ScrollView. Posicionado entre el
+          ScrollView y `identity-fixed-form` (MGC-751) para mantener el orden
+          visual original: Header + Jersey (scrollable) → Nacionalidad (fijo)
+          → Field map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se
+          mete dentro del translateY del `identity-sticky-footer` (MGC-754) — el
+          field map no esquiva IME (es tap target, no input de texto). */}
       {/* MGC-981: league-selector-wrapper colapsado a height:88 explícito.
           Yoga reporta h=220 sin height (Field label + Pressable minHeight:56
           + padding spacing[4] suma >220 en fresh-mount Android). Patrón
