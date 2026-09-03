@@ -60,26 +60,37 @@ jobs:
       - name: Patch expo-modules-core (worklets executeSync → runSync, MGC-366)
         run: node scripts/patch-expo-modules-core.js
 
-      - name: Load EXPO_TOKEN (Infisical /copero env=prod, MGC-379)
+      - name: Load EXPO_TOKEN (Infisical /copero env=prod, MGC-1486)
+        # MGC-1486: el secret INFISICAL_TOKEN largo de vida no tenía lectura sobre /copero.
+        # Switch a universal-auth JWT generado on-the-fly usando CLIENT_ID+CLIENT_SECRET
+        # (mismo principal que mi shell local — ya verificado que lee /copero OK).
         env:
-          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
         run: |
-          if [[ -z "${INFISICAL_TOKEN:-}" || -z "${INFISICAL_PROJECT_ID:-}" ]]; then
-            echo "ERROR: Infisical secrets ausentes en repo. POLICIES §3: escalar al CTO." >&2
+          if [[ -z "${INFISICAL_CLIENT_ID:-}" || -z "${INFISICAL_CLIENT_SECRET:-}" || -z "${INFISICAL_PROJECT_ID:-}" ]]; then
+            echo "ERROR: Infisical CLIENT_ID/CLIENT_SECRET/PROJECT_ID ausentes en repo. POLICIES §3: escalar al CTO." >&2
+            exit 1
+          fi
+          INFISICAL_JWT=$(infisical login --method universal-auth \
+            --client-id "${INFISICAL_CLIENT_ID}" \
+            --client-secret "${INFISICAL_CLIENT_SECRET}" \
+            --plain --silent 2>/dev/null | tail -1)
+          if [[ -z "${INFISICAL_JWT}" ]]; then
+            echo "ERROR: universal-auth login falló (JWT vacío). Escalar al CTO." >&2
             exit 1
           fi
           EXPO_TOKEN=$(infisical export \
             --projectId "${INFISICAL_PROJECT_ID}" \
-            --env=prod --path=/copero --format=dotenv 2>/dev/null \
-            | grep '^paperclip-expo-eas-token=' | cut -d= -f2-)
-          # Fallback: si la key tiene otro nombre en Infisical, intentar EXPO_TOKEN directo.
-          if [[ -z "${EXPO_TOKEN}" ]]; then
-            EXPO_TOKEN=$(infisical export \
-              --projectId "${INFISICAL_PROJECT_ID}" \
-              --env=prod --path=/copero --format=dotenv 2>/dev/null \
-              | grep '^EXPO_TOKEN=' | cut -d= -f2-)
-          fi
+            --env=prod --path=/copero --format=dotenv \
+            --token "${INFISICAL_JWT}" 2>/dev/null \
+            | grep -E '^(paperclip-expo-eas-token|EXPO_TOKEN)=' | head -1 | cut -d= -f2-)
+          # MGC-1486: dotenv format envuelve defensivamente en single quotes — strip.
+          EXPO_TOKEN="${EXPO_TOKEN#\'}"
+          EXPO_TOKEN="${EXPO_TOKEN%\'}"
+          EXPO_TOKEN="${EXPO_TOKEN#\"}"
+          EXPO_TOKEN="${EXPO_TOKEN%\"}"
           if [[ -z "${EXPO_TOKEN}" || "${EXPO_TOKEN}" == "test" || "${EXPO_TOKEN}" == "placeholder" ]]; then
             echo "ERROR: EXPO_TOKEN ausente o placeholder en Infisical /copero env=prod." >&2
             exit 1
@@ -169,16 +180,37 @@ jobs:
         run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
       - name: Patch expo-modules-core (worklets executeSync → runSync, MGC-366)
         run: node scripts/patch-expo-modules-core.js
-      - name: Load EXPO_TOKEN (Infisical /copero env=prod)
+      - name: Load EXPO_TOKEN (Infisical /copero env=prod, MGC-1486)
+        # MGC-1486: ver android-internal — mismo patrón universal-auth JWT.
         env:
-          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
         run: |
+          INFISICAL_JWT=$(infisical login --method universal-auth \
+            --client-id "${INFISICAL_CLIENT_ID}" \
+            --client-secret "${INFISICAL_CLIENT_SECRET}" \
+            --plain --silent 2>/dev/null | tail -1)
+          if [[ -z "${INFISICAL_JWT}" ]]; then
+            echo "ERROR: universal-auth login falló (JWT vacío). Escalar al CTO." >&2
+            exit 1
+          fi
           EXPO_TOKEN=$(infisical export \
             --projectId "${INFISICAL_PROJECT_ID}" \
-            --env=prod --path=/copero --format=dotenv 2>/dev/null \
+            --env=prod --path=/copero --format=dotenv \
+            --token "${INFISICAL_JWT}" 2>/dev/null \
             | grep -E '^(paperclip-expo-eas-token|EXPO_TOKEN)=' | head -1 | cut -d= -f2-)
+          # MGC-1486: dotenv format envuelve defensivamente en single quotes — strip.
+          EXPO_TOKEN="${EXPO_TOKEN#\'}"
+          EXPO_TOKEN="${EXPO_TOKEN%\'}"
+          EXPO_TOKEN="${EXPO_TOKEN#\"}"
+          EXPO_TOKEN="${EXPO_TOKEN%\"}"
+          if [[ -z "${EXPO_TOKEN}" || "${EXPO_TOKEN}" == "test" || "${EXPO_TOKEN}" == "placeholder" ]]; then
+            echo "ERROR: EXPO_TOKEN ausente o placeholder en Infisical /copero env=prod." >&2
+            exit 1
+          fi
           echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
+          echo "[release-internal ios] EXPO_TOKEN cargado (length=${#EXPO_TOKEN})"
       - name: eas init
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
