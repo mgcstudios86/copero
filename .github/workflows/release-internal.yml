@@ -136,7 +136,9 @@ jobs:
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
-          eas submit --platform android --track internal --non-interactive
+          # MGC-1493: eas-cli removió --track; track ahora vive en submit profile (eas.json).
+          # submit.production.android.track=internal. --path apunta al APK localizado.
+          eas submit -p android -e production --path dist/app-release.apk --non-interactive
 
       - name: Resumen + SHA256 del artefacto Android
         if: always()
@@ -144,8 +146,8 @@ jobs:
           set -euo pipefail
           AAB="${{ steps.locate.outputs.aab_path }}"
           if [[ -n "${AAB}" && -f "${AAB}" ]]; then
-            SHA=$(sha256sum "${AAB}" | awk '{print $1}')
-            SIZE=$(stat -c %s "${AAB}")
+            SHA=$(shasum -a 256 "${AAB}" | awk '{print $1}')
+            SIZE=$(stat -f %z "${AAB}")
             {
               echo "## Artefacto Android firmado (copero)"
               echo "- path: ${AAB}"
@@ -232,4 +234,5 @@ jobs:
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
-          eas submit --platform ios --track internal --non-interactive
+          # MGC-1493: eas-cli removió --track; submit profile production define ios config.
+          eas submit -p ios -e production --latest --non-interactive
