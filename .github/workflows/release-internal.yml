@@ -113,7 +113,9 @@ jobs:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
           mkdir -p dist
-          eas build --local --platform android --profile preview --non-interactive
+          # MGC-1492: eas build --local escribe por default a /var/folders/.../T/eas-build-local-nodejs/.../
+          # Forzar --output dist/app-release.apk para que Locate AAB pueda encontrarlo.
+          eas build --local --platform android --profile preview --non-interactive --output dist/app-release.apk
 
       - name: Locate AAB/Android APK
         # MGC-1491: eas build --local --profile preview produce app-release.apk por default
