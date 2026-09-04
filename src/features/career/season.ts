@@ -151,6 +151,8 @@ export function advanceSeason(
 
   // 3) Lesión probabilística.
   const events: CareerEvent[] = [];
+  // MGC-1663: el reset a `ninguna` también pasa por `affectedAttrFor`
+  // para mantener un único punto de mapeo (kind → attribute).
   let career: CareerStats = {
     ...profile.career,
     // MGC-1663 — `affectedAttr` vía helper canónico (M1 tabla en

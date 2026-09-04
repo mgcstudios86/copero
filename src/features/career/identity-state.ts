@@ -43,6 +43,7 @@ export const initialProfile: PlayerProfile = {
     fisico: 80,
     confianza: 60,
     racha: 0,
+    // MGC-1663: pasar por helper para mantener un único punto de mapeo.
     lesion: { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: affectedAttrFor('ninguna') },
     reputation: {
       prensa: 'neutral',

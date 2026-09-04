@@ -229,7 +229,7 @@ export function applyChoice(
   if (strategyId === 'E5' && !success && rng.chance(0.08)) {
     // MGC-1628 rev 3 §M1 — `startedAtWeek` se persiste en la lesión
     // para que F3+ pueda calcular el decaimiento por tiempo sin rehab.
-    // `affectedAttr` viene del helper canónico `affectedAttrFor`.
+    // `affectedAttr` se mapea via el helper canónico `affectedAttrFor`.
     lesion = {
       kind: 'leve',
       fechasOut: 1,
@@ -272,6 +272,9 @@ export function advanceWeek(profile: PlayerProfile): PlayerProfile {
   // week=3 porque la semana 1 del user correspondía al index 0).
   // Ver también `careerStore.ts#hydrateFromSave` y `reputation.ts`.
   const lesionFechasOut = Math.max(0, profile.career.lesion.fechasOut - 1);
+  // MGC-1628 rev 3 §M1 — el drenado a `ninguna` también pasa por
+  // `affectedAttrFor` para mantener un solo punto de mapeo
+  // (kind → attribute) en `types/career.ts`.
   const lesion: Injury = lesionFechasOut === 0
     ? { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: affectedAttrFor('ninguna') }
     : { ...profile.career.lesion, fechasOut: lesionFechasOut };
