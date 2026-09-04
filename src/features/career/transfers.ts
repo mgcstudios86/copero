@@ -213,10 +213,26 @@ export function evaluateTransfer(input: TransferInput, rng: Rng): TransferState 
   };
 }
 
-/** Acepta una oferta. Devuelve el estado resuelto (no muta el original). */
+/**
+ * Acepta una oferta. Devuelve el estado resuelto (no muta el original).
+ *
+ * MGC-1730 (MEDIUM-2 review CTO) — antes, con un `offerId` inexistente,
+ * retornaba **la misma referencia** sin clonar; el test que verifica
+ * "no cambia nada" usaba `toEqual` que pasa por igualdad estructural
+ * indistinguible del mismo objeto. Riesgo concreto: si el caller hacía
+ * `acceptOffer(state, badId) ?? state` y luego seguía usando `state`,
+ * un cambio futuro a esta función (p.ej. bumpear `resolved` o agregar
+ * un campo nuevo al resolver) entraba en colisión silenciosa con el
+ * estado original. Ahora clonamos siempre — si la oferta existe,
+ * marcamos `resolved: true` + `acceptedOfferId`; si NO existe,
+ * devolvemos un clon con `resolved: false` y `acceptedOfferId: null`
+ * (señal explícita de "no se pudo aceptar" sin riesgo de aliasing).
+ */
 export function acceptOffer(state: TransferState, offerId: string): TransferState {
   const offer = state.offers.find((o) => o.id === offerId);
-  if (!offer) return state;
+  if (!offer) {
+    return { ...state, acceptedOfferId: null, resolved: false };
+  }
   return { ...state, acceptedOfferId: offerId, resolved: true };
 }
 

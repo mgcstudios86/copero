@@ -294,6 +294,19 @@ export type CareerSnapshot = {
   seed?: number;
   /** Cursor persistible del stream RNG; se completa al serializar. */
   rng?: RngSnapshot;
+  /**
+   * F3.2 (MGC-1632) / ADR-0017 §6 — campos del motor de Fase 3, vivos en
+   * el state machine para que la UI pueda reabrir el modal post-partido
+   * y la pantalla de transferencias tras un force-stop. Se hidratan con
+   * defaults en `loadCareerSave` cuando el save no los trae (ver
+   * `persistence.ts#hydrateF3Fields`).
+   */
+  /** Evento post-partido pendiente de mostrar. La UI lo lee y drena. */
+  postMatchPending?: PostMatchEvent | null;
+  /** Modificadores que el evento dejó para la semana siguiente. */
+  nextWeekModifiers?: NextWeekModifiers;
+  /** Estado del transfer system al cierre de temporada. */
+  transferState?: TransferState | null;
 };
 
 /** Identificadores de decisión del catálogo de strategies.md (MGC-439). */

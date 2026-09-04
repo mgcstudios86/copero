@@ -26,6 +26,7 @@ import type { CareerSaveState, SeasonLog } from '@/types/career';
 import { createRngSnapshot } from './rng';
 import { initialProfile } from './identity-state';
 import { STAT_INIT } from './position-stats';
+import { NO_MODIFIERS } from './events';
 
 const STORAGE_KEY = 'copero:career:save:v1';
 // MGC-1657 (F2.3) — la persistencia ahora escribe v:2. Mantenemos la
@@ -154,9 +155,10 @@ export async function loadCareerSave(): Promise<CareerSaveState | null> {
         // entregamos tal cual. Otros versiones: log + null.
         if (parsed && parsed.v === 1) {
           const migrated = migrateV1ToV2(parsed);
+          const hydrated = hydrateF3Fields(migrated);
           logPersist(
             'log',
-            `[persistence] hydrate=ok stage=${migrated.stage} profile=${migrated.profile?.name} v=2 (migrated from v:1)`,
+            `[persistence] hydrate=ok stage=${hydrated.stage} profile=${hydrated.profile?.name} v=2 (migrated from v:1)`,
           );
           // MGC-1678 (HIGH-3 PR #404) — antes se hacía `await
           // storage.setItem(STORAGE_KEY, JSON.stringify(migrated))` acá,
@@ -171,7 +173,7 @@ export async function loadCareerSave(): Promise<CareerSaveState | null> {
           // fast-path un launch. Beneficio: load latency cae a la del
           // solo `getItem` y no hay ventana de inconsistencia memory/disco.
           storage
-            .setItem(STORAGE_KEY, JSON.stringify(migrated))
+            .setItem(STORAGE_KEY, JSON.stringify(hydrated))
             .catch((err) => {
               logPersist(
                 'error',
@@ -179,14 +181,19 @@ export async function loadCareerSave(): Promise<CareerSaveState | null> {
                 err,
               );
             });
-          return migrated;
+          return hydrated;
         }
         if (parsed && parsed.v === 2) {
+          // MGC-1730 (HIGH-2 review CTO sobre PR #425) — incluso en v:2
+          // podemos recibir un save pre-F3.2 sin los 3 campos nuevos;
+          // aplicamos los defaults in-memory sin reescribir a disco
+          // (la próxima save los materializará).
+          const hydrated = hydrateF3Fields(parsed);
           logPersist(
             'log',
-            `[persistence] hydrate=ok stage=${parsed.stage} profile=${parsed.profile?.name} v=2`,
+            `[persistence] hydrate=ok stage=${hydrated.stage} profile=${hydrated.profile?.name} v=2`,
           );
-          return parsed;
+          return hydrated;
         }
         logPersist(
           'log',
@@ -221,14 +228,18 @@ export async function loadCareerSave(): Promise<CareerSaveState | null> {
       if (!inner || typeof inner !== 'object') continue;
       const migrated = migrateLegacyToV1(inner as Record<string, unknown>);
       if (!migrated) continue;
+      // MGC-1730 — legacy zustand persist es pre-F2.3 (no trae `v`); le
+      // aplicamos migrateV1ToV2 + hydrateF3Fields para que el caller
+      // reciba un save v:2 con los 3 campos F3.2 ya materializados.
+      const upgraded = hydrateF3Fields(migrateV1ToV2(migrated));
       // Migración silenciosa: escribe nueva key, deja legacy por si otra
       // surface (e.g. devtools) la inspecciona. clearCareerSave() borra ambas.
-      await storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      await storage.setItem(STORAGE_KEY, JSON.stringify(upgraded));
       logPersist(
         'log',
-        `[persistence] hydrate=migrated legacy-key=${legacyKey} stage=${migrated.stage}`,
+        `[persistence] hydrate=migrated legacy-key=${legacyKey} stage=${upgraded.stage}`,
       );
-      return migrated;
+      return upgraded;
     } catch {
       // legacy corrupto, seguir al próximo candidato.
       continue;
@@ -299,6 +310,31 @@ export function migrateV1ToV2(state: CareerSaveState): CareerSaveState {
     v: 2,
     profile: migratedProfile,
     rng: state.rng ?? createRngSnapshot(state.seed),
+  };
+}
+
+/**
+ * MGC-1730 (HIGH-2 review CTO sobre PR #425) — `postMatchPending`,
+ * `nextWeekModifiers` y `transferState` son **opcionales** en el shape
+ * de `CareerSaveState` (ADR-0017 §6 dice: default explícito en lugar de
+ * bump de versión para no invalidar saves viejos). Sin este helper, un
+ * save v:2 que llegó a disco antes de F3.2 (sin estos campos) hidrata
+ * `undefined` y la UI no puede diferenciar "no hay evento" de "el save
+ * está roto". Aplica los defaults del ADR:
+ *
+ *   - `postMatchPending`: `null`  (no hay modal post-partido que mostrar)
+ *   - `nextWeekModifiers`: `NO_MODIFIERS` (sin bonus ni castigos)
+ *   - `transferState`: `null`  (no hay decisión de transferencia abierta)
+ *
+ * Es pura: no muta el input. Se invoca después de `migrateV1ToV2` (en
+ * el fast-path de v:2) y antes de devolver al caller de `loadCareerSave`.
+ */
+export function hydrateF3Fields(state: CareerSaveState): CareerSaveState {
+  return {
+    ...state,
+    postMatchPending: state.postMatchPending ?? null,
+    nextWeekModifiers: state.nextWeekModifiers ?? { ...NO_MODIFIERS },
+    transferState: state.transferState ?? null,
   };
 }
 

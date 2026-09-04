@@ -164,6 +164,14 @@ type CareerStore = CareerSnapshot & {
   /** Loop anual (MGC-208 §3). */
   advanceSeason: () => Promise<void>;
   runCareerToRetirement: () => Promise<void>;
+  /** MGC-1730 (HIGH-1 fix sobre PR #425) — drena `postMatchPending`
+   * después de que la UI F3.3 mostró el modal post-partido. Persiste
+   * inmediatamente para sobrevivir force-stop. */
+  clearPostMatch: () => Promise<void>;
+  /** MGC-1730 (HIGH-1 fix sobre PR #425) — resuelve el transfer system
+   * con el id aceptado o `null` (declinar todas). Sin efecto si no hay
+   * `transferState` abierto (temporada sin cierre reciente). */
+  resolveTransfer: (acceptedOfferId: string | null) => Promise<void>;
   /** MGC-227: hidrata la store desde AsyncStorage vía `loadCareerSave`.
    * Llamado una vez durante el bootstrap de la app (`app/_layout.tsx`).
    * Devuelve `true` si encontró un save previo y lo aplicó. */
@@ -193,6 +201,14 @@ function snapshotToSave(s: CareerStore): CareerSaveState {
     log: s.log ?? { timeline: [], events: [] },
     seed: s.seed ?? 0,
     rng: s.rng ?? createRngSnapshot(s.seed ?? 0),
+    // MGC-1730 (HIGH-2 fix sobre PR #425) — persistir los 3 campos F3.2
+    // para que sobrevivan force-stop. Los defaults los aplica
+    // `loadCareerSave` (ver `persistence.ts#hydrateF3Fields`); acá sólo
+    // copiamos lo que está en memoria (puede ser `null`/`undefined` y
+    // es válido — el loader los normaliza).
+    postMatchPending: s.postMatchPending ?? null,
+    nextWeekModifiers: s.nextWeekModifiers,
+    transferState: s.transferState ?? null,
   };
 }
 
@@ -224,6 +240,12 @@ export function getSnapshot(): CareerSaveV2 {
     clubId: s.profile.club ? s.profile.club.id : null,
     log: s.log ?? { timeline: [], events: [] },
     seed: s.seed ?? 0,
+    // MGC-1730 (HIGH-1 fix sobre PR #425) — exponer los 3 campos F3.2
+    // también en `getSnapshot` para que tests E2E / telemetry vean el
+    // shape completo sin pasar por save/load.
+    postMatchPending: s.postMatchPending ?? null,
+    nextWeekModifiers: s.nextWeekModifiers,
+    transferState: s.transferState ?? null,
   };
 }
 
@@ -625,6 +647,27 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       // pantalla.
       await persistAndFlush(get());
     },
+    // MGC-1730 (HIGH-1 fix sobre PR #425) — drena el modal post-partido.
+    // Misma cadencia que `setEstilo` (async + await flush) para que el
+    // snapshot sin `postMatchPending` llegue a disco.
+    clearPostMatch: async () => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) => step(s, { type: 'clearPostMatch' } satisfies CareerAction));
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    // MGC-1730 (HIGH-1 fix sobre PR #425) — resuelve el transfer system.
+    // `null` declina todas las ofertas (`declineAllOffers` en el reducer);
+    // un `offerId` válido lo acepta y la UI F3.3 puede mover al jugador
+    // de club.
+    resolveTransfer: async (acceptedOfferId) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'resolveTransfer', acceptedOfferId } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
     // MGC-227: hidratación desde AsyncStorage. Llamado una vez en el
     // bootstrap de la app (ver `app/_layout.native.tsx` + `_layout.web.tsx`).
     // Aplica el save al estado actual; si no hay save, devuelve `false`
@@ -657,6 +700,13 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         log: saved.log,
         seed: saved.seed,
         rng: saved.rng,
+        // MGC-1730 (HIGH-2 fix sobre PR #425) — copiar los 3 campos F3.2
+        // del save al store. `loadCareerSave` ya aplicó
+        // `hydrateF3Fields`, así que vienen con defaults si eran
+        // `undefined` en disco.
+        postMatchPending: saved.postMatchPending ?? null,
+        nextWeekModifiers: saved.nextWeekModifiers,
+        transferState: saved.transferState ?? null,
       }));
       set((s) => ({ ...s, hydrated: true }));
       return true;

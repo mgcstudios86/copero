@@ -16,8 +16,9 @@ import {
   applyWeeklyChoice,
   advanceWeek,
   resolveWeeklyMatch,
+  getPositionStats,
 } from './simulation';
-import { createRng, seedFromString, type RngSnapshot } from './rng';
+import { createRng, createRngFromSnapshot, seedFromString, type RngSnapshot } from './rng';
 import {
   cardFromPicks,
   initialDraftBoard,
@@ -29,6 +30,19 @@ import { advanceSeason, isRetired, runCareerLoop } from './season';
 import { STAT_INIT } from './position-stats';
 import type { WeeklyBaseOptionId } from './position-tree';
 import { groupOf } from './positions';
+import {
+  ratingFromScore,
+  runPostMatch,
+  NO_MODIFIERS,
+} from './events';
+import {
+  evaluateTransfer,
+  acceptOffer,
+  declineAllOffers,
+  type TransferInput,
+  type TransferState,
+} from './transfers';
+import { walkTree } from './decision-tree';
 
 /**
  * Reducer puro para el state machine del simulador de carrera (MGC-430
@@ -74,6 +88,16 @@ export type CareerAction =
   | { type: 'pickClub'; club: Club }
   | { type: 'advanceSeason' }
   | { type: 'runCareerToRetirement' }
+  /** MGC-1730 (HIGH-1 fix sobre PR #425) — drena `postMatchPending`
+   * después de que la UI muestra el modal post-partido. Acepta `null`
+   * explícito para forzar el cierre sin que la UI haya leído el evento
+   * (caso edge: force-stop entre `resolveMatchweek` y el render). */
+  | { type: 'clearPostMatch' }
+  /** MGC-1730 (HIGH-1 fix sobre PR #425) — resuelve el transfer system
+   * al cierre de temporada. `acceptedOfferId: null` declina todas y
+   * aplica `no_movement` explícito (mismo efecto que
+   * `declineAllOffers`). */
+  | { type: 'resolveTransfer'; acceptedOfferId: string | null }
   | { type: 'reset' };
 
 export const initialProfile: PlayerProfile = {
@@ -194,8 +218,33 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
       // decide cuándo disparar (manual vs auto al cierre del weekly
       // choice de tipo partido).
       // MGC-1676 — pasa `state.rng` y persiste snapshot avanzado.
+      // MGC-1730 (HIGH-1 fix sobre PR #425) — además dispara el motor
+      // F3.2 `runPostMatch` para producir el evento post-partido (ADR-
+      // 0017 §1/§2). El evento queda en `state.postMatchPending` para
+      // que la UI F3.3 lo muestre y `state.nextWeekModifiers` para que
+      // el `weeklyChoice` siguiente los consuma. Si el evento es `null`
+      // (rating < 6.0) igual materializamos `nextWeekModifiers` con
+      // `NO_MODIFIERS` para que el caller no tenga que nullear.
       const result = resolveWeeklyMatch(state.profile, state.rng as RngSnapshot | undefined);
-      return { ...state, profile: result.profile, rng: result.rngSnapshot };
+      const rngForEvent = createRngFromSnapshot(result.rngSnapshot);
+      const positionStats = getPositionStats(result.profile);
+      const { event, modifiers } = runPostMatch(
+        {
+          position: result.profile.position,
+          positionStats,
+          rating: ratingFromScore(result.match.score),
+          form: result.profile.career.confianza,
+          week: result.profile.week,
+        },
+        rngForEvent,
+      );
+      return {
+        ...state,
+        profile: result.profile,
+        rng: result.rngSnapshot,
+        postMatchPending: event,
+        nextWeekModifiers: modifiers,
+      };
     }
     case 'setYearlyPlan': {
       // MGC-1017: el usuario elige un plan anual al cierre de cada
@@ -338,6 +387,30 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
         log: result.log,
       };
     }
+    // MGC-1730 (HIGH-1 fix sobre PR #425) — drena `postMatchPending`
+    // cuando la UI consumió el evento post-partido. También limpia
+    // `nextWeekModifiers` (que se consumen juntos: si la UI leyó el
+    // modal, los modificadores ya fueron aplicados).
+    case 'clearPostMatch':
+      return {
+        ...state,
+        postMatchPending: null,
+        nextWeekModifiers: { ...NO_MODIFIERS },
+      };
+    // MGC-1730 (HIGH-1 fix sobre PR #425) — resuelve `transferState`
+    // usando `acceptOffer` o `declineAllOffers`. Si `transferState` es
+    // null (no hay temporada cerrada aún), no hace nada. La UI F3.3
+    // abre la pantalla de transferencias cuando `transferState?.resolved
+    // === false` y llama esta acción con el id aceptado (o null para
+    // declinar).
+    case 'resolveTransfer': {
+      if (!state.transferState) return state;
+      const next: TransferState =
+        action.acceptedOfferId === null
+          ? declineAllOffers(state.transferState)
+          : acceptOffer(state.transferState, action.acceptedOfferId);
+      return { ...state, transferState: next };
+    }
     case 'reset':
       return initialSnapshot();
     default:
@@ -358,6 +431,29 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
  * podría hacer que el botón "Siguiente semana" no acumulara stats
  * mientras "Jugar temporada" sí (ver parent MGC-488).
  *
+ * MGC-1730 (HIGH-1 fix sobre PR #425) — el helper ahora también
+ * dispara los módulos F3.2 que antes vivían huérfanos:
+ *
+ *   - `evaluateTransfer` (transfers.ts) — produce el `transferState`
+ *     con verdict, ofertas y deadline. La UI F3.3 lo lee y muestra la
+ *     pantalla de transferencias; el `resolveTransfer` action lo drena.
+ *     Input: avgRating agregado de la temporada recién cerrada + posición
+ *     en tabla + posición del jugador. `tablePos` se aproxima con la
+ *     inversa del rating promedio: a mayor rating, mejor tabla. Esto es
+ *     deliberadamente burdo para F3.2 (la UI lo refinará en F3.3 cuando
+ *     conectemos al leaderboard real); lo importante aquí es que el
+ *     módulo se ejecuta y deja estado persistible.
+ *
+ *   - `walkTree` (decision-tree.ts) — produce la traza de outcomes
+ *     decisión-a-decisión del árbol de F3.2. Cada paso se loguea como
+ *     `CareerEvent` con `kind: 'event'` y `copyId: 'tree_out_<id>'`
+ *     para que QA pueda validar replay determinista y la UI pueda
+ *     mostrar highlights de la temporada en el timeline.
+ *
+ * También drenamos `postMatchPending`/`nextWeekModifiers`: el modal
+ * post-partido perdió relevancia al cambiar de temporada y los
+ * modificadores ya no aplican a la semana 1 de la nueva temporada.
+ *
  * Si no hay club asignado, devuelve `state` sin cambios: la temporada
  * no puede cerrarse sin club (no hay partidos que simular, no hay stats
  * que acumular).
@@ -370,9 +466,54 @@ export function applySeasonRollover(state: CareerSnapshot): CareerSnapshot {
     state.profile.season * 1009 +
     seedFromString(state.profile.name || 'copero');
   const result = advanceSeason(state.profile, state.profile.club, createRng(seed));
+
+  // MGC-1730 — `walkTree` consume un RNG separado con seed estable
+  // (sumamos 3 al seed base para no pisar la secuencia que ya consumió
+  // `advanceSeason`). Reproducibilidad: dado el mismo `seed` y la misma
+  // posición, la traza es bit-exacta (ver `fase3-events-transfers.test.ts`
+  // test "`walkTree` produce historias divergentes con seeds distintos").
+  const walkRng = createRng(seed + 3);
+  const trace = walkTree(result.profile.position, walkRng);
+  const treeEvents: import('@/types/career').CareerEvent[] = trace.map((step, idx) => ({
+    season: result.profile.season,
+    // MGC-1730 — el `CareerEventKind` no tiene slot específico para el
+    // árbol F3.2; reusamos `'match'` que ya carga la prosa de highlights
+    // de temporada en la UI. La `copyId: 'tree_out_*'` distingue los
+    // eventos del árbol de los partidos reales al resolver copy.
+    kind: 'match',
+    copyId: step.outcome.copyId,
+    values: { node: step.nodeId.split('_').slice(1).join('_'), idx },
+  }));
+
+  // MGC-1730 — `evaluateTransfer` se ejecuta con datos agregados de la
+  // temporada que acabamos de cerrar. `avgRating` se aproxima del
+  // rating de la última matchweek (`career.matchweekStats.goals` +
+  // heurística basada en apps). `tablePos` se aproxima con la inversa
+  // del OVR final (cap 1..20): OVR >= 90 → 1, OVR <= 60 → 20.
+  // Documentado como deliberadamente burdo (ver JSDoc arriba); F3.3
+  // refinará cuando conectemos al leaderboard real.
+  const transferRng = createRng(seed + 7);
+  const totalApps = result.profile.stats.apps;
+  const recentGoals = result.profile.career.matchweekStats?.goals ?? 0;
+  const avgRating = totalApps > 0
+    ? clamp(6 + (result.profile.ovr - 60) / 6 + recentGoals / Math.max(1, totalApps), 4, 10)
+    : 6.0;
+  const tablePos = clamp(Math.round(20 - ((result.profile.ovr - 60) / 30) * 19), 1, 20);
+  const transferInput: TransferInput = {
+    avgRating,
+    goals: result.profile.stats.goals - (state.profile.stats.goals ?? 0),
+    tablePos,
+    position: result.profile.position,
+    age: result.profile.age,
+    season: result.profile.season,
+    seasonEndWeek: 38,
+    currentClubId: result.profile.club?.id ?? null,
+  };
+  const transferState = evaluateTransfer(transferInput, transferRng);
+
   const log = {
     timeline: [...(state.log?.timeline ?? []), result.row],
-    events: [...(state.log?.events ?? []), ...result.events],
+    events: [...(state.log?.events ?? []), ...result.events, ...treeEvents],
   };
   const stage: CareerStage = isRetired(result.profile) ? 'retirement' : 'season';
   return {
@@ -380,8 +521,13 @@ export function applySeasonRollover(state: CareerSnapshot): CareerSnapshot {
     stage,
     profile: result.profile,
     log,
+    postMatchPending: null,
+    nextWeekModifiers: { ...NO_MODIFIERS },
+    transferState,
   };
 }
+
+const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
 /** Mezcla la PlayerCard en el PlayerProfile (MGC-208 §1 + §3). */
 function applyCardToProfile(profile: PlayerProfile, card: ReturnType<typeof cardFromPicks>): PlayerProfile {
