@@ -19,6 +19,7 @@
 
 import type { Position } from '@/types/career';
 import { type StatKey } from './position-stats';
+import { groupOf } from './positions';
 
 /* ── Weekly base options ─────────────────────────────────────────── */
 
@@ -147,10 +148,9 @@ export type PositionTree = {
 function fourOutcomes(
   position: Position,
 ): [PositionOutcome, PositionOutcome, PositionOutcome, PositionOutcome] {
-  // 4 outcomes requieren suma = 1.0
-  const isGK = position === 'GK';
-  const isDEF = ['CB', 'LB', 'RB'].includes(position);
-  const isFWD = ['ST', 'LW', 'RW'].includes(position);
+  // Diferenciación por grupo via helper canónico `groupOf` (MGC-1628 §L4)
+  // para evitar drift entre `stats.ts` / `match.ts` / `position-tree.ts`.
+  const group = groupOf(position);
 
   return [
     {
@@ -158,7 +158,10 @@ function fourOutcomes(
       copyId: `${position.toLowerCase()}_out_big_performance`,
       prob: 0.25,
       doubleStreakDelta: 0,
-      deltas: isGK ? { reflejos: 3 } : isDEF ? { marcaje: 3 } : isFWD ? { definicion: 3 } : { pase: 3 },
+      deltas: group === 'goalkeeper' ? { reflejos: 3 }
+        : group === 'defense' ? { marcaje: 3 }
+        : group === 'attack' ? { definicion: 3 }
+        : { pase: 3 },
       careerDeltas: { moral: 8, confianza: 5 },
     },
     {
@@ -166,7 +169,10 @@ function fourOutcomes(
       copyId: `${position.toLowerCase()}_out_solid`,
       prob: 0.45,
       doubleStreakDelta: 1,
-      deltas: isGK ? { posicionamiento: 2 } : isDEF ? { anticipacion: 2 } : isFWD ? { velocidad: 1 } : { vision: 1 },
+      deltas: group === 'goalkeeper' ? { posicionamiento: 2 }
+        : group === 'defense' ? { anticipacion: 2 }
+        : group === 'attack' ? { velocidad: 1 }
+        : { vision: 1 },
       careerDeltas: { moral: 3, fisico: -3 },
     },
     {
@@ -174,7 +180,10 @@ function fourOutcomes(
       copyId: `${position.toLowerCase()}_out_cautious`,
       prob: 0.20,
       doubleStreakDelta: 0,
-      deltas: isGK ? { manos: 2 } : isDEF ? { cabeceo: 2 } : isFWD ? { juegoAereo: 2 } : { resistencia: 2 },
+      deltas: group === 'goalkeeper' ? { manos: 2 }
+        : group === 'defense' ? { cabeceo: 2 }
+        : group === 'attack' ? { juegoAereo: 2 }
+        : { resistencia: 2 },
       careerDeltas: { fisico: 5, moral: 1 },
     },
     {
@@ -182,7 +191,10 @@ function fourOutcomes(
       copyId: `${position.toLowerCase()}_out_off_day`,
       prob: 0.10,
       doubleStreakDelta: 0,
-      deltas: isGK ? { reflejos: -1 } : isDEF ? { marcaje: -1 } : isFWD ? { definicion: -1 } : { pase: -1 },
+      deltas: group === 'goalkeeper' ? { reflejos: -1 }
+        : group === 'defense' ? { marcaje: -1 }
+        : group === 'attack' ? { definicion: -1 }
+        : { pase: -1 },
       careerDeltas: { moral: -4, confianza: -2 },
     },
   ];
@@ -243,8 +255,21 @@ function buildPositionNodes(position: Position): PositionNode[] {
   return [root, c1, c2, c3, c4, closer, match1, match2, epilogue];
 }
 
-const POSITIONS_TREE_BUILD: Position[] = ['GK', 'CB', 'ST', 'CM'];
-const POSITION_TREES: Partial<Record<Position, PositionTree>> = {};
+/**
+ * MGC-1675 — Cobertura completa de las 12 posiciones del tipo `Position`.
+ * Antes (PR #401) sólo GK/CB/ST/CM tenían tree propio; las 9 restantes
+ * caían en fallback silencioso en `getPositionTree`. Ahora cada posición
+ * tiene su árbol, garantizando que la promesa de "diferenciación
+ * posicional 4 stats por línea" se cumpla para los 12 slots del field map.
+ */
+const POSITIONS_TREE_BUILD = [
+  'GK',
+  'CB', 'LB', 'RB',
+  'CDM', 'CM', 'CAM', 'LM', 'RM',
+  'ST', 'LW', 'RW',
+] as const satisfies readonly Position[];
+
+const POSITION_TREES: Record<Position, PositionTree> = {} as Record<Position, PositionTree>;
 
 for (const pos of POSITIONS_TREE_BUILD) {
   const nodes = buildPositionNodes(pos);
@@ -256,13 +281,7 @@ for (const pos of POSITIONS_TREE_BUILD) {
 
 /** Tree con ≥8 nodos por posición. Acceso: `tree.nodes` mapa. */
 export function getPositionTree(position: Position): PositionTree {
-  // Para posiciones no explícitas, aproximar a una del mismo grupo.
-  const fallback: Position =
-    position === 'GK' ? 'GK'
-    : ['CB', 'LB', 'RB'].includes(position) ? 'CB'
-    : ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(position) ? 'CM'
-    : 'ST';
-  const tree = POSITION_TREES[fallback];
+  const tree = POSITION_TREES[position];
   if (!tree) throw new Error(`No tree for position ${position}`);
   return tree;
 }

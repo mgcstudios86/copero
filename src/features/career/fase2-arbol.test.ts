@@ -49,7 +49,12 @@ function profileWith(overrides: Partial<PlayerProfile['career']> = {}, age = 22)
 
 describe('F2.2 — position-stats', () => {
   it('cada posición tiene 4 stats específicos', () => {
-    const positions: Position[] = ['GK', 'CB', 'LB', 'RB', 'CM', 'CAM', 'ST', 'LW'];
+    const positions: Position[] = [
+      'GK',
+      'CB', 'LB', 'RB',
+      'CDM', 'CM', 'CAM', 'LM', 'RM',
+      'ST', 'LW', 'RW',
+    ];
     for (const p of positions) {
       expect(statsForPosition(p)).toHaveLength(4);
     }
@@ -79,15 +84,29 @@ describe('F2.2 — position-stats', () => {
 });
 
 describe('F2.2 — position-tree (≥8 nodos, ≥4 outcomes)', () => {
-  it('cada posición built-in tiene ≥8 nodos', () => {
-    for (const pos of ['GK', 'CB', 'ST', 'CM'] as Position[]) {
+  const ALL_POSITIONS: Position[] = [
+    'GK',
+    'CB', 'LB', 'RB',
+    'CDM', 'CM', 'CAM', 'LM', 'RM',
+    'ST', 'LW', 'RW',
+  ];
+
+  it('cada una de las 12 posiciones tiene tree propio (sin fallback)', () => {
+    for (const pos of ALL_POSITIONS) {
+      const tree = getPositionTree(pos);
+      expect(tree.position).toBe(pos);
+    }
+  });
+
+  it('cada posición tiene ≥8 nodos', () => {
+    for (const pos of ALL_POSITIONS) {
       const tree = getPositionTree(pos);
       expect(nodeCount(tree)).toBeGreaterThanOrEqual(8);
     }
   });
 
   it('cada nodo raíz tiene exactamente 4 outcomes', () => {
-    for (const pos of ['GK', 'CB', 'ST', 'CM'] as Position[]) {
+    for (const pos of ALL_POSITIONS) {
       const tree = getPositionTree(pos);
       expect(rootOutcomeCount(tree)).toBe(4);
       const total = Object.values(tree.nodes).reduce(
@@ -98,10 +117,45 @@ describe('F2.2 — position-tree (≥8 nodos, ≥4 outcomes)', () => {
     }
   });
 
-  it('los 4 outcomes del root suman probabilidad ≈ 1.0', () => {
-    const tree = getPositionTree('ST');
-    const sum = tree.root.outcomes.reduce((a, o) => a + o.prob, 0);
-    expect(sum).toBeCloseTo(1.0, 1);
+  it('los 4 outcomes del root suman probabilidad ≈ 1.0 en todas las posiciones', () => {
+    for (const pos of ALL_POSITIONS) {
+      const tree = getPositionTree(pos);
+      const sum = tree.root.outcomes.reduce((a, o) => a + o.prob, 0);
+      expect(sum).toBeCloseTo(1.0, 1);
+    }
+  });
+
+  it('los 4 outcomes del root tienen IDs estables (big_performance/consistent_solid/cautious/off_day)', () => {
+    for (const pos of ALL_POSITIONS) {
+      const ids = getPositionTree(pos).root.outcomes.map((o) => o.id).sort();
+      expect(ids).toEqual(['big_performance', 'cautious', 'consistent_solid', 'off_day']);
+    }
+  });
+
+  it('copyIds del root son únicos por posición (12 pos × 4 outcomes = 48)', () => {
+    const seen = new Map<string, string>();
+    for (const pos of ALL_POSITIONS) {
+      for (const o of getPositionTree(pos).root.outcomes) {
+        expect(seen.has(o.copyId)).toBe(false);
+        seen.set(o.copyId, pos);
+      }
+    }
+    expect(seen.size).toBe(12 * 4);
+  });
+
+  it('deltas del root difieren por grupo (GK/DEF/MID/FWD)', () => {
+    const sample = (pos: Position) => {
+      const o = getPositionTree(pos).root.outcomes.find((x) => x.id === 'big_performance');
+      if (!o) throw new Error(`big_performance missing for ${pos}`);
+      return Object.keys(o.deltas).sort().join(',');
+    };
+    expect(sample('GK')).toBe('reflejos');
+    expect(sample('CB')).toBe('marcaje');
+    expect(sample('CM')).toBe('pase');
+    expect(sample('ST')).toBe('definicion');
+    expect(sample('GK')).not.toBe(sample('CB'));
+    expect(sample('CB')).not.toBe(sample('CM'));
+    expect(sample('CM')).not.toBe(sample('ST'));
   });
 
   it('6 opciones base semanales existen', () => {
