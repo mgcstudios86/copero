@@ -120,6 +120,21 @@ type CareerStore = CareerSnapshot & {
    * `profile.stats` y deja el resultado en `career.matchweekStats`.
    */
   resolveMatchweek: () => Promise<void>;
+  /**
+   * MGC-1650 (WF4) — startMatch: calcula el MatchOutcome y lo
+   * deposita en matchStore (transient) sin tocar careerStore.
+   */
+  startMatch: () => Promise<void>;
+  /**
+   * MGC-1650 (WF5) — commitMatch: aplica el nextProfile del
+   * matchStore al careerStore, avanza la semana y persiste.
+   */
+  commitMatch: () => Promise<void>;
+  /**
+   * MGC-1650 (WF5) — discardMatch: resetea matchStore sin tocar
+   * careerStore (botón «Volver al hub»).
+   */
+  discardMatch: () => void;
   advance: () => void;
   /**
    * Draft de leyendas (MGC-208 §1) — MGC-209.
@@ -454,6 +469,73 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       );
       persistSnapshot(get());
       await flushPendingSave();
+    },
+    // MGC-1650 (WF4 + WF5 partido y post-partido). El flujo de 3
+    // pantallas usa `matchStore` (transient) como buffer; este par de
+    // acciones maneja el ciclo de vida.
+    startMatch: async () => {
+      const { resolveWeeklyMatch } = await import('@/features/career/simulation');
+      const {
+        ratingFromOutcome,
+        deltasFromRating,
+        clampCareerStat,
+      } = await import('@/features/career/match');
+      const { useMatchStore } = await import('@/shared/store/matchStore');
+      const current = get().profile;
+      const { profile: nextProfile, match } = resolveWeeklyMatch(current);
+      const rating = ratingFromOutcome(match);
+      const { moralDelta, fisicoDelta, confianzaDelta } =
+        deltasFromRating(rating);
+      const preview = {
+        rating,
+        moralDelta,
+        fisicoDelta,
+        confianzaDelta,
+        reputationChanged: false,
+        cleanSheet: match.cleanSheet,
+        goals: match.goals,
+        score: match.score,
+      };
+      const previewedProfile = {
+        ...nextProfile,
+        career: {
+          ...nextProfile.career,
+          moral: clampCareerStat(nextProfile.career.moral + moralDelta),
+          fisico: clampCareerStat(nextProfile.career.fisico + fisicoDelta),
+          confianza: clampCareerStat(
+            nextProfile.career.confianza + confianzaDelta,
+          ),
+        },
+      };
+      useMatchStore.getState().setMatch({
+        outcome: match,
+        previousProfile: current,
+        nextProfile: previewedProfile,
+        preview,
+      });
+    },
+    commitMatch: async () => {
+      const { useMatchStore } = await import('@/shared/store/matchStore');
+      const { advanceWeek } = await import('@/features/career/simulation');
+      const ms = useMatchStore.getState();
+      if (!ms.outcome || !ms.nextProfile) {
+        useMatchStore.getState().reset();
+        return;
+      }
+      setSnapshot((s) => ({
+        ...s,
+        profile: ms.nextProfile!,
+      }));
+      const advanced = advanceWeek(ms.nextProfile!);
+      setSnapshot((s) => ({ ...s, profile: advanced }));
+      persistSnapshot(get());
+      await flushPendingSave();
+      ms.commit();
+    },
+    discardMatch: () => {
+      void import('@/shared/store/matchStore').then((m) =>
+        m.useMatchStore.getState().reset(),
+      );
     },
     setYearlyPlan: async (plan) => {
       const { step } = await import('@/features/career/engine');

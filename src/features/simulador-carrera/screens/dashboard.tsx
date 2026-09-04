@@ -51,6 +51,9 @@ export default function DashboardScreen() {
   const log = storedLog ?? EMPTY_LOG;
   const openAcademy = useCareerStore((s) => s.openAcademy);
   const startDraft = useCareerStore((s) => s.startDraft);
+  // MGC-1650 (WF4) — `startMatch` calcula el MatchOutcome y lo
+  // deposita en `matchStore` (transient).
+  const startMatch = useCareerStore((s) => s.startMatch);
 
   const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
 
@@ -78,20 +81,17 @@ export default function DashboardScreen() {
     //   · Sin club → abrir academy para que el jugador fiche (path
     //     legacy pre-club; mismo flushPendingSave de MGC-722 para
     //     sobrevivir force-stop).
-    //   · Con club → navegar al loop temporada/match (botones
-    //     "Siguiente semana" / "Siguiente temporada" / "Correr hasta
-    //     el retiro" del screen `temporada.tsx`). El engine emite los
-    //     eventos M1-M5 (pre-partido, minuto 60, resultado, MVP,
-    //     tarjeta roja) cuando el usuario avanza la fecha; la lógica
-    //     de match vive en `career/strategy.ts` y se persiste vía
-    //     decide().
+    //   · Con club → MGC-1650 (WF4 partido + WF5 post-partido). El
+    //     CTA "Jugar la próxima fecha" ahora dispara `startMatch()`
+    //     y navega a `/simulador-carrera/match`.
     if (!profile.club) {
       openAcademy();
       await flushPendingSave();
       router.push('/simulador-carrera/academy');
       return;
     }
-    router.push('/simulador-carrera/temporada');
+    await startMatch();
+    router.push('/simulador-carrera/match');
   };
 
   // MGC-209: CTA al flow de 6 pantallas (draft → tu-jugador → club → temporada → fin-carrera).

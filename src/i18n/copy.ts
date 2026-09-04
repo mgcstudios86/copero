@@ -173,7 +173,41 @@ export type Copy = {
     evCompraLujosaDesc: string;
     evPremiacion: string;
     evPremiacionDesc: string;
-  };
+    sectionLabel: string;
+    subtitle: string;
+    ratingA11y: string;
+    ratingOutstanding: string;
+    ratingSolid: string;
+    ratingRegular: string;
+    ratingPoor: string;
+    ratingBad: string;
+    changesTitle: string;
+    statMoral: string;
+    statFisico: string;
+    statConfianza: string;
+    statGoals: string;
+    reputationTitle: string;
+    prensa: string;
+    hinchada: string;
+    vestuario: string;
+    repPrensaEnsalzada: string;
+    repPrensaNeutral: string;
+    repPrensaCritica: string;
+    repPrensaHostil: string;
+    repHinchadaIdolo: string;
+    repHinchadaAceptado: string;
+    repHinchadaDiscutido: string;
+    repHinchadaOdiado: string;
+    repVestuarioCapitan: string;
+    repVestuarioIntegrado: string;
+    repVestuarioAislado: string;
+    nextTitle: string;
+    nextWeek: string;
+    ctaNextWeek: string;
+    ctaNextWeekHint: string;
+    ctaBackToHub: string;
+    ctaBackToHubHint: string;
+};
   // MGC-1632 (F3.2) — transfer system entre temporadas (ADR-0017 §4).
   transfers: {
     eyebrow: string;
@@ -228,6 +262,30 @@ export type Copy = {
     outFlojo: string;
     outDesastre: string;
   };
+  // MGC-1650 (WF4 partido) — strings de la pantalla `/match`.
+  match: {
+    loading: string;
+    loadError: string;
+    ctaLoadErrorBack: string;
+    weekLabel: string;
+    title: string;
+    subtitle: string;
+    finalLabel: string;
+    rival: string;
+    cleanSheet: string;
+    resultClosed: string;
+    eventsTitle: string;
+    noEvents: string;
+    goalEvent: string;
+    yourGameTitle: string;
+    statGoals: string;
+    statAst: string;
+    statPassPct: string;
+    statMinutes: string;
+    ctaFinalize: string;
+    ctaFinalizeHint: string;
+  };
+
 };
 
 export const COPY: Record<Locale, Copy> = {
@@ -368,7 +426,41 @@ export const COPY: Record<Locale, Copy> = {
       evCompraLujosaDesc: 'Te das un gusto caro. Moral por las nubes, cabeza menos en el entrenamiento.',
       evPremiacion: 'Premio individual',
       evPremiacionDesc: 'Te eligen figura de la fecha. Moral y confianza al máximo.',
-    },
+      sectionLabel: 'RESUMEN DEL PARTIDO',
+      subtitle: 'Tu calificación y los cambios que se aplicarán al confirmar.',
+      ratingA11y: 'Calificación {rating} sobre 10',
+      ratingOutstanding: ' actuación brillante',
+      ratingSolid: ' actuación sólida',
+      ratingRegular: ' partido correcto',
+      ratingPoor: ' por debajo de lo esperado',
+      ratingBad: ' noche difícil',
+      changesTitle: 'CAMBIOS',
+      statMoral: 'Moral',
+      statFisico: 'Energía',
+      statConfianza: 'Confianza',
+      statGoals: 'Goles del partido',
+      reputationTitle: 'REPUTACIÓN',
+      prensa: 'Prensa: {value}',
+      hinchada: 'Hinchada: {value}',
+      vestuario: 'Vestuario: {value}',
+      repPrensaEnsalzada: 'ensalzada',
+      repPrensaNeutral: 'neutral',
+      repPrensaCritica: 'crítica',
+      repPrensaHostil: 'hostil',
+      repHinchadaIdolo: 'ídolo',
+      repHinchadaAceptado: 'aceptado',
+      repHinchadaDiscutido: 'discutido',
+      repHinchadaOdiado: 'odiado',
+      repVestuarioCapitan: 'capitán moral',
+      repVestuarioIntegrado: 'integrado',
+      repVestuarioAislado: 'aislado',
+      nextTitle: 'PRÓXIMO',
+      nextWeek: 'Semana {week} / 38',
+      ctaNextWeek: 'Siguiente semana →',
+      ctaNextWeekHint: 'Aplica los cambios y avanza a la próxima fecha',
+      ctaBackToHub: 'Volver al hub',
+      ctaBackToHubHint: 'Descarta los cambios y vuelve al dashboard',
+},
     transfers: {
       eyebrow: 'MERCADO DE PASES',
       title: 'Cierre de temporada',
@@ -420,6 +512,29 @@ export const COPY: Record<Locale, Copy> = {
       outIrregular: 'Irregular',
       outFlojo: 'Flojo',
       outDesastre: 'Desastre',
+    },
+    // MGC-1650 (WF4) — pantalla /match.
+    match: {
+      loading: 'Cargando partido…',
+      loadError: 'No pudimos cargar el partido. Volvé al hub e intentá de nuevo.',
+      ctaLoadErrorBack: 'Volver al hub',
+      weekLabel: 'SEMANA',
+      title: 'Tu partido',
+      subtitle: 'Resultado, eventos y tu rendimiento en la fecha.',
+      finalLabel: 'FINAL',
+      rival: 'Rival',
+      cleanSheet: 'Valla invicta',
+      resultClosed: 'Resultado cerrado',
+      eventsTitle: 'EVENTOS',
+      noEvents: 'Sin goles en este partido.',
+      goalEvent: 'Gol. Definición letal.',
+      yourGameTitle: 'TU PARTIDO',
+      statGoals: 'Goles',
+      statAst: 'Asist.',
+      statPassPct: 'Pase %',
+      statMinutes: 'Minutos',
+      ctaFinalize: 'Finalizar partido',
+      ctaFinalizeHint: 'Pasa a la pantalla de post-partido para confirmar',
     },
   },
   en: {
@@ -559,7 +674,41 @@ export const COPY: Record<Locale, Copy> = {
       evCompraLujosaDesc: 'You treat yourself. Morale soars, focus on training drops.',
       evPremiacion: 'Individual award',
       evPremiacionDesc: 'You are named player of the round. Morale and confidence at their peak.',
-    },
+      sectionLabel: 'MATCH SUMMARY',
+      subtitle: 'Your rating and the changes that will apply on confirm.',
+      ratingA11y: 'Rating {rating} out of 10',
+      ratingOutstanding: ' outstanding performance',
+      ratingSolid: ' solid performance',
+      ratingRegular: ' average performance',
+      ratingPoor: ' below expectations',
+      ratingBad: ' tough night',
+      changesTitle: 'CHANGES',
+      statMoral: 'Morale',
+      statFisico: 'Energy',
+      statConfianza: 'Confidence',
+      statGoals: 'Match goals',
+      reputationTitle: 'REPUTATION',
+      prensa: 'Press: {value}',
+      hinchada: 'Fans: {value}',
+      vestuario: 'Locker room: {value}',
+      repPrensaEnsalzada: 'praised',
+      repPrensaNeutral: 'neutral',
+      repPrensaCritica: 'critical',
+      repPrensaHostil: 'hostile',
+      repHinchadaIdolo: 'idol',
+      repHinchadaAceptado: 'accepted',
+      repHinchadaDiscutido: 'controversial',
+      repHinchadaOdiado: 'vilified',
+      repVestuarioCapitan: 'moral captain',
+      repVestuarioIntegrado: 'integrated',
+      repVestuarioAislado: 'isolated',
+      nextTitle: 'NEXT',
+      nextWeek: 'Week {week} / 38',
+      ctaNextWeek: 'Next week →',
+      ctaNextWeekHint: 'Apply the changes and advance to the next matchweek',
+      ctaBackToHub: 'Back to hub',
+      ctaBackToHubHint: 'Discard the changes and return to the dashboard',
+},
     transfers: {
       eyebrow: 'TRANSFER WINDOW',
       title: 'End of season',
@@ -611,6 +760,29 @@ export const COPY: Record<Locale, Copy> = {
       outIrregular: 'Patchy',
       outFlojo: 'Poor',
       outDesastre: 'Disaster',
+    },
+    // MGC-1650 (WF4) — /match screen.
+    match: {
+      loading: 'Loading match…',
+      loadError: 'We could not load the match. Go back to the hub and try again.',
+      ctaLoadErrorBack: 'Back to hub',
+      weekLabel: 'WEEK',
+      title: 'Your match',
+      subtitle: 'Final score, events and your performance for the week.',
+      finalLabel: 'FULL TIME',
+      rival: 'Opponent',
+      cleanSheet: 'Clean sheet',
+      resultClosed: 'Result closed',
+      eventsTitle: 'EVENTS',
+      noEvents: 'No goals in this match.',
+      goalEvent: 'Goal. Clinical finish.',
+      yourGameTitle: 'YOUR GAME',
+      statGoals: 'Goals',
+      statAst: 'Assists',
+      statPassPct: 'Pass %',
+      statMinutes: 'Minutes',
+      ctaFinalize: 'Finish match',
+      ctaFinalizeHint: 'Open the post-match screen to confirm',
     },
   },
   'zh-CN': {
@@ -750,7 +922,41 @@ export const COPY: Record<Locale, Copy> = {
       evCompraLujosaDesc: '你给自己买了件贵重物品。士气高涨，训练专注度下降。',
       evPremiacion: '个人奖项',
       evPremiacionDesc: '你当选本轮最佳球员。士气与信心达到顶峰。',
-    },
+      sectionLabel: '比赛总结',
+      subtitle: '评分与确认后应用的变动。',
+      ratingA11y: '评分 {rating} / 10',
+      ratingOutstanding: ' 出色表现',
+      ratingSolid: ' 稳健表现',
+      ratingRegular: ' 中规中矩',
+      ratingPoor: ' 低于预期',
+      ratingBad: ' 艰难的夜晚',
+      changesTitle: '变动',
+      statMoral: '士气',
+      statFisico: '体能',
+      statConfianza: '信心',
+      statGoals: '本场进球',
+      reputationTitle: '声誉',
+      prensa: '媒体: {value}',
+      hinchada: '球迷: {value}',
+      vestuario: '更衣室: {value}',
+      repPrensaEnsalzada: '受褒扬',
+      repPrensaNeutral: '中性',
+      repPrensaCritica: '受批评',
+      repPrensaHostil: '敌对',
+      repHinchadaIdolo: '偶像',
+      repHinchadaAceptado: '被接受',
+      repHinchadaDiscutido: '争议',
+      repHinchadaOdiado: '被敌视',
+      repVestuarioCapitan: '精神队长',
+      repVestuarioIntegrado: '融入',
+      repVestuarioAislado: '被孤立',
+      nextTitle: '下一场',
+      nextWeek: '第 {week} / 38 周',
+      ctaNextWeek: '下一周 →',
+      ctaNextWeekHint: '应用变动并进入下一比赛周',
+      ctaBackToHub: '返回主页',
+      ctaBackToHubHint: '丢弃变动并返回仪表盘',
+},
     transfers: {
       eyebrow: '转会市场',
       title: '赛季结束',
@@ -802,6 +1008,29 @@ export const COPY: Record<Locale, Copy> = {
       outIrregular: '起伏不定',
       outFlojo: '低迷',
       outDesastre: '灾难',
+    },
+    // MGC-1650 (WF4) — /match 屏幕。
+    match: {
+      loading: '加载比赛中…',
+      loadError: '比赛加载失败。请返回主页后重试。',
+      ctaLoadErrorBack: '返回主页',
+      weekLabel: '第',
+      title: '本场比赛',
+      subtitle: '比分、事件与本场表现。',
+      finalLabel: '全场结束',
+      rival: '对手',
+      cleanSheet: '零封对手',
+      resultClosed: '结果已出',
+      eventsTitle: '事件',
+      noEvents: '本场无进球。',
+      goalEvent: '进球。冷静射门。',
+      yourGameTitle: '你的表现',
+      statGoals: '进球',
+      statAst: '助攻',
+      statPassPct: '传球 %',
+      statMinutes: '分钟',
+      ctaFinalize: '结束比赛',
+      ctaFinalizeHint: '进入赛后屏幕以确认',
     },
   },
 };

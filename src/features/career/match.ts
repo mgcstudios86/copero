@@ -103,3 +103,39 @@ export function resolveMatch(
     breakdown: { base: weighted, luck, clubFactor: clubScaled, weighted },
   };
 }
+
+/**
+ * MGC-1650 (WF5 post-partido) — rating 0.0–10.0 (1 decimal).
+ */
+export function ratingFromOutcome(outcome: MatchOutcome): number {
+  const base = outcome.score / 10;
+  let rating = base;
+  if (outcome.goals >= 3) rating += 0.5;
+  if (outcome.cleanSheet) rating += 0.3;
+  const clamped = Math.max(0, Math.min(10, rating));
+  return Math.round(clamped * 10) / 10;
+}
+
+/**
+ * MGC-1650 (WF5) — deltas de moral/fisico/confianza según el rating.
+ */
+export function deltasFromRating(rating: number): {
+  moralDelta: number;
+  fisicoDelta: number;
+  confianzaDelta: number;
+} {
+  if (rating >= 8.5)
+    return { moralDelta: 12, fisicoDelta: -8, confianzaDelta: 15 };
+  if (rating >= 7.0)
+    return { moralDelta: 6, fisicoDelta: -5, confianzaDelta: 8 };
+  if (rating >= 5.0)
+    return { moralDelta: 0, fisicoDelta: -3, confianzaDelta: 0 };
+  if (rating >= 3.0)
+    return { moralDelta: -6, fisicoDelta: -2, confianzaDelta: -8 };
+  return { moralDelta: -12, fisicoDelta: -1, confianzaDelta: -15 };
+}
+
+/** Clamp helper público para que la UI no reimplemente el rango. */
+export function clampCareerStat(n: number): number {
+  return Math.max(0, Math.min(100, n));
+}
