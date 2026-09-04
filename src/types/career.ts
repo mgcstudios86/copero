@@ -9,8 +9,10 @@
  * la UI desde `src/design/copy/es-AR/simulador-carrera.ts`.
  */
 
+import type { NextWeekModifiers, PostMatchEvent } from '@/features/career/events';
 import type { PositionStats } from '@/features/career/position-stats';
 import type { RngSnapshot } from '@/features/career/rng';
+import type { TransferState } from '@/features/career/transfers';
 
 export type Foot = 'left' | 'right' | 'both';
 
@@ -455,6 +457,18 @@ export type CareerSaveState = {
   seed: number;
   /** Cursor determinista; v1 legacy puede no incluirlo. */
   rng?: RngSnapshot;
+  /**
+   * F3.2 / ADR-0017 §6 — campos nuevos, **opcionales con default**. Un
+   * save de F2.x que no los traiga se hidrata con `null` /
+   * `NO_MODIFIERS` sin migración ni bump de versión: por eso son
+   * opcionales y no entran en el discriminador `v`.
+   */
+  /** Evento post-partido pendiente de mostrar. `loadState` reabre el modal. */
+  postMatchPending?: PostMatchEvent | null;
+  /** Modificadores que el evento dejó para la semana siguiente. */
+  nextWeekModifiers?: NextWeekModifiers;
+  /** Estado del transfer system al cierre de temporada. */
+  transferState?: TransferState | null;
 };
 
 /**

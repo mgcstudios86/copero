@@ -154,6 +154,80 @@ export type Copy = {
     optTrainingDesc: string;
     backHint: string;
   };
+  // MGC-1632 (F3.2) — eventos post-partido (ADR-0017 §1/§2).
+  postMatch: {
+    eyebrow: string;
+    title: string;
+    ratingLabel: string;
+    luckGatePassed: string;
+    luckGateBlocked: string;
+    continue: string;
+    continueHint: string;
+    evDescanso: string;
+    evDescansoDesc: string;
+    evFiesta: string;
+    evFiestaDesc: string;
+    evGambling: string;
+    evGamblingDesc: string;
+    evCompraLujosa: string;
+    evCompraLujosaDesc: string;
+    evPremiacion: string;
+    evPremiacionDesc: string;
+  };
+  // MGC-1632 (F3.2) — transfer system entre temporadas (ADR-0017 §4).
+  transfers: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    verdictElite: string;
+    verdictStrong: string;
+    verdictHold: string;
+    verdictHoldLow: string;
+    verdictDescent: string;
+    verdictRetirement: string;
+    noOffers: string;
+    forcedTransfer: string;
+    deadline: string;
+    offerRole: string;
+    roleStarter: string;
+    roleRotation: string;
+    offerYears: string;
+    offerWage: string;
+    offerReputation: string;
+    accept: string;
+    acceptHint: string;
+    decline: string;
+    declineHint: string;
+  };
+  // MGC-1632 (F3.2) — árbol de decisión completo (ADR-0017 §3).
+  decisionTree: {
+    nodePretemporada: string;
+    nodeEntrenamientoBase: string;
+    nodeDobleSesion: string;
+    nodeGimnasio: string;
+    nodeVideoAnalisis: string;
+    nodeCharlaTecnico: string;
+    nodeVestuarioTension: string;
+    nodePartidoLiga: string;
+    nodePartidoCopa: string;
+    nodeDerbi: string;
+    nodeVisitanteHostil: string;
+    nodeRuedaPrensa: string;
+    nodeRedesSociales: string;
+    nodeOfertaAgente: string;
+    nodeConvocatoriaJuvenil: string;
+    nodeAmistosoInternacional: string;
+    nodeManejoMolestia: string;
+    nodeRotacionBanco: string;
+    nodeCierreMercado: string;
+    nodeFinalTemporada: string;
+    outBrillante: string;
+    outSolido: string;
+    outCorrecto: string;
+    outIrregular: string;
+    outFlojo: string;
+    outDesastre: string;
+  };
 };
 
 export const COPY: Record<Locale, Copy> = {
@@ -276,6 +350,77 @@ export const COPY: Record<Locale, Copy> = {
       optTrainingDesc: 'Mejora stat posicional concreta.',
       backHint: 'Volver al hub de temporada',
     },
+    postMatch: {
+      eyebrow: 'DESPUÉS DEL PARTIDO',
+      title: '¿Cómo cerrás la noche?',
+      ratingLabel: 'Puntaje del partido',
+      luckGatePassed: 'Tu nivel sostiene la racha: la suerte juega a favor esta semana.',
+      luckGateBlocked: 'Sin nivel no hay suerte que alcance: pagás el desgaste sin premio.',
+      continue: 'Seguir',
+      continueHint: 'Cerrar el evento y avanzar a la semana siguiente',
+      evDescanso: 'Descanso',
+      evDescansoDesc: 'Te quedás en casa. Recuperás físico y cerrás la semana tranquilo.',
+      evFiesta: 'Fiesta',
+      evFiestaDesc: 'Salís a festejar con el plantel. Sube la moral, baja el físico.',
+      evGambling: 'Timba',
+      evGamblingDesc: 'La noche termina en la mesa de juego. Trasnoche, resaca y más riesgo de lesión.',
+      evCompraLujosa: 'Compra de lujo',
+      evCompraLujosaDesc: 'Te das un gusto caro. Moral por las nubes, cabeza menos en el entrenamiento.',
+      evPremiacion: 'Premio individual',
+      evPremiacionDesc: 'Te eligen figura de la fecha. Moral y confianza al máximo.',
+    },
+    transfers: {
+      eyebrow: 'MERCADO DE PASES',
+      title: 'Cierre de temporada',
+      subtitle: 'Tu rendimiento define qué clubes te buscan.',
+      verdictElite: 'Los grandes te quieren. Tres ofertas de elite sobre la mesa.',
+      verdictStrong: 'Buena temporada. Dos clubes del medio te hacen propuesta.',
+      verdictHold: 'Temporada correcta. Te quedás salvo que aparezca algo mejor.',
+      verdictHoldLow: 'Temporada floja pero sin alarma. Seguís donde estás.',
+      verdictDescent: 'Temporada mala. El club te empuja a salir.',
+      verdictRetirement: 'Se termina el camino. Es hora de colgar los botines.',
+      noOffers: 'No llegó ninguna oferta. Seguís en el club.',
+      forcedTransfer: 'Salida forzada: el club no te quiere para la próxima.',
+      deadline: 'Tenés hasta la semana {{week}} para decidir.',
+      offerRole: 'Rol esperado',
+      roleStarter: 'Titular',
+      roleRotation: 'Rotación',
+      offerYears: 'Contrato',
+      offerWage: 'Sueldo',
+      offerReputation: 'Reputación',
+      accept: 'Aceptar',
+      acceptHint: 'Fichar por este club',
+      decline: 'Rechazar todo',
+      declineHint: 'Quedarte en tu club actual',
+    },
+    decisionTree: {
+      nodePretemporada: 'Pretemporada: el cuerpo técnico mide de cero.',
+      nodeEntrenamientoBase: 'Entrenamiento de la semana con el plantel.',
+      nodeDobleSesion: 'Doble sesión: mañana y tarde sin respiro.',
+      nodeGimnasio: 'Trabajo de gimnasio y fuerza.',
+      nodeVideoAnalisis: 'Sesión de video con el analista.',
+      nodeCharlaTecnico: 'Charla mano a mano con el técnico.',
+      nodeVestuarioTension: 'Tensión en el vestuario después del último resultado.',
+      nodePartidoLiga: 'Partido de liga: fecha común.',
+      nodePartidoCopa: 'Partido de copa: eliminación directa.',
+      nodeDerbi: 'Clásico: el partido del año.',
+      nodeVisitanteHostil: 'Visitante en cancha hostil.',
+      nodeRuedaPrensa: 'Rueda de prensa con periodistas filosos.',
+      nodeRedesSociales: 'Se te va la mano en redes sociales.',
+      nodeOfertaAgente: 'Tu representante trae una propuesta.',
+      nodeConvocatoriaJuvenil: 'Convocatoria al seleccionado juvenil.',
+      nodeAmistosoInternacional: 'Amistoso internacional con viaje largo.',
+      nodeManejoMolestia: 'Arrastrás una molestia: hay que manejarla.',
+      nodeRotacionBanco: 'Rotación: arrancás en el banco.',
+      nodeCierreMercado: 'Última semana del mercado de pases.',
+      nodeFinalTemporada: 'Final de temporada: se define todo.',
+      outBrillante: 'Brillante',
+      outSolido: 'Sólido',
+      outCorrecto: 'Correcto',
+      outIrregular: 'Irregular',
+      outFlojo: 'Flojo',
+      outDesastre: 'Desastre',
+    },
   },
   en: {
     brand: 'Copero',
@@ -396,6 +541,77 @@ export const COPY: Record<Locale, Copy> = {
       optTrainingDesc: 'Boosts a specific position stat.',
       backHint: 'Back to the season hub',
     },
+    postMatch: {
+      eyebrow: 'AFTER THE MATCH',
+      title: 'How do you end the night?',
+      ratingLabel: 'Match rating',
+      luckGatePassed: 'Your level backs the run: luck works in your favour this week.',
+      luckGateBlocked: 'No level, no luck: you pay the wear without the reward.',
+      continue: 'Continue',
+      continueHint: 'Close the event and move to next week',
+      evDescanso: 'Rest',
+      evDescansoDesc: 'You stay home. You recover fitness and close the week calmly.',
+      evFiesta: 'Party',
+      evFiestaDesc: 'You go out with the squad. Morale up, fitness down.',
+      evGambling: 'Gambling',
+      evGamblingDesc: 'The night ends at the table. Late hours, hangover and higher injury risk.',
+      evCompraLujosa: 'Luxury purchase',
+      evCompraLujosaDesc: 'You treat yourself. Morale soars, focus on training drops.',
+      evPremiacion: 'Individual award',
+      evPremiacionDesc: 'You are named player of the round. Morale and confidence at their peak.',
+    },
+    transfers: {
+      eyebrow: 'TRANSFER WINDOW',
+      title: 'End of season',
+      subtitle: 'Your performance decides which clubs come after you.',
+      verdictElite: 'The big clubs want you. Three elite offers on the table.',
+      verdictStrong: 'Good season. Two mid-table clubs make a bid.',
+      verdictHold: 'Decent season. You stay unless something better shows up.',
+      verdictHoldLow: 'Weak season, but no alarm. You stay where you are.',
+      verdictDescent: 'Bad season. The club pushes you out.',
+      verdictRetirement: 'The road ends here. Time to hang up the boots.',
+      noOffers: 'No offers arrived. You stay at the club.',
+      forcedTransfer: 'Forced exit: the club does not want you next season.',
+      deadline: 'You have until week {{week}} to decide.',
+      offerRole: 'Expected role',
+      roleStarter: 'Starter',
+      roleRotation: 'Rotation',
+      offerYears: 'Contract',
+      offerWage: 'Wage',
+      offerReputation: 'Reputation',
+      accept: 'Accept',
+      acceptHint: 'Sign for this club',
+      decline: 'Decline all',
+      declineHint: 'Stay at your current club',
+    },
+    decisionTree: {
+      nodePretemporada: 'Pre-season: the staff measures you from scratch.',
+      nodeEntrenamientoBase: 'Regular week of training with the squad.',
+      nodeDobleSesion: 'Double session: morning and afternoon, no rest.',
+      nodeGimnasio: 'Gym and strength work.',
+      nodeVideoAnalisis: 'Video session with the analyst.',
+      nodeCharlaTecnico: 'One-on-one talk with the manager.',
+      nodeVestuarioTension: 'Tension in the dressing room after the last result.',
+      nodePartidoLiga: 'League match: regular round.',
+      nodePartidoCopa: 'Cup match: knockout tie.',
+      nodeDerbi: 'Derby: the match of the year.',
+      nodeVisitanteHostil: 'Away at a hostile ground.',
+      nodeRuedaPrensa: 'Press conference with sharp reporters.',
+      nodeRedesSociales: 'You go too far on social media.',
+      nodeOfertaAgente: 'Your agent brings a proposal.',
+      nodeConvocatoriaJuvenil: 'Call-up to the youth national team.',
+      nodeAmistosoInternacional: 'International friendly with a long trip.',
+      nodeManejoMolestia: 'You are carrying a knock: it has to be managed.',
+      nodeRotacionBanco: 'Rotation: you start on the bench.',
+      nodeCierreMercado: 'Final week of the transfer window.',
+      nodeFinalTemporada: 'Season finale: everything is on the line.',
+      outBrillante: 'Brilliant',
+      outSolido: 'Solid',
+      outCorrecto: 'Decent',
+      outIrregular: 'Patchy',
+      outFlojo: 'Poor',
+      outDesastre: 'Disaster',
+    },
   },
   'zh-CN': {
     brand: 'Copero',
@@ -515,6 +731,77 @@ export const COPY: Record<Locale, Copy> = {
       optTraining: '专项体能训练',
       optTrainingDesc: '提升一个位置属性。',
       backHint: '返回赛季中心',
+    },
+    postMatch: {
+      eyebrow: '赛后',
+      title: '今晚你怎么收场？',
+      ratingLabel: '本场评分',
+      luckGatePassed: '你的实力撑得住这波势头：本周运气站在你这边。',
+      luckGateBlocked: '没有实力就没有运气：你只付出消耗，得不到回报。',
+      continue: '继续',
+      continueHint: '关闭事件并进入下一周',
+      evDescanso: '休息',
+      evDescansoDesc: '你留在家里。恢复体能，平静地结束这一周。',
+      evFiesta: '派对',
+      evFiestaDesc: '你和队友出去庆祝。士气上升，体能下降。',
+      evGambling: '赌博',
+      evGamblingDesc: '这一夜以牌桌收尾。熬夜、宿醉，受伤风险更高。',
+      evCompraLujosa: '奢侈消费',
+      evCompraLujosaDesc: '你给自己买了件贵重物品。士气高涨，训练专注度下降。',
+      evPremiacion: '个人奖项',
+      evPremiacionDesc: '你当选本轮最佳球员。士气与信心达到顶峰。',
+    },
+    transfers: {
+      eyebrow: '转会市场',
+      title: '赛季结束',
+      subtitle: '你的表现决定哪些俱乐部会来找你。',
+      verdictElite: '豪门想要你。桌上有三份顶级报价。',
+      verdictStrong: '赛季不错。两家中游俱乐部提出报价。',
+      verdictHold: '赛季中规中矩。除非出现更好的选择，否则你留下。',
+      verdictHoldLow: '赛季平淡，但不至于亮红灯。你留在原地。',
+      verdictDescent: '赛季糟糕。俱乐部把你推向门外。',
+      verdictRetirement: '路走到头了。是时候挂靴了。',
+      noOffers: '没有收到任何报价。你继续留在俱乐部。',
+      forcedTransfer: '被迫离队：俱乐部下赛季不要你。',
+      deadline: '你有到第 {{week}} 周的时间做决定。',
+      offerRole: '预期角色',
+      roleStarter: '主力',
+      roleRotation: '轮换',
+      offerYears: '合同',
+      offerWage: '薪水',
+      offerReputation: '声望',
+      accept: '接受',
+      acceptHint: '加盟这家俱乐部',
+      decline: '全部拒绝',
+      declineHint: '留在现在的俱乐部',
+    },
+    decisionTree: {
+      nodePretemporada: '季前赛：教练组从零开始评估你。',
+      nodeEntrenamientoBase: '与球队进行常规周训练。',
+      nodeDobleSesion: '双练：上午和下午连轴转。',
+      nodeGimnasio: '健身房力量训练。',
+      nodeVideoAnalisis: '与分析师一起看录像。',
+      nodeCharlaTecnico: '与主教练单独谈话。',
+      nodeVestuarioTension: '上一场结果之后更衣室气氛紧张。',
+      nodePartidoLiga: '联赛比赛：常规轮次。',
+      nodePartidoCopa: '杯赛比赛：淘汰赛。',
+      nodeDerbi: '德比：一年中最重要的比赛。',
+      nodeVisitanteHostil: '客场作战，气氛敌意十足。',
+      nodeRuedaPrensa: '面对尖锐记者的新闻发布会。',
+      nodeRedesSociales: '你在社交媒体上说得太过了。',
+      nodeOfertaAgente: '你的经纪人带来一份提案。',
+      nodeConvocatoriaJuvenil: '入选青年国家队。',
+      nodeAmistosoInternacional: '国际友谊赛，长途奔波。',
+      nodeManejoMolestia: '你带着伤病：必须妥善处理。',
+      nodeRotacionBanco: '轮换：你从替补席开始。',
+      nodeCierreMercado: '转会窗口的最后一周。',
+      nodeFinalTemporada: '赛季收官：一切在此见分晓。',
+      outBrillante: '出色',
+      outSolido: '稳健',
+      outCorrecto: '中规中矩',
+      outIrregular: '起伏不定',
+      outFlojo: '低迷',
+      outDesastre: '灾难',
     },
   },
 };
