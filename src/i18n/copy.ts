@@ -286,6 +286,34 @@ export type Copy = {
     ctaFinalizeHint: string;
   };
 
+  /**
+   * MGC-1736 (WF6) — fin de carrera / retiro. i18n paridad es/en/zh-CN.
+   * El placeholder `{{initial}}`, `{{final}}` y `{{age}}` se sustituyen
+   * con el OVR inicial/final y la edad de retiro.
+   */
+  retire: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    statRetirementAge: string;
+    statFinalOvr: string;
+    statApps: string;
+    statGoalsAssists: string;
+    attributesTitle: string;
+    attributesA11y: string;
+    trophyTitle: string;
+    trophyEmpty: string;
+    legadoTitle: string;
+    ovrDelta: string;
+    legadoLead: string;
+    retiredAt: string;
+    restart: string;
+    restartA11y: string;
+    backSeason: string;
+    backSeasonA11y: string;
+    notFinished: string;
+  };
+
 };
 
 export const COPY: Record<Locale, Copy> = {
@@ -536,6 +564,29 @@ export const COPY: Record<Locale, Copy> = {
       ctaFinalize: 'Finalizar partido',
       ctaFinalizeHint: 'Pasa a la pantalla de post-partido para confirmar',
     },
+    // MGC-1736 (WF6) — fin de carrera / retiro.
+    retire: {
+      eyebrow: 'CARRERA COMPLETA',
+      title: 'FIN DE CARRERA',
+      subtitle: 'Cierre de la carrera. Resumen de tus mejores temporadas, vitrina y legado.',
+      statRetirementAge: 'EDAD DE RETIRO',
+      statFinalOvr: 'OVR FINAL',
+      statApps: 'PARTIDOS',
+      statGoalsAssists: 'GOLES + ASIST.',
+      attributesTitle: 'ATRIBUTOS AL RETIRO',
+      attributesA11y: 'Atributos al retiro',
+      trophyTitle: 'VITRINA',
+      trophyEmpty: 'Sin títulos en tu carrera.',
+      legadoTitle: 'LEGADO',
+      ovrDelta: 'OVR {{initial}} → {{final}}',
+      legadoLead: 'Cresciste de rookie a referente.',
+      retiredAt: 'Te retiraste a los {{age}} años.',
+      restart: 'Empezar nueva carrera',
+      restartA11y: 'Borra la carrera actual y vuelve al inicio',
+      backSeason: 'Volver a la temporada',
+      backSeasonA11y: 'Regresa al hub de temporada',
+      notFinished: 'Tu carrera todavía no terminó. Volvé a la temporada para jugarla completa.',
+    },
   },
   en: {
     brand: 'Copero',
@@ -784,6 +835,29 @@ export const COPY: Record<Locale, Copy> = {
       ctaFinalize: 'Finish match',
       ctaFinalizeHint: 'Open the post-match screen to confirm',
     },
+    // MGC-1736 (WF6) — fin de carrera / retiro.
+    retire: {
+      eyebrow: 'CAREER COMPLETE',
+      title: 'END OF CAREER',
+      subtitle: 'Career closing. Summary of your best seasons, trophy room and legacy.',
+      statRetirementAge: 'RETIREMENT AGE',
+      statFinalOvr: 'FINAL OVR',
+      statApps: 'MATCHES',
+      statGoalsAssists: 'GOALS + ASSISTS',
+      attributesTitle: 'ATTRIBUTES AT RETIREMENT',
+      attributesA11y: 'Attributes at retirement',
+      trophyTitle: 'TROPHY ROOM',
+      trophyEmpty: 'No trophies in your career.',
+      legadoTitle: 'LEGACY',
+      ovrDelta: 'OVR {{initial}} → {{final}}',
+      legadoLead: 'You grew from rookie to a reference.',
+      retiredAt: 'You retired at age {{age}}.',
+      restart: 'Start a new career',
+      restartA11y: 'Erase the current career and return to the start',
+      backSeason: 'Back to season',
+      backSeasonA11y: 'Return to the season hub',
+      notFinished: 'Your career has not finished yet. Go back to the season to play it fully.',
+    },
   },
   'zh-CN': {
     brand: 'Copero',
@@ -1031,6 +1105,29 @@ export const COPY: Record<Locale, Copy> = {
       statMinutes: '分钟',
       ctaFinalize: '结束比赛',
       ctaFinalizeHint: '进入赛后屏幕以确认',
+    },
+    // MGC-1736 (WF6) — fin de carrera / retiro.
+    retire: {
+      eyebrow: '职业生涯完结',
+      title: '退役',
+      subtitle: '职业生涯落幕。回顾你的最佳赛季、奖杯陈列与传奇。',
+      statRetirementAge: '退役年龄',
+      statFinalOvr: '最终 OVR',
+      statApps: '出场次数',
+      statGoalsAssists: '进球 + 助攻',
+      attributesTitle: '退役属性',
+      attributesA11y: '退役时的属性',
+      trophyTitle: '奖杯陈列',
+      trophyEmpty: '你的职业生涯中没有奖杯。',
+      legadoTitle: '传奇',
+      ovrDelta: 'OVR {{initial}} → {{final}}',
+      legadoLead: '你从新秀成长为标杆。',
+      retiredAt: '你在 {{age}} 岁退役。',
+      restart: '开始新的职业生涯',
+      restartA11y: '清除当前职业生涯并返回起始页',
+      backSeason: '返回赛季',
+      backSeasonA11y: '回到赛季主页',
+      notFinished: '你的职业生涯尚未结束。返回赛季继续完整地打完。',
     },
   },
 };

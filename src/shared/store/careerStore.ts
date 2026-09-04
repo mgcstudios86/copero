@@ -177,6 +177,16 @@ type CareerStore = CareerSnapshot & {
    * Devuelve `true` si encontró un save previo y lo aplicó. */
   hydrateFromSave: () => Promise<boolean>;
   reset: () => void;
+  /**
+   * MGC-1736 (WF6) — reset destructivo AWAITABLE para el CTA
+   * "Nueva carrera" en `fin-carrera.tsx`. A diferencia de `reset()`
+   * (fire-and-forget), drena `flushPendingSave()` ANTES del clear para
+   * que una save en vuelo no reescriba la carrera vieja después del
+   * `clearCareerSave` (datos fantasma del AC de no-mutación), y AWAITA
+   * el borrado de AsyncStorage antes de resolver, para que el caller
+   * navegue a `/identity` con el disco ya vacío.
+   */
+  resetAll: () => Promise<void>;
 };
 
 /**
@@ -715,6 +725,29 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     reset: () => {
       setSnapshot(() => initialSnapshot());
       void clearCareerSave().catch(() => {
+        // best-effort: si falla el clear, el próximo save sobrescribe.
+      });
+    },
+    // MGC-1736 (WF6) — variant awaitable de reset. Ordena:
+    //   1) flushPendingSave: drena la save en vuelo al disco para
+    //      que NO compita con el clear siguiente.
+    //   2) reset memoria: vuelve al initialSnapshot.
+    //   3) await clearCareerSave: borra la entry de AsyncStorage y
+    //      ESPERA a que termine antes de resolver, así el caller
+    //      (CTA "Nueva carrera") navega con disco vacío.
+    // El `try/catch` alrededor de clearCareerSave es best-effort
+    // (idéntico a `reset()`): si falla el clear, el próximo save
+    // sobrescribe; pero el flush previo igual cierra la ventana de
+    // datos fantasma que el AC de no-mutación prohíbe.
+    resetAll: async () => {
+      try {
+        await flushPendingSave();
+      } catch {
+        // best-effort: si flush falla seguimos con el reset memoria
+        // y el clear; el peor caso es la misma ventana que reset().
+      }
+      setSnapshot(() => initialSnapshot());
+      await clearCareerSave().catch(() => {
         // best-effort: si falla el clear, el próximo save sobrescribe.
       });
     },
