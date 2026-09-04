@@ -94,6 +94,33 @@ describe('reputation pure function', () => {
     );
     expect(mayor.seleccionConvocado).toBe(true);
   });
+
+  // MGC-1705 — boundary tests para normalización 0-indexed del ciclo
+  // prensa (weekIdx % 3 === 2). Semana 1 (weekIdx=0) no es prensa-active,
+  // semanas 3 y 6 (weekIdx=2, 5) sí lo son.
+  it('semana 1 (weekIdx=0): prensa neutral, no es semana de prensa', () => {
+    const rep = recomputeReputation(
+      { ...initialProfile.career, moral: 80 },
+      { ovr: 70, age: 24, week: 1 },
+    );
+    expect(rep.prensa).toBe('neutral');
+  });
+
+  it('semana 3 (weekIdx=2): prensa refleja moral (ciclo match)', () => {
+    const rep = recomputeReputation(
+      { ...initialProfile.career, moral: 80 },
+      { ovr: 70, age: 24, week: 3 },
+    );
+    expect(rep.prensa).toBe('ensalzada');
+  });
+
+  it('semana 6 (weekIdx=5): prensa refleja moral (ciclo consistente)', () => {
+    const rep = recomputeReputation(
+      { ...initialProfile.career, moral: 20 },
+      { ovr: 70, age: 24, week: 6 },
+    );
+    expect(rep.prensa).toBe('hostil');
+  });
 });
 
 describe('recomputeOvrForPosition', () => {

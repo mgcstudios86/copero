@@ -3,7 +3,9 @@
  *
  * Sin efectos secundarios. Dado un CareerStats devuelve una Reputation
  * consistente con las reglas de strategies.md:
- * - R1 Prensa: cada 3 partidos (week múltiplo de 3) se recalcula desde
+ * - R1 Prensa: cada 3 partidos (weekIdx % 3 === 2 sobre week 0-indexed,
+ *   equivalente a week % 3 === 0 sobre week 1-indexed — convención
+ *   consistente con `recommendStrategy` PR #422) se recalcula desde
  *   moral + racha.
  * - R2 Hinchada: racha + moral local.
  * - R3 Vestuario: conflictos, goles, liderato (proxy: moral del grupo ≈
@@ -47,7 +49,13 @@ export function recomputeReputation(
   career: CareerStats,
   opts: { ovr: number; age: number; week: number },
 ): Reputation {
-  const prensa: PrensaReputation = opts.week % 3 === 0 ? moraleBand(career.moral) : 'neutral';
+  // MGC-1705 — normalizar a 0-indexed (consistente con v2 currentWeek y
+  // `recommendStrategy` PR #422). `opts.week` se conserva 1..38 por compat
+  // con la UI; el motor puro F2.2+ trabaja en 0..37 para evitar el
+  // off-by-one implícito de `week % 3 === 0` (matemáticamente equivalente
+  // pero no expresa la intención de "índice en el ciclo de 3 semanas").
+  const weekIdx = opts.week - 1;
+  const prensa: PrensaReputation = weekIdx % 3 === 2 ? moraleBand(career.moral) : 'neutral';
   const hinchada: HinchadaReputation = rachaBand(career.racha, career.moral);
   const vestuario: VestuarioReputation = vestuarioBand(career.confianza, career.fisico);
   const seleccionConvocado =
