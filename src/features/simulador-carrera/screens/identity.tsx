@@ -909,6 +909,12 @@ export default function IdentityScreen() {
                   accessibilityLabel={`Posición ${pos.label}`}
                   accessibilityState={{ selected: active }}
                   testID={`pos-${pos.id}`}
+                  // MGC-1502 — WCAG 2.5.5: touch target ≥44dp. Dot visual se
+                  // mantiene en 36px; hitSlop +8 cada lado → 52×52dp hitbox sin
+                  // alterar layout. field-map-wrapper lleva overflow:visible
+                  // (línea ~1378) así que el hitbox extendido no clipea contra
+                  // el wrapper parent bounds.
+                  hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
                   collapsable={false}
                   style={{
                     position: 'absolute',
