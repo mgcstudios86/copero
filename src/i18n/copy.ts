@@ -39,6 +39,18 @@ export type Copy = {
     languageLabel: string;
     menuOpen: string;
     menuClose: string;
+    settings: string;
+  };
+  settings: {
+    title: string;
+    version: string;
+    build: string;
+    language: string;
+    resetCareer: string;
+    howToPlay: string;
+    feedback: string;
+    feedbackSubject: string;
+    close: string;
   };
 };
 
@@ -58,6 +70,18 @@ export const COPY: Record<Locale, Copy> = {
       languageLabel: 'Cambiar idioma',
       menuOpen: 'Abrir menú',
       menuClose: 'Cerrar menú',
+      settings: 'Ajustes',
+    },
+    settings: {
+      title: 'Ajustes',
+      version: 'Versión',
+      build: 'Build',
+      language: 'Idioma',
+      resetCareer: 'Resetear carrera',
+      howToPlay: 'Cómo jugar',
+      feedback: 'Enviar feedback',
+      feedbackSubject: 'Feedback Copero',
+      close: 'Cerrar',
     },
   },
   en: {
@@ -75,6 +99,18 @@ export const COPY: Record<Locale, Copy> = {
       languageLabel: 'Change language',
       menuOpen: 'Open menu',
       menuClose: 'Close menu',
+      settings: 'Settings',
+    },
+    settings: {
+      title: 'Settings',
+      version: 'Version',
+      build: 'Build',
+      language: 'Language',
+      resetCareer: 'Reset career',
+      howToPlay: 'How to play',
+      feedback: 'Send feedback',
+      feedbackSubject: 'Copero feedback',
+      close: 'Close',
     },
   },
   'zh-CN': {
@@ -92,6 +128,18 @@ export const COPY: Record<Locale, Copy> = {
       languageLabel: '切换语言',
       menuOpen: '打开菜单',
       menuClose: '关闭菜单',
+      settings: '设置',
+    },
+    settings: {
+      title: '设置',
+      version: '版本',
+      build: '构建',
+      language: '语言',
+      resetCareer: '重置生涯',
+      howToPlay: '玩法',
+      feedback: '反馈',
+      feedbackSubject: 'Copero 反馈',
+      close: '关闭',
     },
   },
 };

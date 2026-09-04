@@ -5,6 +5,8 @@
 // acá. Sin este archivo la navegación devuelve "Unmatched Route" (mismo
 // rootcause que MGC-838 / MGC-841).
 import React, { Suspense, lazy } from 'react';
+import { View } from 'react-native';
+import { VersionBadge } from '@/design/components/VersionBadge';
 
 const DraftScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/draft').then((m) => ({
@@ -14,8 +16,11 @@ const DraftScreen = lazy(() =>
 
 export default function DraftRoute() {
   return (
-    <Suspense fallback={null}>
-      <DraftScreen />
-    </Suspense>
+    <View style={{ flex: 1 }} testID="draft-screen">
+      <Suspense fallback={null}>
+        <DraftScreen />
+      </Suspense>
+      <VersionBadge variant="corner" testID="draft-version-badge" />
+    </View>
   );
 }

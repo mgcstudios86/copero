@@ -3,6 +3,8 @@
 // Wrapper file-based para `/simulador-carrera/temporada` (pantalla 5/6:
 // dashboard temporal con timeline de temporadas).
 import React, { Suspense, lazy } from 'react';
+import { View } from 'react-native';
+import { VersionBadge } from '@/design/components/VersionBadge';
 
 const TemporadaScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/temporada').then((m) => ({
@@ -12,8 +14,11 @@ const TemporadaScreen = lazy(() =>
 
 export default function TemporadaRoute() {
   return (
-    <Suspense fallback={null}>
-      <TemporadaScreen />
-    </Suspense>
+    <View style={{ flex: 1 }} testID="temporada-screen">
+      <Suspense fallback={null}>
+        <TemporadaScreen />
+      </Suspense>
+      <VersionBadge variant="corner" testID="temporada-version-badge" />
+    </View>
   );
 }

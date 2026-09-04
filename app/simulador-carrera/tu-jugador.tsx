@@ -3,6 +3,8 @@
 // Wrapper file-based para `/simulador-carrera/tu-jugador` (pantalla 3/6:
 // carta final con OVR inicial + potencial + picks).
 import React, { Suspense, lazy } from 'react';
+import { View } from 'react-native';
+import { VersionBadge } from '@/design/components/VersionBadge';
 
 const TuJugadorScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/tu-jugador').then((m) => ({
@@ -12,8 +14,11 @@ const TuJugadorScreen = lazy(() =>
 
 export default function TuJugadorRoute() {
   return (
-    <Suspense fallback={null}>
-      <TuJugadorScreen />
-    </Suspense>
+    <View style={{ flex: 1 }} testID="tu-jugador-screen">
+      <Suspense fallback={null}>
+        <TuJugadorScreen />
+      </Suspense>
+      <VersionBadge variant="corner" testID="tu-jugador-version-badge" />
+    </View>
   );
 }

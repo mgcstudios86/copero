@@ -13,6 +13,8 @@
 // `/simulador-carrera/ronda`); ambos paths resuelven la misma pantalla porque
 // los wrappers bajo `simulador-carrera/` re-exportan los mismos chunks.
 import React, { Suspense, lazy } from 'react';
+import { View } from 'react-native';
+import { VersionBadge } from '@/design/components/VersionBadge';
 
 const CategoriaScreen = lazy(() =>
   import('@/features/game/screens/categoria').then((m) => ({
@@ -22,8 +24,11 @@ const CategoriaScreen = lazy(() =>
 
 export default function CategoriaRoute() {
   return (
-    <Suspense fallback={null}>
-      <CategoriaScreen />
-    </Suspense>
+    <View style={{ flex: 1 }} testID="categoria-screen">
+      <Suspense fallback={null}>
+        <CategoriaScreen />
+      </Suspense>
+      <VersionBadge variant="corner" testID="categoria-version-badge" />
+    </View>
   );
 }

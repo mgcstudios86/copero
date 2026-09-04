@@ -11,6 +11,7 @@ import {
 import { useTheme } from '../useTheme';
 import { useLocale } from '../../i18n/locale-context';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { VersionBadge } from './VersionBadge';
 
 /**
  * SiteHeader — MGC-653.
@@ -60,12 +61,18 @@ export type SiteHeaderProps = {
   playHref?: string;
   /** Si false, oculta el LanguageSwitcher (default true). */
   showLanguageSwitcher?: boolean;
+  /** Si false, oculta el link a /settings (default true). */
+  showSettingsLink?: boolean;
+  /** Si false, oculta el badge de versión (default true). MGC-1506. */
+  showVersionBadge?: boolean;
   testID?: string;
 };
 
 export function SiteHeader({
   playHref = '/simulador-carrera',
   showLanguageSwitcher = true,
+  showSettingsLink = true,
+  showVersionBadge = true,
   testID = 'copero-site-header',
 }: SiteHeaderProps) {
   const { colors, spacing, fontSize, fontWeight, fontFamily, radii, borderWidth, tapTarget } =
@@ -223,6 +230,38 @@ export function SiteHeader({
         }}
       >
         {showLanguageSwitcher && <LanguageSwitcher />}
+        {showSettingsLink && (
+          <Link
+            href="/settings"
+            asChild
+            accessibilityRole="link"
+            accessibilityLabel={t('nav.settings')}
+            testID={`${testID}-settings`}
+          >
+            <Pressable
+              hitSlop={spacing[2]}
+              style={({ pressed }) => ({
+                minWidth: tapTarget,
+                minHeight: tapTarget,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: radii.md,
+                backgroundColor: pressed ? colors.surface2 : 'transparent',
+                ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as const) : null),
+              })}
+            >
+              <Text
+                style={{
+                  color: colors.text,
+                  fontSize: fontSize.lg,
+                  lineHeight: fontSize.lg * 1.1,
+                }}
+              >
+                ⚙
+              </Text>
+            </Pressable>
+          </Link>
+        )}
         {!compact && (
           <Link
             href={playHref}
@@ -329,6 +368,25 @@ export function SiteHeader({
               <Text style={playText}>{t('nav.play')}</Text>
             </View>
           </Link>
+        </View>
+      )}
+      {/*
+        MGC-1506 — VersionBadge esquina inferior derecha del header.
+        Posicionado absolute para no participar del flex layout principal
+        ni competir con el CTA Jugar / LanguageSwitcher / hamburguesa.
+        pointerEvents=none en VersionBadge evita que tape el toggle
+        hamburguesa en mobile.
+      */}
+      {showVersionBadge && (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            bottom: 2,
+            right: spacing[3],
+          }}
+        >
+          <VersionBadge variant="inline" testID={`${testID}-version`} />
         </View>
       )}
     </View>

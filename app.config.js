@@ -145,5 +145,12 @@ module.exports = ({ config } = {}) => ({
       testBannerUnitId: TEST_IDS.banner,
       testInterstitialUnitId: TEST_IDS.interstitial,
     },
+    // MGC-1506 — SHA del commit que produjo el build. EAS Build
+    // setea `EAS_BUILD_GIT_COMMIT_HASH` automáticamente; en local
+    // (`eas build --local`) el operador puede exportar la variable
+    // manualmente antes del build, o queda como null y la UI muestra
+    // "dev" como fallback. Solo lectura — la fuente de verdad sigue
+    // siendo `git rev-parse HEAD` en CI / Mac del developer.
+    buildSha: process.env.EAS_BUILD_GIT_COMMIT_HASH || null,
   },
 });
