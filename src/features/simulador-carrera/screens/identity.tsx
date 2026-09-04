@@ -898,9 +898,16 @@ export default function IdentityScreen() {
         }}
       >
         <Field label={t('identity.fieldPosition')}>
+          {/* MGC-1567 — `pointerEvents='box-none'` INCONDICIONAL. El wrapper
+              solo pinta el campo + posición Pressable hijo (pos-XX con
+              hitSlop+8, captura su propio tap). Sin box-none el bg captura
+              el touch sobre los league-list-items que caen dentro de sus
+              bounds cuando el dropdown abre a 340dp. Patrón MGC-1348 v2 /
+              MGC-1578 (PR-394). */}
           <View
             testID="field-map-wrapper"
             collapsable={false}
+            pointerEvents="box-none"
             style={[
               styles.fieldMapWrapper,
               {
@@ -1111,9 +1118,16 @@ export default function IdentityScreen() {
           + altura explícita evita el colapso a ViewGroup h=0 desde el primer
           frame del identity cold-start. testID row permite hook adicional en
           Maestro para asserts de subtree. */}
+      {/* MGC-1567 — `pointerEvents='box-none'` INCONDICIONAL. Sticky
+          contenedor de stepper (120dp). El bg es la única razón visual;
+          los Pressables hijos (btn-number-{minus,plus}) mantienen `auto`
+          y capturan sus taps. Sin box-none el bg overlapea los
+          league-list-items cuando leagueOpen=true y bloquea el tap de
+          selección. */}
       <View
         testID="btn-number-sticky"
         collapsable={false}
+        pointerEvents="box-none"
         style={[
           styles.stepperSticky,
           {
@@ -1134,9 +1148,14 @@ export default function IdentityScreen() {
         >
           {t('identity.numberLabel')}
         </Text>
+        {/* MGC-1567 — `pointerEvents='box-none'` INCONDICIONAL. Fila flex de
+            los botones −N +N. Mismo razonamiento que btn-number-sticky:
+            row bg-only libera el área para que un tap sobre los
+            league-list-items llegue al Pressable hijo. */}
         <View
           testID="btn-number-row"
           collapsable={false}
+          pointerEvents="box-none"
           style={{
             flexDirection: 'row',
             gap: spacing[3],
@@ -1212,8 +1231,15 @@ export default function IdentityScreen() {
       {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
           el soft keyboard esté abierto o el form se desplace. El botón
           sigue siendo testeable por testID `btn-identity-continue` desde
-          el footer (el subtree ya no es scrollable). */}
+          el footer (el subtree ya no es scrollable).
+          MGC-1567 — `pointerEvents='box-none'` INCONDICIONAL. El bg del
+          footer (240dp, colors.bg) ocupa exactamente el área donde caen los
+          league-list-items cuando el wrapper se expande a 340dp; sin
+          box-none el bg captura el tap y bloquea la selección. El Pressable
+          btn-identity-continue (hijo directo, default auto) captura su
+          propio tap. Patrón MGC-1348 v2 / MGC-1578 (PR-394) extendido. */}
       <View
+        pointerEvents="box-none"
         style={[
           styles.footer,
           {
