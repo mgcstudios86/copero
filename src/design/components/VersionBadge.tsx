@@ -1,15 +1,22 @@
 /**
- * VersionBadge — MGC-1506 / MGC-1586
+ * VersionBadge — MGC-1506 / MGC-1586 / MGC-1602
  *
  * Etiqueta compacta `vX.Y.Z (N)` para usar como slot global de versión.
  * Lée del build instalado con la misma fuente de verdad que
- * `src/components/VersionLabel.tsx` (MGC-1498 / PR #378, fix MGC-1586):
+ * `src/components/VersionLabel.tsx` (MGC-1498 / PR #378, fix MGC-1586,
+ * fix MGC-1602):
  *
- *   1. `Constants.nativeAppVersion` / `Constants.nativeBuildVersion` —
- *      lectura directa del binario nativo (Info.plist / BuildConfig).
- *   2. Fallback a `Constants.expoConfig` (version + android.versionCode)
- *      si los nativos no están disponibles (dev client sin sync).
- *   3. Hard fallback "0.0.1" / 0 cuando nada está disponible.
+ *   1. `Application.nativeAppVersion` / `Application.nativeBuildVersion`
+ *      (`expo-application`) — lectura directa del binario nativo
+ *      (Info.plist / PackageManager). MGC-1602: reemplazo del antiguo
+ *      `Constants.nativeBuildVersion`, que `expo-constants` 57 ya no
+ *      expone desde nativo (ConstantsService.kt) y siempre caía al
+ *      fallback stale.
+ *   2. Fallback a `Constants.nativeBuildVersion` (legacy, sólo si
+ *      `expo-application` no resuelve — dev client sin sync).
+ *   3. Fallback a `Constants.expoConfig` (version + android.versionCode)
+ *      si los nativos no están disponibles.
+ *   4. Hard fallback "0.0.1" / 0 cuando nada está disponible.
  *
  * Variantes:
  * - `corner`  → posicionado absolute (usado en pantallas sin SiteHeader global).
@@ -26,6 +33,7 @@ import React from 'react';
 import { Text, View, type ViewStyle, type TextStyle } from 'react-native';
 // eslint-disable-next-line import/no-named-as-default
 import Constants from 'expo-constants';
+import * as Application from 'expo-application';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../useTheme';
 
@@ -50,13 +58,24 @@ export function VersionBadge({
   const { colors, fontSize, fontWeight, fontFamily, spacing } = useTheme();
   const insets = useSafeAreaInsets();
 
-  // MGC-1586: priorizar lectura nativa (real APK) sobre expoConfig (stale).
+  // MGC-1586 / MGC-1602: priorizar lectura nativa (real APK) sobre
+  // expoConfig (stale). `expo-application` lee el valor real del
+  // PackageManager; `expo-constants` 57 ya no expone `nativeBuildVersion`
+  // desde nativo, por lo que el fix de PR-396 era un no-op.
   const versionName =
-    Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? '0.0.1';
+    Application.nativeApplicationVersion ??
+    Constants.nativeAppVersion ??
+    Constants.expoConfig?.version ??
+    '0.0.1';
   const versionCode = (() => {
-    const native = Constants.nativeBuildVersion;
+    const native = Application.nativeBuildVersion;
     if (native != null) {
       const n = Number(native);
+      if (Number.isFinite(n)) return n;
+    }
+    const fallbackNative = Constants.nativeBuildVersion;
+    if (fallbackNative != null) {
+      const n = Number(fallbackNative);
       if (Number.isFinite(n)) return n;
     }
     const cfgCode = Constants.expoConfig?.android?.versionCode;

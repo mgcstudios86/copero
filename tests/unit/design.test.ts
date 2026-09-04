@@ -43,6 +43,18 @@ vi.mock('expo-constants', () => ({
   },
 }));
 
+// MGC-1602 — VersionLabel y VersionBadge ahora importan `expo-application`
+// (Application.nativeBuildVersion) además de expo-constants. El barrel de
+// `expo-application` carga `expo-modules-core` que accede a `global.EventEmitter`,
+// undefined en el environment `node` de vitest. Stub con shape mínimo para
+// evitar el TypeError en `EventEmitter.ts:5:38` durante la collect.
+vi.mock('expo-application', () => ({
+  nativeApplicationVersion: '0.0.1',
+  nativeBuildVersion: 15,
+  applicationName: 'MGC Copero',
+  applicationId: 'com.mgcstudios.copero',
+}));
+
 vi.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   SafeAreaProvider: ({ children }: { children: unknown }) => children,
