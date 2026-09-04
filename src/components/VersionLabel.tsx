@@ -1,13 +1,19 @@
 /**
- * VersionLabel — MGC-1498
+ * VersionLabel — MGC-1498 / MGC-1586
  *
  * Muestra `Versión X.Y.Z (N)` en la UI leyendo del build instalado.
  *
  * Fuente de verdad (en orden de preferencia):
- *   1. `Constants.expoConfig` (version + android.versionCode): confiables
- *      cuando `appVersionSource: remote` en eas.json está alineado.
- *   2. Fallback a `Constants.nativeAppVersion` / `Constants.nativeBuildVersion`
- *      si el config no expone los valores (dev client sin sync).
+ *   1. `Constants.nativeAppVersion` / `Constants.nativeBuildVersion` —
+ *      leídos directamente del build nativo instalado (Info.plist
+ *      `CFBundleVersion` / `BuildConfig.VERSION_CODE` en Android).
+ *      Estos reflejan la versión real del APK en el device.
+ *   2. Fallback a `Constants.expoConfig` (version + android.versionCode)
+ *      si los valores nativos no están disponibles (dev client sin
+ *      sync). Antes era el primario; ver MGC-1586: con
+ *      `cli.appVersionSource: remote` en eas.json el embedded
+ *      expoConfig queda stale (app.config.js versionCode: 15)
+ *      mientras que el APK real lleva el versionCode remoto.
  *
  * Uso:
  *   - Home (`app/index.tsx`) — bajo el `© YYYY Copero`, accesible
@@ -32,11 +38,22 @@ type Props = {
 export function VersionLabel({ tone = 'subtle', testID = 'app-version-label' }: Props) {
   const { colors, fontSize, fontWeight, fontFamily } = useTheme();
 
-  const cfg = Constants.expoConfig;
+  // MGC-1586: priorizar lectura nativa (real APK) sobre expoConfig (stale).
+  // Con `cli.appVersionSource: remote` el server EAS inyecta el versionCode
+  // en el binario nativo, pero `Constants.expoConfig` queda pineado al
+  // app.config.js original (drift). El device muestra 15 cuando el APK es 56.
   const versionName =
-    cfg?.version ?? Constants.nativeAppVersion ?? '0.0.1';
-  const versionCode =
-    cfg?.android?.versionCode ?? Constants.nativeBuildVersion ?? 15;
+    Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? '0.0.1';
+  const versionCode = (() => {
+    const native = Constants.nativeBuildVersion;
+    if (native != null) {
+      const n = Number(native);
+      if (Number.isFinite(n)) return n;
+    }
+    const cfgCode = Constants.expoConfig?.android?.versionCode;
+    if (cfgCode != null) return cfgCode;
+    return 0;
+  })();
 
   const palette =
     tone === 'prominent'

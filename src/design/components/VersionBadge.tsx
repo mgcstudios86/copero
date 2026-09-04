@@ -1,13 +1,15 @@
 /**
- * VersionBadge — MGC-1506
+ * VersionBadge — MGC-1506 / MGC-1586
  *
  * Etiqueta compacta `vX.Y.Z (N)` para usar como slot global de versión.
  * Lée del build instalado con la misma fuente de verdad que
- * `src/components/VersionLabel.tsx` (MGC-1498 / PR #378):
+ * `src/components/VersionLabel.tsx` (MGC-1498 / PR #378, fix MGC-1586):
  *
- *   1. `Constants.expoConfig` (version + android.versionCode)
- *   2. Fallback `Constants.nativeAppVersion` / `Constants.nativeBuildVersion`
- *   3. Hard fallback "0.0.1" / 15 alineado con app.json + app.config.js
+ *   1. `Constants.nativeAppVersion` / `Constants.nativeBuildVersion` —
+ *      lectura directa del binario nativo (Info.plist / BuildConfig).
+ *   2. Fallback a `Constants.expoConfig` (version + android.versionCode)
+ *      si los nativos no están disponibles (dev client sin sync).
+ *   3. Hard fallback "0.0.1" / 0 cuando nada está disponible.
  *
  * Variantes:
  * - `corner`  → posicionado absolute (usado en pantallas sin SiteHeader global).
@@ -48,9 +50,19 @@ export function VersionBadge({
   const { colors, fontSize, fontWeight, fontFamily, spacing } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const cfg = Constants.expoConfig;
-  const versionName = cfg?.version ?? Constants.nativeAppVersion ?? '0.0.1';
-  const versionCode = cfg?.android?.versionCode ?? Constants.nativeBuildVersion ?? 15;
+  // MGC-1586: priorizar lectura nativa (real APK) sobre expoConfig (stale).
+  const versionName =
+    Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? '0.0.1';
+  const versionCode = (() => {
+    const native = Constants.nativeBuildVersion;
+    if (native != null) {
+      const n = Number(native);
+      if (Number.isFinite(n)) return n;
+    }
+    const cfgCode = Constants.expoConfig?.android?.versionCode;
+    if (cfgCode != null) return cfgCode;
+    return 0;
+  })();
 
   const a11yLabel = `Versión ${versionName} build ${versionCode}`;
 
