@@ -18,10 +18,6 @@
  * `reset()` legacy es fire-and-forget y no respeta el contrato awaitable.
  */
 
-vi.mock('expo-router', () => ({
-  useRouter: () => ({ replace: () => undefined, push: () => undefined, back: () => undefined }),
-}));
-
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { useCareerStore } from '@/shared/store/careerStore';
 import {
@@ -30,6 +26,10 @@ import {
   __resetStorageForTests,
 } from '@/features/career/persistence';
 import { initialSnapshot } from '@/features/career/identity-state';
+
+vi.mock('expo-router', () => ({
+  useRouter: () => ({ replace: () => undefined, push: () => undefined, back: () => undefined }),
+}));
 
 const savedCareer = (name: string) => ({
   v: 1 as const,
