@@ -158,10 +158,27 @@ export async function loadCareerSave(): Promise<CareerSaveState | null> {
             'log',
             `[persistence] hydrate=ok stage=${migrated.stage} profile=${migrated.profile?.name} v=2 (migrated from v:1)`,
           );
-          // Persistir la versión migrada para que el próximo load haga
-          // fast-path v:2. Sin re-write, cada launch ejecuta la
-          // migración (correcta pero más lenta).
-          await storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+          // MGC-1678 (HIGH-3 PR #404) — antes se hacía `await
+          // storage.setItem(STORAGE_KEY, JSON.stringify(migrated))` acá,
+          // bloqueando el load con un write extra en cada cold start y
+          // dejando memory/disco inconsistente si el setItem fallaba
+          // (sesión en memoria v:2, disco v:1 → próxima launch repite
+          // migración). Ahora la migración es in-memory: devolvemos v:2
+          // ya migrado y disparamos el rewrite en background sin
+          // awaitear. Si el write falla, el `.catch` lo silencia (la
+          // memoria de la sesión sigue en v:2) y el próximo load reintenta
+          // la migración — nunca perdemos data, solo posponemos el
+          // fast-path un launch. Beneficio: load latency cae a la del
+          // solo `getItem` y no hay ventana de inconsistencia memory/disco.
+          storage
+            .setItem(STORAGE_KEY, JSON.stringify(migrated))
+            .catch((err) => {
+              logPersist(
+                'error',
+                `[persistence] migrate-rewrite=fail reason=setItem-threw`,
+                err,
+              );
+            });
           return migrated;
         }
         if (parsed && parsed.v === 2) {
