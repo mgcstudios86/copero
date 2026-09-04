@@ -99,34 +99,48 @@ export default function IdentityScreen() {
   const commitIdentity = useCareerStore((s) => s.commitIdentity);
 
   const [nationalityQuery, setNationalityQuery] = useState('');
+  // MGC-1503 — UX-005 P0 del audit MGC-1500. Por defecto la pantalla cape el
+  // listado a las 5 primeras (MGC-1448) para no romper el budget vertical del
+  // scroll (33 inline ≈6000px bajo el fold). El usuario puede tap "Ver todas
+  // (N)" abajo del bloque y renderizar las 33 explícitamente; el listado
+  // extendido vive dentro del outer ScrollView (paddingBottom:240 ya
+  // reservado en MGC-1428) y el sticky-footer sigue opaco.
+  const [nationalityExpanded, setNationalityExpanded] = useState(false);
   const filteredNationalities = useMemo(() => {
     const q = nationalityQuery.trim().toLowerCase();
     if (!q) {
-      // MGC-1448 — sin query mostramos solo las 5 primeras (AR/BR/UY/CL/CO)
-      // + la seleccionada. Presupuesto de contenido medido en ZY22G728HN
-      // (viewport del scroll = 1832px = 732.8dp @ density 400):
+      // MGC-1448 — sin query Y sin expandir mostramos solo las 5 primeras
+      // (AR/BR/UY/CL/CO) + la seleccionada. Presupuesto de contenido medido
+      // en ZY22G728HN (viewport del scroll = 1832px = 732.8dp @ density 400):
       //   header 150 + jersey 300 + nationality (32 pad + 20 label + 56 input
       //   + N*57 por fila) + league 88 + field-map 320 + form 340 + pad 240.
       // Con las 33 nacionalidades inline el contenido suma ≈3430dp ≈8570px:
       // league-selector-wrapper e identity-fixed-field-map caen ≈6000px por
       // debajo del fold, así que NINGÚN swipe fijo de 900px los trae al dump
       // (QA MGC-1450/1452 los reportó AUSENTES: estaban renderizados, pero a
-      // 7 swipes de distancia). PR-350 capeó a 12 → seguían a 2+ swipes y el
-      // walk volvió a fallar. Con 5 filas el contenido baja a ≈1830dp:
+      // 7 swipes de distancia). Con 5 filas el contenido baja a ≈1830dp:
       // league-selector y field-map quedan a UN swipe del fold y el form
       // entero es alcanzable con scrollUntilVisible en 1-2 pasos.
       // El search sigue cubriendo las 33 al tipear (query no vacía → filtro
       // completo), que es el flujo real del usuario.
-      const head = NATIONALITIES.slice(0, NATIONALITY_FRESH_LIMIT);
-      const selected = NATIONALITIES.find((n) => n.code === profile.nationalityCode);
-      return selected && !head.some((n) => n.code === selected.code)
-        ? [...head, selected]
-        : head;
+      // MGC-1503 — al expandir (Pressable "Ver todas (33)") se renderiza la
+      // lista completa. El usuario eligió explícitamente ver más, así que el
+      // scroll extra es intencional. El test plan E2E sigue ejercitando las
+      // 5 primeras (testIDs country-ARG/BR/UY/CL/CO), que viven como las
+      // primeras 5 entradas en NATIONALITIES y conservan su contrato.
+      if (!nationalityExpanded) {
+        const head = NATIONALITIES.slice(0, NATIONALITY_FRESH_LIMIT);
+        const selected = NATIONALITIES.find((n) => n.code === profile.nationalityCode);
+        return selected && !head.some((n) => n.code === selected.code)
+          ? [...head, selected]
+          : head;
+      }
+      return NATIONALITIES;
     }
     return NATIONALITIES.filter(
       (n) => n.name.toLowerCase().includes(q) || n.code.toLowerCase().includes(q),
     );
-  }, [nationalityQuery, profile.nationalityCode]);
+  }, [nationalityQuery, profile.nationalityCode, nationalityExpanded]);
 
   // MGC-955: toggle del listado de ligas. Patrón collapsed-button → tap
   // abre ScrollView anidado. Mantener el wrapper collapsable={false} +
@@ -421,17 +435,22 @@ export default function IdentityScreen() {
           >
             {filteredNationalities.map((n) => {
               const active = profile.nationalityCode === n.code;
+              // MGC-1511 — elegir un país cierra la tarea: además de limpiar el
+              // search colapsamos el listado expandido de MGC-1503. Sin esto las
+              // 33 filas siguen inline tras la selección y league-selector +
+              // field-map vuelven a caer ≈6000px bajo el fold (los FAIL de QA
+              // MGC-1450/1452 que motivaron el cap de MGC-1448). El usuario
+              // puede re-expandir con "Ver todas las N" cuando quiera.
+              const selectNationality = () => {
+                setNationality(n.code);
+                setNationalityQuery('');
+                setNationalityExpanded(false);
+              };
               return (
                 <Pressable
                   key={n.code}
-                  onPress={() => {
-                    setNationality(n.code);
-                    setNationalityQuery('');
-                  }}
-                  {...onKeyActivate(() => {
-                    setNationality(n.code);
-                    setNationalityQuery('');
-                  })}
+                  onPress={selectNationality}
+                  {...onKeyActivate(selectNationality)}
                   collapsable={false}
                   style={{
                     flexDirection: 'row',
@@ -479,20 +498,97 @@ export default function IdentityScreen() {
               </Text>
             ) : null}
           </View>
-          {/* MGC-1448 — con la lista capada a NATIONALITY_FRESH_LIMIT el resto
-              del mundo sigue disponible por search; el hint lo hace explícito
-              (sin él, el cap se lee como "faltan países"). */}
+          {/* MGC-1503 — Pressable "Ver todas (N)" / "Ver menos" reemplaza al hint
+              pasivo de MGC-1448. Hallazgo UX-005 P0 (audit MGC-1500): el cap a
+              5 sin acción explícita se leía como lista incompleta. Ahora el
+              usuario expande/colapsa sin tipear en el search. El botón vive
+              debajo del listado (no como Floating Action) para respetar el
+              outline del tree del outer scroll y mantener el presupuesto vertical
+              del sticky-footer intacto (scrollContent.paddingBottom:240).
+              - Colapsado: renderiza un Pressable primario con testID estable
+                `btn-nationality-expand` y label "Ver todas las N". El hint
+                secundario "Escribí para buscar…" sigue debajo.
+              - Expandido: Pressable secundario `btn-nationality-collapse` con
+                "Ver menos" + flecha arriba. La lista pasa a las 33, el
+                scroll hace su trabajo, el sticky-footer overlapea opaco.
+              - Con query: el search filtra sobre las 33 (cualquier cap/expand
+                queda irrelevante), no se renderiza ningún botón (UX-005 sólo
+                aplica a la vista sin filtro). */}
           {!nationalityQuery.trim() ? (
-            <Text
-              testID="nationality-search-hint"
+            <View
+              testID="nationality-toggle-row"
+              collapsable={false}
               style={{
-                color: colors.textMuted,
-                fontSize: fontSize.sm,
-                marginTop: spacing[2],
+                marginTop: spacing[3],
+                gap: spacing[1],
               }}
             >
-              Escribí para buscar entre las {NATIONALITIES.length} nacionalidades.
-            </Text>
+              <Pressable
+                testID={
+                  nationalityExpanded
+                    ? 'btn-nationality-collapse'
+                    : 'btn-nationality-expand'
+                }
+                onPress={() => setNationalityExpanded((v) => !v)}
+                {...onKeyActivate(() => setNationalityExpanded((v) => !v))}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: nationalityExpanded }}
+                accessibilityLabel={
+                  nationalityExpanded
+                    ? 'Ver menos nacionalidades'
+                    : `Ver todas las ${NATIONALITIES.length} nacionalidades`
+                }
+                collapsable={false}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: spacing[2],
+                  paddingHorizontal: spacing[3],
+                  paddingVertical: spacing[2],
+                  borderRadius: radii.md,
+                  borderWidth: 1,
+                  borderColor: nationalityExpanded
+                    ? colors.borderStrong
+                    : colors.primary,
+                  backgroundColor: nationalityExpanded
+                    ? colors.surface
+                    : colors.primarySoft,
+                  minHeight: 44,
+                }}
+              >
+                <Text
+                  style={{
+                    color: nationalityExpanded ? colors.text : colors.primary,
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.semibold,
+                  }}
+                >
+                  {nationalityExpanded
+                    ? 'Ver menos'
+                    : `Ver todas las ${NATIONALITIES.length}`}
+                </Text>
+                <Text
+                  style={{
+                    color: nationalityExpanded ? colors.text : colors.primary,
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.semibold,
+                  }}
+                >
+                  {nationalityExpanded ? '▲' : '▼'}
+                </Text>
+              </Pressable>
+              <Text
+                testID="nationality-search-hint"
+                style={{
+                  color: colors.textMuted,
+                  fontSize: fontSize.sm,
+                  textAlign: 'center',
+                }}
+              >
+                Escribí para buscar entre las {NATIONALITIES.length} nacionalidades.
+              </Text>
+            </View>
           ) : null}
         </Field>
       </View>
