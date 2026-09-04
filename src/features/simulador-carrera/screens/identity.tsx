@@ -868,7 +868,14 @@ export default function IdentityScreen() {
         testID="league-selector-wrapper"
         collapsable={false}
         style={{
-          height: 88,
+          // MGC-1548: la altura fija 88 vale SÓLO para el estado colapsado. Con
+          // leagueOpen=true el buscador (≈61) + la lista (maxHeight 180 + 2 de
+          // borde) suman ≈243 extra; con height:88 + overflow:hidden el listado
+          // quedaba clipeado fuera del box — uiautomator reportaba bounds
+          // invertidos (y1 > y2), las opciones no eran visibles ni tappables y
+          // el tap caía sobre identity-fixed-field-map (bloque POSICIÓN), que
+          // ocupa esa franja. 340 = 82 de contenido colapsado + 243 + margen.
+          height: leagueOpen ? 340 : 88,
           overflow: 'hidden',
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
