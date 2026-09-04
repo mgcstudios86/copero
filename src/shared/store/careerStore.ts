@@ -30,7 +30,16 @@ import {
   isPersistentStorage,
 } from '@/features/career/persistence';
 import type { CareerAction } from '@/features/career/engine';
-import type { CareerSnapshot, Club, EstiloRasgo, Foot, Position, StrategyId, YearlyPlan } from '@/types/career';
+import type {
+  CareerSaveV2,
+  CareerSnapshot,
+  Club,
+  EstiloRasgo,
+  Foot,
+  Position,
+  StrategyId,
+  YearlyPlan,
+} from '@/types/career';
 
 type CareerStore = CareerSnapshot & {
   /**
@@ -135,6 +144,12 @@ type CareerStore = CareerSnapshot & {
  * Snapshot persistible (alineado con `CareerSaveState` salvo `clubId`,
  * que la store no expone — `profile.club.id` lo cubre). Lo construimos
  * desde el estado actual de la store en cada save.
+ *
+ * MGC-1628 rev 3 §L2: `snapshotToSave` retorna shape `v: 1` para no
+ * romper las saves legacy en disco. La conversión al shape `v: 2`
+ * ocurre en `getSnapshot()` (helper público), que además normaliza el
+ * `Injury` con `affectedAttr`/`startedAtWeek` para los callers que
+ * quieran consumir el snapshot sin pasar por `loadCareerSave`.
  */
 function snapshotToSave(s: CareerStore): {
   v: 1;
@@ -148,6 +163,37 @@ function snapshotToSave(s: CareerStore): {
 } {
   return {
     v: 1,
+    stage: s.stage,
+    profile: s.profile,
+    draft: s.draft ?? null,
+    card: s.card ?? null,
+    clubId: s.profile.club ? s.profile.club.id : null,
+    log: s.log ?? { timeline: [], events: [] },
+    seed: s.seed ?? 0,
+  };
+}
+
+/**
+ * MGC-1628 rev 3 §L2 — `getSnapshot(): CareerSaveV2`.
+ *
+ * Helper público que toma el estado actual de la store y lo proyecta al
+ * shape `v: 2`. Casos de uso:
+ *
+ * - Tests E2E que necesitan un snapshot completo sin pasar por el
+ *   ciclo `saveCareerSave` → `loadCareerSave`.
+ * - Debug / telemetry: exponer el snapshot vía `Sentry` o el panel de
+ *   QA sin filtrar estado runtime (`hydrated`, setters).
+ * - Migración on-the-fly V1→V2 para clientes que aún tienen saves v1.
+ *
+ * Es función pura: no muta la store, no llama a AsyncStorage, no
+ * dispara listeners. Vinculada a `commit()` (cada save v2 emite este
+ * shape) y a `loadCareerSave()` (v1 legacy se normaliza vía
+ * `migrateV1ToV2` antes de hidratar la store).
+ */
+export function getSnapshot(): CareerSaveV2 {
+  const s = useCareerStore.getState();
+  return {
+    v: 2,
     stage: s.stage,
     profile: s.profile,
     draft: s.draft ?? null,

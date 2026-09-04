@@ -213,7 +213,15 @@ export function applyChoice(
 
   let lesion: Injury = career.lesion;
   if (strategyId === 'E5' && !success && rng.chance(0.08)) {
-    lesion = { kind: 'leve', fechasOut: 1 };
+    // MGC-1628 rev 3 §M1 — `startedAtWeek` se persiste en la lesión
+    // para que F3+ pueda calcular el decaimiento por tiempo sin rehab.
+    // `affectedAttr` viene del helper canónico `affectedAttrFor`.
+    lesion = {
+      kind: 'leve',
+      fechasOut: 1,
+      startedAtWeek: profile.week,
+      affectedAttr: 'fisico',
+    };
   }
 
   const tone = toneForStat(deltas[0]?.field ?? '', deltas.reduce((a, b) => a + b.delta, 0));
@@ -242,9 +250,16 @@ export function applyChoice(
 
 /** Avanza la semana: drena lesión y bumpea season cada 38 semanas. */
 export function advanceWeek(profile: PlayerProfile): PlayerProfile {
+  // MGC-1628 rev 3 §L3 — convención 0-indexed para el call a
+  // `hasMatchThisWeek` debajo. `profile.week` se conserva 1-indexed
+  // (1..38) por compat con la UI, pero los helpers del motor puro
+  // (F2.2+) trabajan en 0-indexed (0..37) para evitar el off-by-one
+  // que tenía el match plan original (`week % 3 === 0` fallaba en
+  // week=3 porque la semana 1 del user correspondía al index 0).
+  // Ver también `careerStore.ts#hydrateFromSave` y `reputation.ts`.
   const lesionFechasOut = Math.max(0, profile.career.lesion.fechasOut - 1);
   const lesion: Injury = lesionFechasOut === 0
-    ? { kind: 'ninguna', fechasOut: 0 }
+    ? { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: 'fisico' }
     : { ...profile.career.lesion, fechasOut: lesionFechasOut };
 
   const season = profile.week >= 38 ? profile.season + 1 : profile.season;
@@ -254,13 +269,55 @@ export function advanceWeek(profile: PlayerProfile): PlayerProfile {
   return { ...profile, career: { ...profile.career, lesion }, week, season, age };
 }
 
+/**
+ * MGC-1628 rev 3 §L3 — `hasMatchThisWeek(week, action)`.
+ *
+ * Determina si la acción `action` corresponde a un partido en la semana
+ * `week` (0-indexed, rango [0, 37]). Convención 0-indexed:
+ *  - `week = 0` ↔ `profile.week = 1` (primera semana de la temporada).
+ *  - `week = 37` ↔ `profile.week = 38` (última semana, cierre).
+ *
+ * Por convención MGC-1628 rev 3: hay partido cada 3 semanas, offset 0
+ * (semanas 0, 3, 6, ..., 36 → matches). Las semanas 1, 2, 4, 5, ... son
+ * entrenamiento. Esto corrige el off-by-one del plan original
+ * (`week % 3 === 0` con `week` 1-indexed fallaba en la primera semana).
+ *
+ * Pure function. Sin RNG. Devuelve `true` si la acción debe disparar el
+ * match resolver (`match.ts#resolveMatch`); `false` si la semana es de
+ * entrenamiento y se debe delegar a `applyTrainingDelta`.
+ */
+export function hasMatchThisWeek(week: number, _action: string): boolean {
+  if (week < 0 || week > 37) return false;
+  return week % 3 === 0;
+}
+
 /** Helper: setea una lesión. */
-export function setInjury(profile: PlayerProfile, kind: InjuryKind, fechasOut: number): PlayerProfile {
+export function setInjury(
+  profile: PlayerProfile,
+  kind: InjuryKind,
+  fechasOut: number,
+  startedAtWeek: number = profile.week,
+): PlayerProfile {
+  // MGC-1628 rev 3 §M1 — `affectedAttr` se rellena desde el `kind`
+  // vía el helper canónico `affectedAttrFor(kind)` para mantener la
+  // tabla en un solo lugar (ver `career.ts`).
+  const affectedAttr = ((): import('@/types/career').AttributeKey => {
+    switch (kind) {
+      case 'leve':
+        return 'fisico';
+      case 'media':
+        return 'mental';
+      case 'grave':
+        return 'tecnico';
+      case 'ninguna':
+        return 'fisico';
+    }
+  })();
   return {
     ...profile,
     career: {
       ...profile.career,
-      lesion: { kind, fechasOut },
+      lesion: { kind, fechasOut, startedAtWeek, affectedAttr },
     },
   };
 }

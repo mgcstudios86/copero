@@ -91,7 +91,12 @@ describe('MGC-1657 · F2.3 wiring motor V2', () => {
     const profile = seededProfile(99, {
       career: {
         ...initialProfile.career,
-        lesion: { kind: 'leve', fechasOut: 3 },
+        lesion: {
+          kind: 'leve',
+          fechasOut: 3,
+          startedAtWeek: 0,
+          affectedAttr: 'fisico',
+        },
       },
     });
     const opts = availableWeeklyOptions(profile);

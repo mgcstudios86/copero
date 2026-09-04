@@ -153,14 +153,23 @@ export function advanceSeason(
   const events: CareerEvent[] = [];
   let career: CareerStats = {
     ...profile.career,
-    lesion: { kind: 'ninguna', fechasOut: 0 },
+    lesion: { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: 'fisico' },
   };
   // MGC-1017: el plan anual también afecta la chance de lesión.
   const injuryChance = injuryChanceForAge(age, rng) * planMod.injury;
   if (rng.chance(injuryChance)) {
     const kind = rng.chance(0.7) ? 'leve' : rng.chance(0.6) ? 'media' : 'grave';
     const fechasOut = kind === 'leve' ? rng.int(2, 4) : kind === 'media' ? rng.int(6, 10) : rng.int(14, 24);
-    career = { ...career, lesion: { kind, fechasOut } };
+    // MGC-1628 rev 3 §M1 — `affectedAttr` se mapea via `affectedAttrFor`
+    // (mismo helper canónico que `injury-v2.ts` y `simulation.ts`).
+    // `startedAtWeek` queda en 0 porque el loop anual agrega la fila al
+    // `timeline` al cierre, no al disparo semanal.
+    const affectedAttr: 'tecnico' | 'mental' | 'fisico' =
+      kind === 'leve' ? 'fisico' : kind === 'media' ? 'mental' : 'tecnico';
+    career = {
+      ...career,
+      lesion: { kind, fechasOut, startedAtWeek: 0, affectedAttr },
+    };
     events.push({
       season,
       kind: 'injury',

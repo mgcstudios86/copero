@@ -19,6 +19,7 @@
  */
 
 import type { Position, PlayerProfile } from '@/types/career';
+import { groupOf } from './positions';
 import { type Rng } from './rng';
 import {
   STAT_INIT,
@@ -53,23 +54,6 @@ export type MatchOutcome = {
 };
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
-
-function groupOf(position: Position): 'goalkeeper' | 'defense' | 'midfield' | 'attack' {
-  switch (position) {
-    case 'GK': return 'goalkeeper';
-    case 'CB':
-    case 'LB':
-    case 'RB': return 'defense';
-    case 'CDM':
-    case 'CM':
-    case 'CAM':
-    case 'LM':
-    case 'RM': return 'midfield';
-    case 'ST':
-    case 'LW':
-    case 'RW': return 'attack';
-  }
-}
 
 function weightedForPosition(stats: PositionStats, position: Position): number {
   const group = groupOf(position);

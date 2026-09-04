@@ -64,10 +64,76 @@ export type PlayerStats = {
 };
 
 export type InjuryKind = 'ninguna' | 'leve' | 'media' | 'grave';
+
+/**
+ * Mapeo canónico `severity ↔ kind` (MGC-1628 rev 3 §"Sistema de lesiones v2").
+ *
+ * Se conserva `InjuryKind` para compatibilidad con catálogos y tests
+ * preexistentes (MGC-1629 AC). `severityFor(kind)` centraliza la conversión
+ * a número 1..3 (1 = leve, 2 = media, 3 = grave, 0 = ninguna) para que la UI
+ * pueda mostrar un progress bar sin branching repetido.
+ *
+ * El 'media' NO se samplea (rev 3 del code-reviewer MGC-1640): la
+ * probabilidad de cada kind se decide por RNG en `injury-v2.ts#maybeRollInjury`
+ * (leve 0.6 / media 0.3 / grave 0.1). Si en F3+ queremos media sampleada
+ * (p.ej. media condicional a OVR < 70), se agrega acá sin tocar call sites.
+ */
+export function severityFor(kind: InjuryKind): 0 | 1 | 2 | 3 {
+  switch (kind) {
+    case 'ninguna':
+      return 0;
+    case 'leve':
+      return 1;
+    case 'media':
+      return 2;
+    case 'grave':
+      return 3;
+  }
+}
+
+/**
+ * Atributo afectado por la lesión (MGC-1628 rev 3 §"affectedAttr").
+ *
+ * Mapeo determinístico (no se samplea):
+ * - 'leve'  → 'fisico'   (muscular, recuperable con rehab).
+ * - 'media' → 'mental'   (baja confianza + moral del jugador).
+ * - 'grave' → 'tecnico'  (cirugía/largo plazo; el skill técnico se ve
+ *                         afectado porque el jugador pierde ritmo de
+ *                         competencia hasta su regreso).
+ * - 'ninguna' → 'fisico' (no se usa; placeholder para shape estable).
+ *
+ * El atributo es un signal para `applyTrainingDelta` (L1): durante la
+ * rehabilitación, los deltas al atributo afectado se dividen por 2.
+ * Mantiene el `Injury` schema chico y predecible.
+ */
+export function affectedAttrFor(kind: InjuryKind): AttributeKey {
+  switch (kind) {
+    case 'leve':
+      return 'fisico';
+    case 'media':
+      return 'mental';
+    case 'grave':
+      return 'tecnico';
+    case 'ninguna':
+      return 'fisico';
+  }
+}
+
 export type Injury = {
   kind: InjuryKind;
   /** Fechas restantes para volver a jugar. 0 = sano. */
   fechasOut: number;
+  /**
+   * Semana (1-indexed, dentro de la temporada actual) en la que se
+   * disparó la lesión. Permite que `applyTrainingDelta` decremente el
+   * `attr` afectado en función del tiempo transcurrido desde el
+   * disparo (regla F3+: a partir de la semana 4 sin rehab, el delta
+   * negativo se acumula 1.5×). `0` para lesiones en `initialProfile`
+   * o en fixtures de tests sin week.
+   */
+  startedAtWeek: number;
+  /** Atributo del player afectado durante la rehabilitación (ver `affectedAttrFor`). */
+  affectedAttr: AttributeKey;
 };
 
 /**
@@ -385,6 +451,27 @@ export type CareerSaveState = {
   log: SeasonLog;
   seed: number;
 };
+
+/**
+ * MGC-1628 rev 3 §L2 — `CareerSaveV2`.
+ *
+ * Mismo shape que `CareerSaveState` (`v: 1`) pero con `v: 2` para
+ * reflejar la extensión del tipo `Injury` (M1: `affectedAttr`,
+ * `startedAtWeek`). El bump de versión obliga a:
+ *
+ * 1. `loadCareerSave` rechaza `v: 1` legacy y delega a `migrateV1ToV2`
+ *    antes de devolver el snapshot hidratado.
+ * 2. `getSnapshot()` (en `careerStore.ts`) emite SIEMPRE `v: 2`.
+ * 3. La rama de F3+ que introduzca nuevos campos persistibles (p.ej.
+ *    `currentFatigue`, `lastAction`) agrega el discriminador `v: 3` y
+ *    un `migrateV2ToV3`. Ver `arquitectura-motor.md` rev 3 §"Upgrade
+ *    path F3+".
+ *
+ * Hoy la migración V1→V2 sólo normaliza los `Injury` saves legacy
+ * (rellena `affectedAttr` desde el `kind` vía `affectedAttrFor` y
+ * `startedAtWeek` a `0` para los disparos sin week persistido).
+ */
+export type CareerSaveV2 = Omit<CareerSaveState, 'v'> & { v: 2 };
 
 /** Resumen del fin de carrera (MGC-208 §4). */
 export type RetirementSummary = {

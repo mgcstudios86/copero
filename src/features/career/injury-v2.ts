@@ -11,6 +11,7 @@
  */
 
 import type { Injury, InjuryKind, PlayerProfile } from '@/types/career';
+import { affectedAttrFor } from '@/types/career';
 import { createRng, type Rng } from './rng';
 
 export const DOUBLE_SHIFT_STREAK_INJURY_THRESHOLD = 3;
@@ -78,7 +79,16 @@ export function maybeRollInjury(
   if (roll < 0.6) kind = 'leve';
   else if (roll < 0.9) kind = 'media';
   else kind = 'grave';
-  return { kind, fechasOut };
+  // MGC-1628 rev 3 §M1 — `startedAtWeek` se persiste al disparar la
+  // lesión (semana actual 1-indexed del profile). `affectedAttr` se
+  // obtiene del helper canónico `affectedAttrFor(kind)` (mapeo
+  // determinístico leve→fisico, media→mental, grave→tecnico).
+  return {
+    kind,
+    fechasOut,
+    startedAtWeek: profile.week,
+    affectedAttr: affectedAttrFor(kind),
+  };
 }
 
 /**

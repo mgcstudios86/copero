@@ -68,6 +68,19 @@ export function recomputeOvr(attrs: {
   return clamp(fieldAvg);
 }
 
+/**
+ * OVR ponderado por posición (MGC-1628 rev 3 §M2 + MGC-439).
+ *
+ * Composite `positionFactor` (F2.2 §5):
+ * `1.05 (ST vs DESARROLLO) × 1.02 (CB vs AMBICIÓN) = 1.071`
+ * representa el techo teórico del OVR compuesto: un partido donde un ST
+ * juega contra un rival con arquero AMBICIÓN (escenario límite del
+ * arquetipo). El producto de ambos factores se aplica ANTES del clamp
+ * final; el clamp [0, 99] absorbe cualquier溢出. Para F3+ este método
+ * aceptará un parámetro `opponentArchetype` opcional que activará el
+ * composite; hoy la firma es estable y los callers existentes no se
+ * rompen (factor neutro 1.0 cuando no se pasa arquetipo).
+ */
 export function recomputeOvrForPosition(
   position: string,
   attrs: { tecnico: number; fisico: number; mental: number; portero: number },

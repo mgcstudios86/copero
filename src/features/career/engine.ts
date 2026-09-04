@@ -27,6 +27,7 @@ import {
 import { advanceSeason, isRetired, runCareerLoop } from './season';
 import { STAT_INIT } from './position-stats';
 import type { WeeklyBaseOptionId } from './position-tree';
+import { groupOf } from './positions';
 
 /**
  * Reducer puro para el state machine del simulador de carrera (MGC-430
@@ -93,7 +94,7 @@ export const initialProfile: PlayerProfile = {
     fisico: 80,
     confianza: 60,
     racha: 0,
-    lesion: { kind: 'ninguna', fechasOut: 0 },
+    lesion: { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: 'fisico' },
     reputation: {
       prensa: 'neutral',
       hinchada: 'aceptado',
@@ -285,22 +286,11 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
       // La asignación typed a `unknown` evita el ciclo entre engine y clubs.
       const fit = (action.club as unknown as { fitBonus?: number; positionGroups?: string[] })
         .fitBonus ?? 0;
-      const playerGroup = state.profile.position;
-      const groupMap: Record<string, string> = {
-        ST: 'attack',
-        LW: 'attack',
-        RW: 'attack',
-        CAM: 'midfield',
-        CM: 'midfield',
-        LM: 'midfield',
-        RM: 'midfield',
-        CDM: 'midfield',
-        CB: 'defense',
-        LB: 'defense',
-        RB: 'defense',
-        GK: 'goalkeeper',
-      };
-      const playerGroupResolved = groupMap[playerGroup] ?? 'midfield';
+      // MGC-1628 rev 3 §L4 — `groupOf` se importa desde `positions.ts`
+      // (helper canónico F2.1). Antes era un `groupMap` inline; ahora
+      // es un solo switch exportado, consumible también por `match.ts`
+      // y `stats.ts`.
+      const playerGroupResolved = groupOf(state.profile.position);
       const positionGroups = (action.club as unknown as { positionGroups?: string[] })
         .positionGroups ?? [];
       const fitBonus =
@@ -404,7 +394,7 @@ function applyCardToProfile(profile: PlayerProfile, card: ReturnType<typeof card
     career: {
       ...profile.career,
       presupuesto: 0,
-      lesion: { kind: 'ninguna', fechasOut: 0 },
+      lesion: { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: 'fisico' },
       reputation: {
         prensa: 'neutral',
         hinchada: 'aceptado',

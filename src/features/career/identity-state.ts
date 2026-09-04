@@ -42,7 +42,7 @@ export const initialProfile: PlayerProfile = {
     fisico: 80,
     confianza: 60,
     racha: 0,
-    lesion: { kind: 'ninguna', fechasOut: 0 },
+    lesion: { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: 'fisico' },
     reputation: {
       prensa: 'neutral',
       hinchada: 'aceptado',

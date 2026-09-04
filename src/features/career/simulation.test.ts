@@ -208,21 +208,30 @@ describe('recommendStrategy', () => {
 
   it('L1 cuando lesionado leve', () => {
     const p = profileFixture({
-      career: { ...initialProfile.career, lesion: { kind: 'leve', fechasOut: 1 } },
+      career: {
+        ...initialProfile.career,
+        lesion: { kind: 'leve', fechasOut: 1, startedAtWeek: 1, affectedAttr: 'fisico' },
+      },
     });
     expect(recommendStrategy(p)).toBe('L1');
   });
 
   it('L2 cuando lesionado medio', () => {
     const p = profileFixture({
-      career: { ...initialProfile.career, lesion: { kind: 'media', fechasOut: 2 } },
+      career: {
+        ...initialProfile.career,
+        lesion: { kind: 'media', fechasOut: 2, startedAtWeek: 1, affectedAttr: 'mental' },
+      },
     });
     expect(recommendStrategy(p)).toBe('L2');
   });
 
   it('L3 cuando lesionado grave', () => {
     const p = profileFixture({
-      career: { ...initialProfile.career, lesion: { kind: 'grave', fechasOut: 4 } },
+      career: {
+        ...initialProfile.career,
+        lesion: { kind: 'grave', fechasOut: 4, startedAtWeek: 1, affectedAttr: 'tecnico' },
+      },
     });
     expect(recommendStrategy(p)).toBe('L3');
   });
