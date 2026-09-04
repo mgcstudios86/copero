@@ -72,7 +72,7 @@ module.exports = ({ config } = {}) => ({
   slug: 'copero',
   owner: 'mgcstudios',
   scheme: 'copero',
-  version: '0.1.1',
+  version: '0.0.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
@@ -90,6 +90,11 @@ module.exports = ({ config } = {}) => ({
   },
   android: {
     package: 'com.mgcstudios.copero',
+    // MGC-1498: versionCode explícito para alinear con app.json. Con
+    // `cli.appVersionSource: remote` en eas.json, el server EAS es la
+    // fuente de verdad al build; mantener ambos sincronizados evita drift
+    // entre `Constants.expoConfig` y `expo-application` en runtime.
+    versionCode: 15,
     // MGC-839: NO declarar AD_ID. Per MGC-4919 rootcause, play-services-ads-*
     // AARs autolinkeados la inyectan transitivamente y declarar el permiso
     // no la remueve. Copero no usa ads → Play Console warning se resuelve

@@ -58,6 +58,7 @@ import type { CareerStage } from '@/types/career';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
+import { VersionLabel } from '@/components/VersionLabel';
 
 // Mapa stage → ruta de resume (MGC-251). Se conserva tal cual para el CTA
 // "Continuar carrera" cuando hay sesión persistida.
@@ -237,7 +238,7 @@ export default function Home() {
           />
         ) : null}
 
-        {/* ── Pie minimal: sólo copyright. Sin links externos. ─────── */}
+        {/* ── Pie minimal: copyright + Versión instalada. Sin links. ─ */}
         <Text
           accessibilityRole="text"
           style={{
@@ -251,6 +252,10 @@ export default function Home() {
         >
           © {new Date().getFullYear()} Copero · Proyecto independiente
         </Text>
+        {/* MGC-1498 — diagnóstico de versión instalada en footer home */}
+        <View style={{ marginTop: spacing[1] }}>
+          <VersionLabel tone="subtle" testID="home-version-label" />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
