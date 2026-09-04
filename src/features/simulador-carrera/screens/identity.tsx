@@ -427,6 +427,250 @@ export default function IdentityScreen() {
           pointerEvents='box-none' mantiene el spec MGC-1348 para que el wrapper
           no intercepte clicks de los country-* Pressables (que ahora viven MÁS
           ABAJO en el scroll, no más arriba). */}
+      {/* MGC-1737 — nationality-section REPOSICIONADA como SEGUNDO hijo del
+          outer ScrollView (entre identity-header e identity-fixed-form).
+          Causa raíz AC3 FAIL walk WF1 PR #427 (MGC-1732 sobre APK
+          build-PR-427-20d2556): nationality-section arrancaba en y=1338px
+          content, tapada completamente por sticky field-map overlay
+          [0,1310][1080,1530] + sticky-footer [0,1530][1080,2130] en
+          fresh-mount (scroll position = 0). Reordenando nationality ANTES
+          de identity-fixed-form, country-ARG queda a y≈625px viewport,
+          ENCIMA del field-map overlay 1310px (margin 685px) → tappable sin
+          scrollUntilVisible.
+
+          Layout resultante en ZY22G728HN 1080×2400 density 400 (1dp = 2.5px),
+          viewport del scroll 732.8dp, footer top = 1530px, field-map top ≈
+          1310px:
+            identity-header          y=0      → y=375px
+            nationality-section      y=375px  → y=1168px  ← country-ARG ≈ 625px ✓
+            identity-fixed-form      y=1168px → y=2132px  ← input-name ≈ 1295px
+            jersey-preview-wrapper   y=2132px → y=2332px
+
+          country-ARG queda 685px encima del field-map overlay → AC3 cumplido.
+          input-name a y≈1295px también ENCIMA del field-map 1310px → usuario
+          puede tipear nombre sin scroll. identity-fixed-form requiere scroll
+          para acceder a lastname/age/foot, trade-off aceptado para preservar
+          el AC3 de MGC-1737. scrollContent.paddingBottom:512 sigue despejando
+          el field-map + footer para que el form completo sea alcanzable tras
+          scroll.
+
+          Mantiene: cap NATIONALITY_FRESH_LIMIT=5 (MGC-1448), search hint,
+          testID alias AR→ARG (MGC-1348 v2), lista plana sin ScrollView anidado
+          (MGC-1428 intento-7). NO reintroducir ScrollView anidado.
+          NO extraer nationality a sibling externo (MGC-807/843/1428 cerraron
+          esa ruta por measure pass + clipping). Reordenar dentro del scroll
+          es la mínima superficie de cambio. */}
+      <View
+        testID="nationality-section"
+        collapsable={false}
+        style={{
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          padding: spacing[4],
+          flexShrink: 0,
+        }}
+      >
+        <Field label={t('identity.fieldNationality')}>
+          <TextInput
+            value={nationalityQuery}
+            onChangeText={setNationalityQuery}
+            placeholder={t('identity.nationalityPlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            autoCorrect={false}
+            style={[
+              styles.input,
+              {
+                color: colors.text,
+                borderColor: colors.borderStrong,
+                borderRadius: radii.md,
+                paddingHorizontal: spacing[3],
+                paddingVertical: spacing[3],
+                fontSize: fontSize.base,
+                marginBottom: spacing[2],
+              },
+            ]}
+            accessibilityLabel={t('identity.nationalitySearchA11y')}
+            testID="input-nationality-search"
+          />
+          {/* MGC-1428 — lista plana de países (sin ScrollView anidado). Países
+              son hijos directos del outer ScrollView para evitar el clipping
+              de RN-Android sobre bounds anidados. flexWrap mantiene orden
+              vertical, maxHeight acotado por el outer ScrollView + paddingBottom:512. */}
+          <View
+            style={{
+              borderRadius: radii.md,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              overflow: 'hidden',
+            }}
+          >
+            {filteredNationalities.map((n) => {
+              const active = profile.nationalityCode === n.code;
+              // MGC-1511 — elegir un país cierra la tarea: además de limpiar el
+              // search colapsamos el listado expandido de MGC-1503. Sin esto las
+              // 33 filas siguen inline tras la selección y field-map vuelve a
+              // caer ≈6000px bajo el fold (los FAIL de QA MGC-1450/1452 que
+              // motivaron el cap de MGC-1448). El usuario puede re-expandir
+              // con "Ver todas las N" cuando quiera.
+              const selectNationality = () => {
+                setNationality(n.code);
+                setNationalityQuery('');
+                setNationalityExpanded(false);
+              };
+              return (
+                <Pressable
+                  key={n.code}
+                  onPress={selectNationality}
+                  {...onKeyActivate(selectNationality)}
+                  collapsable={false}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing[3],
+                    paddingHorizontal: spacing[3],
+                    paddingVertical: spacing[3],
+                    minHeight: 56,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                    backgroundColor: active ? colors.primarySoft : 'transparent',
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
+                  // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
+                  // `getByTestId('country-ARG')`. Alias solo para AR;
+                  // resto del mundo mantiene FIFA code como testID.
+                  testID={`country-${n.code === 'AR' ? 'ARG' : n.code}`}
+                >
+                  <Text style={{ fontSize: 22, lineHeight: 28, includeFontPadding: false }}>{n.flag}</Text>
+                  <Text
+                    style={{
+                      color: active ? colors.primary : colors.text,
+                      fontSize: fontSize.base,
+                      fontWeight: active ? fontWeight.semibold : fontWeight.regular,
+                      lineHeight: 22,
+                      includeFontPadding: false,
+                    }}
+                  >
+                    {n.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            {filteredNationalities.length === 0 ? (
+              <Text
+                style={{
+                  color: colors.textMuted,
+                  padding: spacing[3],
+                  fontSize: fontSize.sm,
+                }}
+              >
+                {t('identity.nationalityNoMatches')}
+              </Text>
+            ) : null}
+          </View>
+          {/* MGC-1503 — Pressable "Ver todas (N)" / "Ver menos" reemplaza al hint
+              pasivo de MGC-1448. Hallazgo UX-005 P0 (audit MGC-1500): el cap a
+              5 sin acción explícita se leía como lista incompleta. Ahora el
+              usuario expande/colapsa sin tipear en el search. El botón vive
+              debajo del listado (no como Floating Action) para respetar el
+              outline del tree del outer scroll y mantener el presupuesto vertical
+              del sticky-footer intacto (scrollContent.paddingBottom:512). */}
+          {!nationalityQuery.trim() ? (
+            <View
+              testID="nationality-toggle-row"
+              collapsable={false}
+              style={{
+                marginTop: spacing[3],
+                gap: spacing[1],
+              }}
+            >
+              <Pressable
+                testID={
+                  nationalityExpanded
+                    ? 'btn-nationality-collapse'
+                    : 'btn-nationality-expand'
+                }
+                onPress={() => setNationalityExpanded((v) => !v)}
+                {...onKeyActivate(() => setNationalityExpanded((v) => !v))}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: nationalityExpanded }}
+                accessibilityLabel={
+                  nationalityExpanded
+                    ? t('identity.nationalityCollapseA11y')
+                    : t('identity.nationalityExpandA11y', { n: NATIONALITIES.length })
+                }
+                collapsable={false}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: spacing[2],
+                  paddingHorizontal: spacing[3],
+                  paddingVertical: spacing[2],
+                  borderRadius: radii.md,
+                  borderWidth: 1,
+                  borderColor: nationalityExpanded
+                    ? colors.borderStrong
+                    : colors.primary,
+                  backgroundColor: nationalityExpanded
+                    ? colors.surface
+                    : colors.primarySoft,
+                  minHeight: 44,
+                }}
+              >
+                <Text
+                  style={{
+                    color: nationalityExpanded ? colors.text : colors.primary,
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.semibold,
+                  }}
+                >
+                  {nationalityExpanded
+                    ? t('identity.nationalityCollapseLabel')
+                    : t('identity.nationalityExpandLabel', { n: NATIONALITIES.length })}
+                </Text>
+                <Text
+                  style={{
+                    color: nationalityExpanded ? colors.text : colors.primary,
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.semibold,
+                  }}
+                >
+                  {nationalityExpanded ? '▲' : '▼'}
+                </Text>
+              </Pressable>
+              <Text
+                testID="nationality-search-hint"
+                style={{
+                  color: colors.textMuted,
+                  fontSize: fontSize.sm,
+                  textAlign: 'center',
+                }}
+              >
+                {t('identity.nationalityHint', { n: NATIONALITIES.length })}
+              </Text>
+            </View>
+          ) : null}
+        </Field>
+      </View>
+      {/* MGC-1532 (actualizado por MGC-1737) — identity-fixed-form reubicado
+          como TERCER hijo del outer ScrollView (después de nationality-section,
+          antes de jersey-preview-wrapper). Causa raíz original MGC-1532:
+          `isIdentityComplete` exige SOLO `name.trim().length >= 2`, así que
+          el nombre es el ÚNICO gate de Continuar. MGC-1737 invierte la
+          prioridad: nationality-section debe quedar ARRIBA del form para
+          que country-ARG sea visible sin scrollUntilVisible (AC3 explícito).
+          input-name sigue siendo tappable en y≈1295px (arriba del field-map
+          overlay 1310px) y los campos restantes (lastname/age/foot) requieren
+          scroll — trade-off explícito en MGC-1737 para preservar el AC3 de
+          WF1 PR #427 walk MGC-1732.
+
+          pointerEvents='box-none' mantiene el spec MGC-1348 para que el wrapper
+          no intercepte clicks de los country-* Pressables que viven MÁS
+          ARRIBA en el scroll. */}
       <View
         testID="identity-fixed-form"
         collapsable={false}
@@ -664,243 +908,6 @@ export default function IdentityScreen() {
               );
             })}
           </View>
-        </Field>
-      </View>
-
-      {/* MGC-1474 — nationality-section REPOSICIONADA como segundo hijo del
-          outer ScrollView (entre identity-header y jersey-preview-wrapper).
-          Causa raíz AC4 FAIL sobre PR-352 (MGC-1473 sobre APK 395aeb9e):
-          en scroll natural order, nationality-section arrancaba en y=1552px
-          con country-ARG y=1823-1963, totalmente overlay por
-          identity-sticky-footer top=1530 → bounds invertidos, no tappable
-          sin scrollUntilVisible. Reordenando, nationality-section queda
-          inmediatamente bajo el header (y≈150dp = y≈375px), country-ARG
-          a y≈420dp = y≈1050px, sobre footer top=1530 → tappable en fresh
-          scroll position sin scrollUntilVisible.
-
-          Layout resultante en ZY22G728HN 1080×2400 density 400
-          (actualizado por MGC-1532: identity-fixed-form se intercala entre
-          identity-header y nationality-section; country-ARG baja 283px pero
-          sigue por encima del footerTop 1530px, así que el AC4 se preserva):
-            identity-header          y=0      → y=150dp   ( 375px)
-            identity-fixed-form      y=150dp  → y=263dp   ( 658px) ← MGC-1532
-            nationality-section      y=263dp  → y=613dp   ← country-ARG ≈1333px
-            jersey-preview-wrapper   y=613dp  → y=913dp   ← bajo fold, scroll
-            identity-fixed-field-map y=1001dp → y=1353dp
-            scrollContent.paddingBottom:240 despeja el footer top y=1530.
-
-          Mantener: cap NATIONALITY_FRESH_LIMIT=5 (MGC-1448), search hint
-          "Escribí para buscar entre las N nacionalidades", testID alias
-          AR→ARG (MGC-1348 v2), lista plana sin ScrollView anidado
-          (MGC-1428 intento-7). NO reintroducir ScrollView anidado.
-          NO extraer nationality del ScrollView a sibling externo — eso
-          reintroduce los problemas de measure pass / clipping que MGC-807
-          / MGC-843 / MGC-1428 ya cerraron. Reordenar dentro del scroll es
-          la mínima superficie de cambio y resuelve AC4 sin tocar contrato
-          ni el cap de 5. */}
-      <View
-        testID="nationality-section"
-        collapsable={false}
-        style={{
-          backgroundColor: colors.bg,
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          padding: spacing[4],
-          flexShrink: 0,
-        }}
-      >
-        <Field label={t('identity.fieldNationality')}>
-          <TextInput
-            value={nationalityQuery}
-            onChangeText={setNationalityQuery}
-            placeholder={t('identity.nationalityPlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            autoCorrect={false}
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                borderColor: colors.borderStrong,
-                borderRadius: radii.md,
-                paddingHorizontal: spacing[3],
-                paddingVertical: spacing[3],
-                fontSize: fontSize.base,
-                marginBottom: spacing[2],
-              },
-            ]}
-            accessibilityLabel={t('identity.nationalitySearchA11y')}
-            testID="input-nationality-search"
-          />
-          {/* MGC-1428 — lista plana de países (sin ScrollView anidado). Países
-              son hijos directos del outer ScrollView para evitar el clipping
-              de RN-Android sobre bounds anidados. flexWrap mantiene orden
-              vertical, maxHeight acotado por el outer ScrollView + paddingBottom:240. */}
-          <View
-            style={{
-              borderRadius: radii.md,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.surface,
-              overflow: 'hidden',
-            }}
-          >
-            {filteredNationalities.map((n) => {
-              const active = profile.nationalityCode === n.code;
-              // MGC-1511 — elegir un país cierra la tarea: además de limpiar el
-              // search colapsamos el listado expandido de MGC-1503. Sin esto las
-              // 33 filas siguen inline tras la selección y field-map vuelve a
-              // caer ≈6000px bajo el fold (los FAIL de QA MGC-1450/1452 que
-              // motivaron el cap de MGC-1448). El usuario puede re-expandir
-              // con "Ver todas las N" cuando quiera.
-              const selectNationality = () => {
-                setNationality(n.code);
-                setNationalityQuery('');
-                setNationalityExpanded(false);
-              };
-              return (
-                <Pressable
-                  key={n.code}
-                  onPress={selectNationality}
-                  {...onKeyActivate(selectNationality)}
-                  collapsable={false}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing[3],
-                    paddingHorizontal: spacing[3],
-                    paddingVertical: spacing[3],
-                    minHeight: 56,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.border,
-                    backgroundColor: active ? colors.primarySoft : 'transparent',
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
-                  // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
-                  // `getByTestId('country-ARG')`. Alias solo para AR;
-                  // resto del mundo mantiene FIFA code como testID.
-                  testID={`country-${n.code === 'AR' ? 'ARG' : n.code}`}
-                >
-                  <Text style={{ fontSize: 22, lineHeight: 28, includeFontPadding: false }}>{n.flag}</Text>
-                  <Text
-                    style={{
-                      color: active ? colors.primary : colors.text,
-                      fontSize: fontSize.base,
-                      fontWeight: active ? fontWeight.semibold : fontWeight.regular,
-                      lineHeight: 22,
-                      includeFontPadding: false,
-                    }}
-                  >
-                    {n.name}
-                  </Text>
-                </Pressable>
-              );
-            })}
-            {filteredNationalities.length === 0 ? (
-              <Text
-                style={{
-                  color: colors.textMuted,
-                  padding: spacing[3],
-                  fontSize: fontSize.sm,
-                }}
-              >
-                {t('identity.nationalityNoMatches')}
-              </Text>
-            ) : null}
-          </View>
-          {/* MGC-1503 — Pressable "Ver todas (N)" / "Ver menos" reemplaza al hint
-              pasivo de MGC-1448. Hallazgo UX-005 P0 (audit MGC-1500): el cap a
-              5 sin acción explícita se leía como lista incompleta. Ahora el
-              usuario expande/colapsa sin tipear en el search. El botón vive
-              debajo del listado (no como Floating Action) para respetar el
-              outline del tree del outer scroll y mantener el presupuesto vertical
-              del sticky-footer intacto (scrollContent.paddingBottom:240).
-              - Colapsado: renderiza un Pressable primario con testID estable
-                `btn-nationality-expand` y label "Ver todas las N". El hint
-                secundario "Escribí para buscar…" sigue debajo.
-              - Expandido: Pressable secundario `btn-nationality-collapse` con
-                "Ver menos" + flecha arriba. La lista pasa a las 33, el
-                scroll hace su trabajo, el sticky-footer overlapea opaco.
-              - Con query: el search filtra sobre las 33 (cualquier cap/expand
-                queda irrelevante), no se renderiza ningún botón (UX-005 sólo
-                aplica a la vista sin filtro). */}
-          {!nationalityQuery.trim() ? (
-            <View
-              testID="nationality-toggle-row"
-              collapsable={false}
-              style={{
-                marginTop: spacing[3],
-                gap: spacing[1],
-              }}
-            >
-              <Pressable
-                testID={
-                  nationalityExpanded
-                    ? 'btn-nationality-collapse'
-                    : 'btn-nationality-expand'
-                }
-                onPress={() => setNationalityExpanded((v) => !v)}
-                {...onKeyActivate(() => setNationalityExpanded((v) => !v))}
-                accessibilityRole="button"
-                accessibilityState={{ expanded: nationalityExpanded }}
-                accessibilityLabel={
-                  nationalityExpanded
-                    ? t('identity.nationalityCollapseA11y')
-                    : t('identity.nationalityExpandA11y', { n: NATIONALITIES.length })
-                }
-                collapsable={false}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: spacing[2],
-                  paddingHorizontal: spacing[3],
-                  paddingVertical: spacing[2],
-                  borderRadius: radii.md,
-                  borderWidth: 1,
-                  borderColor: nationalityExpanded
-                    ? colors.borderStrong
-                    : colors.primary,
-                  backgroundColor: nationalityExpanded
-                    ? colors.surface
-                    : colors.primarySoft,
-                  minHeight: 44,
-                }}
-              >
-                <Text
-                  style={{
-                    color: nationalityExpanded ? colors.text : colors.primary,
-                    fontSize: fontSize.sm,
-                    fontWeight: fontWeight.semibold,
-                  }}
-                >
-                  {nationalityExpanded
-                    ? t('identity.nationalityCollapseLabel')
-                    : t('identity.nationalityExpandLabel', { n: NATIONALITIES.length })}
-                </Text>
-                <Text
-                  style={{
-                    color: nationalityExpanded ? colors.text : colors.primary,
-                    fontSize: fontSize.sm,
-                    fontWeight: fontWeight.semibold,
-                  }}
-                >
-                  {nationalityExpanded ? '▲' : '▼'}
-                </Text>
-              </Pressable>
-              <Text
-                testID="nationality-search-hint"
-                style={{
-                  color: colors.textMuted,
-                  fontSize: fontSize.sm,
-                  textAlign: 'center',
-                }}
-              >
-                {t('identity.nationalityHint', { n: NATIONALITIES.length })}
-              </Text>
-            </View>
-          ) : null}
         </Field>
       </View>
       {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
