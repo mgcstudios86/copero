@@ -27,13 +27,16 @@ const JerseyPreview = lazy(() =>
   import('@/design/components/JerseyPreview').then((m) => ({ default: m.JerseyPreview })),
 );
 
+const EMPTY_LOG = { timeline: [], events: [] };
+
 export default function DashboardScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
 
   const profile = useCareerStore((s) => s.profile);
   const stage = useCareerStore((s) => s.stage);
-  const log = useCareerStore((s) => s.log ?? { timeline: [], events: [] });
+  const storedLog = useCareerStore((s) => s.log);
+  const log = storedLog ?? EMPTY_LOG;
   const openAcademy = useCareerStore((s) => s.openAcademy);
   const startDraft = useCareerStore((s) => s.startDraft);
 
