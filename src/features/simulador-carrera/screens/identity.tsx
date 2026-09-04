@@ -27,7 +27,7 @@ import { NATIONALITIES } from '@/features/career/nationalities';
 // El campo leagueCode del store queda como default '' y se mantiene el setter
 // `setLeague` por compat con storage migrado (MGC-1501 internal track).
 import { isIdentityComplete } from '@/features/career/identity-state';
-import type { Foot } from '@/types/career';
+import type { Foot, PositionGroup } from '@/types/career';
 
 // MGC-1448 — filas de nacionalidad visibles sin query. Ver el presupuesto de
 // contenido documentado en `filteredNationalities`: con las 33 inline el árbol
@@ -36,6 +36,27 @@ import type { Foot } from '@/types/career';
 // Las 5 primeras cubren los testIDs del contrato E2E:
 // country-ARG / BR / UY / CL / CO.
 const NATIONALITY_FRESH_LIMIT = 5;
+
+// MGC-1628 / WF1 — chips de posición (wireframe §WF1). 4 grupos en una
+// sola fila horizontal. Cada chip tiene un `defaultPos` que es el
+// representante del grupo para guardar en `profile.position` cuando se
+// selecciona (F1 no modela sub-posiciones; el árbol semanal posicional
+// vive en F2 / MGC-1628 §L4 + MGC-1675). `ids` cubre todos los
+// representatives del grupo para que el chip siga seleccionado si el
+// profile hidrata con una sub-posición legacy (LH/RW → ST, etc.).
+type PositionChip = {
+  id: string;
+  label: 'Gk' | 'Def' | 'Mid' | 'Fwd';
+  group: PositionGroup;
+  defaultPos: (typeof POSITIONS)[number]['id'];
+  ids: (typeof POSITIONS)[number]['id'][];
+};
+const POSITION_CHIPS: PositionChip[] = [
+  { id: 'GK', label: 'Gk', group: 'goalkeeper', defaultPos: 'GK', ids: ['GK'] },
+  { id: 'CB', label: 'Def', group: 'defense', defaultPos: 'CB', ids: ['LB', 'CB', 'RB'] },
+  { id: 'CAM', label: 'Mid', group: 'midfield', defaultPos: 'CAM', ids: ['LM', 'CAM', 'RM', 'CM', 'CDM'] },
+  { id: 'ST', label: 'Fwd', group: 'attack', defaultPos: 'ST', ids: ['LW', 'ST', 'RW'] },
+];
 
 // Lazy-load JerseyPreview (MGC-482): separa el SVG patterns (~10 KB)
 // del chunk inicial de /identity. Mejora LCP sin cambiar UX
@@ -89,6 +110,13 @@ export default function IdentityScreen() {
 
   const profile = useCareerStore((s) => s.profile);
   const setName = useCareerStore((s) => s.setName);
+  // MGC-1628 / WF1 — apellido separado del nombre. Mismo patrón que
+  // `setName`: spread inmutable del profile, persistencia async best-effort.
+  const setLastName = useCareerStore((s) => s.setLastName);
+  // MGC-1628 / WF1 — edad editable 16-35 en el form. El motor sigue
+  // incrementando `profile.age` cada temporada (season.ts:122) — este
+  // setter sólo opera durante el alta.
+  const setAge = useCareerStore((s) => s.setAge);
   const setNumber = useCareerStore((s) => s.setNumber);
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
@@ -325,7 +353,10 @@ export default function IdentityScreen() {
         collapsable={false}
         style={{ gap: spacing[2], padding: spacing[4], flexShrink: 0 }}
       >
-        {/* Header */}
+        {/* MGC-1628 / WF1 — header reorganizado (wireframe §WF1).
+            eyebrow = marca + step ("COPERO · NUEVA CARRERA" / "Paso 1 de 2"),
+            title = "Creá tu jugador", subtitle = el step indicator explícito.
+            Se preserva el patrón de 2 roles header para screen readers. */}
         <View style={{ gap: spacing[2] }}>
           <Text
             style={{
@@ -462,6 +493,110 @@ export default function IdentityScreen() {
               accessibilityLabel={t('identity.nameA11y')}
               testID="input-name"
             />
+          </View>
+        </Field>
+
+        {/* MGC-1628 / WF1 — Apellido en input separado (wireframe §WF1).
+            Mismo patrón que Nombre: wrapper collapsable=false + box-none,
+            TextInput con autoCapitalize=words + maxLength 24 (rango
+            validado por isIdentityComplete: ≥2 chars). El setter
+            `setLastName` escribe a `profile.lastName` (campo nuevo,
+            ver identity-state.ts). testID `input-lastname` se publica
+            para que QA (MGC-1626 walk E2E) lo pueda apuntar. */}
+        <Field
+          label={t('identity.fieldLastName')}
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          <View
+            testID="input-lastname-wrapper"
+            collapsable={false}
+            pointerEvents="box-none"
+            style={{ minHeight: 40, width: '100%' }}
+          >
+            <TextInput
+              value={profile.lastName ?? ''}
+              onChangeText={setLastName}
+              placeholder={t('identity.lastNamePlaceholder')}
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+              autoCorrect={false}
+              maxLength={24}
+              collapsable={false}
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  borderColor: colors.borderStrong,
+                  borderRadius: radii.md,
+                  paddingHorizontal: spacing[3],
+                  paddingVertical: spacing[2],
+                  fontSize: fontSize.base,
+                },
+              ]}
+              accessibilityLabel={t('identity.lastNameA11y')}
+              testID="input-lastname"
+            />
+          </View>
+        </Field>
+
+        {/* MGC-1628 / WF1 — Edad 16-35. TextInput numérico, validación
+            inline en `setAge` (clamp 16-35). El hint debajo del input
+            (`t('identity.ageHelp')`) explica al usuario el rango y por qué
+            (la edad se incrementa temporada a temporada y la retirada
+            ocurre a los 35). testID `input-age` para QA walk. */}
+        <Field
+          label={t('identity.fieldAge')}
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          <View
+            testID="input-age-wrapper"
+            collapsable={false}
+            pointerEvents="box-none"
+            style={{ minHeight: 40, width: '100%' }}
+          >
+            <TextInput
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              value={String(profile.age)}
+              onChangeText={(txt) => {
+                // Acepta sólo dígitos. El clamp final lo hace setAge.
+                const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
+                const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
+                setAge(parsed);
+              }}
+              placeholder={t('identity.agePlaceholder')}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="number-pad"
+              inputMode="numeric"
+              maxLength={2}
+              collapsable={false}
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  borderColor: colors.borderStrong,
+                  borderRadius: radii.md,
+                  paddingHorizontal: spacing[3],
+                  paddingVertical: spacing[2],
+                  fontSize: fontSize.base,
+                },
+              ]}
+              accessibilityLabel={t('identity.ageA11y')}
+              testID="input-age"
+            />
+            <Text
+              testID="input-age-help"
+              style={{
+                color: colors.textMuted,
+                fontSize: fontSize.xs,
+                marginTop: spacing[1],
+                lineHeight: 14,
+                includeFontPadding: false,
+              }}
+            >
+              {t('identity.ageHelp')}
+            </Text>
           </View>
         </Field>
 
@@ -895,85 +1030,66 @@ export default function IdentityScreen() {
           right: 0,
           bottom: 240, // encima del identity-sticky-footer height:240
           paddingHorizontal: spacing[4],
-          paddingTop: spacing[4],
-          paddingBottom: spacing[4],
+          paddingTop: spacing[3],
+          paddingBottom: spacing[3],
           gap: spacing[2],
           backgroundColor: colors.bg,
           zIndex: 10,
           flexShrink: 0,
         }}
       >
-        <Field label={t('identity.fieldPosition')}>
-          {/* MGC-1567 — `pointerEvents='box-none'` INCONDICIONAL. El wrapper
-              solo pinta el campo + posición Pressable hijo (pos-XX con
-              hitSlop+8, captura su propio tap). Sin box-none el bg captura
-              el touch sobre los league-list-items que caen dentro de sus
-              bounds cuando el dropdown abre a 340dp. Patrón MGC-1348 v2 /
-              MGC-1578 (PR-394). */}
+        <Field
+          label={t('identity.fieldPosition')}
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          {/* MGC-1628 / WF1 — chips de posición (wireframe §WF1):
+              GK DEF MID FWD en una sola fila horizontal. El chip
+              seleccionado persiste `profile.position` a un representante
+              del grupo (GK → 'GK', DEF → 'CB', MID → 'CAM', FWD → 'ST').
+              F2 reemplaza esta fila por el árbol de decisión posicional
+              completo (MGC-1628 §L4 / MGC-1675). testIDs preservan el
+              contrato E2E existente (pos-GK / pos-CB / pos-CAM / pos-ST
+              en e2e/simulador-carrera.spec.ts + axe mgc-462-contrast). */}
           <View
-            testID="field-map-wrapper"
+            testID="position-chips-row"
             collapsable={false}
             pointerEvents="box-none"
-            style={[
-              styles.fieldMapWrapper,
-              {
-                backgroundColor: colors.successSoft,
-                borderColor: colors.borderStrong,
-                borderRadius: radii.lg,
-              },
-            ]}
-            accessibilityLabel={t('identity.fieldMapA11y')}
+            style={{
+              flexDirection: 'row',
+              gap: spacing[2],
+              width: '100%',
+              minHeight: 48,
+            }}
           >
-            {/* Líneas del campo */}
-            <View
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: 0,
-                right: 0,
-                height: 1,
-                backgroundColor: colors.border,
-              }}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                left: '50%',
-                top: 0,
-                bottom: 0,
-                width: 1,
-                backgroundColor: colors.border,
-              }}
-            />
-            {POSITIONS.map((pos) => {
-              const active = profile.position === pos.id;
+            {POSITION_CHIPS.map((chip) => {
+              const active = chip.ids.includes(profile.position);
               return (
                 <Pressable
-                  key={pos.id}
-                  onPress={() => setPosition(pos.id)}
-                  {...onKeyActivate(() => setPosition(pos.id))}
+                  key={chip.id}
+                  onPress={() => setPosition(chip.defaultPos)}
+                  {...onKeyActivate(() => setPosition(chip.defaultPos))}
                   accessibilityRole="button"
-                  accessibilityLabel={t('identity.positionA11y', { label: pos.label })}
+                  accessibilityLabel={t('identity.positionChipsA11y', {
+                    label: chip.label,
+                  })}
                   accessibilityState={{ selected: active }}
-                  testID={`pos-${pos.id}`}
-                  // MGC-1502 — WCAG 2.5.5: touch target ≥44dp. Dot visual se
-                  // mantiene en 36px; hitSlop +8 cada lado → 52×52dp hitbox sin
-                  // alterar layout. field-map-wrapper lleva overflow:visible
-                  // (línea ~1378) así que el hitbox extendido no clipea contra
-                  // el wrapper parent bounds.
+                  // MGC-1502 — WCAG 2.5.5: touch target ≥44dp. Chip visual
+                  // 48dp + hitSlop +8 cada lado → 64dp hitbox. testID
+                  // `pos-${chip.id}` preserva el contrato `pos-GK/CB/CAM/ST`
+                  // que las specs E2E y axe ya consumen.
                   hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+                  testID={`pos-${chip.id}`}
                   collapsable={false}
                   style={{
-                    position: 'absolute',
-                    left: `${pos.x * 100}%`,
-                    top: `${pos.y * 100}%`,
-                    transform: [{ translateX: -18 }, { translateY: -18 }],
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
+                    flex: 1,
+                    paddingVertical: spacing[3],
+                    borderRadius: radii.md,
                     borderWidth: 2,
-                    borderColor: active ? colors.textStrong : colors.border,
-                    backgroundColor: active ? GROUP_COLOR[pos.group] : colors.surface,
+                    borderColor: active ? GROUP_COLOR[chip.group] : colors.borderStrong,
+                    backgroundColor: active
+                      ? GROUP_COLOR[chip.group]
+                      : colors.surface,
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
@@ -981,11 +1097,12 @@ export default function IdentityScreen() {
                   <Text
                     style={{
                       color: active ? '#0A120E' : colors.text,
-                      fontSize: fontSize.xs,
+                      fontSize: fontSize.base,
                       fontWeight: fontWeight.bold,
+                      letterSpacing: 1,
                     }}
                   >
-                    {pos.label}
+                    {t(`identity.positionGroup${chip.label}`)}
                   </Text>
                 </Pressable>
               );
@@ -1426,23 +1543,14 @@ const styles = StyleSheet.create({
   // ZY22G728HN 1080x2400, empujando identity-sticky-footer debajo del
   // viewport y ocultando nationality/sticky-stepper/btn-identity-continue.
   // MGC-1299: PR-320 (MGC-1286) reintrodujo ScrollView outer y declaró
-  // height:380 + flexBasis:380 como belt-suspenders — pero el spec histórico
-  // (MGC-1143/MGC-1152) espera field-map-wrapper h=320±10dp. Restauramos
-  // 320dp explícito + flexBasis:320 + flexGrow:0 para canónico. aspectRatio
-  // queda como fallback (ignorado cuando hay height explícito). Mantener
-  // overflow:visible — pos-XX Pressables con translateX/Y -18 no se clipean
-  // dentro del wrapper parent bounds.
-  fieldMapWrapper: {
-    aspectRatio: 1.6,
-    width: '100%',
-    height: 320,
-    flexBasis: 320,
-    flexGrow: 0,
-    borderWidth: 2,
-    position: 'relative',
-    overflow: 'visible',
-    flexShrink: 0,
-  },
+  // MGC-1628 / WF1 — el `fieldMapWrapper` (soccer field con dots) se
+  // reemplazó por chips de posición horizontales (`POSITION_CHIPS`
+  // módulo-scope). La fila de chips lleva styling inline en el JSX
+  // (flexDirection:'row', gap, minHeight:48) — no requiere style acá.
+  // El wrapper `identity-fixed-field-map` sigue existiendo como
+  // fixed sibling absolute (mismo layout bottom:240) para mantener la
+  // jerarquía visual del form (Nombre/Apellido/Edad/Nacionalidad arriba
+  // en el scroll + chips de posición abajo + stepper + Continue).
   // MGC-1428 — fixedFieldMap style retirado: identity-fixed-field-map ya no
   // vive fuera del ScrollView. El wrapper ahora es hijo directo del outer
   // scroll y su padding/gap se aplican inline en el JSX (ver bloque arriba).

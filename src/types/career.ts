@@ -253,6 +253,11 @@ export type League = {
 
 export type PlayerProfile = {
   name: string;
+  // MGC-1628 / WF1 — apellido separado del nombre. El form del alta los pide
+  // en inputs distintos; el seed del motor sigue usando sólo `name` para no
+  // invalidar partidas guardadas. Opcional para back-compat con saves v:1/v:2
+  // existentes — la migración `migrateV1ToV2` lo hidrata con ''.
+  lastName?: string;
   number: number;
   position: Position;
   nationalityCode: string;

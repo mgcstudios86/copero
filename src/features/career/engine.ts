@@ -59,6 +59,10 @@ import { walkTree } from './decision-tree';
 
 export type CareerAction =
   | { type: 'setName'; name: string }
+  // MGC-1628 / WF1 — apellido separado del nombre (form del alta).
+  | { type: 'setLastName'; lastName: string }
+  // MGC-1628 / WF1 — edad editable 16-35 (clamp en reducer).
+  | { type: 'setAge'; age: number }
   | { type: 'setNumber'; number: number }
   | { type: 'setPosition'; position: Position }
   | { type: 'setNationality'; code: string }
@@ -151,6 +155,17 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
   switch (action.type) {
     case 'setName':
       return { ...state, profile: { ...state.profile, name: action.name } };
+    // MGC-1628 / WF1 — apellido separado. Mismo spread inmutable que
+    // `setName`; el motor no necesita tocarlo, sólo persistir.
+    case 'setLastName':
+      return { ...state, profile: { ...state.profile, lastName: action.lastName } };
+    // MGC-1628 / WF1 — edad editable. Clamp 16-35 idéntico al setter
+    // del store (identity-state.ts#setAge) para mantener una sola
+    // fuente de verdad.
+    case 'setAge': {
+      const a = Math.max(16, Math.min(35, Math.floor(Number.isFinite(action.age) ? action.age : 16)));
+      return { ...state, profile: { ...state.profile, age: a } };
+    }
     case 'setNumber': {
       const n = Math.max(1, Math.min(99, Math.floor(action.number)));
       return { ...state, profile: { ...state.profile, number: n } };
@@ -557,6 +572,15 @@ function applyCardToProfile(profile: PlayerProfile, card: ReturnType<typeof card
 }
 
 /** Helper: ¿el profile tiene los campos mínimos para pasar de identity a dashboard? */
+// MGC-1628 / WF1 — espejo del helper liviano en identity-state.ts.
+// El motor re-exporta la misma lógica para que las simulaciones y tests
+// no tengan que importar el módulo liviano (que arrastra menos, pero
+// vive aparte por code-split MGC-543). Mantener ambos sincronizados
+// hasta que consolidemos en una sola fuente.
 export function isIdentityComplete(profile: PlayerProfile): boolean {
-  return profile.name.trim().length >= 2 && profile.number >= 1 && profile.number <= 99;
+  const firstName = profile.name.trim();
+  const lastName = (profile.lastName ?? '').trim();
+  const ageValid = profile.age >= 16 && profile.age <= 35;
+  const natValid = profile.nationalityCode.trim().length > 0;
+  return firstName.length >= 2 && lastName.length >= 2 && ageValid && natValid;
 }

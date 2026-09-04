@@ -105,12 +105,16 @@ describe('career engine', () => {
     expect(s).toEqual(initialSnapshot());
   });
 
-  it('isIdentityComplete exige nombre de al menos 2 chars y número válido', () => {
+  it('isIdentityComplete exige nombre + apellido (≥2 c/u) + edad 16-35 + nacionalidad', () => {
+    // MGC-1628 / WF1 — la identidad reorganizada agrega apellido y edad
+    // como gates. nationalityCode ya tiene default 'AR' (cumple la
+    // condición) y age=16 (límite inferior válido), así que sólo falta
+    // poblar nombre + apellido con al menos 2 chars.
     let s = initialSnapshot();
     expect(isIdentityComplete(s.profile)).toBe(false);
-    s = step(s, { type: 'setName', name: 'M' });
-    expect(isIdentityComplete(s.profile)).toBe(false);
     s = step(s, { type: 'setName', name: 'Ma' });
+    expect(isIdentityComplete(s.profile)).toBe(false);
+    s = step(s, { type: 'setLastName', lastName: 'Ro' });
     expect(isIdentityComplete(s.profile)).toBe(true);
   });
 

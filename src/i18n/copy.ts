@@ -62,8 +62,20 @@ export type Copy = {
     eyebrow: string;
     title: string;
     subtitle: string;
+    stepIndicator: string;
     fieldName: string;
     namePlaceholder: string;
+    // MGC-1628 / WF1 — apellido separado del nombre (wireframe §WF1).
+    fieldLastName: string;
+    lastNamePlaceholder: string;
+    // MGC-1628 / WF1 — edad editable 16-35. `ageHelp` se muestra debajo
+    // del input como hint estático; `ageA11y` lo lee el screen reader.
+    fieldAge: string;
+    agePlaceholder: string;
+    ageHelp: string;
+    ageA11y: string;
+    nameA11y: string;
+    lastNameA11y: string;
     fieldFoot: string;
     footLeft: string;
     footRight: string;
@@ -76,6 +88,7 @@ export type Copy = {
     nationalityCollapseA11y: string;
     nationalityExpandA11y: string;
     nationalityHint: string;
+    nationalitySearchA11y: string;
     jerseyEyebrow: string;
     jerseyCaption: string;
     fieldLeague: string;
@@ -84,17 +97,23 @@ export type Copy = {
     leagueSearchPlaceholder: string;
     leagueSearchA11y: string;
     leagueNoMatches: string;
+    // MGC-1628 / WF1 — posición como chips horizontales (GK DEF MID FWD)
+    // en lugar del field-map (soccer field). `positionChipsA11y` arma el
+    // label de cada chip; `groupGk/Def/Mid/Fwd` son las etiquetas visibles.
     fieldPosition: string;
     positionA11y: string;
+    positionChipsA11y: string;
+    positionGroupGk: string;
+    positionGroupDef: string;
+    positionGroupMid: string;
+    positionGroupFwd: string;
+    fieldMapA11y: string;
     numberLabel: string;
     numberDecrement: string;
     numberIncrement: string;
     continueHint: string;
     continue: string;
     continueA11yHint: string;
-    nameA11y: string;
-    nationalitySearchA11y: string;
-    fieldMapA11y: string;
   };
   // MGC-1648 — strings de la pantalla /team-select (WF2 del alta). Clubs
   // se muestran en español independientemente del locale del jugador (el
@@ -346,15 +365,24 @@ export const COPY: Record<Locale, Copy> = {
       close: 'Cerrar',
     },
     identity: {
-      eyebrow: 'SIMULADOR DE CARRERA',
-      title: 'Define tu identidad',
-      subtitle: 'Tu jugador empieza con 16 años, OVR 50 y sin club. Elegí nombre, número y posición.',
+      eyebrow: 'COPERO · NUEVA CARRERA',
+      title: 'Creá tu jugador',
+      subtitle: 'Paso 1 de 2 — Tu jugador',
+      stepIndicator: 'Paso 1 de 2',
       fieldName: 'Nombre',
-      namePlaceholder: 'Ej. Mateo Romero',
-      fieldFoot: 'Pie hábil',
-      footLeft: 'Izquierdo',
-      footRight: 'Derecho',
-      footBoth: 'Ambos',
+      namePlaceholder: 'Ej. Lionel',
+      fieldLastName: 'Apellido',
+      lastNamePlaceholder: 'Ej. Messi',
+      fieldAge: 'Edad (16–35)',
+      agePlaceholder: '19',
+      ageHelp: 'Tu jugador arranca a esta edad y se retira a los 35.',
+      ageA11y: 'Edad del jugador, entre 16 y 35 años',
+      nameA11y: 'Nombre del jugador',
+      lastNameA11y: 'Apellido del jugador',
+      fieldFoot: 'Pierna hábil',
+      footLeft: 'Izquierda',
+      footRight: 'Derecha',
+      footBoth: 'Ambas',
       fieldNationality: 'Nacionalidad',
       nationalityPlaceholder: 'Buscar país…',
       nationalityNoMatches: 'Sin coincidencias.',
@@ -363,6 +391,7 @@ export const COPY: Record<Locale, Copy> = {
       nationalityCollapseA11y: 'Ver menos nacionalidades',
       nationalityExpandA11y: 'Ver todas las {n} nacionalidades',
       nationalityHint: 'Escribí para buscar entre las {n} nacionalidades.',
+      nationalitySearchA11y: 'Seleccionar nacionalidad',
       jerseyEyebrow: 'VISTA PREVIA DE CAMISETA',
       jerseyCaption: '{position} · OVR 50',
       fieldLeague: 'Liga de origen',
@@ -371,17 +400,20 @@ export const COPY: Record<Locale, Copy> = {
       leagueSearchPlaceholder: 'Buscar liga…',
       leagueSearchA11y: 'Buscar liga',
       leagueNoMatches: 'Sin coincidencias.',
-      fieldPosition: 'Posición (tap en el campo)',
+      fieldPosition: 'Posición',
       positionA11y: 'Posición {label}',
+      positionChipsA11y: 'Posición: {label}',
+      positionGroupGk: 'GK',
+      positionGroupDef: 'DEF',
+      positionGroupMid: 'MID',
+      positionGroupFwd: 'FWD',
+      fieldMapA11y: 'Mapa del campo con posiciones',
       numberLabel: 'NÚMERO (1–99)',
       numberDecrement: 'Restar número',
       numberIncrement: 'Sumar número',
-      continueHint: 'Escribí tu nombre arriba para continuar.',
-      continue: 'Continuar',
-      continueA11yHint: 'Guarda la identidad y abre el dashboard',
-      nameA11y: 'Nombre del jugador',
-      nationalitySearchA11y: 'Buscar nacionalidad',
-      fieldMapA11y: 'Mapa del campo con posiciones',
+      continueHint: 'Completá los 4 campos para continuar.',
+      continue: 'Continuar → Elegir equipo',
+      continueA11yHint: 'Guarda la identidad y abre la selección de equipo',
     },
     teamSelect: {
       eyebrow: 'ELEGÍ TU CLUB',
@@ -617,11 +649,20 @@ export const COPY: Record<Locale, Copy> = {
       close: 'Close',
     },
     identity: {
-      eyebrow: 'CAREER SIMULATOR',
-      title: 'Define your identity',
-      subtitle: 'Your player starts at 16, OVR 50, with no club. Pick a name, number and position.',
+      eyebrow: 'COPERO · NEW CAREER',
+      title: 'Create your player',
+      subtitle: 'Step 1 of 2 — Your player',
+      stepIndicator: 'Step 1 of 2',
       fieldName: 'Name',
-      namePlaceholder: 'e.g. Mateo Romero',
+      namePlaceholder: 'e.g. Lionel',
+      fieldLastName: 'Last name',
+      lastNamePlaceholder: 'e.g. Messi',
+      fieldAge: 'Age (16–35)',
+      agePlaceholder: '19',
+      ageHelp: 'Your player starts at this age and retires at 35.',
+      ageA11y: 'Player age, between 16 and 35',
+      nameA11y: 'Player name',
+      lastNameA11y: 'Player last name',
       fieldFoot: 'Preferred foot',
       footLeft: 'Left',
       footRight: 'Right',
@@ -634,6 +675,7 @@ export const COPY: Record<Locale, Copy> = {
       nationalityCollapseA11y: 'See fewer nationalities',
       nationalityExpandA11y: 'See all {n} nationalities',
       nationalityHint: 'Type to search across the {n} nationalities.',
+      nationalitySearchA11y: 'Select nationality',
       jerseyEyebrow: 'JERSEY PREVIEW',
       jerseyCaption: '{position} · OVR 50',
       fieldLeague: 'Home league',
@@ -642,17 +684,20 @@ export const COPY: Record<Locale, Copy> = {
       leagueSearchPlaceholder: 'Search league…',
       leagueSearchA11y: 'Search league',
       leagueNoMatches: 'No matches.',
-      fieldPosition: 'Position (tap on the pitch)',
+      fieldPosition: 'Position',
       positionA11y: 'Position {label}',
+      positionChipsA11y: 'Position: {label}',
+      positionGroupGk: 'GK',
+      positionGroupDef: 'DEF',
+      positionGroupMid: 'MID',
+      positionGroupFwd: 'FWD',
+      fieldMapA11y: 'Pitch map with positions',
       numberLabel: 'NUMBER (1–99)',
       numberDecrement: 'Decrease number',
       numberIncrement: 'Increase number',
-      continueHint: 'Type your name above to continue.',
-      continue: 'Continue',
-      continueA11yHint: 'Saves your identity and opens the dashboard',
-      nameA11y: 'Player name',
-      nationalitySearchA11y: 'Search nationality',
-      fieldMapA11y: 'Pitch map with positions',
+      continueHint: 'Fill the 4 fields to continue.',
+      continue: 'Continue → Pick team',
+      continueA11yHint: 'Saves your identity and opens the team picker',
     },
     teamSelect: {
       eyebrow: 'PICK YOUR CLUB',
@@ -888,11 +933,20 @@ export const COPY: Record<Locale, Copy> = {
       close: '关闭',
     },
     identity: {
-      eyebrow: '职业生涯模拟器',
-      title: '定义你的身份',
-      subtitle: '你的球员从 16 岁、OVR 50、无俱乐部开始。选择姓名、号码和位置。',
+      eyebrow: 'COPERO · 新建生涯',
+      title: '创建你的球员',
+      subtitle: '第 1 步 / 共 2 步 — 你的球员',
+      stepIndicator: '第 1 步 / 共 2 步',
       fieldName: '姓名',
-      namePlaceholder: '例如 马蒂奥·罗梅罗',
+      namePlaceholder: '例如 利昂内尔',
+      fieldLastName: '姓氏',
+      lastNamePlaceholder: '例如 梅西',
+      fieldAge: '年龄 (16–35)',
+      agePlaceholder: '19',
+      ageHelp: '你的球员从这个年龄开始，35 岁退役。',
+      ageA11y: '球员年龄，介于 16 至 35 岁',
+      nameA11y: '球员姓名',
+      lastNameA11y: '球员姓氏',
       fieldFoot: '惯用脚',
       footLeft: '左脚',
       footRight: '右脚',
@@ -905,6 +959,7 @@ export const COPY: Record<Locale, Copy> = {
       nationalityCollapseA11y: '收起国籍列表',
       nationalityExpandA11y: '查看全部 {n} 个国籍',
       nationalityHint: '输入以搜索全部 {n} 个国籍。',
+      nationalitySearchA11y: '选择国籍',
       jerseyEyebrow: '球衣预览',
       jerseyCaption: '{position} · OVR 50',
       fieldLeague: '所属联赛',
@@ -913,17 +968,20 @@ export const COPY: Record<Locale, Copy> = {
       leagueSearchPlaceholder: '搜索联赛…',
       leagueSearchA11y: '搜索联赛',
       leagueNoMatches: '无匹配。',
-      fieldPosition: '位置（点击球场）',
+      fieldPosition: '位置',
       positionA11y: '位置 {label}',
+      positionChipsA11y: '位置：{label}',
+      positionGroupGk: 'GK',
+      positionGroupDef: 'DEF',
+      positionGroupMid: 'MID',
+      positionGroupFwd: 'FWD',
+      fieldMapA11y: '带位置的球场地图',
       numberLabel: '号码 (1–99)',
       numberDecrement: '减少号码',
       numberIncrement: '增加号码',
-      continueHint: '在上方输入姓名以继续。',
-      continue: '继续',
-      continueA11yHint: '保存身份并打开仪表盘',
-      nameA11y: '球员姓名',
-      nationalitySearchA11y: '搜索国籍',
-      fieldMapA11y: '带位置的球场地图',
+      continueHint: '填写 4 个字段后继续。',
+      continue: '继续 → 选择球队',
+      continueA11yHint: '保存身份并打开球队选择',
     },
     teamSelect: {
       eyebrow: '选择你的俱乐部',

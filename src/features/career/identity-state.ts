@@ -26,6 +26,8 @@ import { affectedAttrFor } from '@/types/career';
 /** Profile por defecto. Espejo de `engine.ts#initialProfile` pero standalone. */
 export const initialProfile: PlayerProfile = {
   name: '',
+  // MGC-1628 / WF1 — apellido separado. Default '' hasta que el form lo pida.
+  lastName: '',
   number: 9,
   position: 'ST',
   nationalityCode: 'AR',
@@ -74,10 +76,16 @@ export const initialSnapshot = (): CareerSnapshot => ({
 });
 
 /** ¿El profile tiene los campos mínimos para pasar de identity a dashboard? */
+// MGC-1628 / WF1 — el form exige nombre + apellido (≥2 chars c/u) +
+// edad 16-35 + nacionalidad obligatoria. La validación inline muestra
+// el motivo exacto (campo vacío / fuera de rango) y el botón
+// «Continuar → Elegir equipo» permanece disabled hasta cubrir las 4.
 export function isIdentityComplete(profile: PlayerProfile): boolean {
-  return (
-    profile.name.trim().length >= 2 && profile.number >= 1 && profile.number <= 99
-  );
+  const firstName = profile.name.trim();
+  const lastName = (profile.lastName ?? '').trim();
+  const ageValid = profile.age >= 16 && profile.age <= 35;
+  const natValid = profile.nationalityCode.trim().length > 0;
+  return firstName.length >= 2 && lastName.length >= 2 && ageValid && natValid;
 }
 
 /** Setters inmutables para los 5 campos de identidad. Sin tocar `engine.ts`. */
@@ -85,6 +93,22 @@ export const setName = (state: CareerSnapshot, name: string): CareerSnapshot => 
   ...state,
   profile: { ...state.profile, name },
 });
+
+// MGC-1628 / WF1 — setter puro para el apellido. Reutiliza el patrón de
+// `setName`: spread inmutable, sin tocar motor ni stage.
+export const setLastName = (state: CareerSnapshot, lastName: string): CareerSnapshot => ({
+  ...state,
+  profile: { ...state.profile, lastName },
+});
+
+// MGC-1628 / WF1 — setter puro para la edad con clamp 16-35 (rango
+// wireframe MGC-1625 §WF1 + retirement.ts §RETIREMENT_AGE). El TextInput
+// del form valida inline; acá sólo aseguramos que el motor nunca vea
+// edades fuera del rango persistible.
+export const setAge = (state: CareerSnapshot, age: number): CareerSnapshot => {
+  const a = Math.max(16, Math.min(35, Math.floor(Number.isFinite(age) ? age : 16)));
+  return { ...state, profile: { ...state.profile, age: a } };
+};
 
 export const setNumber = (state: CareerSnapshot, number: number): CareerSnapshot => {
   const n = Math.max(1, Math.min(99, Math.floor(number)));

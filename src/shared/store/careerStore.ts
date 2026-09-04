@@ -54,6 +54,14 @@ type CareerStore = CareerSnapshot & {
    */
   hydrated: boolean;
   setName: (name: string) => void;
+  // MGC-1628 / WF1 — apellido separado del nombre. Mismo patrón que
+  // `setName`: applyAndPersist spread inmutable, sin tocar motor.
+  setLastName: (lastName: string) => void;
+  // MGC-1628 / WF1 — edad editable en el form. El setter hace clamp
+  // 16-35 (ver `setAge` en identity-state). La edad sigue siendo
+  // mutable por el motor (season.ts la incrementa) — este setter sólo
+  // opera en la pantalla de alta.
+  setAge: (age: number) => void;
   setNumber: (number: number) => void;
   setPosition: (position: Position) => void;
   setNationality: (code: string) => void;
@@ -400,6 +408,14 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     hydrated: false,
     // Setters livianos: identity-state, sin motor.
     setName: (name) => applyAndPersist((s) => ({ ...s, profile: { ...s.profile, name } })),
+    // MGC-1628 / WF1 — apellido separado. Persiste junto al resto del
+    // profile; back-compat con saves v:1/v:2 (lastName undefined → '').
+    setLastName: (lastName) =>
+      applyAndPersist((s) => ({ ...s, profile: { ...s.profile, lastName } })),
+    // MGC-1628 / WF1 — edad editable. El clamp 16-35 vive en
+    // identity-state.setAge (single source of truth); acá sólo
+    // aplicamos el spread.
+    setAge: (age) => applyAndPersist((s) => ({ ...s, profile: { ...s.profile, age } })),
     setNumber: (number) =>
       applyAndPersist((s) => ({ ...s, profile: { ...s.profile, number } })),
     setPosition: (position) =>
