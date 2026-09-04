@@ -114,6 +114,46 @@ export type Copy = {
     continue: string;
     continueA11yHint: string;
   };
+  // MGC-1649 — WF3 season hub + weekly decision placeholder.
+  seasonHub: {
+    eyebrow: string;
+    heroName: string;
+    position: string;
+    age: string;
+    club: string;
+    freeAgent: string;
+    week: string;
+    fatigueEyebrow: string;
+    fatigueValue: string;
+    statsEyebrow: string;
+    statsNote: string;
+    statVision: string;
+    statPass: string;
+    statDribble: string;
+    statStamina: string;
+    nextMatchEyebrow: string;
+    nextMatchVs: string;
+    nextMatchJornada: string;
+    nextMatchEmpty: string;
+    ctaViewTable: string;
+    ctaViewTableHint: string;
+    ctaDecide: string;
+    ctaDecideHint: string;
+  };
+  weekDecision: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    optDoubleShift: string;
+    optDoubleShiftDesc: string;
+    optSimpleShift: string;
+    optSimpleShiftDesc: string;
+    optRest: string;
+    optRestDesc: string;
+    optTraining: string;
+    optTrainingDesc: string;
+    backHint: string;
+  };
 };
 
 export const COPY: Record<Locale, Copy> = {
@@ -196,6 +236,46 @@ export const COPY: Record<Locale, Copy> = {
       continue: 'Empezar carrera',
       continueA11yHint: 'Guarda el club elegido y abre el dashboard',
     },
+    // MGC-1649 — WF3 hub de temporada + placeholder de decisión semanal.
+    seasonHub: {
+      eyebrow: 'HUB DE TEMPORADA',
+      heroName: '{name}',
+      position: '{position}',
+      age: '{age} años',
+      club: '{club}',
+      freeAgent: 'Sin club',
+      week: 'SEMANA {week}/38',
+      fatigueEyebrow: 'FATIGA',
+      fatigueValue: '{value}/100',
+      statsEyebrow: 'STATS DE LA POSICIÓN',
+      statsNote: 'Otras posiciones se suman en F2',
+      statVision: 'Visión',
+      statPass: 'Pase',
+      statDribble: 'Dribling',
+      statStamina: 'Resistencia',
+      nextMatchEyebrow: 'PRÓXIMO PARTIDO',
+      nextMatchVs: 'vs {rival}',
+      nextMatchJornada: 'Jornada {week}',
+      nextMatchEmpty: 'Aún sin rival',
+      ctaViewTable: 'Ver tabla',
+      ctaViewTableHint: 'Abre el timeline de temporadas',
+      ctaDecide: 'Decidir semana →',
+      ctaDecideHint: 'Abre la decisión semanal con las 4 opciones',
+    },
+    weekDecision: {
+      eyebrow: 'DECISIÓN SEMANAL',
+      title: '¿Qué hacés esta semana?',
+      subtitle: 'Elegí una opción. F2 la reemplaza por el árbol posicional completo.',
+      optDoubleShift: 'Doble turno',
+      optDoubleShiftDesc: 'Alto riesgo · alta recompensa. Aumenta fatiga.',
+      optSimpleShift: 'Turno simple',
+      optSimpleShiftDesc: 'Balance · riesgo bajo · deltas moderados.',
+      optRest: 'Descanso',
+      optRestDesc: 'Recuperás fatiga · sin partido esta semana.',
+      optTraining: 'Entrenamiento físico',
+      optTrainingDesc: 'Mejora stat posicional concreta.',
+      backHint: 'Volver al hub de temporada',
+    },
   },
   en: {
     brand: 'Copero',
@@ -276,6 +356,46 @@ export const COPY: Record<Locale, Copy> = {
       continue: 'Start career',
       continueA11yHint: 'Saves your club and opens the dashboard',
     },
+    // MGC-1649 — WF3 hub of season + weekly decision placeholder.
+    seasonHub: {
+      eyebrow: 'SEASON HUB',
+      heroName: '{name}',
+      position: '{position}',
+      age: '{age} yo',
+      club: '{club}',
+      freeAgent: 'Free agent',
+      week: 'WEEK {week}/38',
+      fatigueEyebrow: 'FATIGUE',
+      fatigueValue: '{value}/100',
+      statsEyebrow: 'POSITION STATS',
+      statsNote: 'Other positions added in F2',
+      statVision: 'Vision',
+      statPass: 'Pass',
+      statDribble: 'Dribbling',
+      statStamina: 'Stamina',
+      nextMatchEyebrow: 'NEXT MATCH',
+      nextMatchVs: 'vs {rival}',
+      nextMatchJornada: 'Matchday {week}',
+      nextMatchEmpty: 'No opponent yet',
+      ctaViewTable: 'View table',
+      ctaViewTableHint: 'Opens the season timeline',
+      ctaDecide: 'Decide week →',
+      ctaDecideHint: 'Opens the weekly decision with the 4 options',
+    },
+    weekDecision: {
+      eyebrow: 'WEEKLY DECISION',
+      title: 'What do you do this week?',
+      subtitle: 'Pick one option. F2 replaces this with the full positional tree.',
+      optDoubleShift: 'Double shift',
+      optDoubleShiftDesc: 'High risk · high reward. Increases fatigue.',
+      optSimpleShift: 'Simple shift',
+      optSimpleShiftDesc: 'Balanced · low risk · moderate deltas.',
+      optRest: 'Rest',
+      optRestDesc: 'Recover fatigue · no match this week.',
+      optTraining: 'Physical training',
+      optTrainingDesc: 'Boosts a specific position stat.',
+      backHint: 'Back to the season hub',
+    },
   },
   'zh-CN': {
     brand: 'Copero',
@@ -355,6 +475,46 @@ export const COPY: Record<Locale, Copy> = {
       continueHint: '点击一支球队以选择它。',
       continue: '开始职业生涯',
       continueA11yHint: '保存所选球队并打开仪表盘',
+    },
+    // MGC-1649 — WF3 赛季中心 + 本周决策占位。
+    seasonHub: {
+      eyebrow: '赛季中心',
+      heroName: '{name}',
+      position: '{position}',
+      age: '{age} 岁',
+      club: '{club}',
+      freeAgent: '自由球员',
+      week: '第 {week}/38 周',
+      fatigueEyebrow: '疲劳',
+      fatigueValue: '{value}/100',
+      statsEyebrow: '位置属性',
+      statsNote: '其他位置在 F2 加入',
+      statVision: '视野',
+      statPass: '传球',
+      statDribble: '盘带',
+      statStamina: '体能',
+      nextMatchEyebrow: '下一场比赛',
+      nextMatchVs: '对阵 {rival}',
+      nextMatchJornada: '第 {week} 轮',
+      nextMatchEmpty: '暂无对手',
+      ctaViewTable: '查看积分榜',
+      ctaViewTableHint: '打开赛季时间线',
+      ctaDecide: '决定本周 →',
+      ctaDecideHint: '打开本周的 4 个选项',
+    },
+    weekDecision: {
+      eyebrow: '本周决策',
+      title: '本周你打算做什么？',
+      subtitle: '选择一项。F2 将用完整的位置树替换此界面。',
+      optDoubleShift: '双倍训练',
+      optDoubleShiftDesc: '高风险 · 高回报。增加疲劳。',
+      optSimpleShift: '单次训练',
+      optSimpleShiftDesc: '平衡 · 低风险 · 中等变化。',
+      optRest: '休息',
+      optRestDesc: '恢复疲劳 · 本周无比赛。',
+      optTraining: '专项体能训练',
+      optTrainingDesc: '提升一个位置属性。',
+      backHint: '返回赛季中心',
     },
   },
 };
