@@ -27,7 +27,13 @@ const JerseyPreview = lazy(() =>
   import('@/design/components/JerseyPreview').then((m) => ({ default: m.JerseyPreview })),
 );
 
-const EMPTY_LOG = { timeline: [], events: [] };
+// MGC-1577 / MGC-1608 — fallback módulo-scope para `s.log ?? ...`. La
+// referencia es estable entre renders (Zustand v5 usa `Object.is`); un
+// objeto literal inline crearía referencia NUEVA cada render → loop
+// "Maximum update depth exceeded" en Dashboard. `as const` endurece el
+// tipo (readonly timeline/events) para que un caller no pueda mutar
+// el placeholder por accidente y disparar renders extra.
+const EMPTY_LOG = { timeline: [], events: [] } as const;
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -35,12 +41,12 @@ export default function DashboardScreen() {
 
   const profile = useCareerStore((s) => s.profile);
   const stage = useCareerStore((s) => s.stage);
-  // MGC-1577 — split selector en dos llamadas para devolver referencia
-  // estable. `useCareerStore((s) => s.log)` devuelve undefined cuando
-  // no hay log; el `?? EMPTY_LOG` módulo-scope lo reemplaza con la
-  // misma referencia para todos los renders. Evita el Maximum update
-  // depth exceeded del selector `(s) => s.log ?? { timeline: [],
-  // events: [] }` (objeto NUEVO cada render).
+  // MGC-1577 / MGC-1608 — split selector en dos llamadas. La primera
+  // devuelve el snapshot real (o undefined); la segunda aplica el
+  // fallback módulo-scope. Evita el crash que QA reprodujo en MGC-1576
+  // sobre build-PR-392 vc=56 al volver a Dashboard tras fichar club
+  // (2da visita): el selector inline `s.log ?? { ... }` creaba
+  // referencia nueva cada render → Maximum update depth exceeded.
   const storedLog = useCareerStore((s) => s.log);
   const log = storedLog ?? EMPTY_LOG;
   const openAcademy = useCareerStore((s) => s.openAcademy);
