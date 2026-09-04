@@ -164,8 +164,13 @@ export function recommendStrategy(profile: PlayerProfile): StrategyId | null {
     if (profile.career.lesion.kind === 'grave') return 'L3';
     return null;
   }
-  if (profile.week % 3 === 0) return MATCH_STRATEGIES[0];
-  return WEEKLY_STRATEGIES[profile.week % WEEKLY_STRATEGIES.length];
+  // MGC-1664 — normalizar a 0-indexed (consistente con v2 currentWeek).
+  // `profile.week` se conserva 1..38 por compat con la UI; los helpers
+  // puros del motor F2.2+ trabajan en 0..37 para evitar el off-by-one
+  // que tenía `week % 5` (semana 1 → WEEKLY[1] en vez de WEEKLY[0]).
+  const weekIdx = profile.week - 1;
+  if (weekIdx % 3 === 2) return MATCH_STRATEGIES[0];
+  return WEEKLY_STRATEGIES[weekIdx % WEEKLY_STRATEGIES.length];
 }
 
 const ctxToValues = (id: StrategyId, p: PlayerProfile): Record<string, string | number> => {

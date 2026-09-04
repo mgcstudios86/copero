@@ -235,6 +235,28 @@ describe('recommendStrategy', () => {
     });
     expect(recommendStrategy(p)).toBe('L3');
   });
+
+  // MGC-1664 — boundary checks tras normalizar week index a 0-indexed.
+  it('semana 1 → WEEKLY[0]=E1 (no salta E1 por off-by-one)', () => {
+    expect(recommendStrategy(profileFixture({ week: 1 }))).toBe('E1');
+  });
+
+  it('semana 3 → MATCH_STRATEGIES[0]=M1 (cada 3 semanas desde 0-indexed)', () => {
+    expect(recommendStrategy(profileFixture({ week: 3 }))).toBe('M1');
+  });
+
+  it('semana 6 → MATCH_STRATEGIES[0]=M1 (ciclo match consistente)', () => {
+    expect(recommendStrategy(profileFixture({ week: 6 }))).toBe('M1');
+  });
+
+  it('semana 5 → WEEKLY[4]=E5 (último weekly antes de match en week 6)', () => {
+    expect(recommendStrategy(profileFixture({ week: 5 }))).toBe('E5');
+  });
+
+  it('semana 38 (boundary season end) → weekly, no match', () => {
+    const id = recommendStrategy(profileFixture({ week: 38 }));
+    expect(id).toMatch(/^E\d$/);
+  });
 });
 
 describe('cobertura del catálogo E1-V7', () => {
