@@ -22,7 +22,10 @@ import { useCareerStore } from '@/shared/store/careerStore';
 import { useLocale } from '@/i18n/locale-context';
 import { POSITIONS, GROUP_COLOR } from '@/features/career/positions';
 import { NATIONALITIES } from '@/features/career/nationalities';
-import { LEAGUES, leagueNameByCode } from '@/features/career/leagues';
+// MGC-1585: league-selector-wrapper extraído de /identity. La selección de
+// liga ocurre exclusivamente en /academy paso 3 (cada club expone su league).
+// El campo leagueCode del store queda como default '' y se mantiene el setter
+// `setLeague` por compat con storage migrado (MGC-1501 internal track).
 import { isIdentityComplete } from '@/features/career/identity-state';
 import type { Foot } from '@/types/career';
 
@@ -89,8 +92,6 @@ export default function IdentityScreen() {
   const setNumber = useCareerStore((s) => s.setNumber);
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
-  // MGC-955: setter de liga. Persiste junto con nationality/foot.
-  const setLeague = useCareerStore((s) => s.setLeague);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);
   // MGC-374: el contrato del flow E2E (PR #169, simulador-carrera.spec.ts:133,
   // a11y-keyboard.spec.ts:68) navega identity → /dashboard. El draft de 8 rondas
@@ -147,21 +148,6 @@ export default function IdentityScreen() {
       (n) => n.name.toLowerCase().includes(q) || n.code.toLowerCase().includes(q),
     );
   }, [nationalityQuery, profile.nationalityCode, nationalityExpanded]);
-
-  // MGC-955: toggle del listado de ligas. Patrón collapsed-button → tap
-  // abre ScrollView anidado. Mantener el wrapper collapsable={false} +
-  // altura fija (h entre 48 y 200 según AC1) garantiza bounds reales en
-  // uiautomator fresh-mount (mismo patrón que nationality-section).
-  const [leagueOpen, setLeagueOpen] = useState(false);
-  const [leagueQuery, setLeagueQuery] = useState('');
-  const filteredLeagues = useMemo(() => {
-    const q = leagueQuery.trim().toLowerCase();
-    if (!q) return LEAGUES;
-    return LEAGUES.filter(
-      (l) => l.name.toLowerCase().includes(q) || l.code.toLowerCase().includes(q),
-    );
-  }, [leagueQuery]);
-  const selectedLeagueName = leagueNameByCode(profile.leagueCode);
 
   const canContinue = isIdentityComplete(profile);
 
@@ -857,181 +843,16 @@ export default function IdentityScreen() {
           → Field map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se
           mete dentro del translateY del `identity-sticky-footer` (MGC-754) — el
           field map no esquiva IME (es tap target, no input de texto). */}
-      {/* MGC-981: league-selector-wrapper colapsado a height:88 explícito.
-          Yoga reporta h=220 sin height (Field label + Pressable minHeight:56
-          + padding spacing[4] suma >220 en fresh-mount Android). Patrón
-          canónico MGC-848/852/870: height fijo + overflow:hidden + flexShrink:0
-          + collapsable={false} + compresión interna para que el contenido
-          natural quepa en 88 (padding 8 + label 14 + gap 4 + Pressable 48 + 8
-          = 82 con margen). El listado abierto mantiene maxHeight:180 interno.
-          testIDs:
-            - league-selector-wrapper: contenedor padre.
-            - league-selector-label: liga seleccionada visible.
-            - league-selector-toggle: Pressable principal que abre/cierra.
-            - league-list: ScrollView anidado con las opciones.
-            - league-list-item-{code}: cada opción. */}
-      <View
-        testID="league-selector-wrapper"
-        collapsable={false}
-        style={{
-          // MGC-1548: la altura fija 88 vale SÓLO para el estado colapsado. Con
-          // leagueOpen=true el buscador (≈61) + la lista (maxHeight 180 + 2 de
-          // borde) suman ≈243 extra; con height:88 + overflow:hidden el listado
-          // quedaba clipeado fuera del box — uiautomator reportaba bounds
-          // invertidos (y1 > y2), las opciones no eran visibles ni tappables y
-          // el tap caía sobre identity-fixed-field-map (bloque POSICIÓN), que
-          // ocupa esa franja. 340 = 82 de contenido colapsado + 243 + margen.
-          height: leagueOpen ? 340 : 88,
-          overflow: 'hidden',
-          backgroundColor: colors.bg,
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          paddingHorizontal: spacing[4],
-          paddingVertical: spacing[2],
-          flexShrink: 0,
-        }}
-      >
-        <Field
-          label={t('identity.fieldLeague')}
-          wrapperStyle={{ gap: spacing[1] }}
-          labelStyle={{ lineHeight: 14 }}
-        >
-          <Pressable
-            testID="league-selector-toggle"
-            onPress={() => setLeagueOpen((v) => !v)}
-            {...onKeyActivate(() => setLeagueOpen((v) => !v))}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: leagueOpen }}
-            accessibilityHint={t('identity.leagueOpenHint')}
-            collapsable={false}
-            style={{
-              minHeight: 48,
-              width: '100%',
-              borderWidth: 1,
-              borderColor: colors.borderStrong,
-              borderRadius: radii.md,
-              paddingHorizontal: spacing[3],
-              paddingVertical: spacing[2],
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              backgroundColor: colors.surface,
-            }}
-          >
-            <Text
-              testID="league-selector-label"
-              style={{
-                color: selectedLeagueName ? colors.text : colors.textMuted,
-                fontSize: fontSize.base,
-                fontWeight: selectedLeagueName ? fontWeight.semibold : fontWeight.regular,
-                flex: 1,
-              }}
-              numberOfLines={1}
-            >
-              {selectedLeagueName ?? t('identity.leaguePlaceholder')}
-            </Text>
-            <Text
-              style={{
-                color: colors.textMuted,
-                fontSize: fontSize.base,
-                marginLeft: spacing[2],
-              }}
-            >
-              {leagueOpen ? '▲' : '▼'}
-            </Text>
-          </Pressable>
-          {leagueOpen ? (
-            <>
-              <TextInput
-                value={leagueQuery}
-                onChangeText={setLeagueQuery}
-                placeholder={t('identity.leagueSearchPlaceholder')}
-                placeholderTextColor={colors.textMuted}
-                autoCorrect={false}
-                style={[
-                  styles.input,
-                  {
-                    color: colors.text,
-                    borderColor: colors.borderStrong,
-                    borderRadius: radii.md,
-                    paddingHorizontal: spacing[3],
-                    paddingVertical: spacing[3],
-                    fontSize: fontSize.base,
-                    marginTop: spacing[2],
-                    marginBottom: spacing[2],
-                  },
-                ]}
-                accessibilityLabel={t('identity.leagueSearchA11y')}
-                testID="input-league-search"
-              />
-              <View
-                style={{
-                  maxHeight: 180,
-                  borderRadius: radii.md,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  backgroundColor: colors.surface,
-                }}
-              >
-                <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" testID="league-list">
-                  {filteredLeagues.map((l) => {
-                    const active = profile.leagueCode === l.code;
-                    return (
-                      <Pressable
-                        key={l.code}
-                        testID={`league-list-item-${l.code}`}
-                        onPress={() => {
-                          setLeague(l.code);
-                          setLeagueOpen(false);
-                          setLeagueQuery('');
-                        }}
-                        {...onKeyActivate(() => {
-                          setLeague(l.code);
-                          setLeagueOpen(false);
-                          setLeagueQuery('');
-                        })}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: spacing[3],
-                          paddingHorizontal: spacing[3],
-                          paddingVertical: spacing[3],
-                          borderBottomWidth: 1,
-                          borderBottomColor: colors.border,
-                          backgroundColor: active ? colors.primarySoft : 'transparent',
-                        }}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: active }}
-                      >
-                        <Text
-                          style={{
-                            color: active ? colors.primary : colors.text,
-                            fontSize: fontSize.base,
-                            fontWeight: active ? fontWeight.semibold : fontWeight.regular,
-                          }}
-                        >
-                          {l.name}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                  {filteredLeagues.length === 0 ? (
-                    <Text
-                      style={{
-                        color: colors.textMuted,
-                        padding: spacing[3],
-                        fontSize: fontSize.sm,
-                      }}
-                    >
-                      {t('identity.leagueNoMatches')}
-                    </Text>
-                  ) : null}
-                </ScrollView>
-              </View>
-            </>
-          ) : null}
-        </Field>
-      </View>
+      {/* MGC-1585: league-selector-wrapper REMOVIDO de /identity. La selección
+          de liga ocurre exclusivamente en /academy paso 3 (cada club expone
+          su liga). Ver MGC-1567 walk E2E: identity → dashboard → academy →
+          Morón → /temporada resulta jugable sin seleccionar liga en identity.
+          El árbol del scroll queda:
+            identity-header → identity-fixed-form → nationality-section
+            → jersey-preview-wrapper
+          y los bounds reportados en ZY22G728HN density 400 son ahora
+          siempre positivos en fresh-mount (no más wrapper clipeado bajo el
+          fold del ScrollView position:absolute full-bounds). */}
       </ScrollView>
       {/* MGC-1533 — field-map-section EXTRAÍDA como fixed sibling absoluto.
           Antes vivía como SIBLING dentro del ScrollView (MGC-1428 intento-7
