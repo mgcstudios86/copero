@@ -35,6 +35,12 @@ export default function DashboardScreen() {
 
   const profile = useCareerStore((s) => s.profile);
   const stage = useCareerStore((s) => s.stage);
+  // MGC-1577 — split selector en dos llamadas para devolver referencia
+  // estable. `useCareerStore((s) => s.log)` devuelve undefined cuando
+  // no hay log; el `?? EMPTY_LOG` módulo-scope lo reemplaza con la
+  // misma referencia para todos los renders. Evita el Maximum update
+  // depth exceeded del selector `(s) => s.log ?? { timeline: [],
+  // events: [] }` (objeto NUEVO cada render).
   const storedLog = useCareerStore((s) => s.log);
   const log = storedLog ?? EMPTY_LOG;
   const openAcademy = useCareerStore((s) => s.openAcademy);
