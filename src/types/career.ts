@@ -10,6 +10,7 @@
  */
 
 import type { PositionStats } from '@/features/career/position-stats';
+import type { RngSnapshot } from '@/features/career/rng';
 
 export type Foot = 'left' | 'right' | 'both';
 
@@ -289,6 +290,8 @@ export type CareerSnapshot = {
   log?: SeasonLog;
   /** Seed determinista para reproducibilidad (MGC-208 §5). */
   seed?: number;
+  /** Cursor persistible del stream RNG; se completa al serializar. */
+  rng?: RngSnapshot;
 };
 
 /** Identificadores de decisión del catálogo de strategies.md (MGC-439). */
@@ -450,6 +453,8 @@ export type CareerSaveState = {
   clubId: string | null;
   log: SeasonLog;
   seed: number;
+  /** Cursor determinista; v1 legacy puede no incluirlo. */
+  rng?: RngSnapshot;
 };
 
 /**

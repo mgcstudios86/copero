@@ -29,9 +29,11 @@ import {
   clearCareerSave,
   isPersistentStorage,
 } from '@/features/career/persistence';
+import { createRngSnapshot } from '@/features/career/rng';
 import type { CareerAction } from '@/features/career/engine';
 import type {
-  CareerSaveV2,
+CareerSaveState,
+CareerSaveV2,
   CareerSnapshot,
   Club,
   EstiloRasgo,
@@ -141,7 +143,7 @@ type CareerStore = CareerSnapshot & {
 };
 
 /**
- * Snapshot persistible (alineado con `CareerSaveState` salvo `clubId`,
+* Snapshot persistible (alineado con `CareerSaveState` salvo `clubId`,
  * que la store no expone — `profile.club.id` lo cubre). Lo construimos
  * desde el estado actual de la store en cada save.
  *
@@ -151,16 +153,7 @@ type CareerStore = CareerSnapshot & {
  * `Injury` con `affectedAttr`/`startedAtWeek` para los callers que
  * quieran consumir el snapshot sin pasar por `loadCareerSave`.
  */
-function snapshotToSave(s: CareerStore): {
-  v: 1;
-  stage: CareerSnapshot['stage'];
-  profile: CareerSnapshot['profile'];
-  draft: NonNullable<CareerSnapshot['draft']> | null;
-  card: NonNullable<CareerSnapshot['card']> | null;
-  clubId: string | null;
-  log: NonNullable<CareerSnapshot['log']>;
-  seed: number;
-} {
+function snapshotToSave(s: CareerStore): CareerSaveState {
   return {
     v: 1,
     stage: s.stage,
@@ -170,6 +163,7 @@ function snapshotToSave(s: CareerStore): {
     clubId: s.profile.club ? s.profile.club.id : null,
     log: s.log ?? { timeline: [], events: [] },
     seed: s.seed ?? 0,
+    rng: s.rng ?? createRngSnapshot(s.seed ?? 0),
   };
 }
 
@@ -247,16 +241,7 @@ export function flushPendingSave(): Promise<void> {
  * `flushPendingSave` final), el listener de AppState escribe el
  * último snapshot conocido sin depender de la cadena de promesas.
  */
-type SnapshotPayload = {
-  v: 1;
-  stage: CareerSnapshot['stage'];
-  profile: CareerSnapshot['profile'];
-  draft: NonNullable<CareerSnapshot['draft']> | null;
-  card: NonNullable<CareerSnapshot['card']> | null;
-  clubId: string | null;
-  log: NonNullable<CareerSnapshot['log']>;
-  seed: number;
-};
+type SnapshotPayload = CareerSaveState;
 let lastSnapshot: SnapshotPayload | null = null;
 
 export function getLastSnapshot(): SnapshotPayload | null {
@@ -557,6 +542,7 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         card: saved.card ?? null,
         log: saved.log,
         seed: saved.seed,
+        rng: saved.rng,
       }));
       set((s) => ({ ...s, hydrated: true }));
       return true;

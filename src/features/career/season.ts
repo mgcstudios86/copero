@@ -26,7 +26,7 @@ import type {
   TimelineSeason,
   YearlyPlan,
 } from '@/types/career';
-import { YEARLY_PLAN_MODIFIERS } from '@/types/career';
+import { YEARLY_PLAN_MODIFIERS, affectedAttrFor } from '@/types/career';
 import { recomputeReputation } from './reputation';
 import type { Rng } from './rng';
 
@@ -153,7 +153,10 @@ export function advanceSeason(
   const events: CareerEvent[] = [];
   let career: CareerStats = {
     ...profile.career,
-    lesion: { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: 'fisico' },
+    // MGC-1663 — `affectedAttr` vía helper canónico (M1 tabla en
+    // types/career.ts). Estado inicial sano: kind='ninguna' mapea a
+    // 'fisico' por convención.
+    lesion: { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: affectedAttrFor('ninguna') },
   };
   // MGC-1017: el plan anual también afecta la chance de lesión.
   const injuryChance = injuryChanceForAge(age, rng) * planMod.injury;
@@ -164,8 +167,9 @@ export function advanceSeason(
     // (mismo helper canónico que `injury-v2.ts` y `simulation.ts`).
     // `startedAtWeek` queda en 0 porque el loop anual agrega la fila al
     // `timeline` al cierre, no al disparo semanal.
-    const affectedAttr: 'tecnico' | 'mental' | 'fisico' =
-      kind === 'leve' ? 'fisico' : kind === 'media' ? 'mental' : 'tecnico';
+    // MGC-1663 — antes se reimplementaba con ternario; ahora consume el
+    // helper centralizado para evitar divergencia con injury-v2.ts.
+    const affectedAttr = affectedAttrFor(kind);
     career = {
       ...career,
       lesion: { kind, fechasOut, startedAtWeek: 0, affectedAttr },

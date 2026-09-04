@@ -45,6 +45,7 @@ import type {
   SimulationEvent,
   StrategyId,
 } from '@/types/career';
+import { affectedAttrFor } from '@/types/career';
 import {
   STAT_INIT,
   applyStatDeltas,
@@ -220,7 +221,7 @@ export function applyChoice(
       kind: 'leve',
       fechasOut: 1,
       startedAtWeek: profile.week,
-      affectedAttr: 'fisico',
+      affectedAttr: affectedAttrFor('leve'),
     };
   }
 
@@ -259,7 +260,7 @@ export function advanceWeek(profile: PlayerProfile): PlayerProfile {
   // Ver también `careerStore.ts#hydrateFromSave` y `reputation.ts`.
   const lesionFechasOut = Math.max(0, profile.career.lesion.fechasOut - 1);
   const lesion: Injury = lesionFechasOut === 0
-    ? { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: 'fisico' }
+    ? { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: affectedAttrFor('ninguna') }
     : { ...profile.career.lesion, fechasOut: lesionFechasOut };
 
   const season = profile.week >= 38 ? profile.season + 1 : profile.season;
@@ -298,21 +299,11 @@ export function setInjury(
   fechasOut: number,
   startedAtWeek: number = profile.week,
 ): PlayerProfile {
-  // MGC-1628 rev 3 §M1 — `affectedAttr` se rellena desde el `kind`
-  // vía el helper canónico `affectedAttrFor(kind)` para mantener la
-  // tabla en un solo lugar (ver `career.ts`).
-  const affectedAttr = ((): import('@/types/career').AttributeKey => {
-    switch (kind) {
-      case 'leve':
-        return 'fisico';
-      case 'media':
-        return 'mental';
-      case 'grave':
-        return 'tecnico';
-      case 'ninguna':
-        return 'fisico';
-    }
-  })();
+  // MGC-1663 — usa el helper centralizado `affectedAttrFor(kind)` (M1
+  // tabla canónica en `types/career.ts`). Antes se re-implementaba el
+  // switch acá, violando DRY y arriesgando divergencia con injury-v2.ts
+  // y season.ts.
+  const affectedAttr = affectedAttrFor(kind);
   return {
     ...profile,
     career: {

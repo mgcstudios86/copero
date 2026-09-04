@@ -23,6 +23,7 @@
  */
 
 import type { CareerSaveState, SeasonLog } from '@/types/career';
+import { createRngSnapshot } from './rng';
 import { initialProfile } from './identity-state';
 import { STAT_INIT } from './position-stats';
 
@@ -232,6 +233,7 @@ export function migrateLegacyToV1(legacy: Record<string, unknown>): CareerSaveSt
   if (typeof stage !== 'string' || !profile || typeof profile !== 'object') {
     return null;
   }
+  const seed = typeof legacy.seed === 'number' ? legacy.seed : Math.floor(Math.random() * 1_000_000);
   return {
     v: 1,
     stage: stage as CareerSaveState['stage'],
@@ -240,7 +242,8 @@ export function migrateLegacyToV1(legacy: Record<string, unknown>): CareerSaveSt
     card: (legacy.card as CareerSaveState['card']) ?? null,
     clubId: (legacy.clubId as CareerSaveState['clubId']) ?? null,
     log: normalizeLegacyLog(legacy.log),
-    seed: typeof legacy.seed === 'number' ? legacy.seed : Math.floor(Math.random() * 1_000_000),
+    seed,
+    rng: createRngSnapshot(seed),
   };
 }
 
@@ -278,6 +281,7 @@ export function migrateV1ToV2(state: CareerSaveState): CareerSaveState {
     ...state,
     v: 2,
     profile: migratedProfile,
+    rng: state.rng ?? createRngSnapshot(state.seed),
   };
 }
 
@@ -357,5 +361,6 @@ export function blankCareerSave(): CareerSaveState {
     clubId: null,
     log: { timeline: [], events: [] },
     seed: 0,
+    rng: createRngSnapshot(0),
   };
 }
