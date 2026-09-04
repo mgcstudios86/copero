@@ -100,11 +100,49 @@ export const WEEKLY_BASE_OPTIONS: Record<WeeklyBaseOptionId, WeeklyBaseOption> =
     id: 'entrenamiento_fisico_especifico',
     copyId: 'weekly_positional_training',
     prob: 0.7,
-    successDeltas: {}, // se setea dinámicamente según posición
+    // MGC-1674: el delta posicional concreto se asigna dinámicamente
+    // según la posición del jugador vía `positionalTrainingDelta()`,
+    // mergeado por `applyWeeklyChoice` cuando success=true.
+    successDeltas: {},
     careerDeltas: { fisico: -10, moral: 2 },
     allowedPositions: 'all',
   },
 };
+
+/**
+ * MGC-1674 — Asignación dinámica del stat posicional concreto para
+ * `entrenamiento_fisico_especifico`. Mapea `position` → StatKey
+ * principal + delta (estático por línea: GK/DEF/MID/FWD).
+ *
+ * La UI no elige slot explícito en esta iteración (recomendación
+ * HIGH-1 PR #401). Determinista para que el AC MGC-1629 ("mejora
+ * stat posicional concreto") se cumpla sin dependencia de UI.
+ *
+ * Si en el futuro el jugador elige el stat explícitamente, esta firma
+ * cambia a `positionalTrainingDelta(position, slot?: StatKey)`.
+ */
+export function positionalTrainingDelta(
+  position: Position,
+): Partial<Record<StatKey, number>> {
+  switch (position) {
+    case 'GK':
+      return { reflejos: 2 };
+    case 'CB':
+    case 'LB':
+    case 'RB':
+      return { marcaje: 2 };
+    case 'CDM':
+    case 'CM':
+    case 'CAM':
+    case 'LM':
+    case 'RM':
+      return { vision: 2 };
+    case 'ST':
+    case 'LW':
+    case 'RW':
+      return { definicion: 2 };
+  }
+}
 
 /* ── Position-specific decision tree ─────────────────────────────── */
 

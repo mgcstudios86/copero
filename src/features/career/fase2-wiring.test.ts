@@ -26,8 +26,8 @@ import {
   getPositionStats,
   resolveWeeklyMatch,
 } from './simulation';
-import { STAT_INIT, statsForPosition } from './position-stats';
-import { WEEKLY_BASE_OPTIONS, getPositionTree } from './position-tree';
+import { STAT_INIT, statsForPosition, type StatKey } from './position-stats';
+import { WEEKLY_BASE_OPTIONS, getPositionTree, positionalTrainingDelta } from './position-tree';
 import { createRng, seedFromString } from './rng';
 import { affectedAttrFor } from '@/types/career';
 import {
@@ -372,6 +372,88 @@ describe('MGC-1677 · reinjury-preserve-weeks', () => {
 });
 
 // RNG smoke import — confirma seedFromString estable.
+// FakeRNG determinista: success configurable + sin lesión + sin randomness.
+// chance: p >= 0.5 → success opt, p < 0.5 → no lesion (base rate 0.02).
+// snapshot/restore: shims no-op para satisfacer la interface Rng v2 (MGC-1676).
+const makeFakeRng = (overrides?: { chance?: (p: number) => boolean; roll?: number }) => ({
+  next: () => overrides?.roll ?? 0.001,
+  int: (a: number, _b: number) => a,
+  chance: overrides?.chance ?? ((p: number) => p >= 0.5),
+  snapshot: () => ({ v: 1 as const, seed: 0, cursor: 0, algorithm: 'mulberry32' as const }),
+  restore: () => {},
+});
+
+describe('MGC-1674 · entrenamiento_fisico_especifico (HIGH-1 PR #401)', () => {
+  it('positionalTrainingDelta asigna 1 stat concreto por línea (GK/DEF/MID/FWD)', () => {
+    expect(positionalTrainingDelta('GK')).toEqual({ reflejos: 2 });
+    expect(positionalTrainingDelta('CB')).toEqual({ marcaje: 2 });
+    expect(positionalTrainingDelta('LB')).toEqual({ marcaje: 2 });
+    expect(positionalTrainingDelta('CM')).toEqual({ vision: 2 });
+    expect(positionalTrainingDelta('ST')).toEqual({ definicion: 2 });
+    expect(positionalTrainingDelta('LW')).toEqual({ definicion: 2 });
+  });
+
+  it('applyWeeklyChoice bumpa 1 stat posicional concreto cuando success (ST → definicion)', () => {
+    const profile = seededProfile(1674, { position: 'ST' });
+    const before = getPositionStats(profile);
+    const result = applyWeeklyChoice(
+      profile,
+      'entrenamiento_fisico_especifico',
+      makeFakeRng() as never,
+    );
+    // ST → bump ≥ +2 en definicion (puede sumar +3 si el outcome sampleado
+    // fue `big_performance` y eligió `definicion` como stat FWD).
+    expect(result.positionStats.definicion).toBeGreaterThanOrEqual(before.definicion + 2);
+    // Y al menos un stat cambió en total.
+    const changed = (Object.keys(result.positionStats) as StatKey[]).some(
+      (k) => result.positionStats[k] !== before[k],
+    );
+    expect(changed).toBe(true);
+    // El feedback debe ser success (sin lesion, sin fail).
+    expect(result.feedback.kind).toBe('success');
+    expect(result.injuryFired).toBe(false);
+  });
+
+  it('applyWeeklyChoice bumpa reflejos cuando GK elige la opción', () => {
+    const profile = seededProfile(2024, { position: 'GK' });
+    const before = getPositionStats(profile);
+    const result = applyWeeklyChoice(
+      profile,
+      'entrenamiento_fisico_especifico',
+      makeFakeRng() as never,
+    );
+    expect(result.positionStats.reflejos).toBeGreaterThanOrEqual(before.reflejos + 2);
+  });
+
+  it('on failure el stat posicional concreto no se bumpa', () => {
+    const profile = seededProfile(99, { position: 'ST' });
+    const before = getPositionStats(profile);
+    const result = applyWeeklyChoice(
+      profile,
+      'entrenamiento_fisico_especifico',
+      makeFakeRng({ chance: () => false }) as never,
+    );
+    // Failure: opt.failureDeltas es undefined (successDeltas vacío). Y
+    // positionalTrainingDelta solo aplica en success. Por lo tanto el
+    // stat no cambia (también: failureDeltas = undefined → no-op).
+    expect(result.positionStats.definicion).toBe(before.definicion);
+    expect(result.feedback.kind).toBe('warning');
+  });
+
+  it('el option successDeltas vacío ya no es el bug: el delta se computa en runtime', () => {
+    expect(WEEKLY_BASE_OPTIONS.entrenamiento_fisico_especifico.successDeltas).toEqual({});
+    // El delta efectivo en runtime surge del helper + outcome del árbol.
+    const profile = seededProfile(11, { position: 'CM' });
+    const result = applyWeeklyChoice(
+      profile,
+      'entrenamiento_fisico_especifico',
+      makeFakeRng() as never,
+    );
+    // MID → vision +2 siempre; outcome también puede tocar otro stat.
+    expect(result.positionStats.vision).toBeGreaterThan(50); // 50 base + ≥2
+  });
+});
+
 describe('MGC-1657 · RNG smoke', () => {
   it('seedFromString es determinista', () => {
     expect(seedFromString('foo')).toBe(seedFromString('foo'));

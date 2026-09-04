@@ -63,6 +63,7 @@ import {
 import {
   WEEKLY_BASE_OPTIONS,
   getPositionTree,
+  positionalTrainingDelta,
   type PositionOutcome,
   type WeeklyBaseOption,
   type WeeklyBaseOptionId,
@@ -485,6 +486,17 @@ export function applyWeeklyChoice(
       }
     }
     outcomeDeltas = { ...opt.successDeltas, ...outcome.deltas };
+    // MGC-1674: asignar dinámicamente el stat posicional concreto
+    // cuando el jugador elige `entrenamiento_fisico_especifico`.
+    // Sobre-escribe solo si el outcome del árbol posicional no lo tocó
+    // (mantiene variabilidad pero garantiza el bump del slot canónico).
+    if (optionId === 'entrenamiento_fisico_especifico') {
+      const positional = positionalTrainingDelta(profile.position);
+      for (const [k, v] of Object.entries(positional)) {
+        const key = k as StatKey;
+        outcomeDeltas[key] = (outcomeDeltas[key] ?? 0) + (v ?? 0);
+      }
+    }
     copyId = outcome.copyId;
   } else {
     outcomeDeltas = { ...(opt.failureDeltas ?? {}) };
