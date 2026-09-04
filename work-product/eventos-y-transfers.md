@@ -78,7 +78,7 @@ export type PostMatchResolution = {
 
 | Evento | Probabilidad | Condición extra |
 |--------|--------------|-----------------|
-| `descanso` | 50% | siempre que el rating del partido ≥ 6.0 |
+| `descanso` | default (fallback) | rating ≥ 6.0 cuando no sale `fiesta` ni `premiacion_individual` |
 | `fiesta` | 50% | rating ≥ 7.0 (si rating < 7.0, no se ofrece salir) |
 | `gambling` | 30% (entre los que salieron a fiesta) | requiere `form ≥ 60` |
 | `compra_lujosa` | 20% (entre los que salieron) | requiere `rating ≥ 8.0` |
