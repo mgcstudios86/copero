@@ -96,6 +96,24 @@ export type Copy = {
     nationalitySearchA11y: string;
     fieldMapA11y: string;
   };
+  // MGC-1648 — strings de la pantalla /team-select (WF2 del alta). Clubs
+  // se muestran en español independientemente del locale del jugador (el
+  // dominio del juego es fútbol argentino; los nombres propios de los
+  // clubes NO se traducen). `cardA11y` se interpola con {name} {league}
+  // {reputation} {maxReputation} para que el screen reader anuncie la
+  // reputación completa al tabular entre cards.
+  teamSelect: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    reputationLabel: string;
+    reputationValue: string;
+    cardA11y: string;
+    selectedBadge: string;
+    continueHint: string;
+    continue: string;
+    continueA11yHint: string;
+  };
 };
 
 export const COPY: Record<Locale, Copy> = {
@@ -165,6 +183,19 @@ export const COPY: Record<Locale, Copy> = {
       nationalitySearchA11y: 'Buscar nacionalidad',
       fieldMapA11y: 'Mapa del campo con posiciones',
     },
+    teamSelect: {
+      eyebrow: 'ELEGÍ TU CLUB',
+      title: '¿En qué club empezás tu carrera?',
+      subtitle:
+        'Tu primer club define el arranque. Después, entre temporadas, podés recibir ofertas de equipos con mejor reputación.',
+      reputationLabel: 'REPUTACIÓN',
+      reputationValue: '{n} / 5',
+      cardA11y: '{name}, {league}, reputación {reputation} de {maxReputation}',
+      selectedBadge: 'Seleccionado',
+      continueHint: 'Tocá un club para seleccionarlo.',
+      continue: 'Empezar carrera',
+      continueA11yHint: 'Guarda el club elegido y abre el dashboard',
+    },
   },
   en: {
     brand: 'Copero',
@@ -232,6 +263,19 @@ export const COPY: Record<Locale, Copy> = {
       nationalitySearchA11y: 'Search nationality',
       fieldMapA11y: 'Pitch map with positions',
     },
+    teamSelect: {
+      eyebrow: 'PICK YOUR CLUB',
+      title: 'Where do you start your career?',
+      subtitle:
+        'Your first club shapes the early game. Between seasons you may receive offers from higher-reputation teams.',
+      reputationLabel: 'REPUTATION',
+      reputationValue: '{n} / 5',
+      cardA11y: '{name}, {league}, reputation {reputation} of {maxReputation}',
+      selectedBadge: 'Selected',
+      continueHint: 'Tap a club to select it.',
+      continue: 'Start career',
+      continueA11yHint: 'Saves your club and opens the dashboard',
+    },
   },
   'zh-CN': {
     brand: 'Copero',
@@ -298,6 +342,19 @@ export const COPY: Record<Locale, Copy> = {
       nameA11y: '球员姓名',
       nationalitySearchA11y: '搜索国籍',
       fieldMapA11y: '带位置的球场地图',
+    },
+    teamSelect: {
+      eyebrow: '选择你的俱乐部',
+      title: '你想从哪支球队开始你的职业生涯?',
+      subtitle:
+        '你的第一支球队决定了起步。之后,每赛季之间你可能收到来自更高声望球队的邀请。',
+      reputationLabel: '声望',
+      reputationValue: '{n} / 5',
+      cardA11y: '{name},{league},声望 {reputation} / {maxReputation}',
+      selectedBadge: '已选择',
+      continueHint: '点击一支球队以选择它。',
+      continue: '开始职业生涯',
+      continueA11yHint: '保存所选球队并打开仪表盘',
     },
   },
 };

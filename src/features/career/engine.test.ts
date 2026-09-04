@@ -194,13 +194,17 @@ describe('career fixtures', () => {
     expect(new Set(POSITIONS.map((p) => p.id)).size).toBe(12);
   });
 
-  it('ACADEMY_CLUBS tiene 4 ofertas (Vélez / Temperley / Morón / Boca)', () => {
-    expect(ACADEMY_CLUBS).toHaveLength(4);
+  it('ACADEMY_CLUBS tiene 5 ofertas (Vélez / Temperley / Morón / Boca / River)', () => {
+    // MGC-1648 — WF2 team-select obligatorio exige top-5 popular. Se
+    // agregó River Plate al catálogo canónico. El test cubre que el
+    // club esté presente; el resto del catálogo sigue intacto.
+    expect(ACADEMY_CLUBS).toHaveLength(5);
     const names = ACADEMY_CLUBS.map((c) => c.name);
     expect(names).toContain('Vélez Sarsfield');
     expect(names).toContain('Temperley');
     expect(names).toContain('Morón');
     expect(names).toContain('Boca Juniors');
+    expect(names).toContain('River Plate');
   });
 
   it('ACADEMY_CLUBS cubre los 3 arquetipos (DESARROLLO / EQUILIBRIO / AMBICIÓN)', () => {

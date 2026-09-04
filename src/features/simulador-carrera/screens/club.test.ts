@@ -22,8 +22,13 @@ describe('club screen — copy de origen', () => {
   );
   const clubCount = Array.from(clubsCatalog.matchAll(/^\s*id:\s*'([^']+)'/gm)).length;
 
-  it('declara 4 clubes en la lista', () => {
-    expect(clubCount).toBe(4);
+  it('declara 5 clubes en la lista', () => {
+    // MGC-1648 — WF2 team-select obligatorio exige un top-5 visible en
+    // el alta. Se agregó River Plate al catálogo canónico en
+    // `clubs.ts`; los tests de regresión contra el tamaño del catálogo
+    // se actualizan en consecuencia. Si volvés a cambiar la cantidad,
+    // actualizá también la aserción de «título renderizado» debajo.
+    expect(clubCount).toBe(5);
   });
 
   it('no tiene el título del header hardcodeado', () => {
@@ -51,7 +56,11 @@ describe('club screen — copy de origen', () => {
   });
 
   it('el título renderizado coincide con la cantidad de clubes del catálogo', () => {
-    expect(gameT('origin.title', { count: clubCount })).toBe('ELEGÍ ENTRE CUATRO CAMINOS');
+    // MGC-1648 — top-5 popular. El título debe coincidir con el count del
+    // catálogo (`CINCO` para 5 clubes). La tabla de números en `game-copy`
+    // ya cubre 5 (ver test «sigue al catálogo cuando cambia la cantidad»
+    // abajo).
+    expect(gameT('origin.title', { count: clubCount })).toBe('ELEGÍ ENTRE CINCO CAMINOS');
   });
 });
 

@@ -70,6 +70,26 @@ export const ACADEMY_CLUBS: ClubWithPosition[] = [
     positionGroups: ['attack', 'midfield'],
     fitBonus: 2,
   },
+  // MGC-1648 — F1 WF2 (team-select obligatorio) requiere 5 clubes
+  // seleccionables con reputación visible. River Plate cierra el top 5 de
+  // popularité (Boca/River/Vélez + los dos de Primera Nacional). Sin este
+  // quinto club la pantalla del alta no podía cumplir el AC del ticket
+  // («lista de 5 clubes»). Mantiene shape ClubWithPosition para no romper
+  // `clubsForPosition` que el academy (F2+) sigue consumiendo: un ST sigue
+  // viendo Boca/River/Vélez primero; un GK ve Temperley/Morón. La reputación
+  // 5 lo posiciona como AMBICIÓN para los drills de draft.
+  {
+    id: 'river',
+    name: 'River Plate',
+    league: 'Liga Profesional',
+    crestColor: '#FFFFFF',
+    crestAccent: '#D4AF37',
+    presupuesto: 24,
+    archetype: 'AMBICIÓN',
+    reputation: 5,
+    positionGroups: ['attack', 'midfield', 'defense'],
+    fitBonus: 2,
+  },
 ];
 
 /** Devuelve los clubes afines a un grupo de posición, ordenados por fit. */

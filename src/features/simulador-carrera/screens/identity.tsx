@@ -193,12 +193,18 @@ export default function IdentityScreen() {
     //
     // Además usamos `router.replace` en vez de `push` para que identity
     // no quede en el back-stack post-commit (memory pressure + UX más
-    // limpio: back desde dashboard va a home, no al form ya enviado).
+    // limpio: back desde team-select va a home, no al form ya enviado).
+    // MGC-1648 — WF2 team-select obligatorio en el alta. El push va a
+    // `/simulador-carrera/team-select` en vez del dashboard; ese screen
+    // setea `profile.club` y re-navega al dashboard tras el CTA
+    // «Empezar carrera». El comentario MGC-532 / MGC-633 sobre el defer
+    // sigue aplicando al nuevo target (el chunk lazy del team-select
+    // también compite con el settle del IME dismiss).
     commitIdentity();
     InteractionManager.runAfterInteractions(() => {
       requestAnimationFrame(() => {
         setTimeout(() => {
-          router.replace('/simulador-carrera/dashboard');
+          router.replace('/simulador-carrera/team-select');
         }, 250);
       });
     });

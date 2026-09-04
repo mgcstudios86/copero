@@ -78,6 +78,20 @@ type CareerStore = CareerSnapshot & {
   commitIdentityAndStartDraft: (seed?: number) => Promise<void>;
   openAcademy: () => void;
   acceptClub: (club: Club) => void;
+  /**
+   * MGC-1648 — WF2 team-select obligatorio. Setea el club inicial del
+   * jugador en el alta SIN cambiar de stage (queda en `dashboard`). La
+   * pantalla /team-select se monta después de `commitIdentity` (stage ya
+   * en `dashboard`), así que un transition extra a `clubStart` sacaría
+   * al usuario del flujo de WF3 (hub de temporada). La persistencia es
+   * async + await `flushPendingSave()` para que un `await caller.navigate()`
+   * post-acción bloquee hasta que AsyncStorage confirme la escritura — el
+   * mismo patrón AC7 de MGC-273 / MGC-284. Antes de MGC-1648 el club se
+   * elegía dentro del academy (F2+ post-draft) y llegaba a `profile.club`
+   * vía `acceptClub` + flujo `clubStart`. La ruta F1 obligatoria requiere
+   * un setter independiente que no toque stage.
+   */
+  selectInitialClub: (club: Club) => Promise<void>;
   decide: (strategyId: StrategyId, choiceId: string) => void;
   /**
    * MGC-1017 — setYearlyPlan: persiste el plan anual elegido por el
@@ -385,6 +399,24 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
           clubInteres: true,
         },
       })),
+    // MGC-1648 — WF2 team-select obligatorio. Setea club + presupuesto +
+    // interes sin tocar stage (la pantalla /team-select llega cuando
+    // stage ya está en `dashboard` post `commitIdentity`). Persistencia
+    // async + flushPendingSave para que el `router.replace('/dashboard')`
+    // posterior bloquee hasta que AsyncStorage confirme la escritura.
+    selectInitialClub: async (club) => {
+      setSnapshot((s) => ({
+        ...s,
+        profile: {
+          ...s.profile,
+          club,
+          clubPresupuesto: club.presupuesto,
+          clubInteres: true,
+        },
+      }));
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
     // Acciones de simulación: dynamic import del engine. La navegación
     // ya ocurrió (la UI está en /dashboard), así que el update
     // asincrónico no rompe el flujo de pantalla.
