@@ -17,7 +17,7 @@ import {
   advanceWeek,
   resolveWeeklyMatch,
 } from './simulation';
-import { createRng, seedFromString } from './rng';
+import { createRng, seedFromString, type RngSnapshot } from './rng';
 import {
   cardFromPicks,
   initialDraftBoard,
@@ -177,22 +177,24 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
     case 'weeklyChoice': {
       // MGC-1657 (F2.3) — flujo V2 semanal. Garantiza positionStats
       // presente (hidrata STAT_INIT si el profile viene de save v:1 no
-      // migrado). El RNG es determinista por (week, season, profile,
-      // optionId) dentro de `applyWeeklyChoice`.
+      // migrado).
+      // MGC-1676 — pasa `state.rng` para que el cursor se reanude y se
+      // persista tras la decisión (replay determinista post force-stop).
       const profileWithStats: PlayerProfile =
         state.profile.positionStats
           ? state.profile
           : { ...state.profile, positionStats: { ...STAT_INIT } };
-      const result = applyWeeklyChoice(profileWithStats, action.optionId);
-      return { ...state, profile: result.profile };
+      const result = applyWeeklyChoice(profileWithStats, action.optionId, state.rng as RngSnapshot | undefined);
+      return { ...state, profile: result.profile, rng: result.rngSnapshot };
     }
     case 'resolveMatchweek': {
       // MGC-1657 (F2.3) — cierre de matchweek. Acumula stats y deja
       // evidencia en `career.matchweekStats`. El caller (UI semanal)
       // decide cuándo disparar (manual vs auto al cierre del weekly
       // choice de tipo partido).
-      const result = resolveWeeklyMatch(state.profile);
-      return { ...state, profile: result.profile };
+      // MGC-1676 — pasa `state.rng` y persiste snapshot avanzado.
+      const result = resolveWeeklyMatch(state.profile, state.rng as RngSnapshot | undefined);
+      return { ...state, profile: result.profile, rng: result.rngSnapshot };
     }
     case 'setYearlyPlan': {
       // MGC-1017: el usuario elige un plan anual al cierre de cada

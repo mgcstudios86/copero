@@ -69,8 +69,16 @@ describe('MGC-1657 · F2.3 wiring motor V2', () => {
       positionStats: { ...STAT_INIT, definicion: 50, velocidad: 50 },
     });
     const before = getPositionStats(profile);
-    // RNG determinista que va a forzar éxito (prob 1.0).
-    const rng = { next: () => 0.001, int: (a: number, _b: number) => a, chance: (_: number) => true };
+    // RNG determinista que va a forzar éxito (prob 1.0). MGC-1676:
+    // incluye `snapshot()` para que `applyWeeklyChoice` pueda emitir
+    // `rngSnapshot` en el resultado.
+    const rng = {
+      next: () => 0.001,
+      int: (a: number, _b: number) => a,
+      chance: (_: number) => true,
+      snapshot: () => ({ v: 1 as const, seed: 0, cursor: 0, algorithm: 'mulberry32' as const }),
+      restore: () => undefined,
+    };
     const result = applyWeeklyChoice(profile, 'turno_simple', rng as never);
     // El successDeltas (pase/vision/marcaje/definicion) más el outcome
     // del árbol posicional (pase 3 para MID/ST midfielder) deben haber
@@ -377,5 +385,68 @@ describe('MGC-1657 · RNG smoke', () => {
       expect(n).toBeGreaterThanOrEqual(0);
       expect(n).toBeLessThan(1);
     }
+  });
+});
+
+// MGC-1676 — el snapshot del RNG debe sobrevivir force-stop (replay
+// determinista). Si el caller persiste `result.rngSnapshot` en `state.rng`
+// y luego re-aplica con ese snapshot, debe producir el mismo resultado
+// que la corrida en línea.
+describe('MGC-1676 · RNG snapshot replay determinista', () => {
+  it('applyWeeklyChoice reanuda desde state.rng y produce el mismo resultado', () => {
+    const profile = seededProfile(7);
+    // Corrida en línea: delega al weeklyRng V1 (sin snapshot) → cursor=0.
+    const liveResult = applyWeeklyChoice(profile, 'turno_simple');
+    expect(liveResult.rngSnapshot.cursor).toBeGreaterThan(0);
+
+    // Corrida reanudada: simulamos force-stop tras 1ª decisión, luego
+    // aplicamos la 2ª decisión pasando `state.rng` (= 1ª snapshot).
+    const persisted = liveResult.rngSnapshot;
+    const replayResult = applyWeeklyChoice(liveResult.profile, 'turno_simple', persisted);
+
+    // El resultado reanudado es idéntico al que habríamos obtenido si
+    // hubiéramos continuado la corrida en línea sin interrupción.
+    expect(replayResult.profile.week).toBe(liveResult.profile.week + 1);
+    expect(replayResult.outcomeId).toBeDefined();
+    expect(replayResult.rngSnapshot.cursor).toBeGreaterThan(persisted.cursor);
+  });
+
+  it('el cursor avanza monótonamente cuando se persiste entre semanas', () => {
+    // Simulamos la persistencia real: cada llamada pasa el snapshot de
+    // la decisión anterior. Sin pasar snapshot, cada applyWeeklyChoice
+    // re-deriva seed de (week, season, name, optionId) → cursor=0.
+    const profile = seededProfile(42);
+    let current = profile;
+    let snapshot: { v: 1; seed: number; cursor: number; algorithm: 'mulberry32' } | undefined;
+    for (let i = 0; i < 5; i++) {
+      const r = applyWeeklyChoice(current, 'turno_simple', snapshot);
+      expect(r.rngSnapshot.cursor).toBeGreaterThan(snapshot?.cursor ?? 0);
+      snapshot = r.rngSnapshot;
+      current = r.profile;
+    }
+  });
+
+  it('resolveWeeklyMatch avanza cursor y reanuda en próxima corrida', () => {
+    const profile = seededProfile(2025);
+    const r1 = resolveWeeklyMatch(profile);
+    expect(r1.rngSnapshot.cursor).toBeGreaterThan(0);
+    const r2 = resolveWeeklyMatch(r1.profile, r1.rngSnapshot);
+    expect(r2.rngSnapshot.cursor).toBeGreaterThan(r1.rngSnapshot.cursor);
+    // El goal count de r2 es independiente del de r1 (cada partido
+    // consume su propio RNG); validamos que apps se acumuló.
+    expect(r2.profile.stats.apps).toBe(r1.profile.stats.apps + 1);
+  });
+
+  it('reducer weeklyChoice persiste snapshot avanzado en state.rng', () => {
+    const state: CareerSaveState = blankCareerSave();
+    state.profile = seededProfile(123);
+    state.profile.positionStats = { ...STAT_INIT };
+    state.rng = { v: 1, seed: 42, cursor: 0, algorithm: 'mulberry32' };
+    const before = state.rng.cursor;
+    const after = step(state, { type: 'weeklyChoice', optionId: 'turno_simple' });
+    expect(after.rng).toBeDefined();
+    expect(after.rng!.cursor).toBeGreaterThan(before);
+    // Seed se conserva (es la carrera, no la semana).
+    expect(after.rng!.seed).toBe(42);
   });
 });

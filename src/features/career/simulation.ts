@@ -23,7 +23,15 @@
  * funcionando intacto para tests heredados.
  */
 
-import { createRng, seedFromString, type Rng } from './rng';
+import {
+  createRng,
+  createRngFromSnapshot,
+  createRngSnapshot,
+  seedFromString,
+  snapshotRng,
+  type Rng,
+  type RngSnapshot,
+} from './rng';
 import { recomputeOvrForPosition, recomputeReputation } from './reputation';
 import {
   EVENT_STRATEGIES,
@@ -325,13 +333,32 @@ export function getPositionStats(profile: PlayerProfile): PositionStats {
   return profile.positionStats ?? STAT_INIT;
 }
 
-/** RNG determinista por (week, season, profileName, optionId). */
-export function weeklyRng(profile: PlayerProfile, optionId: string): Rng {
+/**
+ * MGC-1676 — RNG determinista para una decisión semanal. Devuelve el RNG
+ * listo para consumir (`rng`) y el snapshot posterior (`snapshot`) que el
+ * caller debe persistir en `CareerSaveState.rng` para que el próximo wake
+ * (post force-stop / post navigate) reanude desde el cursor avanzado.
+ *
+ * Si se pasa `snapshot`, restaura el cursor desde `state.rng` (semanas
+ * previas ya consumieron RNG; este consume los siguientes draws). Sin
+ * snapshot, deriva el seed de (week, season, name, optionId) y arranca
+ * con cursor=0 — fallback determinista V1 (tests / saves sin snapshot).
+ */
+export function weeklyRng(
+  profile: PlayerProfile,
+  optionId: string,
+  snapshot?: RngSnapshot,
+): { rng: Rng; snapshot: RngSnapshot } {
+  if (snapshot) {
+    const rng = createRngFromSnapshot(snapshot);
+    return { rng, snapshot: snapshotRng(rng) };
+  }
   const seed =
     profile.week * 1009 +
     profile.season * 31 +
     seedFromString(`${profile.name}|${optionId}`);
-  return createRng(seed);
+  const rng = createRng(seed);
+  return { rng, snapshot: createRngSnapshot(seed) };
 }
 
 /**
@@ -366,6 +393,12 @@ export type WeeklyChoiceResult = {
   injuryFired: boolean;
   /** Lesión resultante si disparó (null en caso contrario). */
   injury: Injury | null;
+  /**
+   * MGC-1676 — snapshot del cursor RNG tras consumir la decisión. El
+   * caller (engine.ts#weeklyChoice) lo persiste en `state.rng` para que
+   * el próximo wake (post force-stop) reanude el stream sin perder draws.
+   */
+  rngSnapshot: RngSnapshot;
 };
 
 /**
@@ -389,11 +422,25 @@ export type WeeklyChoiceResult = {
  *
  * Pure function: no muta el profile, devuelve uno nuevo.
  */
+/**
+ * MGC-1676 — el tercer argumento puede ser:
+ *  - `Rng` (legacy/test): el caller ya construyó un RNG (ej. mock).
+ *  - `RngSnapshot` (state.rng persistido): reanuda el cursor y devuelve
+ *    snapshot avanzado en `result.rngSnapshot`.
+ *  - `undefined`: deriva seed de (week, season, name, optionId) con
+ *    cursor=0 (V1 back-compat / primer inicio).
+ */
 export function applyWeeklyChoice(
   profile: PlayerProfile,
   optionId: WeeklyBaseOptionId,
-  rng: Rng = weeklyRng(profile, optionId),
+  rngOrSnapshot?: Rng | RngSnapshot,
 ): WeeklyChoiceResult {
+  let rng: Rng;
+  if (rngOrSnapshot && typeof (rngOrSnapshot as Rng).next === 'function') {
+    rng = rngOrSnapshot as Rng;
+  } else {
+    rng = weeklyRng(profile, optionId, rngOrSnapshot as RngSnapshot | undefined).rng;
+  }
   const opt = WEEKLY_BASE_OPTIONS[optionId];
   if (!opt) {
     return {
@@ -411,6 +458,7 @@ export function applyWeeklyChoice(
       positionStats: getPositionStats(profile),
       injuryFired: false,
       injury: null,
+      rngSnapshot: createRngSnapshot(0),
     };
   }
 
@@ -549,6 +597,7 @@ export function applyWeeklyChoice(
     positionStats: nextPositionStats,
     injuryFired,
     injury,
+    rngSnapshot: snapshotRng(rng),
   };
 }
 
@@ -559,12 +608,27 @@ export function applyWeeklyChoice(
 export type ResolveMatchResult = {
   profile: PlayerProfile;
   match: MatchOutcome;
+  /**
+   * MGC-1676 — snapshot RNG tras consumir el resolve. Persistir en
+   * `state.rng` para que el próximo partido (post force-stop) reanude.
+   */
+  rngSnapshot: RngSnapshot;
 };
 
+/**
+ * MGC-1676 — el segundo argumento puede ser `Rng` (legacy/test) o
+ * `RngSnapshot` (state.rng persistido). Sin args: deriva seed V1.
+ */
 export function resolveWeeklyMatch(
   profile: PlayerProfile,
-  rng: Rng = weeklyRng(profile, 'match'),
+  rngOrSnapshot?: Rng | RngSnapshot,
 ): ResolveMatchResult {
+  let rng: Rng;
+  if (rngOrSnapshot && typeof (rngOrSnapshot as Rng).next === 'function') {
+    rng = rngOrSnapshot as Rng;
+  } else {
+    rng = weeklyRng(profile, 'match', rngOrSnapshot as RngSnapshot | undefined).rng;
+  }
   const positionStats = getPositionStats(profile);
   const match = resolveMatch(profile, positionStats, rng);
 
@@ -593,7 +657,7 @@ export function resolveWeeklyMatch(
     career: nextCareer,
   };
 
-  return { profile: nextProfile, match };
+  return { profile: nextProfile, match, rngSnapshot: snapshotRng(rng) };
 }
 
 // Los consumidores deben importar STRATEGIES / *_STRATEGIES desde './strategy'
