@@ -90,6 +90,10 @@ const ENTRIES: Record<string, CopyEntry> = {
   dashboard_timeline_h2: { raw: 'Tu carrera' },
   dashboard_timeline_current: { raw: 'Hoy: {age} años' },
   dashboard_timeline_empty: { raw: 'Aún no fichaste por ningún club.' },
+  dashboard_timeline_fresh_h2: { raw: 'Aún no empezaste tu carrera' },
+  dashboard_timeline_fresh_p: {
+    raw: 'Tu primera temporada se escribe cuando arrancás el draft. Cada decisión te define.',
+  },
   dashboard_selection_h2: { raw: 'Selección nacional' },
   dashboard_selection_empty: { raw: 'Todavía no debutaste.' },
   dashboard_cta_training: { raw: 'Ir a entrenar' },

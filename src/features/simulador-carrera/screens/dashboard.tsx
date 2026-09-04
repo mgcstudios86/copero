@@ -33,23 +33,19 @@ export default function DashboardScreen() {
 
   const profile = useCareerStore((s) => s.profile);
   const stage = useCareerStore((s) => s.stage);
+  const log = useCareerStore((s) => s.log ?? { timeline: [], events: [] });
   const openAcademy = useCareerStore((s) => s.openAcademy);
   const startDraft = useCareerStore((s) => s.startDraft);
 
   const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
 
-  // Placeholder timeline rows 16..38 con OVR/APPS/GOALS/AST
-  const timelineRows = Array.from({ length: 38 - 16 + 1 }, (_, i) => {
-    const age = 16 + i;
-    return {
-      age,
-      ovr: profile.ovr,
-      apps: 0,
-      goals: 0,
-      ast: 0,
-      club: profile.club?.name ?? copy.resolve('dashboard_badge_value_free'),
-    };
-  });
+  // MGC-1504 — Render condicional del timeline. Antes el dashboard
+  // pintaba 23 filas hardcoded (age 16..38, OVR/APPS/GOALS/AST en 0) para
+  // simular una carrera que aún no empezó. Eso engañaba al usuario: la tabla
+  // sugería "ya jugaste 23 temporadas y no marcaste ni un gol". Ahora, si la
+  // carrera está fresca (log.timeline vacío) mostramos una card motivadora
+  // con CTA al draft en lugar de la tabla mentirosa.
+  const timelineHasContent = log.timeline.length > 0;
 
   // Lazy-load del bloque "Estrategia recomendada" (MGC-482):
   // el cálculo `recommendStrategy(profile)` + `strategyCopy` corre dentro
@@ -245,76 +241,127 @@ export default function DashboardScreen() {
           </View>
         </Section>
 
-        {/* Timeline */}
+        {/* Timeline — MGC-1504: render condicional. Carrera fresca →
+            card motivador con CTA al draft. Carrera avanzada → tabla
+            con filas reales del motor. Ver UX-006 audit-2026-09-04. */}
         <Section title={copy.resolve('dashboard_timeline_h2')}>
-          <View
-            style={{
-              borderRadius: radii.lg,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.surface,
-              overflow: 'hidden',
-            }}
-          >
+          {timelineHasContent ? (
             <View
+              testID="dashboard-timeline-table"
               style={{
-                flexDirection: 'row',
-                paddingHorizontal: spacing[3],
-                paddingVertical: spacing[2],
-                backgroundColor: colors.surface2,
+                borderRadius: radii.lg,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+                overflow: 'hidden',
               }}
             >
-              <Text style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                EDAD
-              </Text>
-              <Text style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                CLUB
-              </Text>
-              <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                OVR
-              </Text>
-              <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                APPS
-              </Text>
-              <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                G
-              </Text>
-              <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                AST
-              </Text>
-            </View>
-            {timelineRows.map((row) => (
               <View
-                key={row.age}
                 style={{
                   flexDirection: 'row',
                   paddingHorizontal: spacing[3],
                   paddingVertical: spacing[2],
-                  borderTopWidth: 1,
-                  borderTopColor: colors.border,
+                  backgroundColor: colors.surface2,
                 }}
               >
-                <Text style={[styles.colCell, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.age}
+                <Text style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                  EDAD
                 </Text>
-                <Text style={[styles.colCell, { color: colors.textMuted, fontSize: fontSize.sm }]}>
-                  {row.club}
+                <Text style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                  CLUB
                 </Text>
-                <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.ovr}
+                <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                  OVR
                 </Text>
-                <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.apps}
+                <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                  APPS
                 </Text>
-                <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.goals}
+                <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                  G
                 </Text>
-                <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.ast}
+                <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                  AST
                 </Text>
               </View>
-            ))}
-          </View>
+              {log.timeline.map((row) => (
+                <View
+                  key={`${row.season}-${row.clubId}`}
+                  style={{
+                    flexDirection: 'row',
+                    paddingHorizontal: spacing[3],
+                    paddingVertical: spacing[2],
+                    borderTopWidth: 1,
+                    borderTopColor: colors.border,
+                  }}
+                >
+                  <Text style={[styles.colCell, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.age}
+                  </Text>
+                  <Text style={[styles.colCell, { color: colors.textMuted, fontSize: fontSize.sm }]}>
+                    {row.clubName}
+                  </Text>
+                  <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.ovr}
+                  </Text>
+                  <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.apps}
+                  </Text>
+                  <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.goals}
+                  </Text>
+                  <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.assists}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View
+              testID="dashboard-timeline-empty"
+              style={{
+                borderRadius: radii.lg,
+                borderWidth: 1,
+                borderStyle: 'dashed',
+                borderColor: colors.borderStrong,
+                backgroundColor: colors.surface2,
+                padding: spacing[5],
+                alignItems: 'center',
+                gap: spacing[2],
+              }}
+            >
+              <Text
+                accessibilityRole="header"
+                style={{
+                  color: colors.textStrong,
+                  fontSize: fontSize.lg,
+                  fontWeight: fontWeight.bold,
+                  textAlign: 'center',
+                }}
+              >
+                {copy.resolve('dashboard_timeline_fresh_h2')}
+              </Text>
+              <Text
+                style={{
+                  color: colors.textMuted,
+                  fontSize: fontSize.sm,
+                  textAlign: 'center',
+                }}
+              >
+                {copy.resolve('dashboard_timeline_fresh_p')}
+              </Text>
+              {showDraftCta ? (
+                <View style={{ marginTop: spacing[2], alignSelf: 'stretch' }}>
+                  <Button
+                    label="Empezar draft de leyendas"
+                    onPress={onDraftPress}
+                    variant="primary"
+                    size="md"
+                    testID="btn-dashboard-timeline-cta"
+                  />
+                </View>
+              ) : null}
+            </View>
+          )}
         </Section>
 
         {/* National team */}
