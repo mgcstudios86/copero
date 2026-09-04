@@ -53,15 +53,30 @@ export default function DashboardScreen() {
   // Ver <RecommendedStrategy> abajo.
 
   const onAcademyPress = async () => {
-    // MGC-722 — AWAIT del flush antes de navegar. Antes era
-    // fire-and-forget: openAcademy disparaba persistSnapshot y el
-    // router.push se ejecutaba antes de que AsyncStorage confirmara
-    // la transición a stage='academy'. Un force-stop del usuario
-    // durante ese gap perdía el snapshot y la home re-pintaba con
-    // initialSnapshot vacío tras relaunch.
-    openAcademy();
-    await flushPendingSave();
-    router.push('/simulador-carrera/academy');
+    // MGC-1531 — Branch sobre profile.club. Antes el CTA
+    // "Jugar la próxima fecha" llamaba openAcademy() incondicional y
+    // navegaba a /academy; tras fichar por un club, el tap re-abría
+    // el academy "Elegí tu primer club" (Paso 3 de 3) y la carrera
+    // quedaba atrapada en un loop sin poder avanzar al partido.
+    //
+    // Reglas:
+    //   · Sin club → abrir academy para que el jugador fiche (path
+    //     legacy pre-club; mismo flushPendingSave de MGC-722 para
+    //     sobrevivir force-stop).
+    //   · Con club → navegar al loop temporada/match (botones
+    //     "Siguiente semana" / "Siguiente temporada" / "Correr hasta
+    //     el retiro" del screen `temporada.tsx`). El engine emite los
+    //     eventos M1-M5 (pre-partido, minuto 60, resultado, MVP,
+    //     tarjeta roja) cuando el usuario avanza la fecha; la lógica
+    //     de match vive en `career/strategy.ts` y se persiste vía
+    //     decide().
+    if (!profile.club) {
+      openAcademy();
+      await flushPendingSave();
+      router.push('/simulador-carrera/academy');
+      return;
+    }
+    router.push('/simulador-carrera/temporada');
   };
 
   // MGC-209: CTA al flow de 6 pantallas (draft → tu-jugador → club → temporada → fin-carrera).
