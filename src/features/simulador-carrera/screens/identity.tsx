@@ -1032,23 +1032,41 @@ export default function IdentityScreen() {
           ) : null}
         </Field>
       </View>
-      {/* MGC-1428 — field-map-section RE-INGRESADO al outer ScrollView como
-          SIBLING visible dentro del scroll (opción B MGC-1411 fiel). Antes
-          vivía como View fijo hermano entre identity-fixed-form y
-          identity-sticky-footer (MGC-1305/MGC-1314) pero eso AUSENTABA
-          identity-fixed-field-map del hierarchy dump fresh-mount. Padding
-          interno spacing[4] arriba/abajo para mantener cohesión visual con
-          el resto del scroll. flexShrink:0 garantiza que el ScrollView no lo
-          comprima contra el sticky-footer (que vive como sibling fuera del
-          scroll). */}
+      </ScrollView>
+      {/* MGC-1533 — field-map-section EXTRAÍDA como fixed sibling absoluto.
+          Antes vivía como SIBLING dentro del ScrollView (MGC-1428 intento-7
+          opción B), pero el sticky-footer absolute bottom:0 height:240 opaco
+          (MGC-1448) overlapeaba la mitad inferior del wrapper cuando el
+          usuario scrolleaba para revelar el field map: positions LM (y=0.42)
+          / CAM (y=0.40) / RM / CM / CDM / LB / RB / CB / GK caían con sus
+          bounds detrás del footer top y=1530px en ZY22G728HN density 400 →
+          Pressables pos-XX no interceptaban el tap (RN-Android hit-testea
+          top-most view, sube por el árbol y nunca baja al Pressable oculto).
+          Como fixed sibling kavContent-level con position:absolute bottom:240
+          el field map queda anclado ARRIBA del sticky-footer sin solaparse
+          con btn-identity-continue (z-index natural del árbol de pintado: el
+          ScrollView va antes que el field map, el field map antes que el
+          sticky-footer). Todas las Pressables pos-XX quedan siempre tappable
+          independientemente del scroll position. HitSlop +8dp WCAG 2.5.5
+          (MGC-1502) preservado. zIndex:10 explícito por si RN-Android
+          empata con siblings sin position:absolute declarada en la rama
+          del ScrollView. flexShrink:0 garantiza que el sticky-footer (240dp
+          absolute) no consume flex space que achique el section a 0 en
+          flex-shrink pass. */}
       <View
         testID="identity-fixed-field-map"
         collapsable={false}
         style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 240, // encima del identity-sticky-footer height:240
           paddingHorizontal: spacing[4],
           paddingTop: spacing[4],
           paddingBottom: spacing[4],
           gap: spacing[2],
+          backgroundColor: colors.bg,
+          zIndex: 10,
           flexShrink: 0,
         }}
       >
@@ -1135,7 +1153,6 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
-      </ScrollView>
       {/* MGC-1314: cierre del ScrollView externo tras league-selector-wrapper.
           identity-fixed-form e identity-fixed-field-map NO son hijos del
           ScrollView — viven como siblings (líneas 786+) entre el ScrollView y
@@ -1484,10 +1501,22 @@ const styles = StyleSheet.create({
   // ≈ 831px) en lugar del flex:1 del kavContent (732.8dp). country-CO
   // (último país) cae fuera del viewport y queda con bottom clippeado al
   // scroll bottom → bounds invertidos (QA MGC-1435 sobre SHA 17d592a).
-  // Con flexGrow:1 + paddingBottom:240, contentContainer ocupa TODO el
+  // Con flexGrow:1 + paddingBottom, contentContainer ocupa TODO el
   // viewport del ScrollView (1832px = 732.8dp), permitiendo scroll completo
   // hasta country-CO sin invertir bounds. Patrón canónico PR-346 PASS.
-  scrollContent: { flexGrow: 1, paddingBottom: 240 },
+  // MGC-1533 — paddingBottom bumped 240→512. Antes el field-map-section
+  // vivía como último hijo del ScrollView (MGC-1428), así que paddingBottom:240
+  // solo tenía que despejar el sticky-footer (240dp). Ahora vive como fixed
+  // sibling kavContent-level con position:absolute bottom:240 height:352
+  // (wrapper 320 + padding 32), superpuesto encima del ScrollView. Para que
+  // el form (identity-fixed-form, ahora 2º hijo tras PR-385/MGC-1532) scrollee
+  // por encima del overlay del field map (y=8-360) + footer (y=360-600),
+  // el paddingBottom necesita ≥ (form_height=113) + (field_map_top=8) = 121dp
+  // sobre el scroll viewport. 512dp da buffer amplio: form-bottom llega a
+  // y=600-512=88dp → form-top y=-25dp (off-screen al fondo del scroll) →
+  // al scrollear arriba del todo el form queda en y=0-113dp totalmente
+  // visible POR ENCIMA del overlay del field map.
+  scrollContent: { flexGrow: 1, paddingBottom: 512 },
   container: {},
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
