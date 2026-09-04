@@ -1053,9 +1053,18 @@ export default function IdentityScreen() {
           del ScrollView. flexShrink:0 garantiza que el sticky-footer (240dp
           absolute) no consume flex space que achique el section a 0 en
           flex-shrink pass. */}
+      {/* MGC-1578 — `pointerEvents="box-none"` INCONDICIONAL sobre
+          identity-fixed-field-map. Mismo patrón que sticky-footer arriba.
+          PR-391 condicionaba a leagueOpen lo que rompía el toggle inicial. El
+          field-map solo dibuja fondo + field-map-wrapper; los Pressables pos-*
+          siguen auto y capturan sus taps. Liberar el área vacía permite que
+          un swipe iniciado en el centro del viewport (540,1400) llegue al
+          ScrollView y haga scroll, en lugar de ser consumido por el field-map
+          absoluto. */}
       <View
         testID="identity-fixed-field-map"
         collapsable={false}
+        pointerEvents="box-none"
         style={{
           position: 'absolute',
           left: 0,
@@ -1243,9 +1252,21 @@ export default function IdentityScreen() {
           dejándolos con bottom < footerTop, nunca sobre bounds crudos del
           dump fresh-mount. NO usar pointerEvents='box-none' acá: haría
           tappable contenido tapado por la banda opaca (peor que el bug). */}
+      {/* MGC-1578 — `pointerEvents="box-none"` INCONDICIONAL sobre
+          identity-sticky-footer. PR-391 intentó condicionarlo a
+          `leagueOpen ? 'box-none' : 'auto'` para liberar el toggle cuando el
+          dropdown abre, pero eso es chicken-and-egg: con `leagueOpen=false`
+          el footer overlapea league-selector-toggle en y=2016-2130 y se come
+          el tap inicial que debería disparar `setLeagueOpen(true)`. El footer
+          solo pinta fondo + bandas opacas; los Pressables hijos (btn-number,
+          btn-identity-continue) siguen siendo auto, capturan sus propios taps
+          y el área vacía deja pasar el touch hacia el ScrollView debajo.
+          Mismo razonamiento que MGC-1348 v2 sobre identity-fixed-form:
+          contenedor que solo estiliza → box-none, Pressables auto. */}
       <View
         testID="identity-sticky-footer"
         collapsable={false}
+        pointerEvents="box-none"
         style={[
           {
             position: 'absolute',
