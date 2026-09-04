@@ -29,6 +29,7 @@ import {
 import { STAT_INIT, statsForPosition } from './position-stats';
 import { WEEKLY_BASE_OPTIONS, getPositionTree } from './position-tree';
 import { createRng, seedFromString } from './rng';
+import { affectedAttrFor } from '@/types/career';
 import {
   blankCareerSave,
   loadCareerSave,
@@ -269,6 +270,96 @@ describe('MGC-1657 · WEEKLY_BASE_OPTIONS smoke', () => {
 
   it('rehabilitacion requiere lesión activa', () => {
     expect(WEEKLY_BASE_OPTIONS.rehabilitacion.requiresInjury).toBe(true);
+  });
+});
+
+// MGC-1677 HIGH-2 — al rehabilitarse, NO se debe pisar la lesión activa
+// con un nuevo roll de `maybeRollInjury` (re-lesión contradice la
+// narrativa de lesión sostenida). El remanente `fechasOut` y el
+// `startedAtWeek` original deben sobrevivir.
+describe('MGC-1677 · reinjury-preserve-weeks', () => {
+  it('applyWeeklyChoice con lesión activa NO invoca maybeRollInjury', () => {
+    // Perfil en week 4 rehabilitandose de una lesión leve de 3 semanas
+    // disparada en week 1 (ya consumió 3 semanas).
+    const startedAtWeek = 1;
+    const profile = seededProfile(2025, {
+      week: 4,
+      career: {
+        ...initialProfile.career,
+        lesion: {
+          kind: 'leve',
+          fechasOut: 3,
+          startedAtWeek,
+          affectedAttr: 'fisico',
+        },
+      },
+    });
+    const result = applyWeeklyChoice(profile, 'rehabilitacion');
+    // La lesión activa se preserva intacta: kind, fechasOut remanente
+    // (no se resetea a un nuevo rango 2..6), startedAtWeek original.
+    expect(result.profile.career.lesion.kind).toBe('leve');
+    expect(result.profile.career.lesion.startedAtWeek).toBe(startedAtWeek);
+    expect(result.profile.career.lesion.affectedAttr).toBe('fisico');
+    expect(result.profile.career.lesion.fechasOut).toBe(3);
+    // No se disparó nueva lesión (la lesión activa es pre-existente).
+    expect(result.injuryFired).toBe(false);
+    // `result.injury` refleja la lesión activa remanente (no null, no
+    // una nueva lesión de rango 2..6).
+    expect(result.injury).not.toBeNull();
+    expect(result.injury?.fechasOut).toBe(3);
+    expect(result.injury?.startedAtWeek).toBe(startedAtWeek);
+  });
+
+  it('applyWeeklyChoice con lesión activa de 6 semanas mantiene fechasOut=6', () => {
+    const profile = seededProfile(31415, {
+      week: 8,
+      career: {
+        ...initialProfile.career,
+        lesion: {
+          kind: 'grave',
+          fechasOut: 6,
+          startedAtWeek: 2,
+          affectedAttr: 'tecnico',
+        },
+      },
+    });
+    const result = applyWeeklyChoice(profile, 'rehabilitacion');
+    // No se reinicia a un nuevo rango 2..6; el remanente 6 sobrevive.
+    expect(result.profile.career.lesion.fechasOut).toBe(6);
+    expect(result.profile.career.lesion.kind).toBe('grave');
+    expect(result.profile.career.lesion.startedAtWeek).toBe(2);
+  });
+
+  it('applyWeeklyChoice SIN lesión activa sí puede disparar nueva lesión', () => {
+    // fatiga alta + streak alto fuerzan injuryProbability > 0; el RNG
+    // builtin hace chance() retornar true para p > 0.
+    const profile = seededProfile(7777, {
+      career: {
+        ...initialProfile.career,
+        fisico: 5,
+        doubleShiftStreak: 8,
+        lesion: {
+          kind: 'ninguna',
+          fechasOut: 0,
+          startedAtWeek: 0,
+          affectedAttr: affectedAttrFor('ninguna'),
+        },
+      },
+    });
+    const result = applyWeeklyChoice(profile, 'doble_turno');
+    // Sin lesión previa, maybeRollInjury puede dispararse; si dispara
+    // la lesión nueva queda registrada con fechasOut en [2, 6].
+    if (result.injuryFired && result.injury) {
+      expect(result.injury.fechasOut).toBeGreaterThanOrEqual(2);
+      expect(result.injury.fechasOut).toBeLessThanOrEqual(6);
+      expect(result.profile.career.lesion.fechasOut).toBe(
+        result.injury.fechasOut,
+      );
+    } else {
+      // Si el RNG del test no disparó lesión, al menos verificamos
+      // que el path "sin lesión previa" no preserva una lesión vieja.
+      expect(result.profile.career.lesion.fechasOut).toBe(0);
+    }
   });
 });
 

@@ -478,19 +478,30 @@ export function applyWeeklyChoice(
   }
 
   // 6) Injury check (post-choice).
-  const injury = maybeRollInjury(
-    { ...profile, career: nextCareer },
-    nextCareer.doubleShiftStreak ?? 0,
-    rng,
-  );
+  // MGC-1677 HIGH-2: si ya existe una lesión activa (fechasOut > 0) NO
+  // se invoca `maybeRollInjury` — preservar el remanente. Una re-lesión
+  // mientras se rehabilita no resetea el counter; recién se re-evaluará
+  // la próxima semana cuando `fechasOut` llegue a 0 vía `advanceWeek`.
+  let injury: Injury | null = null;
   let injuryFired = false;
-  if (injury) {
-    nextCareer = { ...nextCareer, lesion: injury };
-    nextCareer.weeklyInjuryFlipped = true;
-    injuryFired = true;
-  } else if (nextCareer.lesion.fechasOut === 0) {
-    // Drenar el flag si ya no hay lesión activa.
-    nextCareer.weeklyInjuryFlipped = false;
+  if (nextCareer.lesion.fechasOut > 0) {
+    // Mantener lesión activa intacta. weeklyInjuryFlipped ya refleja el
+    // disparo original; no lo flipeamos de nuevo para no spammear la UI.
+    injury = nextCareer.lesion;
+  } else {
+    injury = maybeRollInjury(
+      { ...profile, career: nextCareer },
+      nextCareer.doubleShiftStreak ?? 0,
+      rng,
+    );
+    if (injury) {
+      nextCareer = { ...nextCareer, lesion: injury };
+      nextCareer.weeklyInjuryFlipped = true;
+      injuryFired = true;
+    } else if (nextCareer.lesion.fechasOut === 0) {
+      // Drenar el flag si ya no hay lesión activa.
+      nextCareer.weeklyInjuryFlipped = false;
+    }
   }
 
   // 7) Recompute OVR + reputación.
