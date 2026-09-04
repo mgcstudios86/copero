@@ -468,7 +468,7 @@ export default function IdentityScreen() {
                   fontSize: fontSize.base,
                 },
               ]}
-              accessibilityLabel="Nombre del jugador"
+              accessibilityLabel={t('identity.nameA11y')}
               testID="input-name"
             />
           </View>
@@ -599,7 +599,7 @@ export default function IdentityScreen() {
                 marginBottom: spacing[2],
               },
             ]}
-            accessibilityLabel="Buscar nacionalidad"
+            accessibilityLabel={t('identity.nationalitySearchA11y')}
             testID="input-nationality-search"
           />
           {/* MGC-1428 — lista plana de países (sin ScrollView anidado). Países
@@ -1082,7 +1082,7 @@ export default function IdentityScreen() {
                 borderRadius: radii.lg,
               },
             ]}
-            accessibilityLabel="Mapa del campo con posiciones"
+            accessibilityLabel={t('identity.fieldMapA11y')}
           >
             {/* Líneas del campo */}
             <View

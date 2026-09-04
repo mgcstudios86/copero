@@ -92,6 +92,9 @@ export type Copy = {
     continueHint: string;
     continue: string;
     continueA11yHint: string;
+    nameA11y: string;
+    nationalitySearchA11y: string;
+    fieldMapA11y: string;
   };
 };
 
@@ -158,6 +161,9 @@ export const COPY: Record<Locale, Copy> = {
       continueHint: 'Escribí tu nombre arriba para continuar.',
       continue: 'Continuar',
       continueA11yHint: 'Guarda la identidad y abre el dashboard',
+      nameA11y: 'Nombre del jugador',
+      nationalitySearchA11y: 'Buscar nacionalidad',
+      fieldMapA11y: 'Mapa del campo con posiciones',
     },
   },
   en: {
@@ -222,6 +228,9 @@ export const COPY: Record<Locale, Copy> = {
       continueHint: 'Type your name above to continue.',
       continue: 'Continue',
       continueA11yHint: 'Saves your identity and opens the dashboard',
+      nameA11y: 'Player name',
+      nationalitySearchA11y: 'Search nationality',
+      fieldMapA11y: 'Pitch map with positions',
     },
   },
   'zh-CN': {
@@ -286,6 +295,9 @@ export const COPY: Record<Locale, Copy> = {
       continueHint: '在上方输入姓名以继续。',
       continue: '继续',
       continueA11yHint: '保存身份并打开仪表盘',
+      nameA11y: '球员姓名',
+      nationalitySearchA11y: '搜索国籍',
+      fieldMapA11y: '带位置的球场地图',
     },
   },
 };
