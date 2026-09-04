@@ -30,7 +30,7 @@ import {
   isPersistentStorage,
 } from '@/features/career/persistence';
 import type { CareerAction } from '@/features/career/engine';
-import type { CareerSnapshot, Club, Foot, Position, StrategyId, YearlyPlan } from '@/types/career';
+import type { CareerSnapshot, Club, EstiloRasgo, Foot, Position, StrategyId, YearlyPlan } from '@/types/career';
 
 type CareerStore = CareerSnapshot & {
   /**
@@ -75,6 +75,14 @@ type CareerStore = CareerSnapshot & {
    * persistencia que `decide` para sobrevivir force-stop.
    */
   setYearlyPlan: (plan: YearlyPlan) => Promise<void>;
+  /**
+   * MGC-1505 — setEstilo: setter para los rasgos opt-in del jugador
+   * (multi-select, cap 2). La UI pasa el array ya toggled; el reducer
+   * re-sanitiza defensivamente (dedupe + cap 2 + descartar valores no
+   * canónicos). Persistencia inmediata vía flushPendingSave para
+   * sobrevivir force-stop, patrón idéntico a setYearlyPlan.
+   */
+  setEstilo: (rasgos: EstiloRasgo[]) => Promise<void>;
   advance: () => void;
   /**
    * Draft de leyendas (MGC-208 §1) — MGC-209.
@@ -353,6 +361,17 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       const { step } = await import('@/features/career/engine');
       setSnapshot((s) =>
         step(s, { type: 'setYearlyPlan', plan } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    // MGC-1505: setter de rasgos (multi-select, cap 2 enforced en reducer).
+    // Misma cadencia async + await flushPendingSave que setYearlyPlan para
+    // sobrevivir force-stop (AC persistence gate).
+    setEstilo: async (rasgos) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'setEstilo', rasgos } satisfies CareerAction),
       );
       persistSnapshot(get());
       await flushPendingSave();

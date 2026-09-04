@@ -3,6 +3,7 @@ import type {
   CareerStage,
   Club,
   ClubArchetype,
+  EstiloRasgo,
   Foot,
   PlayerProfile,
   Position,
@@ -45,6 +46,9 @@ export type CareerAction =
   | { type: 'acceptClub'; club: Club }
   | { type: 'decide'; strategyId: StrategyId; choiceId: string }
   | { type: 'setYearlyPlan'; plan: YearlyPlan }
+  /** MGC-1505 — toggle de rasgo (multi-select hasta 2). El reducer hace
+   * toggle on/off + dedupe + cap 2; la UI no necesita enforced logic. */
+  | { type: 'setEstilo'; rasgos: EstiloRasgo[] }
   | { type: 'advance' }
   | { type: 'startDraft'; seed?: number }
   | { type: 'swapLegend' }
@@ -163,6 +167,22 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
         profile: {
           ...state.profile,
           career: { ...state.profile.career, yearlyPlan: action.plan },
+        },
+      };
+    }
+    case 'setEstilo': {
+      // MGC-1505: setter idempotente. La UI ya garantiza cap 2 + dedupe,
+      // pero el reducer re-sanitiza defensivamente: dedupe (Set), cap 2,
+      // descartar valores que no estén en el catálogo canónico.
+      const allowed = new Set<EstiloRasgo>(['magneto-mediatico', 'trotamundos']);
+      const cleaned = Array.from(
+        new Set(action.rasgos.filter((r): r is EstiloRasgo => allowed.has(r))),
+      ).slice(0, 2);
+      return {
+        ...state,
+        profile: {
+          ...state.profile,
+          career: { ...state.profile.career, estilo: cleaned },
         },
       };
     }

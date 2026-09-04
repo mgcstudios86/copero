@@ -103,6 +103,16 @@ export const YEARLY_PLAN_MODIFIERS: Record<
   },
 };
 
+/**
+ * MGC-1505 — Rasgos opt-in del jugador que modifican eventos / drift OVR.
+ * Lista cerrada: por ahora `Magneto mediático` y `Trotamundos`. UI lo
+ * expone como multi-select (cap 2) en `temporada.tsx`.
+ */
+export type EstiloRasgo = 'magneto-mediatico' | 'trotamundos';
+
+/** Catálogo canónico de etiquetas que se persisten y se renderean. */
+export const ESTILO_RASGOS: readonly EstiloRasgo[] = ['magneto-mediatico', 'trotamundos'] as const;
+
 /** Stats globales del jugador (MGC-439 §sistema de stats). */
 export type CareerStats = {
   presupuesto: number; // €
@@ -114,6 +124,8 @@ export type CareerStats = {
   reputation: Reputation;
   /** Plan elegido al cierre de la temporada anterior (MGC-1017). */
   yearlyPlan?: YearlyPlan;
+  /** Rasgos opt-in del jugador (MGC-1505). Cap 2 enforced en UI. */
+  estilo?: EstiloRasgo[];
 };
 
 export type Club = {

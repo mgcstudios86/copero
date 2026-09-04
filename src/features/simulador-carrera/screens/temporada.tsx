@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -7,7 +7,12 @@ import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { RETIREMENT_AGE } from '@/features/career/season';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
-import { YEARLY_PLAN_MODIFIERS, type YearlyPlan } from '@/types/career';
+import {
+  ESTILO_RASGOS,
+  YEARLY_PLAN_MODIFIERS,
+  type EstiloRasgo,
+  type YearlyPlan,
+} from '@/types/career';
 
 /**
  * MGC-209 [5/6] — TEMPORADA.
@@ -34,6 +39,25 @@ export default function TemporadaScreen() {
   // MGC-1017: acción para fijar el plan anual (UI picker abajo).
   const setYearlyPlan = useCareerStore((s) => s.setYearlyPlan);
   const currentPlan = profile.career.yearlyPlan;
+  // MGC-1505: rasgos opt-in (multi-select, cap 2). Persistido en
+  // `profile.career.estilo` y consumido por el motor cuando corresponda.
+  const setEstilo = useCareerStore((s) => s.setEstilo);
+  const estilo: EstiloRasgo[] = useMemo(
+    () => profile.career.estilo ?? [],
+    [profile.career.estilo],
+  );
+
+  // MGC-1505 — toggle de rasgo. La lista ya viene toggled (on tap
+  // off, off tap on); cap 2 lo enforce el reducer defensivo + UI
+  // deshabilita el 3er tap.
+  const onToggleRasgo = useCallback(
+    (rasgo: EstiloRasgo) => {
+      const isOn = estilo.includes(rasgo);
+      const next = isOn ? estilo.filter((r) => r !== rasgo) : [...estilo, rasgo].slice(0, 2);
+      void setEstilo(next);
+    },
+    [estilo, setEstilo],
+  );
 
   const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
 
@@ -220,32 +244,53 @@ export default function TemporadaScreen() {
           <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
             Cambian eventos, ofertas y desarrollo. Seleccioná 1 o 2.
           </Text>
-          {(['Magneto mediático', 'Trotamundos'] as const).map((r) => (
-            <View
-              key={r}
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingVertical: spacing[2],
-                borderTopWidth: 1,
-                borderTopColor: colors.border,
-              }}
-            >
-              <Text
+          {/* MGC-1505 — Rasgos como Pressable toggle (cap 2). El 3er tap
+              sobre un rasgo no-seleccionado cuando ya hay 2 elegidos
+              queda deshabilitado (defensa UI; el reducer también cap-a
+              defensivamente). El Pill refleja el contador global
+              `${seleccionados} / 2` y se pone verde cuando hay al menos
+              uno elegido. */}
+          {ESTILO_RASGOS.map((rasgo) => {
+            const selected = estilo.includes(rasgo);
+            const atCap = !selected && estilo.length >= 2;
+            return (
+              <Pressable
+                key={rasgo}
+                onPress={() => onToggleRasgo(rasgo)}
+                disabled={atCap}
+                accessibilityRole="button"
+                accessibilityState={{ selected, disabled: atCap }}
+                accessibilityLabel={`Rasgo ${rasgo}${selected ? ' seleccionado' : ' no seleccionado'}`}
+                testID={`btn-estilo-${rasgo}`}
                 style={{
-                  color: colors.textStrong,
-                  fontSize: fontSize.xs,
-                  fontWeight: fontWeight.bold,
-                  letterSpacing: 2,
-                  textTransform: 'uppercase',
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  paddingVertical: spacing[2],
+                  borderTopWidth: 1,
+                  borderTopColor: colors.border,
+                  opacity: atCap ? 0.4 : 1,
                 }}
               >
-                {r.toUpperCase()}
-              </Text>
-              <Pill label="0 / 2" bg={colors.surface2} fg={colors.textMuted} />
-            </View>
-          ))}
+                <Text
+                  style={{
+                    color: colors.textStrong,
+                    fontSize: fontSize.xs,
+                    fontWeight: fontWeight.bold,
+                    letterSpacing: 2,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {rasgo.toUpperCase()}
+                </Text>
+                <Pill
+                  label={`${estilo.length} / 2`}
+                  bg={estilo.length > 0 ? colors.primary : colors.surface2}
+                  fg={estilo.length > 0 ? colors.textOnPrimary : colors.textMuted}
+                />
+              </Pressable>
+            );
+          })}
         </View>
 
         {/* MGC-1381: los CTAs del loop viven ahora en
