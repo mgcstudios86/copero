@@ -358,6 +358,179 @@ export default function IdentityScreen() {
         </View>
       </View>
 
+      {/* MGC-1532 — P0-BLOCKER: identity-fixed-form PROMOVIDO a SEGUNDO hijo
+          del outer ScrollView (entre identity-header y nationality-section).
+          Causa raíz del walk E2E MGC-1499 sobre v0.1.1(16): `isIdentityComplete`
+          (src/features/career/identity-state.ts) exige SOLO
+          `name.trim().length >= 2` — `number` arranca en 9 (válido) y
+          position/nationality/foot tienen default. O sea: el nombre es el
+          ÚNICO gate del botón Continuar. Pero identity-fixed-form era el
+          ÚLTIMO hijo del scroll (y≈1208dp de un viewport de 732.8dp), así que
+          en cold-start el usuario veía la camiseta con el placeholder estático
+          "TU NOMBRE" (jersey-preview), tocaba país + número, y Continuar seguía
+          gris sin ninguna pista de que faltaba scrollear ~475dp para encontrar
+          el EditText. QA reportó el EditText input-name AUSENTE del dump
+          fresh-mount (qa_id2.xml: sólo el TextView estático `jersey-name`).
+
+          Layout resultante en ZY22G728HN 1080×2400 density 400 (1dp = 2.5px),
+          viewport del scroll 732.8dp, footer opaco top = 492.8dp (1530px):
+            identity-header          y=0      → y≈150dp   ( 375px)
+            identity-fixed-form      y≈150dp  → y≈263dp   ( 658px) ← input-name
+            nationality-section      y≈263dp  → y≈613dp   (1533px) ← country-ARG ≈ 912px
+            jersey-preview-wrapper   y≈613dp  → y≈913dp   (bajo el fold, scroll)
+            league-selector-wrapper  y≈913dp  → y≈1001dp
+            identity-fixed-field-map y≈1001dp → y≈1353dp
+            scrollContent.paddingBottom:240 sigue despejando el footer.
+
+          input-name queda ENTERO sobre el fold (658px << 1530px) y country-ARG
+          sigue tappable sin scrollUntilVisible, preservando el AC4 de MGC-1474.
+          jersey-preview baja bajo el fold: es decorativo (no bloquea el CTA) y
+          su placeholder "TU NOMBRE" era justamente la fuente de la confusión.
+
+          MGC-1432 (histórico, sigue vigente) — identity-fixed-form vive DENTRO
+          del outer ScrollView, no como View fijo hermano. En intentos previos
+          (5dbdd95 attempt-4, d592a2c attempt-5 spec) vivía entre ScrollView y
+          identity-sticky-footer, consumiendo ~280px del kavContent y dejando
+          ScrollView con 1552px en vez de 1832px. NO volver a extraerlo.
+          pointerEvents='box-none' mantiene el spec MGC-1348 para que el wrapper
+          no intercepte clicks de los country-* Pressables (que ahora viven MÁS
+          ABAJO en el scroll, no más arriba). */}
+      <View
+        testID="identity-fixed-form"
+        collapsable={false}
+        // MGC-1348 v2 — Playwright web flake: box-none evita que el wrapper
+        // capture clicks de los country-* Pressables que viven más arriba en
+        // el scroll (RNW hit-test pasaba por el wrapper vacío). En Android
+        // box-none es no-op cuando el wrapper tiene content visible.
+        pointerEvents="box-none"
+        style={{
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          // MGC-1339 — overshoot fix: padding spacing[1]=4 → spacing[0]=0
+          // (-8dp). Compactación preservada al mover dentro del scroll.
+          // MGC-1347 — restaurar paddingHorizontal spacing[1]=4dp para que
+          // TextInput Nombre y Pressables Pie hábil no peguen contra el
+          // borde lateral. paddingVertical=0 explícito para preservar el
+          // budget vertical de 113dp del AC MGC-1341.
+          paddingHorizontal: spacing[1],
+          paddingVertical: 0,
+          gap: spacing[1],
+          flexShrink: 0,
+        }}
+      >
+        {/* MGC-1330: compactación para liberar 86dp de budget vertical.
+            viewport 732.8dp = identity-fixed-form (113dp target) +
+            identity-fixed-field-map 320dp (ancla MGC-1324) +
+            identity-sticky-footer 240dp (ancla MGC-1286) + 59.6dp slack.
+            Cambios: padding form 16→4, gap form 16→4, Field label gap 8→0,
+            inputs minHeight 48→40, TextInput/Pressable paddingV 12→8,
+            label fontSize 14→12. Total estimado ~105dp. Patrón preserva:
+            field wrapper collapsable=false, label accessibilityRole=text,
+            input hit-box via minHeight:40 + paddingV:8 + border. Refs:
+            [[mgc1330-form-budget]], MGC-632, MGC-686, MGC-1286, MGC-1324. */}
+        <Field
+          label="Nombre"
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          <View
+            testID="input-name-wrapper"
+            collapsable={false}
+            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
+            // clicks, el TextInput hijo sí. Patrón recursivo Field wrapper.
+            pointerEvents="box-none"
+            style={{ minHeight: 40, width: '100%' }}
+          >
+            <TextInput
+              value={profile.name}
+              onChangeText={setName}
+              placeholder="Ej. Mateo Romero"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+              autoCorrect={false}
+              maxLength={24}
+              collapsable={false}
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  borderColor: colors.borderStrong,
+                  borderRadius: radii.md,
+                  paddingHorizontal: spacing[3],
+                  paddingVertical: spacing[2],
+                  fontSize: fontSize.base,
+                },
+              ]}
+              accessibilityLabel="Nombre del jugador"
+              testID="input-name"
+            />
+          </View>
+        </Field>
+
+        {/* Preferred foot — MGC-632: wrapper View collapsable=false +
+            minHeight:48. Pressable hijos sin collapsable={false} porque
+            RN-Android mide bounds reales desde el wrapper padre cuando
+            vive fuera del ScrollView (verificado por QA MGC-744 sobre
+            stepper). Si QA reporta flake en los Pressables individuales
+            (Izquierdo/Derecho/Ambos), replicar el patrón canónico del
+            stepper (collapsable={false} en cada Pressable hijo). */}
+        <Field
+          label="Pie hábil"
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          <View
+            testID="btn-foot-row"
+            collapsable={false}
+            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
+            // clicks, los 3 Pressables hijos sí. Patrón recursivo Field wrapper.
+            pointerEvents="box-none"
+            style={{
+              flexDirection: 'row',
+              gap: spacing[2],
+              width: '100%',
+              minHeight: 40,
+            }}
+          >
+            {(['left', 'right', 'both'] as Foot[]).map((f) => {
+              const active = profile.preferredFoot === f;
+              return (
+                <Pressable
+                  key={f}
+                  onPress={() => setPreferredFoot(f)}
+                  {...onKeyActivate(() => setPreferredFoot(f))}
+                  testID={`btn-foot-${f === 'left' ? 'izq' : f === 'right' ? 'der' : 'ambos'}`}
+                  collapsable={false}
+                  style={{
+                    flex: 1,
+                    paddingVertical: spacing[2],
+                    borderRadius: radii.md,
+                    borderWidth: 1,
+                    borderColor: active ? colors.primary : colors.borderStrong,
+                    backgroundColor: active ? colors.primarySoft : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Text
+                    style={{
+                      color: active ? colors.primary : colors.text,
+                      fontWeight: fontWeight.semibold,
+                      fontSize: fontSize.sm,
+                    }}
+                  >
+                    {f === 'left' ? 'Izquierdo' : f === 'right' ? 'Derecho' : 'Ambos'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Field>
+      </View>
+
       {/* MGC-1474 — nationality-section REPOSICIONADA como segundo hijo del
           outer ScrollView (entre identity-header y jersey-preview-wrapper).
           Causa raíz AC4 FAIL sobre PR-352 (MGC-1473 sobre APK 395aeb9e):
@@ -369,13 +542,16 @@ export default function IdentityScreen() {
           a y≈420dp = y≈1050px, sobre footer top=1530 → tappable en fresh
           scroll position sin scrollUntilVisible.
 
-          Layout resultante en ZY22G728HN 1080×2400 density 400:
-            identity-header         y=0     → y=150dp   (375px)
-            nationality-section     y=150dp → y=500dp   (1250px) ← country-ARG @ 1050px
-            jersey-preview-wrapper  y=500dp → y=800dp   (2000px) ← bajo fold, scroll
-            league-selector-wrapper y=800dp → y=888dp   (2220px)
-            identity-fixed-field-map y=888dp → y=1208dp
-            identity-fixed-form     y=1208dp → y=1548dp
+          Layout resultante en ZY22G728HN 1080×2400 density 400
+          (actualizado por MGC-1532: identity-fixed-form se intercala entre
+          identity-header y nationality-section; country-ARG baja 283px pero
+          sigue por encima del footerTop 1530px, así que el AC4 se preserva):
+            identity-header          y=0      → y=150dp   ( 375px)
+            identity-fixed-form      y=150dp  → y=263dp   ( 658px) ← MGC-1532
+            nationality-section      y=263dp  → y=613dp   ← country-ARG ≈1333px
+            jersey-preview-wrapper   y=613dp  → y=913dp   ← bajo fold, scroll
+            league-selector-wrapper  y=913dp  → y=1001dp
+            identity-fixed-field-map y=1001dp → y=1353dp
             scrollContent.paddingBottom:240 despeja el footer top y=1530.
 
           Mantener: cap NATIONALITY_FRESH_LIMIT=5 (MGC-1448), search hint
@@ -946,157 +1122,6 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
-      {/* MGC-1432 — intento-5 opción B fiel. identity-fixed-form RE-INGRESADO
-          al outer ScrollView como SIBLING visible (hermano directo, último
-          hijo antes del paddingBottom:240). En intentos previos (5dbdd95
-          attempt-4, d592a2c attempt-5 spec) identity-fixed-form vivía como
-          View fijo hermano entre ScrollView y identity-sticky-footer,
-          consumiendo ~280px del kavContent y dejando ScrollView con
-          1552px en vez de 1832px (viewport completo 732.8dp). El
-          sticky-footer absolute overlap tampoco despejaba los bounds
-          porque el form estaba en zona fija, no en el scroll. Con form
-          DENTRO del scroll, el outer ScrollView reclama TODO el kavContent
-          (único flex child, sticky-footer absolute) y el último hijo
-          (input-name-wrapper / btn-foot-row) cae dentro del paddingBottom
-          zone, accesible tras scroll completo sin quedar tapado por el
-          footer overlap. pointerEvents='box-none' mantiene el spec MGC-1348
-          para que el wrapper no intercepte clicks de country-* Pressables
-          que viven más arriba en el scroll. */}
-      <View
-        testID="identity-fixed-form"
-        collapsable={false}
-        // MGC-1348 v2 — Playwright web flake: box-none evita que el wrapper
-        // capture clicks de los country-* Pressables que viven más arriba en
-        // el scroll (RNW hit-test pasaba por el wrapper vacío). En Android
-        // box-none es no-op cuando el wrapper tiene content visible.
-        pointerEvents="box-none"
-        style={{
-          backgroundColor: colors.bg,
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          // MGC-1339 — overshoot fix: padding spacing[1]=4 → spacing[0]=0
-          // (-8dp). Compactación preservada al mover dentro del scroll.
-          // MGC-1347 — restaurar paddingHorizontal spacing[1]=4dp para que
-          // TextInput Nombre y Pressables Pie hábil no peguen contra el
-          // borde lateral. paddingVertical=0 explícito para preservar el
-          // budget vertical de 113dp del AC MGC-1341.
-          paddingHorizontal: spacing[1],
-          paddingVertical: 0,
-          gap: spacing[1],
-          flexShrink: 0,
-        }}
-      >
-        {/* MGC-1330: compactación para liberar 86dp de budget vertical.
-            viewport 732.8dp = identity-fixed-form (113dp target) +
-            identity-fixed-field-map 320dp (ancla MGC-1324) +
-            identity-sticky-footer 240dp (ancla MGC-1286) + 59.6dp slack.
-            Cambios: padding form 16→4, gap form 16→4, Field label gap 8→0,
-            inputs minHeight 48→40, TextInput/Pressable paddingV 12→8,
-            label fontSize 14→12. Total estimado ~105dp. Patrón preserva:
-            field wrapper collapsable=false, label accessibilityRole=text,
-            input hit-box via minHeight:40 + paddingV:8 + border. Refs:
-            [[mgc1330-form-budget]], MGC-632, MGC-686, MGC-1286, MGC-1324. */}
-        <Field
-          label="Nombre"
-          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
-          wrapperStyle={{ gap: 0 }}
-        >
-          <View
-            testID="input-name-wrapper"
-            collapsable={false}
-            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
-            // clicks, el TextInput hijo sí. Patrón recursivo Field wrapper.
-            pointerEvents="box-none"
-            style={{ minHeight: 40, width: '100%' }}
-          >
-            <TextInput
-              value={profile.name}
-              onChangeText={setName}
-              placeholder="Ej. Mateo Romero"
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
-              autoCorrect={false}
-              maxLength={24}
-              collapsable={false}
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  borderColor: colors.borderStrong,
-                  borderRadius: radii.md,
-                  paddingHorizontal: spacing[3],
-                  paddingVertical: spacing[2],
-                  fontSize: fontSize.base,
-                },
-              ]}
-              accessibilityLabel="Nombre del jugador"
-              testID="input-name"
-            />
-          </View>
-        </Field>
-
-        {/* Preferred foot — MGC-632: wrapper View collapsable=false +
-            minHeight:48. Pressable hijos sin collapsable={false} porque
-            RN-Android mide bounds reales desde el wrapper padre cuando
-            vive fuera del ScrollView (verificado por QA MGC-744 sobre
-            stepper). Si QA reporta flake en los Pressables individuales
-            (Izquierdo/Derecho/Ambos), replicar el patrón canónico del
-            stepper (collapsable={false} en cada Pressable hijo). */}
-        <Field
-          label="Pie hábil"
-          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
-          wrapperStyle={{ gap: 0 }}
-        >
-          <View
-            testID="btn-foot-row"
-            collapsable={false}
-            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
-            // clicks, los 3 Pressables hijos sí. Patrón recursivo Field wrapper.
-            pointerEvents="box-none"
-            style={{
-              flexDirection: 'row',
-              gap: spacing[2],
-              width: '100%',
-              minHeight: 40,
-            }}
-          >
-            {(['left', 'right', 'both'] as Foot[]).map((f) => {
-              const active = profile.preferredFoot === f;
-              return (
-                <Pressable
-                  key={f}
-                  onPress={() => setPreferredFoot(f)}
-                  {...onKeyActivate(() => setPreferredFoot(f))}
-                  testID={`btn-foot-${f === 'left' ? 'izq' : f === 'right' ? 'der' : 'ambos'}`}
-                  collapsable={false}
-                  style={{
-                    flex: 1,
-                    paddingVertical: spacing[2],
-                    borderRadius: radii.md,
-                    borderWidth: 1,
-                    borderColor: active ? colors.primary : colors.borderStrong,
-                    backgroundColor: active ? colors.primarySoft : colors.surface,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Text
-                    style={{
-                      color: active ? colors.primary : colors.text,
-                      fontWeight: fontWeight.semibold,
-                      fontSize: fontSize.sm,
-                    }}
-                  >
-                    {f === 'left' ? 'Izquierdo' : f === 'right' ? 'Derecho' : 'Ambos'}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Field>
-      </View>
       </ScrollView>
       {/* MGC-1314: cierre del ScrollView externo tras league-selector-wrapper.
           identity-fixed-form e identity-fixed-field-map NO son hijos del
@@ -1330,6 +1355,32 @@ export default function IdentityScreen() {
           },
         ]}
       >
+        {/* MGC-1532 — hint del CTA deshabilitado. Segunda mitad del AC del
+            bug: aunque el reorder ya deja input-name sobre el fold, el botón
+            gris sin explicación seguía siendo un dead-end si el usuario no
+            tipea. `isIdentityComplete` sólo mira name.length>=2, así que el
+            texto nombra el campo exacto que falta. Presupuesto vertical del
+            sticky-footer (height:240 fijo, MGC-1448): stepperSticky 120 +
+            footer (16+52+16) 84 = 204dp; el hint suma 14 (lineHeight) + 4
+            (marginBottom) = 18dp → 222dp, con 18dp de slack contra la banda
+            opaca. NO agrandar la tipografía acá sin re-medir: si el contenido
+            supera 240dp, justifyContent:'flex-end' lo desborda POR ARRIBA de
+            la banda opaca y queda dibujado sobre el scroll sin fondo. */}
+        {!canContinue ? (
+          <Text
+            testID="identity-continue-hint"
+            style={{
+              color: colors.textMuted,
+              fontSize: fontSize.xs,
+              lineHeight: 14,
+              includeFontPadding: false,
+              marginBottom: spacing[1],
+              textAlign: 'center',
+            }}
+          >
+            Escribí tu nombre arriba para continuar.
+          </Text>
+        ) : null}
         <Button
           label="Continuar"
           onPress={onContinue}

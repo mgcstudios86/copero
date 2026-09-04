@@ -17,6 +17,13 @@
         "buildType": "app-bundle"
       }
     },
+    "preview-apk": {
+      "distribution": "internal",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "preview-ios-sim": {
       "distribution": "internal",
       "channel": "preview",
