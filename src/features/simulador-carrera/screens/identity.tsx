@@ -19,6 +19,7 @@ import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { onKeyActivate } from '@/design/utils/keyboardActivation';
 import { useCareerStore } from '@/shared/store/careerStore';
+import { useLocale } from '@/i18n/locale-context';
 import { POSITIONS, GROUP_COLOR } from '@/features/career/positions';
 import { NATIONALITIES } from '@/features/career/nationalities';
 import { LEAGUES, leagueNameByCode } from '@/features/career/leagues';
@@ -97,6 +98,11 @@ export default function IdentityScreen() {
   // dashboard (dashboard.tsx:352). Volvemos al patrón simple `commitIdentity +
   // router.push('/dashboard')` que existía antes de MGC-249/MGC-251.
   const commitIdentity = useCareerStore((s) => s.commitIdentity);
+
+  // MGC-1534: subscribirse al contexto de locale para re-renderizar el form
+  // completo al cambiar idioma. Antes las strings quedaban en espanol aunque
+  // el LanguageSwitcher marcara EN/中文 seleccionado.
+  const { t } = useLocale();
 
   const [nationalityQuery, setNationalityQuery] = useState('');
   // MGC-1503 — UX-005 P0 del audit MGC-1500. Por defecto la pantalla cape el
@@ -338,7 +344,7 @@ export default function IdentityScreen() {
             }}
             accessibilityRole="header"
           >
-            SIMULADOR DE CARRERA
+            {t('identity.eyebrow')}
           </Text>
           <Text
             style={{
@@ -350,10 +356,10 @@ export default function IdentityScreen() {
             }}
             accessibilityRole="header"
           >
-            Define tu identidad
+            {t('identity.title')}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.base }}>
-            Tu jugador empieza con 16 años, OVR 50 y sin club. Elegí nombre, número y posición.
+            {t('identity.subtitle')}
           </Text>
         </View>
       </View>
@@ -430,7 +436,7 @@ export default function IdentityScreen() {
             input hit-box via minHeight:40 + paddingV:8 + border. Refs:
             [[mgc1330-form-budget]], MGC-632, MGC-686, MGC-1286, MGC-1324. */}
         <Field
-          label="Nombre"
+          label={t('identity.fieldName')}
           labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
           wrapperStyle={{ gap: 0 }}
         >
@@ -445,7 +451,7 @@ export default function IdentityScreen() {
             <TextInput
               value={profile.name}
               onChangeText={setName}
-              placeholder="Ej. Mateo Romero"
+              placeholder={t('identity.namePlaceholder')}
               placeholderTextColor={colors.textMuted}
               autoCapitalize="words"
               autoCorrect={false}
@@ -476,7 +482,7 @@ export default function IdentityScreen() {
             (Izquierdo/Derecho/Ambos), replicar el patrón canónico del
             stepper (collapsable={false} en cada Pressable hijo). */}
         <Field
-          label="Pie hábil"
+          label={t('identity.fieldFoot')}
           labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
           wrapperStyle={{ gap: 0 }}
         >
@@ -522,7 +528,7 @@ export default function IdentityScreen() {
                       fontSize: fontSize.sm,
                     }}
                   >
-                    {f === 'left' ? 'Izquierdo' : f === 'right' ? 'Derecho' : 'Ambos'}
+                    {f === 'left' ? t('identity.footLeft') : f === 'right' ? t('identity.footRight') : t('identity.footBoth')}
                   </Text>
                 </Pressable>
               );
@@ -574,11 +580,11 @@ export default function IdentityScreen() {
           flexShrink: 0,
         }}
       >
-        <Field label="Nacionalidad">
+        <Field label={t('identity.fieldNationality')}>
           <TextInput
             value={nationalityQuery}
             onChangeText={setNationalityQuery}
-            placeholder="Buscar país…"
+            placeholder={t('identity.nationalityPlaceholder')}
             placeholderTextColor={colors.textMuted}
             autoCorrect={false}
             style={[
@@ -670,7 +676,7 @@ export default function IdentityScreen() {
                   fontSize: fontSize.sm,
                 }}
               >
-                Sin coincidencias.
+                {t('identity.nationalityNoMatches')}
               </Text>
             ) : null}
           </View>
@@ -711,8 +717,8 @@ export default function IdentityScreen() {
                 accessibilityState={{ expanded: nationalityExpanded }}
                 accessibilityLabel={
                   nationalityExpanded
-                    ? 'Ver menos nacionalidades'
-                    : `Ver todas las ${NATIONALITIES.length} nacionalidades`
+                    ? t('identity.nationalityCollapseA11y')
+                    : t('identity.nationalityExpandA11y', { n: NATIONALITIES.length })
                 }
                 collapsable={false}
                 style={{
@@ -741,8 +747,8 @@ export default function IdentityScreen() {
                   }}
                 >
                   {nationalityExpanded
-                    ? 'Ver menos'
-                    : `Ver todas las ${NATIONALITIES.length}`}
+                    ? t('identity.nationalityCollapseLabel')
+                    : t('identity.nationalityExpandLabel', { n: NATIONALITIES.length })}
                 </Text>
                 <Text
                   style={{
@@ -762,7 +768,7 @@ export default function IdentityScreen() {
                   textAlign: 'center',
                 }}
               >
-                Escribí para buscar entre las {NATIONALITIES.length} nacionalidades.
+                {t('identity.nationalityHint', { n: NATIONALITIES.length })}
               </Text>
             </View>
           ) : null}
@@ -801,7 +807,7 @@ export default function IdentityScreen() {
         }}
       >
         <Text style={{ color: colors.textMuted, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
-          VISTA PREVIA DE CAMISETA
+          {t('identity.jerseyEyebrow')}
         </Text>
         {/* JerseyPreview renderiza SVG del país con dorsal + apellido.
             Contraste dorsal/jersey verificado AA WCAG por MGC-465.
@@ -834,7 +840,7 @@ export default function IdentityScreen() {
             includeFontPadding: false,
           }}
         >
-          {profile.position} · OVR 50
+          {t('identity.jerseyCaption', { position: profile.position })}
         </Text>
       </View>
       {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
@@ -886,7 +892,7 @@ export default function IdentityScreen() {
         }}
       >
         <Field
-          label="Liga de origen"
+          label={t('identity.fieldLeague')}
           wrapperStyle={{ gap: spacing[1] }}
           labelStyle={{ lineHeight: 14 }}
         >
@@ -896,7 +902,7 @@ export default function IdentityScreen() {
             {...onKeyActivate(() => setLeagueOpen((v) => !v))}
             accessibilityRole="button"
             accessibilityState={{ expanded: leagueOpen }}
-            accessibilityHint="Abre la lista de ligas"
+            accessibilityHint={t('identity.leagueOpenHint')}
             collapsable={false}
             style={{
               minHeight: 48,
@@ -922,7 +928,7 @@ export default function IdentityScreen() {
               }}
               numberOfLines={1}
             >
-              {selectedLeagueName ?? 'Seleccionar liga…'}
+              {selectedLeagueName ?? t('identity.leaguePlaceholder')}
             </Text>
             <Text
               style={{
@@ -939,7 +945,7 @@ export default function IdentityScreen() {
               <TextInput
                 value={leagueQuery}
                 onChangeText={setLeagueQuery}
-                placeholder="Buscar liga…"
+                placeholder={t('identity.leagueSearchPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCorrect={false}
                 style={[
@@ -955,7 +961,7 @@ export default function IdentityScreen() {
                     marginBottom: spacing[2],
                   },
                 ]}
-                accessibilityLabel="Buscar liga"
+                accessibilityLabel={t('identity.leagueSearchA11y')}
                 testID="input-league-search"
               />
               <View
@@ -1017,7 +1023,7 @@ export default function IdentityScreen() {
                         fontSize: fontSize.sm,
                       }}
                     >
-                      Sin coincidencias.
+                      {t('identity.leagueNoMatches')}
                     </Text>
                   ) : null}
                 </ScrollView>
@@ -1046,7 +1052,7 @@ export default function IdentityScreen() {
           flexShrink: 0,
         }}
       >
-        <Field label="Posición (tap en el campo)">
+        <Field label={t('identity.fieldPosition')}>
           <View
             testID="field-map-wrapper"
             collapsable={false}
@@ -1089,7 +1095,7 @@ export default function IdentityScreen() {
                   onPress={() => setPosition(pos.id)}
                   {...onKeyActivate(() => setPosition(pos.id))}
                   accessibilityRole="button"
-                  accessibilityLabel={`Posición ${pos.label}`}
+                  accessibilityLabel={t('identity.positionA11y', { label: pos.label })}
                   accessibilityState={{ selected: active }}
                   testID={`pos-${pos.id}`}
                   // MGC-1502 — WCAG 2.5.5: touch target ≥44dp. Dot visual se
@@ -1271,7 +1277,7 @@ export default function IdentityScreen() {
             marginBottom: spacing[2],
           }}
         >
-          NÚMERO (1–99)
+          {t('identity.numberLabel')}
         </Text>
         <View
           testID="btn-number-row"
@@ -1289,7 +1295,7 @@ export default function IdentityScreen() {
           <Pressable
             onPress={() => setNumber(profile.number - 1)}
             accessibilityRole="button"
-            accessibilityLabel="Restar número"
+            accessibilityLabel={t('identity.numberDecrement')}
             testID="btn-number-minus"
             hitSlop={12}
             collapsable={false}
@@ -1330,7 +1336,7 @@ export default function IdentityScreen() {
           <Pressable
             onPress={() => setNumber(profile.number + 1)}
             accessibilityRole="button"
-            accessibilityLabel="Sumar número"
+            accessibilityLabel={t('identity.numberIncrement')}
             testID="btn-number-plus"
             hitSlop={12}
             collapsable={false}
@@ -1385,11 +1391,11 @@ export default function IdentityScreen() {
               textAlign: 'center',
             }}
           >
-            Escribí tu nombre arriba para continuar.
+            {t('identity.continueHint')}
           </Text>
         ) : null}
         <Button
-          label="Continuar"
+          label={t('identity.continue')}
           onPress={onContinue}
           variant="primary"
           size="lg"
@@ -1398,7 +1404,7 @@ export default function IdentityScreen() {
           testID="btn-identity-continue"
           accessible
           importantForAccessibility="yes"
-          accessibilityHint="Guarda la identidad y abre el dashboard"
+          accessibilityHint={t('identity.continueA11yHint')}
         />
       </View>
       </View>

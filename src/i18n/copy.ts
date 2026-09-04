@@ -52,6 +52,47 @@ export type Copy = {
     feedbackSubject: string;
     close: string;
   };
+  // MGC-1534 — strings del form `identity`. El screen debe re-renderizar
+  // al cambiar locale (subscribe via `useLocale`) y resolver cada etiqueta
+  // visible vía `t()` para que el tap en EN/中文 deje TODAS las strings en
+  // su idioma, no sólo el pill del LanguageSwitcher. Strings parametrizadas
+  // usan placeholders `"{n}"` / `"{label}"` / `"{position}"` que `locale-context`
+  // interpola con el segundo arg de `t()`.
+  identity: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    fieldName: string;
+    namePlaceholder: string;
+    fieldFoot: string;
+    footLeft: string;
+    footRight: string;
+    footBoth: string;
+    fieldNationality: string;
+    nationalityPlaceholder: string;
+    nationalityNoMatches: string;
+    nationalityExpandLabel: string;
+    nationalityCollapseLabel: string;
+    nationalityCollapseA11y: string;
+    nationalityExpandA11y: string;
+    nationalityHint: string;
+    jerseyEyebrow: string;
+    jerseyCaption: string;
+    fieldLeague: string;
+    leagueOpenHint: string;
+    leaguePlaceholder: string;
+    leagueSearchPlaceholder: string;
+    leagueSearchA11y: string;
+    leagueNoMatches: string;
+    fieldPosition: string;
+    positionA11y: string;
+    numberLabel: string;
+    numberDecrement: string;
+    numberIncrement: string;
+    continueHint: string;
+    continue: string;
+    continueA11yHint: string;
+  };
 };
 
 export const COPY: Record<Locale, Copy> = {
@@ -83,6 +124,41 @@ export const COPY: Record<Locale, Copy> = {
       feedbackSubject: 'Feedback Copero',
       close: 'Cerrar',
     },
+    identity: {
+      eyebrow: 'SIMULADOR DE CARRERA',
+      title: 'Define tu identidad',
+      subtitle: 'Tu jugador empieza con 16 años, OVR 50 y sin club. Elegí nombre, número y posición.',
+      fieldName: 'Nombre',
+      namePlaceholder: 'Ej. Mateo Romero',
+      fieldFoot: 'Pie hábil',
+      footLeft: 'Izquierdo',
+      footRight: 'Derecho',
+      footBoth: 'Ambos',
+      fieldNationality: 'Nacionalidad',
+      nationalityPlaceholder: 'Buscar país…',
+      nationalityNoMatches: 'Sin coincidencias.',
+      nationalityExpandLabel: 'Ver todas las {n}',
+      nationalityCollapseLabel: 'Ver menos',
+      nationalityCollapseA11y: 'Ver menos nacionalidades',
+      nationalityExpandA11y: 'Ver todas las {n} nacionalidades',
+      nationalityHint: 'Escribí para buscar entre las {n} nacionalidades.',
+      jerseyEyebrow: 'VISTA PREVIA DE CAMISETA',
+      jerseyCaption: '{position} · OVR 50',
+      fieldLeague: 'Liga de origen',
+      leagueOpenHint: 'Abre la lista de ligas',
+      leaguePlaceholder: 'Seleccionar liga…',
+      leagueSearchPlaceholder: 'Buscar liga…',
+      leagueSearchA11y: 'Buscar liga',
+      leagueNoMatches: 'Sin coincidencias.',
+      fieldPosition: 'Posición (tap en el campo)',
+      positionA11y: 'Posición {label}',
+      numberLabel: 'NÚMERO (1–99)',
+      numberDecrement: 'Restar número',
+      numberIncrement: 'Sumar número',
+      continueHint: 'Escribí tu nombre arriba para continuar.',
+      continue: 'Continuar',
+      continueA11yHint: 'Guarda la identidad y abre el dashboard',
+    },
   },
   en: {
     brand: 'Copero',
@@ -112,6 +188,41 @@ export const COPY: Record<Locale, Copy> = {
       feedbackSubject: 'Copero feedback',
       close: 'Close',
     },
+    identity: {
+      eyebrow: 'CAREER SIMULATOR',
+      title: 'Define your identity',
+      subtitle: 'Your player starts at 16, OVR 50, with no club. Pick a name, number and position.',
+      fieldName: 'Name',
+      namePlaceholder: 'e.g. Mateo Romero',
+      fieldFoot: 'Preferred foot',
+      footLeft: 'Left',
+      footRight: 'Right',
+      footBoth: 'Both',
+      fieldNationality: 'Nationality',
+      nationalityPlaceholder: 'Search country…',
+      nationalityNoMatches: 'No matches.',
+      nationalityExpandLabel: 'See all {n}',
+      nationalityCollapseLabel: 'See less',
+      nationalityCollapseA11y: 'See fewer nationalities',
+      nationalityExpandA11y: 'See all {n} nationalities',
+      nationalityHint: 'Type to search across the {n} nationalities.',
+      jerseyEyebrow: 'JERSEY PREVIEW',
+      jerseyCaption: '{position} · OVR 50',
+      fieldLeague: 'Home league',
+      leagueOpenHint: 'Open the league list',
+      leaguePlaceholder: 'Pick a league…',
+      leagueSearchPlaceholder: 'Search league…',
+      leagueSearchA11y: 'Search league',
+      leagueNoMatches: 'No matches.',
+      fieldPosition: 'Position (tap on the pitch)',
+      positionA11y: 'Position {label}',
+      numberLabel: 'NUMBER (1–99)',
+      numberDecrement: 'Decrease number',
+      numberIncrement: 'Increase number',
+      continueHint: 'Type your name above to continue.',
+      continue: 'Continue',
+      continueA11yHint: 'Saves your identity and opens the dashboard',
+    },
   },
   'zh-CN': {
     brand: 'Copero',
@@ -140,6 +251,41 @@ export const COPY: Record<Locale, Copy> = {
       feedback: '反馈',
       feedbackSubject: 'Copero 反馈',
       close: '关闭',
+    },
+    identity: {
+      eyebrow: '职业生涯模拟器',
+      title: '定义你的身份',
+      subtitle: '你的球员从 16 岁、OVR 50、无俱乐部开始。选择姓名、号码和位置。',
+      fieldName: '姓名',
+      namePlaceholder: '例如 马蒂奥·罗梅罗',
+      fieldFoot: '惯用脚',
+      footLeft: '左脚',
+      footRight: '右脚',
+      footBoth: '双脚',
+      fieldNationality: '国籍',
+      nationalityPlaceholder: '搜索国家…',
+      nationalityNoMatches: '无匹配。',
+      nationalityExpandLabel: '查看全部 {n}',
+      nationalityCollapseLabel: '收起',
+      nationalityCollapseA11y: '收起国籍列表',
+      nationalityExpandA11y: '查看全部 {n} 个国籍',
+      nationalityHint: '输入以搜索全部 {n} 个国籍。',
+      jerseyEyebrow: '球衣预览',
+      jerseyCaption: '{position} · OVR 50',
+      fieldLeague: '所属联赛',
+      leagueOpenHint: '打开联赛列表',
+      leaguePlaceholder: '选择联赛…',
+      leagueSearchPlaceholder: '搜索联赛…',
+      leagueSearchA11y: '搜索联赛',
+      leagueNoMatches: '无匹配。',
+      fieldPosition: '位置（点击球场）',
+      positionA11y: '位置 {label}',
+      numberLabel: '号码 (1–99)',
+      numberDecrement: '减少号码',
+      numberIncrement: '增加号码',
+      continueHint: '在上方输入姓名以继续。',
+      continue: '继续',
+      continueA11yHint: '保存身份并打开仪表盘',
     },
   },
 };
