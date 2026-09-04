@@ -49,6 +49,16 @@ export const initialProfile: PlayerProfile = {
       vestuario: 'integrado',
       seleccionConvocado: false,
     },
+    // MGC-1657 (F2.3) — campos nuevos persistidos en v:2.
+    doubleShiftStreak: 0,
+    matchweekStats: { clubId: '', apps: 0, goals: 0, ast: 0 },
+  },
+  // MGC-1657 (F2.3) — stats posicionales V2 inicializadas en 50.
+  positionStats: {
+    reflejos: 50, posicionamiento: 50, salida: 50, manos: 50,
+    marcaje: 50, cabeceo: 50, anticipacion: 50,
+    vision: 50, pase: 50, dribling: 50, resistencia: 50,
+    definicion: 50, velocidad: 50, regate: 50, juegoAereo: 50,
   },
   week: 1,
   season: 1,

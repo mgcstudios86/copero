@@ -24,8 +24,15 @@
 
 import type { CareerSaveState, SeasonLog } from '@/types/career';
 import { initialProfile } from './identity-state';
+import { STAT_INIT } from './position-stats';
 
 const STORAGE_KEY = 'copero:career:save:v1';
+// MGC-1657 (F2.3) — la persistencia ahora escribe v:2. Mantenemos la
+// key estable; el discriminador es el campo `v` del payload (v:1 legacy
+// sigue funcionando gracias al back-compat `migrateV1ToV2` que se
+// ejecuta en cada load). El cambio de key implicaría invalidar todas
+// las partidas guardadas en device — no lo hacemos porque QA valida
+// continuidad de save entre runs (AC4).
 // MGC-227 migró la key `copero-career` (zustand persist middleware, formato
 // `{ state, version }`) a `copero:career:save:v1` (formato versionado manual).
 // Tests Playwright existentes (MGC-523/523/444) siguen sembrando
@@ -141,16 +148,31 @@ export async function loadCareerSave(): Promise<CareerSaveState | null> {
     if (raw) {
       try {
         const parsed = JSON.parse(raw) as CareerSaveState;
+        // MGC-1657 (F2.3) — aceptamos v:1 (legacy) y v:2. Si llega v:1
+        // aplicamos `migrateV1ToV2` antes de devolver; si llega v:2 lo
+        // entregamos tal cual. Otros versiones: log + null.
         if (parsed && parsed.v === 1) {
+          const migrated = migrateV1ToV2(parsed);
           logPersist(
             'log',
-            `[persistence] hydrate=ok stage=${parsed.stage} profile=${parsed.profile?.name}`,
+            `[persistence] hydrate=ok stage=${migrated.stage} profile=${migrated.profile?.name} v=2 (migrated from v:1)`,
+          );
+          // Persistir la versión migrada para que el próximo load haga
+          // fast-path v:2. Sin re-write, cada launch ejecuta la
+          // migración (correcta pero más lenta).
+          await storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+          return migrated;
+        }
+        if (parsed && parsed.v === 2) {
+          logPersist(
+            'log',
+            `[persistence] hydrate=ok stage=${parsed.stage} profile=${parsed.profile?.name} v=2`,
           );
           return parsed;
         }
         logPersist(
           'log',
-          `[persistence] hydrate=null reason=version-mismatch expected=v1 got=${parsed?.v}`,
+          `[persistence] hydrate=null reason=version-mismatch expected=v1|v2 got=${parsed?.v}`,
         );
       } catch {
         logPersist('log', `[persistence] hydrate=null reason=json-parse-failed`);
@@ -223,6 +245,43 @@ export function migrateLegacyToV1(legacy: Record<string, unknown>): CareerSaveSt
 }
 
 /**
+ * MGC-1657 (F2.3) — migración v:1 → v:2. Suma los campos nuevos del
+ * motor V2 al profile y bumpea el discriminador. Idempotente: si el
+ * profile ya trae `positionStats` lo deja igual (test-friendly).
+ *
+ * Campos agregados (todos con default seguro para no invalidar saves
+ * viejos):
+ *  - profile.positionStats = STAT_INIT (50 por slot)
+ *  - profile.career.doubleShiftStreak = 0
+ *  - profile.career.matchweekStats = { clubId: '', apps: 0, goals: 0, ast: 0 }
+ */
+export function migrateV1ToV2(state: CareerSaveState): CareerSaveState {
+  if (state.v === 2) return state;
+  const profile = state.profile;
+  const migratedProfile = {
+    ...profile,
+    positionStats: profile.positionStats
+      ? profile.positionStats
+      : { ...STAT_INIT },
+    career: {
+      ...profile.career,
+      doubleShiftStreak: profile.career.doubleShiftStreak ?? 0,
+      matchweekStats: profile.career.matchweekStats ?? {
+        clubId: profile.club?.id ?? '',
+        apps: 0,
+        goals: 0,
+        ast: 0,
+      },
+    },
+  };
+  return {
+    ...state,
+    v: 2,
+    profile: migratedProfile,
+  };
+}
+
+/**
  * MGC-399 — normaliza el `log` legacy al shape `SeasonLog`
  * (`{ timeline, events }`). Payloads viejos lo guardaban como array plano
  * de temporadas; otros lo omitían. Devuelve siempre un `SeasonLog` válido.
@@ -283,10 +342,14 @@ export async function clearCareerSave(): Promise<void> {
 /**
  * Snapshot mínimo para arrancar la persistencia desde un stage inicial.
  * El caller completa luego con draft/card/log según corresponda.
+ *
+ * MGC-1657 (F2.3) — produce v:2 con `positionStats` ya hidratado en
+ * `STAT_INIT`. El reducer garantiza que cualquier estado en memoria
+ * también tiene `positionStats` antes de invocar `saveCareerSave`.
  */
 export function blankCareerSave(): CareerSaveState {
   return {
-    v: 1,
+    v: 2,
     stage: 'identity',
     profile: { ...initialProfile },
     draft: null,

@@ -18,8 +18,7 @@
  */
 
 import type { Position } from '@/types/career';
-import type { Rng } from './rng';
-import { type PositionStats, type StatKey } from './position-stats';
+import { type StatKey } from './position-stats';
 
 /* ── Weekly base options ─────────────────────────────────────────── */
 

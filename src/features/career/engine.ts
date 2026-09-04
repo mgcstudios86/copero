@@ -10,7 +10,12 @@ import type {
   StrategyId,
   YearlyPlan,
 } from '@/types/career';
-import { applyChoice, advanceWeek } from './simulation';
+import {
+  applyChoice,
+  applyWeeklyChoice,
+  advanceWeek,
+  resolveWeeklyMatch,
+} from './simulation';
 import { createRng, seedFromString } from './rng';
 import {
   cardFromPicks,
@@ -20,6 +25,8 @@ import {
   attrsFromCard,
 } from './draft';
 import { advanceSeason, isRetired, runCareerLoop } from './season';
+import { STAT_INIT } from './position-stats';
+import type { WeeklyBaseOptionId } from './position-tree';
 
 /**
  * Reducer puro para el state machine del simulador de carrera (MGC-430
@@ -45,6 +52,15 @@ export type CareerAction =
   | { type: 'openAcademy' }
   | { type: 'acceptClub'; club: Club }
   | { type: 'decide'; strategyId: StrategyId; choiceId: string }
+  /** MGC-1657 (F2.3) — decisión semanal V2. Reemplaza al flujo V1 para
+   * el weekly screen; persiste `positionStats` y dispara `maybeRollInjury`
+   * post-choice. Idempotente en lesión activa: la única opción válida
+   * es `rehabilitacion`. */
+  | { type: 'weeklyChoice'; optionId: WeeklyBaseOptionId }
+  /** MGC-1657 (F2.3) — invocación de `resolveMatch` al cierre de la
+   * matchweek. Suma goals+apps al `profile.stats` y deja el resultado
+   * en `career.matchweekStats`. */
+  | { type: 'resolveMatchweek' }
   | { type: 'setYearlyPlan'; plan: YearlyPlan }
   /** MGC-1505 — toggle de rasgo (multi-select hasta 2). El reducer hace
    * toggle on/off + dedupe + cap 2; la UI no necesita enforced logic. */
@@ -84,7 +100,12 @@ export const initialProfile: PlayerProfile = {
       vestuario: 'integrado',
       seleccionConvocado: false,
     },
+    doubleShiftStreak: 0,
+    matchweekStats: { clubId: '', apps: 0, goals: 0, ast: 0 },
   },
+  // MGC-1657 (F2.3) — stats posicionales V2 inicializados en 50 (mediano)
+  // por slot. La migración v:1→v:2 también produce este shape.
+  positionStats: { ...STAT_INIT },
   week: 1,
   season: 1,
   clubPresupuesto: 0,
@@ -150,6 +171,26 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
         createRng(seed),
       );
       return { ...state, profile };
+    }
+    case 'weeklyChoice': {
+      // MGC-1657 (F2.3) — flujo V2 semanal. Garantiza positionStats
+      // presente (hidrata STAT_INIT si el profile viene de save v:1 no
+      // migrado). El RNG es determinista por (week, season, profile,
+      // optionId) dentro de `applyWeeklyChoice`.
+      const profileWithStats: PlayerProfile =
+        state.profile.positionStats
+          ? state.profile
+          : { ...state.profile, positionStats: { ...STAT_INIT } };
+      const result = applyWeeklyChoice(profileWithStats, action.optionId);
+      return { ...state, profile: result.profile };
+    }
+    case 'resolveMatchweek': {
+      // MGC-1657 (F2.3) — cierre de matchweek. Acumula stats y deja
+      // evidencia en `career.matchweekStats`. El caller (UI semanal)
+      // decide cuándo disparar (manual vs auto al cierre del weekly
+      // choice de tipo partido).
+      const result = resolveWeeklyMatch(state.profile);
+      return { ...state, profile: result.profile };
     }
     case 'setYearlyPlan': {
       // MGC-1017: el usuario elige un plan anual al cierre de cada

@@ -55,7 +55,9 @@ describe('MGC-282 · backend de persistencia', () => {
     await clearCareerSave();
     await saveCareerSave({
       ...blankCareerSave(),
-      v: 2 as unknown as 1,
+      // MGC-1657 (F2.3) — v:1 y v:2 son ambas válidas; probamos una
+      // versión futura desconocida (v:3) para confirmar que se descarta.
+      v: 3 as unknown as 1,
     });
     expect(await loadCareerSave()).toBeNull();
   });

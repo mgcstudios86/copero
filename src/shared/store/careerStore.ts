@@ -83,6 +83,18 @@ type CareerStore = CareerSnapshot & {
    * sobrevivir force-stop, patrón idéntico a setYearlyPlan.
    */
   setEstilo: (rasgos: EstiloRasgo[]) => Promise<void>;
+  /**
+   * MGC-1657 (F2.3) — weeklyChoice dispara la decisión semanal V2
+   * (`applyWeeklyChoice`). Persiste tras `flushPendingSave` para que el
+   * snapshot con `positionStats` actualizado llegue a AsyncStorage.
+   */
+  weeklyChoice: (optionId: import('@/features/career/position-tree').WeeklyBaseOptionId) => Promise<void>;
+  /**
+   * MGC-1657 (F2.3) — resolveMatchweek cierra la matchweek
+   * (`resolveWeeklyMatch` → `resolveMatch`). Suma goals + apps a
+   * `profile.stats` y deja el resultado en `career.matchweekStats`.
+   */
+  resolveMatchweek: () => Promise<void>;
   advance: () => void;
   /**
    * Draft de leyendas (MGC-208 §1) — MGC-209.
@@ -353,6 +365,29 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       const { step } = await import('@/features/career/engine');
       setSnapshot((s) =>
         step(s, { type: 'decide', strategyId, choiceId } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    // MGC-1657 (F2.3) — decisión semanal V2. Dispatchea el action
+    // `weeklyChoice` que el reducer conecta con `applyWeeklyChoice` (motor
+    // puro F2.3). Persistencia idéntica a `decide` (await
+    // flushPendingSave) para sobrevivir force-stop.
+    weeklyChoice: async (optionId) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'weeklyChoice', optionId } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    // MGC-1657 (F2.3) — invocación de `resolveMatch` al cierre de la
+    // matchweek. La UI semanal lo llama después del weekly choice de
+    // tipo partido. Acumula goals + apps en `profile.stats`.
+    resolveMatchweek: async () => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'resolveMatchweek' } satisfies CareerAction),
       );
       persistSnapshot(get());
       await flushPendingSave();

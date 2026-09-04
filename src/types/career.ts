@@ -9,6 +9,8 @@
  * la UI desde `src/design/copy/es-AR/simulador-carrera.ts`.
  */
 
+import type { PositionStats } from '@/features/career/position-stats';
+
 export type Foot = 'left' | 'right' | 'both';
 
 export type Position =
@@ -126,6 +128,26 @@ export type CareerStats = {
   yearlyPlan?: YearlyPlan;
   /** Rasgos opt-in del jugador (MGC-1505). Cap 2 enforced en UI. */
   estilo?: EstiloRasgo[];
+  /** MGC-1657 — contador de semanas consecutivas de doble turno. Se
+   * persiste junto al career porque `injury-v2.maybeRollInjury` lo
+   * consume para modular la chance de lesión. Lo resetea el `descanso`
+   * semanal y el switch a otras opciones distintas a `doble_turno`. */
+  doubleShiftStreak?: number;
+  /** MGC-1657 — flag emitido por `applyWeeklyChoice` cuando la semana
+   * en curso disparó una lesión v2. La UI lo lee para mostrar feedback
+   * inline en el weekly screen. Se drena con `clearWeeklyInjury` al
+   * mostrar la rehabilitación. */
+  weeklyInjuryFlipped?: boolean;
+  /** MGC-1657 — goles y asist por club en la matchweek actual. El
+   * motor `resolveMatch()` los escribe y el `advanceWeek` los vuelca
+   * a `profile.stats` acumulado. Estructura por clubId permite agregar
+   * por temporada cuando hay cambios de club. */
+  matchweekStats?: {
+    clubId: string;
+    goals: number;
+    ast: number;
+    apps: number;
+  };
 };
 
 export type Club = {
@@ -175,6 +197,11 @@ export type PlayerProfile = {
   stats: PlayerStats;
   attrs: Attributes;
   career: CareerStats;
+  /** MGC-1657 (F2.3) — 4 stats específicos por línea (GK/DEF/MID/FWD)
+   * consumidos por el árbol semanal V2 y `resolveMatch`. Opcional para
+   * back-compat con saves v:1; la migración `migrateV1ToV2` lo hidrata
+   * con `STAT_INIT` (50 en cada slot). */
+  positionStats?: PositionStats;
   /** Semana actual dentro de la temporada (1-indexed). */
   week: number;
   /** Temporada actual (1-indexed). */
@@ -343,9 +370,13 @@ export type SeasonLog = {
   events: CareerEvent[];
 };
 
-/** Estado de la partida entre etapas (MGC-208 §5 persistencia). */
+/** Estado de la partida entre etapas (MGC-208 §5 persistencia).
+ *
+ * Versión 2 (MGC-1657 / F2.3): suma `profile.positionStats` para
+ * persistir las stats posicionales V2. El loader de persistencia
+ * detecta v:1 y aplica `migrateV1ToV2` antes de hidratar. */
 export type CareerSaveState = {
-  v: 1;
+  v: 1 | 2;
   stage: CareerStage;
   profile: PlayerProfile;
   draft: DraftBoard | null;

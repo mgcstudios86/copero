@@ -189,8 +189,6 @@ describe('F2.2 — match resolution (stats + RNG + posición)', () => {
 
   it('mejor stats posicionales = mejor score (monótono)', () => {
     const profile = profileWith();
-    const weak = resolveMatch(profile, { ...STAT_INIT }, createRng(7));
-    const strong = resolveMatch(profile, applyStatDeltas({ ...STAT_INIT }, { definicion: 30, velocidad: 30, regate: 30, juegoAereo: 30 }), createRng(7));
     // Mismo seed ⇒ mismo luck ⇒ misma base de la comparación.
     // Como cambiamos stats, no podemos garantizar diferencia; corremos múltiples seeds.
     let better = 0;
