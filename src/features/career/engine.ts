@@ -35,6 +35,7 @@ import {
   runPostMatch,
   NO_MODIFIERS,
 } from './events';
+import { mergeModifiers, runSocialEvent } from './social-events';
 import {
   evaluateTransfer,
   acceptOffer,
@@ -240,25 +241,43 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
       // el `weeklyChoice` siguiente los consuma. Si el evento es `null`
       // (rating < 6.0) igual materializamos `nextWeekModifiers` con
       // `NO_MODIFIERS` para que el caller no tenga que nullear.
+      // MGC-1738 / MGC-1762 (F4) — encadena `runSocialEvent` sobre el
+      // cursor YA avanzado por `runPostMatch`, y compone ambos vía
+      // `mergeModifiers` (luckBonus MAX, injuryRiskMul producto,
+      // fatigue/moral/confianza suma, trainingBoost MIN; clamp
+      // injuryRiskMul ≤ 2.5). El evento social queda en
+      // `state.socialEventPending` para que la UI F4 lo muestre.
       const result = resolveWeeklyMatch(state.profile, state.rng as RngSnapshot | undefined);
       const rngForEvent = createRngFromSnapshot(result.rngSnapshot);
       const positionStats = getPositionStats(result.profile);
-      const { event, modifiers } = runPostMatch(
+      const ratingValue = ratingFromScore(result.match.score);
+      const { event, modifiers: postModifiers } = runPostMatch(
         {
           position: result.profile.position,
           positionStats,
-          rating: ratingFromScore(result.match.score),
+          rating: ratingValue,
           form: result.profile.career.confianza,
           week: result.profile.week,
         },
         rngForEvent,
       );
+      const socialResult = runSocialEvent(
+        {
+          position: result.profile.position,
+          positionStats,
+          rating: ratingValue,
+          week: result.profile.week,
+        },
+        rngForEvent.snapshot(),
+      );
+      const merged = mergeModifiers(postModifiers, socialResult.modifiers);
       return {
         ...state,
         profile: result.profile,
-        rng: result.rngSnapshot,
+        rng: socialResult.rngSnapshot,
         postMatchPending: event,
-        nextWeekModifiers: modifiers,
+        socialEventPending: socialResult.event,
+        nextWeekModifiers: merged,
       };
     }
     case 'setYearlyPlan': {
@@ -406,10 +425,12 @@ export function step(state: CareerSnapshot, action: CareerAction): CareerSnapsho
     // cuando la UI consumió el evento post-partido. También limpia
     // `nextWeekModifiers` (que se consumen juntos: si la UI leyó el
     // modal, los modificadores ya fueron aplicados).
+    // MGC-1738 / MGC-1762 — drena también `socialEventPending` (F4).
     case 'clearPostMatch':
       return {
         ...state,
         postMatchPending: null,
+        socialEventPending: null,
         nextWeekModifiers: { ...NO_MODIFIERS },
       };
     // MGC-1730 (HIGH-1 fix sobre PR #425) — resuelve `transferState`
@@ -537,6 +558,7 @@ export function applySeasonRollover(state: CareerSnapshot): CareerSnapshot {
     profile: result.profile,
     log,
     postMatchPending: null,
+    socialEventPending: null,
     nextWeekModifiers: { ...NO_MODIFIERS },
     transferState,
   };

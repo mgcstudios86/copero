@@ -10,6 +10,7 @@
  */
 
 import type { NextWeekModifiers, PostMatchEvent } from '@/features/career/events';
+import type { SocialEvent } from '@/features/career/social-events';
 import type { PositionStats } from '@/features/career/position-stats';
 import type { RngSnapshot } from '@/features/career/rng';
 import type { TransferState } from '@/features/career/transfers';
@@ -308,6 +309,14 @@ export type CareerSnapshot = {
    */
   /** Evento post-partido pendiente de mostrar. La UI lo lee y drena. */
   postMatchPending?: PostMatchEvent | null;
+  /**
+   * MGC-1738 / MGC-1762 — evento social pendiente de mostrar (F4). Sale
+   * tras el post-partido y modula la semana siguiente vía `mergeModifiers`
+   * (compose `runPostMatch` + `runSocialEvent`). La UI F4 lo lee y drena
+   * junto con `postMatchPending`. Opcional: saves pre-F4 lo omiten y
+   * `hydrateF3Fields` lo rellena con `null`.
+   */
+  socialEventPending?: SocialEvent | null;
   /** Modificadores que el evento dejó para la semana siguiente. */
   nextWeekModifiers?: NextWeekModifiers;
   /** Estado del transfer system al cierre de temporada. */

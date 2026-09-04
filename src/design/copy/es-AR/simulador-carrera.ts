@@ -362,6 +362,38 @@ const ENTRIES: Record<string, CopyEntry> = {
   event_v7_apelar: { raw: 'Apelar' },
   feedback_fine_pay: { raw: 'Multa pagada. -{monto}.', tone: 'warning' },
   feedback_fine_appeal: { raw: 'Apelación en curso. La decisión queda pendiente.', tone: 'neutral' },
+
+  // ── MGC-1738 / MGC-1762 — eventos sociales F4 ─────────────────────
+  // 4 outcomes: timba / asado / tour / quedarse. La UI los muestra tras
+  // el modal post-partido; el motor ya aplicó los modificadores vía
+  // `mergeModifiers(post, social)`. Voz consistente con el resto del
+  // catálogo (vos, rioplatense). Cuando se agregue en/zh-CN locales,
+  // replicar estas keys con el mismo id (`social_*`).
+  social_timba_title: { raw: 'Timba con los pibes', tone: 'warning' },
+  social_timba_body: {
+    raw: 'Saliste a apostar con amigos. La noche se desmadró.',
+  },
+  social_asado_title: { raw: 'Asado en casa de un compañero' },
+  social_asado_body: {
+    raw: 'Carne, vino y risas. Una noche tranquila con la banda.',
+  },
+  social_tour_title: { raw: 'Tour por la noche' },
+  social_tour_body: {
+    raw: 'Salida a boliches con el grupo. Salís recargado.',
+  },
+  social_quedarse_title: { raw: 'Te quedaste en casa' },
+  social_quedarse_body: {
+    raw: 'Noche tranquila. Dormís bien y el cuerpo lo agradece.',
+  },
+  social_outcome_mods_luck: { raw: 'Bonus suerte: +{pct}%' },
+  social_outcome_mods_injury: { raw: 'Riesgo lesión: x{val}' },
+  social_outcome_mods_training: { raw: 'Entrenamiento: x{val}' },
+  social_outcome_mods_fatigue: { raw: 'Fatiga: {delta}' },
+  social_outcome_mods_moral: { raw: 'Moral: {delta}' },
+  social_outcome_mods_confianza: { raw: 'Confianza: {delta}' },
+  social_locked_stats: {
+    raw: 'Necesitás el stat clave alto para que la suerte compense.',
+  },
 };
 
 /** Catálogo expuesto al motor y a la UI. Inmutable. */
