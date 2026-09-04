@@ -165,7 +165,11 @@ export default function IdentityScreen() {
       // primeras 5 entradas en NATIONALITIES y conservan su contrato.
       if (!nationalityExpanded) {
         const head = NATIONALITIES.slice(0, NATIONALITY_FRESH_LIMIT);
-        const selected = NATIONALITIES.find((n) => n.code === profile.nationalityCode);
+        // MGC-1769 — nationalityCode es `string | null`. Sin selección
+        // activa, no se filtra la lista (selected=undefined → OK).
+        const selected = profile.nationalityCode
+          ? NATIONALITIES.find((n) => n.code === profile.nationalityCode)
+          : undefined;
         return selected && !head.some((n) => n.code === selected.code)
           ? [...head, selected]
           : head;
@@ -948,7 +952,7 @@ export default function IdentityScreen() {
           }
         >
           <JerseyPreview
-            countryCode={profile.nationalityCode}
+            countryCode={profile.nationalityCode ?? 'AR'}
             number={profile.number}
             name={profile.name}
             size="md"

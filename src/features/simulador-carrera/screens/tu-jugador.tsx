@@ -251,7 +251,9 @@ export default function TuJugadorScreen() {
                   letterSpacing: 2,
                 }}
               >
-                {profile.nationalityCode}
+                {/* MGC-1769 — nationalityCode puede ser null antes de
+                    selección. Mostramos '—' como placeholder. */}
+                {profile.nationalityCode ?? '—'}
               </Text>
             </View>
           </View>

@@ -261,7 +261,12 @@ export type PlayerProfile = {
   lastName?: string;
   number: number;
   position: Position;
-  nationalityCode: string;
+  // MGC-1769 / WF1 — nationalityCode arranca en `null` (sin selección) y
+  // se popula con un código FIFA válido cuando el usuario confirma un
+  // chip / opción en el form. Esto fuerza que el botón «Continuar» no
+  // se habilite sólo con los 3 gates de nombre+apellido+edad mientras
+  // nationalityCode sigue con su default histórico ('AR').
+  nationalityCode: string | null;
   /** MGC-955: código de liga ('' si sin selección). */
   leagueCode: string;
   preferredFoot: Foot;

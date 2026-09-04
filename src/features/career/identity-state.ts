@@ -30,7 +30,12 @@ export const initialProfile: PlayerProfile = {
   lastName: '',
   number: 9,
   position: 'ST',
-  nationalityCode: 'AR',
+  // MGC-1769 — nationalityCode arranca en `null`. El default histórico
+  // 'AR' permitía habilitar el botón Continuar con sólo 3/4 gates
+  // (nombre + apellido + edad), dejando nationality sin selección real
+  // del usuario. Cambiar el default a `null` fuerza al gate a esperar
+  // una selección explícita en el form.
+  nationalityCode: null,
   leagueCode: '',
   preferredFoot: 'right',
   age: 16,
@@ -84,7 +89,11 @@ export function isIdentityComplete(profile: PlayerProfile): boolean {
   const firstName = profile.name.trim();
   const lastName = (profile.lastName ?? '').trim();
   const ageValid = profile.age >= 16 && profile.age <= 35;
-  const natValid = profile.nationalityCode.trim().length > 0;
+  // MGC-1769 — nationalityCode puede ser `null` hasta que el usuario
+  // confirme un código FIFA en el form. La validación exige un valor
+  // no-vacío para habilitar el botón Continuar.
+  const natValid =
+    profile.nationalityCode != null && profile.nationalityCode.trim().length > 0;
   return firstName.length >= 2 && lastName.length >= 2 && ageValid && natValid;
 }
 

@@ -109,7 +109,10 @@ export const initialProfile: PlayerProfile = {
   name: '',
   number: 9,
   position: 'ST',
-  nationalityCode: 'AR',
+  // MGC-1769 — nationalityCode arranca en `null`. Ver rationale en
+  // `identity-state.ts` (default histórico 'AR' permitía habilitar el
+  // botón Continuar con 3/4 gates).
+  nationalityCode: null,
   leagueCode: '',
   preferredFoot: 'right',
   age: 16,
@@ -603,6 +606,9 @@ export function isIdentityComplete(profile: PlayerProfile): boolean {
   const firstName = profile.name.trim();
   const lastName = (profile.lastName ?? '').trim();
   const ageValid = profile.age >= 16 && profile.age <= 35;
-  const natValid = profile.nationalityCode.trim().length > 0;
+  // MGC-1769 — nationalityCode puede ser `null`. La validación exige un
+  // valor no-vacío (no-null + length>0) para habilitar el botón.
+  const natValid =
+    profile.nationalityCode != null && profile.nationalityCode.trim().length > 0;
   return firstName.length >= 2 && lastName.length >= 2 && ageValid && natValid;
 }

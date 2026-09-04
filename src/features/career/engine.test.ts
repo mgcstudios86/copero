@@ -106,16 +106,33 @@ describe('career engine', () => {
   });
 
   it('isIdentityComplete exige nombre + apellido (≥2 c/u) + edad 16-35 + nacionalidad', () => {
-    // MGC-1628 / WF1 — la identidad reorganizada agrega apellido y edad
-    // como gates. nationalityCode ya tiene default 'AR' (cumple la
-    // condición) y age=16 (límite inferior válido), así que sólo falta
-    // poblar nombre + apellido con al menos 2 chars.
+    // MGC-1769 / WF1 — nationalityCode arranca en `null` y exige selección
+    // explícita. Antes el default 'AR' permitía habilitar el botón con
+    // sólo nombre+apellido+edad (3/4 gates). Repro del bug walk #427.
     let s = initialSnapshot();
     expect(isIdentityComplete(s.profile)).toBe(false);
+    // Default nationalityCode es null, no 'AR'.
+    expect(s.profile.nationalityCode).toBeNull();
     s = step(s, { type: 'setName', name: 'Ma' });
     expect(isIdentityComplete(s.profile)).toBe(false);
     s = step(s, { type: 'setLastName', lastName: 'Ro' });
+    // Sin nationality sigue incompleto — gate exige selección explícita.
+    expect(isIdentityComplete(s.profile)).toBe(false);
+    s = step(s, { type: 'setNationality', code: 'AR' });
     expect(isIdentityComplete(s.profile)).toBe(true);
+  });
+
+  it('isIdentityComplete rechaza nationalityCode string vacío o whitespace', () => {
+    // MGC-1769 — guard defensivo: aunque el setter filtra strings no
+    // FIFA-válidos, el gate debe rechazar '' / '   ' por si llegan vía
+    // migración de save o import manual.
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'Ma' });
+    s = step(s, { type: 'setLastName', lastName: 'Ro' });
+    s = step(s, { type: 'setNationality', code: '' });
+    expect(isIdentityComplete(s.profile)).toBe(false);
+    s = step(s, { type: 'setNationality', code: '   ' });
+    expect(isIdentityComplete(s.profile)).toBe(false);
   });
 
   it('decide aplica una decision y avanza la semana manteniendo stage', () => {

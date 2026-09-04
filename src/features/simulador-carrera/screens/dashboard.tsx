@@ -55,7 +55,10 @@ export default function DashboardScreen() {
   // deposita en `matchStore` (transient).
   const startMatch = useCareerStore((s) => s.startMatch);
 
-  const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
+  // MGC-1769 — nationalityCode puede ser `null` en /identity. En
+  // /dashboard la carrera ya pasó `commitIdentity` (gate exige no-null),
+  // pero TypeScript no lo infiere. `?? 'AR'` es fallback cosmético.
+  const nat = NATIONALITIES_BY_CODE[profile.nationalityCode ?? 'AR'];
 
   // MGC-1504 — Render condicional del timeline. Antes el dashboard
   // pintaba 23 filas hardcoded (age 16..38, OVR/APPS/GOALS/AST en 0) para
@@ -150,7 +153,7 @@ export default function DashboardScreen() {
             }
           >
             <JerseyPreview
-              countryCode={profile.nationalityCode}
+              countryCode={profile.nationalityCode ?? 'AR'}
               number={profile.number}
               name={profile.name}
               size="md"

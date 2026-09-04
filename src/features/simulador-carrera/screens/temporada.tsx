@@ -59,7 +59,9 @@ export default function TemporadaScreen() {
     [estilo, setEstilo],
   );
 
-  const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
+  // MGC-1769 — fallback 'AR' cosmético; en /temporada nationalityCode
+  // ya está seleccionado (gate exige no-null antes de commitIdentity).
+  const nat = NATIONALITIES_BY_CODE[profile.nationalityCode ?? 'AR'];
 
   // Construye filas de timeline: las del log + placeholders hasta retiro.
   const startAge = profile.age - (log?.timeline.length ?? 0);
