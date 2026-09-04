@@ -31,10 +31,10 @@ import type { Foot } from '@/types/career';
 
 // MGC-1448 — filas de nacionalidad visibles sin query. Ver el presupuesto de
 // contenido documentado en `filteredNationalities`: con las 33 inline el árbol
-// del scroll sumaba ≈8570px y dejaba league-selector-wrapper +
-// identity-fixed-field-map ≈6000px bajo el fold (fuera del alcance de
-// cualquier swipe fijo y del hierarchy dump de QA). Las 5 primeras cubren los
-// testIDs del contrato E2E: country-ARG / BR / UY / CL / CO.
+// del scroll sumaba ≈8570px y dejaba identity-fixed-field-map ≈6000px bajo el
+// fold (fuera del alcance de cualquier swipe fijo y del hierarchy dump de QA).
+// Las 5 primeras cubren los testIDs del contrato E2E:
+// country-ARG / BR / UY / CL / CO.
 const NATIONALITY_FRESH_LIMIT = 5;
 
 // Lazy-load JerseyPreview (MGC-482): separa el SVG patterns (~10 KB)
@@ -122,12 +122,12 @@ export default function IdentityScreen() {
       //   header 150 + jersey 300 + nationality (32 pad + 20 label + 56 input
       //   + N*57 por fila) + league 88 + field-map 320 + form 340 + pad 240.
       // Con las 33 nacionalidades inline el contenido suma ≈3430dp ≈8570px:
-      // league-selector-wrapper e identity-fixed-field-map caen ≈6000px por
-      // debajo del fold, así que NINGÚN swipe fijo de 900px los trae al dump
-      // (QA MGC-1450/1452 los reportó AUSENTES: estaban renderizados, pero a
-      // 7 swipes de distancia). Con 5 filas el contenido baja a ≈1830dp:
-      // league-selector y field-map quedan a UN swipe del fold y el form
-      // entero es alcanzable con scrollUntilVisible en 1-2 pasos.
+      // identity-fixed-field-map cae ≈6000px por debajo del fold, así que
+      // NINGÚN swipe fijo de 900px lo trae al dump (QA MGC-1450/1452 lo
+      // reportó AUSENTE: estaba renderizado, pero a 7 swipes de distancia).
+      // Con 5 filas el contenido baja a ≈1830dp: field-map queda a UN swipe
+      // del fold y el form entero es alcanzable con scrollUntilVisible en
+      // 1-2 pasos.
       // El search sigue cubriendo las 33 al tipear (query no vacía → filtro
       // completo), que es el flujo real del usuario.
       // MGC-1503 — al expandir (Pressable "Ver todas (33)") se renderiza la
@@ -226,7 +226,7 @@ export default function IdentityScreen() {
           flexGrow:1 paddingBottom:240 — pero el measure pass de RN-Android
           colapsó el ScrollView wrapper a h=1431px en ZY22G728HN 1080×2400
           (gap 401px vs viewport 1832px), dejando identity-fixed-field-map
-          y league-selector-wrapper AUSENTES del hierarchy dump fresh-mount
+          AUSENTE del hierarchy dump fresh-mount
           (clipping de hijos bajo el measure pass). countries-CL/US
           INVERTIDOS porque caen en el overlap del sticky-footer top
           y=1607 (altura real 209.2dp, no 240dp esperado).
@@ -235,13 +235,13 @@ export default function IdentityScreen() {
           kavContent position:relative garantiza que el wrapper del
           ScrollView ocupe EXACTAMENTE los 1832px del kavContent,
           independientemente del measure pass del contentContainer.
-          Saca identity-fixed-field-map y league-selector-wrapper del
-          ScrollView (siblings) para garantizar su presencia en el
-          hierarchy dump fresh-mount sin depender de la posición del
-          scroll — patrón MGC-751/811/807 original. countries-* siguen
-          como hijos directos del scroll (Option B fiel MGC-1411) con
-          paddingBottom:240 que despeja el overlap del footer para
-          country-CO/CL/US accesibles tras scroll completo. */}
+          Saca identity-fixed-field-map del ScrollView (sibling) para
+          garantizar su presencia en el hierarchy dump fresh-mount sin
+          depender de la posición del scroll — patrón MGC-751/811/807
+          original. countries-* siguen como hijos directos del scroll
+          (Option B fiel MGC-1411) con paddingBottom:240 que despeja el
+          overlap del footer para country-CO/CL/US accesibles tras scroll
+          completo. */}
       {/* MGC-429: el testID `identity-screen` vive en el wrapper
           (`app/simulador-carrera/identity.tsx`) que monta sincrónicamente
           antes de que el chunk lazy de este componente termine de cargar.
@@ -271,22 +271,22 @@ export default function IdentityScreen() {
           QA MGC-1273 midió identity-screen bounds h=1832 y TOTAL natural height
           ~1300dp > viewport disponible 709dp en ZY22G728HN 1080×2400 density
           400 (1080×960dp). Sin scroll, las secciones debajo del fold
-          (league-selector-wrapper, field-map-section, identity-fixed-form,
-          identity-sticky-footer) quedaban clipeadas del render tree y AUSENTES
-          del UIAutomator dump. Patrón canónico MGC-1257 (commit f6bfdc8,
-          APK 03d898fb...d94526, bundle 56ba46ab...c8f7c923, ref MGC-1178
-          433281f/fa99ac4): outer ScrollView flexGrow:1 cubre TODO el árbol
-          scrollable (identity-header + Jersey + nationality-section +
-          league-selector-wrapper + field-map-section + identity-fixed-form);
-          `identity-sticky-footer` flexBasis:240 flexGrow:0 flexShrink:0 es el
-          ÚNICO sibling del ScrollView — siempre visible al fondo con stepper
-          +/- y Continue. collapsable={false} + removeClippedSubviews={false}
-          en el ScrollView para mantener resource-id estable en UIAutomator.
-          field-map-wrapper (MGC-916/MGC-1152 canónico) lleva height:320 +
-          flexBasis:320 + flexGrow:0 contra shrink cascade del measure pass
-          del ScrollView. Spec MGC-1143 320±10dp. MGC-1299 revierte el
-          height:380 que PR-320 (MGC-1286) había introducido como
-          belt-suspenders — 380dp queda 60dp por encima del spec histórico.
+          (field-map-section, identity-fixed-form, identity-sticky-footer)
+          quedaban clipeadas del render tree y AUSENTES del UIAutomator dump.
+          Patrón canónico MGC-1257 (commit f6bfdc8, APK 03d898fb...d94526,
+          bundle 56ba46ab...c8f7c923, ref MGC-1178 433281f/fa99ac4): outer
+          ScrollView flexGrow:1 cubre TODO el árbol scrollable
+          (identity-header + Jersey + nationality-section + field-map-section
+          + identity-fixed-form); `identity-sticky-footer` flexBasis:240
+          flexGrow:0 flexShrink:0 es el ÚNICO sibling del ScrollView — siempre
+          visible al fondo con stepper +/- y Continue. collapsable={false} +
+          removeClippedSubviews={false} en el ScrollView para mantener
+          resource-id estable en UIAutomator. field-map-wrapper
+          (MGC-916/MGC-1152 canónico) lleva height:320 + flexBasis:320 +
+          flexGrow:0 contra shrink cascade del measure pass del ScrollView.
+          Spec MGC-1143 320±10dp. MGC-1299 revierte el height:380 que PR-320
+          (MGC-1286) había introducido como belt-suspenders — 380dp queda
+          60dp por encima del spec histórico.
           Refs: [[mgc1257-outer-scrollview-tree]], MGC-711, MGC-751, MGC-806,
           MGC-807, MGC-811, MGC-840, MGC-843, MGC-1016, MGC-1086, MGC-1222,
           MGC-1299. */}
@@ -370,7 +370,6 @@ export default function IdentityScreen() {
             identity-fixed-form      y≈150dp  → y≈263dp   ( 658px) ← input-name
             nationality-section      y≈263dp  → y≈613dp   (1533px) ← country-ARG ≈ 912px
             jersey-preview-wrapper   y≈613dp  → y≈913dp   (bajo el fold, scroll)
-            league-selector-wrapper  y≈913dp  → y≈1001dp
             identity-fixed-field-map y≈1001dp → y≈1353dp
             scrollContent.paddingBottom:240 sigue despejando el footer.
 
@@ -542,7 +541,6 @@ export default function IdentityScreen() {
             identity-fixed-form      y=150dp  → y=263dp   ( 658px) ← MGC-1532
             nationality-section      y=263dp  → y=613dp   ← country-ARG ≈1333px
             jersey-preview-wrapper   y=613dp  → y=913dp   ← bajo fold, scroll
-            league-selector-wrapper  y=913dp  → y=1001dp
             identity-fixed-field-map y=1001dp → y=1353dp
             scrollContent.paddingBottom:240 despeja el footer top y=1530.
 
@@ -605,10 +603,10 @@ export default function IdentityScreen() {
               const active = profile.nationalityCode === n.code;
               // MGC-1511 — elegir un país cierra la tarea: además de limpiar el
               // search colapsamos el listado expandido de MGC-1503. Sin esto las
-              // 33 filas siguen inline tras la selección y league-selector +
-              // field-map vuelven a caer ≈6000px bajo el fold (los FAIL de QA
-              // MGC-1450/1452 que motivaron el cap de MGC-1448). El usuario
-              // puede re-expandir con "Ver todas las N" cuando quiera.
+              // 33 filas siguen inline tras la selección y field-map vuelve a
+              // caer ≈6000px bajo el fold (los FAIL de QA MGC-1450/1452 que
+              // motivaron el cap de MGC-1448). El usuario puede re-expandir
+              // con "Ver todas las N" cuando quiera.
               const selectNationality = () => {
                 setNationality(n.code);
                 setNationalityQuery('');
@@ -843,16 +841,16 @@ export default function IdentityScreen() {
           → Field map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se
           mete dentro del translateY del `identity-sticky-footer` (MGC-754) — el
           field map no esquiva IME (es tap target, no input de texto). */}
-      {/* MGC-1585: league-selector-wrapper REMOVIDO de /identity. La selección
-          de liga ocurre exclusivamente en /academy paso 3 (cada club expone
-          su liga). Ver MGC-1567 walk E2E: identity → dashboard → academy →
-          Morón → /temporada resulta jugable sin seleccionar liga en identity.
+      {/* MGC-1585 / PR #395: la selección de liga se removió de /identity.
+          Ocurre exclusivamente en /academy paso 3 (cada club expone su liga).
+          Ver MGC-1567 walk E2E: identity → dashboard → academy → Morón →
+          /temporada resulta jugable sin seleccionar liga en identity.
           El árbol del scroll queda:
             identity-header → identity-fixed-form → nationality-section
             → jersey-preview-wrapper
           y los bounds reportados en ZY22G728HN density 400 son ahora
-          siempre positivos en fresh-mount (no más wrapper clipeado bajo el
-          fold del ScrollView position:absolute full-bounds). */}
+          siempre positivos en fresh-mount (no más secciones clipeadas bajo
+          el fold del ScrollView position:absolute full-bounds). */}
       </ScrollView>
       {/* MGC-1533 — field-map-section EXTRAÍDA como fixed sibling absoluto.
           Antes vivía como SIBLING dentro del ScrollView (MGC-1428 intento-7
@@ -875,13 +873,12 @@ export default function IdentityScreen() {
           absolute) no consume flex space que achique el section a 0 en
           flex-shrink pass. */}
       {/* MGC-1578 — `pointerEvents="box-none"` INCONDICIONAL sobre
-          identity-fixed-field-map. Mismo patrón que sticky-footer arriba.
-          PR-391 condicionaba a leagueOpen lo que rompía el toggle inicial. El
-          field-map solo dibuja fondo + field-map-wrapper; los Pressables pos-*
-          siguen auto y capturan sus taps. Liberar el área vacía permite que
-          un swipe iniciado en el centro del viewport (540,1400) llegue al
-          ScrollView y haga scroll, en lugar de ser consumido por el field-map
-          absoluto. */}
+          identity-fixed-field-map. Mismo patrón que sticky-footer abajo.
+          El field-map solo dibuja fondo + field-map-wrapper; los Pressables
+          pos-* siguen auto y capturan sus taps. Liberar el área vacía
+          permite que un swipe iniciado en el centro del viewport (540,1400)
+          llegue al ScrollView y haga scroll, en lugar de ser consumido por
+          el field-map absoluto. */}
       <View
         testID="identity-fixed-field-map"
         collapsable={false}
@@ -983,7 +980,7 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
-      {/* MGC-1314: cierre del ScrollView externo tras league-selector-wrapper.
+      {/* MGC-1314: cierre del ScrollView externo tras wrappers extraídos.
           identity-fixed-form e identity-fixed-field-map NO son hijos del
           ScrollView — viven como siblings (líneas 786+) entre el ScrollView y
           identity-sticky-footer. Causa raíz MGC-1309 / MGC-1035: en fresh-mount
@@ -1011,11 +1008,11 @@ export default function IdentityScreen() {
           en uiautomator fresh-mount, sin depender del scroll position.
 
           ScrollView conserva flexGrow:1 + flexShrink:1 (MGC-1286/PR-320) y
-          removeClippedSubviews={false} (MGC-1286 belt) sobre las 4 secciones
+          removeClippedSubviews={false} (MGC-1286 belt) sobre las secciones
           scrollables: identity-header + jersey-preview-wrapper +
-          nationality-section + league-selector-wrapper. ScrollView cubre
-          TODO el alto disponible menos identity-fixed-form (auto) +
-          identity-fixed-field-map (auto) + identity-sticky-footer (240).
+          nationality-section. ScrollView cubre TODO el alto disponible
+          menos identity-fixed-form (auto) + identity-fixed-field-map (auto)
+          + identity-sticky-footer (240).
 
           field-map-wrapper mantiene height:320 + flexBasis:320 + flexShrink:0
           (MGC-1143 spec / MGC-1299 restore / MGC-1309 belt) sin la
@@ -1074,14 +1071,13 @@ export default function IdentityScreen() {
           dump fresh-mount. NO usar pointerEvents='box-none' acá: haría
           tappable contenido tapado por la banda opaca (peor que el bug). */}
       {/* MGC-1578 — `pointerEvents="box-none"` INCONDICIONAL sobre
-          identity-sticky-footer. PR-391 intentó condicionarlo a
-          `leagueOpen ? 'box-none' : 'auto'` para liberar el toggle cuando el
-          dropdown abre, pero eso es chicken-and-egg: con `leagueOpen=false`
-          el footer overlapea league-selector-toggle en y=2016-2130 y se come
-          el tap inicial que debería disparar `setLeagueOpen(true)`. El footer
-          solo pinta fondo + bandas opacas; los Pressables hijos (btn-number,
-          btn-identity-continue) siguen siendo auto, capturan sus propios taps
-          y el área vacía deja pasar el touch hacia el ScrollView debajo.
+          identity-sticky-footer. Versiones tempranas condicionaban el
+          pointerEvents a un toggle de dropdown que rompía el tap inicial
+          (chicken-and-egg: el footer overlapeaba el toggle y se comía el
+          primer tap que debía dispararlo). El footer solo pinta fondo +
+          bandas opacas; los Pressables hijos (btn-number, btn-identity-
+          continue) siguen siendo auto, capturan sus propios taps y el área
+          vacía deja pasar el touch hacia el ScrollView debajo.
           Mismo razonamiento que MGC-1348 v2 sobre identity-fixed-form:
           contenedor que solo estiliza → box-none, Pressables auto. */}
       <View
