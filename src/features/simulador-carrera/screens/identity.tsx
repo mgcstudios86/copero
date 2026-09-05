@@ -684,288 +684,6 @@ export default function IdentityScreen() {
           ) : null}
         </Field>
       </View>
-      {/* MGC-1532 (actualizado por MGC-1737) — identity-fixed-form reubicado
-          como TERCER hijo del outer ScrollView (después de nationality-section,
-          antes de jersey-preview-wrapper). Causa raíz original MGC-1532:
-          `isIdentityComplete` exige SOLO `name.trim().length >= 2`, así que
-          el nombre es el ÚNICO gate de Continuar. MGC-1737 invierte la
-          prioridad: nationality-section debe quedar ARRIBA del form para
-          que country-ARG sea visible sin scrollUntilVisible (AC3 explícito).
-          input-name sigue siendo tappable en y≈1295px (arriba del field-map
-          overlay 1310px) y los campos restantes (lastname/age/foot) requieren
-          scroll — trade-off explícito en MGC-1737 para preservar el AC3 de
-          WF1 PR #427 walk MGC-1732.
-
-          pointerEvents='box-none' mantiene el spec MGC-1348 para que el wrapper
-          no intercepte clicks de los country-* Pressables que viven MÁS
-          ARRIBA en el scroll. */}
-      <View
-        testID="identity-fixed-form"
-        collapsable={false}
-        // MGC-1348 v2 — Playwright web flake: box-none evita que el wrapper
-        // capture clicks de los country-* Pressables que viven más arriba en
-        // el scroll (RNW hit-test pasaba por el wrapper vacío). En Android
-        // box-none es no-op cuando el wrapper tiene content visible.
-        pointerEvents="box-none"
-        style={{
-          backgroundColor: colors.bg,
-          borderTopColor: colors.border,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          // MGC-1339 — overshoot fix: padding spacing[1]=4 → spacing[0]=0
-          // (-8dp). Compactación preservada al mover dentro del scroll.
-          // MGC-1347 — restaurar paddingHorizontal spacing[1]=4dp para que
-          // TextInput Nombre y Pressables Pie hábil no peguen contra el
-          // borde lateral. paddingVertical=0 explícito para preservar el
-          // budget vertical de 113dp del AC MGC-1341.
-          paddingHorizontal: spacing[1],
-          paddingVertical: 0,
-          gap: spacing[1],
-          flexShrink: 0,
-        }}
-      >
-        {/* MGC-1330: compactación para liberar 86dp de budget vertical.
-            viewport 732.8dp = identity-fixed-form (113dp target) +
-            identity-fixed-field-map 320dp (ancla MGC-1324) +
-            identity-sticky-footer 240dp (ancla MGC-1286) + 59.6dp slack.
-            Cambios: padding form 16→4, gap form 16→4, Field label gap 8→0,
-            inputs minHeight 48→40, TextInput/Pressable paddingV 12→8,
-            label fontSize 14→12. Total estimado ~105dp. Patrón preserva:
-            field wrapper collapsable=false, label accessibilityRole=text,
-            input hit-box via minHeight:40 + paddingV:8 + border. Refs:
-            [[mgc1330-form-budget]], MGC-632, MGC-686, MGC-1286, MGC-1324. */}
-        <Field
-          label={t('identity.fieldName')}
-          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
-          wrapperStyle={{ gap: 0 }}
-        >
-          <View
-            testID="input-name-wrapper"
-            collapsable={false}
-            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
-            // clicks, el TextInput hijo sí. Patrón recursivo Field wrapper.
-            pointerEvents="box-none"
-            style={{ minHeight: 40, width: '100%' }}
-          >
-            <TextInput
-              value={profile.name}
-              onChangeText={setName}
-              placeholder={t('identity.namePlaceholder')}
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
-              autoCorrect={false}
-              maxLength={24}
-              collapsable={false}
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  borderColor: colors.borderStrong,
-                  borderRadius: radii.md,
-                  paddingHorizontal: spacing[3],
-                  // MGC-1874 — spacing[1] (4dp) en lugar de spacing[2] (8dp)
-                  // para compactar el form 16dp total (4 inputs × 4dp). Eso
-                  // combinado con NATIONALITY_FRESH_LIMIT=3 y minHeight de fila
-                  // 44 hace que identity-fixed-form quepa arriba del
-                  // identity-sticky-footer (footer top y=1530 ZY22G728HN).
-                  paddingVertical: spacing[1],
-                  fontSize: fontSize.base,
-                },
-              ]}
-              accessibilityLabel={t('identity.nameA11y')}
-              testID="input-name"
-            />
-          </View>
-        </Field>
-
-        {/* MGC-1628 / WF1 — Apellido en input separado (wireframe §WF1).
-            Mismo patrón que Nombre: wrapper collapsable=false + box-none,
-            TextInput con autoCapitalize=words + maxLength 24 (rango
-            validado por isIdentityComplete: ≥2 chars). El setter
-            `setLastName` escribe a `profile.lastName` (campo nuevo,
-            ver identity-state.ts). testID `input-lastname` se publica
-            para que QA (MGC-1626 walk E2E) lo pueda apuntar. */}
-        <Field
-          label={t('identity.fieldLastName')}
-          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
-          wrapperStyle={{ gap: 0 }}
-        >
-          <View
-            testID="input-lastname-wrapper"
-            collapsable={false}
-            pointerEvents="box-none"
-            style={{ minHeight: 40, width: '100%' }}
-          >
-            <TextInput
-              value={profile.lastName ?? ''}
-              onChangeText={setLastName}
-              placeholder={t('identity.lastNamePlaceholder')}
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
-              autoCorrect={false}
-              maxLength={24}
-              collapsable={false}
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  borderColor: colors.borderStrong,
-                  borderRadius: radii.md,
-                  paddingHorizontal: spacing[3],
-                  // MGC-1874 — spacing[1] (4dp) en lugar de spacing[2] (8dp)
-                  // para compactar el form 16dp total (4 inputs × 4dp). Eso
-                  // combinado con NATIONALITY_FRESH_LIMIT=3 y minHeight de fila
-                  // 44 hace que identity-fixed-form quepa arriba del
-                  // identity-sticky-footer (footer top y=1530 ZY22G728HN).
-                  paddingVertical: spacing[1],
-                  fontSize: fontSize.base,
-                },
-              ]}
-              accessibilityLabel={t('identity.lastNameA11y')}
-              testID="input-lastname"
-            />
-          </View>
-        </Field>
-
-        {/* MGC-1628 / WF1 — Edad 16-35. TextInput numérico, validación
-            inline en `setAge` (clamp 16-35). El hint debajo del input
-            (`t('identity.ageHelp')`) explica al usuario el rango y por qué
-            (la edad se incrementa temporada a temporada y la retirada
-            ocurre a los 35). testID `input-age` para QA walk. */}
-        <Field
-          label={t('identity.fieldAge')}
-          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
-          wrapperStyle={{ gap: 0 }}
-        >
-          <View
-            testID="input-age-wrapper"
-            collapsable={false}
-            pointerEvents="box-none"
-            style={{ minHeight: 40, width: '100%' }}
-          >
-            {/* MGC-1760 — Pressable wrapper con hitSlop=12 cada lado para que el
-                tap perimetral (12dp = +24dp total por eje) abra el teclado. En
-                Android nativo, hitSlop en TextInput no extiende el hitbox de
-                focus (MGC-1760 QA walk PR #427 f08d22e). El Pressable hijo
-                captura el tap perimetral y llama ageInputRef.current?.focus() */}
-            <Pressable
-              onPress={() => ageInputRef.current?.focus()}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              collapsable={false}
-              testID="input-age-tap-target"
-              accessible={false}
-            >
-              <TextInput
-                ref={ageInputRef}
-                value={String(profile.age)}
-                onChangeText={(txt) => {
-                  // Acepta sólo dígitos. El clamp final lo hace setAge.
-                  const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
-                  const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
-                  setAge(parsed);
-                }}
-                placeholder={t('identity.agePlaceholder')}
-                placeholderTextColor={colors.textMuted}
-                keyboardType="number-pad"
-                inputMode="numeric"
-                maxLength={2}
-                collapsable={false}
-                style={[
-                  styles.input,
-                  {
-                    color: colors.text,
-                    borderColor: colors.borderStrong,
-                    borderRadius: radii.md,
-                    paddingHorizontal: spacing[3],
-                    // MGC-1874 — spacing[1] (4dp) en lugar de spacing[2] (8dp)
-                    // para compactar el form 16dp total (4 inputs × 4dp). Eso
-                    // combinado con NATIONALITY_FRESH_LIMIT=3 y minHeight de fila
-                    // 44 hace que identity-fixed-form quepa arriba del
-                    // identity-sticky-footer (footer top y=1530 ZY22G728HN).
-                    paddingVertical: spacing[1],
-                    fontSize: fontSize.base,
-                  },
-                ]}
-                accessibilityLabel={t('identity.ageA11y')}
-                testID="input-age"
-              />
-            </Pressable>
-            <Text
-              testID="input-age-help"
-              style={{
-                color: colors.textMuted,
-                fontSize: fontSize.xs,
-                marginTop: spacing[1],
-                lineHeight: 14,
-                includeFontPadding: false,
-              }}
-            >
-              {t('identity.ageHelp')}
-            </Text>
-          </View>
-        </Field>
-
-        {/* Preferred foot — MGC-632: wrapper View collapsable=false +
-            minHeight:48. Pressable hijos sin collapsable={false} porque
-            RN-Android mide bounds reales desde el wrapper padre cuando
-            vive fuera del ScrollView (verificado por QA MGC-744 sobre
-            stepper). Si QA reporta flake en los Pressables individuales
-            (Izquierdo/Derecho/Ambos), replicar el patrón canónico del
-            stepper (collapsable={false} en cada Pressable hijo). */}
-        <Field
-          label={t('identity.fieldFoot')}
-          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
-          wrapperStyle={{ gap: 0 }}
-        >
-          <View
-            testID="btn-foot-row"
-            collapsable={false}
-            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
-            // clicks, los 3 Pressables hijos sí. Patrón recursivo Field wrapper.
-            pointerEvents="box-none"
-            style={{
-              flexDirection: 'row',
-              gap: spacing[2],
-              width: '100%',
-              minHeight: 40,
-            }}
-          >
-            {(['left', 'right', 'both'] as Foot[]).map((f) => {
-              const active = profile.preferredFoot === f;
-              return (
-                <Pressable
-                  key={f}
-                  onPress={() => setPreferredFoot(f)}
-                  {...onKeyActivate(() => setPreferredFoot(f))}
-                  testID={`btn-foot-${f === 'left' ? 'izq' : f === 'right' ? 'der' : 'ambos'}`}
-                  collapsable={false}
-                  style={{
-                    flex: 1,
-                    paddingVertical: spacing[2],
-                    borderRadius: radii.md,
-                    borderWidth: 1,
-                    borderColor: active ? colors.primary : colors.borderStrong,
-                    backgroundColor: active ? colors.primarySoft : colors.surface,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Text
-                    style={{
-                      color: active ? colors.primary : colors.text,
-                      fontWeight: fontWeight.semibold,
-                      fontSize: fontSize.sm,
-                    }}
-                  >
-                    {f === 'left' ? t('identity.footLeft') : f === 'right' ? t('identity.footRight') : t('identity.footBoth')}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Field>
-      </View>
       {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
           height:300 + maxHeight:300 + overflow:hidden fuerzan el clamp al
           intrinsic height del JerseyPreview md (160x200) + título + label
@@ -1060,6 +778,299 @@ export default function IdentityScreen() {
           siempre positivos en fresh-mount (no más secciones clipeadas bajo
           el fold del ScrollView position:absolute full-bounds). */}
       </ScrollView>
+      {/* MGC-1943 — identity-fixed-form EXTRAÍDA del ScrollView y
+          reubicada como fixed sibling kavContent-level con position:absolute
+          bottom:240 (encima del identity-sticky-footer height:240).
+          Causa raíz del walk MGC-1942 sobre APK vc=148 (SHA 9ace95e):
+          PR #467 cherry-pick de MGC-1874 redujo paddingV y
+          NATIONALITY_FRESH_LIMIT, pero el form seguía renderizándose a
+          y=[1591,2130] (539px de overlap con identity-sticky-footer
+          [1530,2130]) porque el form vivía DENTRO del outer ScrollView
+          y su content-position y ≈ 1000dp ya estaba bajo el fold del
+          kavContent. EDAD + btn-foot-* quedaban clipeados detrás del
+          field-map z=10 y del sticky-footer — el usuario NO podía
+          completar el alta sin descubrir el form con scroll.
+
+          Fix: sacar el form del ScrollView y anclarlo como fixed sibling
+          a 240dp del fondo (mismo anchor que field-map + sticky-footer).
+          zIndex:15 lo pone sobre el field-map (z=10) y sobre el ScrollView
+          para garantizar visibilidad permanente. pointerEvents="box-none"
+          libera los taps que caigan en el bg del form para que lleguen al
+          field-map POSICIÓN chips (z=10) cuando hay overlap visual.
+
+          Patrón simétrico al identity-fixed-field-map (MGC-1533) y al
+          identity-sticky-footer (MGC-1428): los tres viven como siblings
+          del outer ScrollView con position:absolute y flexShrink:0.
+
+          Compactación adicional (MGC-1943 sobre MGC-1874):
+          - hint Text bajo input-age removido (saving ~18dp) — el placeholder
+            y accessibilityLabel ya cubren el rango 16-35.
+          - form gap spacing[1]→0 (saving 12dp en 3 gaps entre Fields).
+          - input paddingV spacing[1]→0 (saving 8dp × 3 = 24dp).
+          - input minHeight 40→36 (saving 4dp × 4 = 16dp).
+          Total compactación: ~70dp. Form pasa de ~216dp → ~146dp.
+          */}
+      <View
+        testID="identity-fixed-form"
+        collapsable={false}
+        // MGC-1348 v2 — Playwright web flake: box-none evita que el wrapper
+        // capture clicks de los country-* Pressables que viven más arriba en
+        // el scroll (RNW hit-test pasaba por el wrapper vacío). En Android
+        // box-none es no-op cuando el wrapper tiene content visible.
+        pointerEvents="box-none"
+        style={{
+          // MGC-1943 — fixed sibling del kavContent (sin ScrollView).
+          // position:absolute bottom:240 (encima del identity-sticky-footer
+          // height:240) + zIndex:15 (sobre el field-map z=10). flexShrink:0
+          // garantiza que el kavContent no comprima el form en el measure pass.
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 240,
+          zIndex: 15,
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          paddingHorizontal: spacing[1],
+          paddingVertical: 0,
+          // MGC-1943 — gap spacing[1]→0 (compactación para reducir altura
+          // del form ~12dp en 3 gaps entre Fields).
+          gap: 0,
+          flexShrink: 0,
+        }}
+      >
+        {/* MGC-1330: compactación para liberar 86dp de budget vertical.
+            viewport 732.8dp = identity-fixed-form (113dp target) +
+            identity-fixed-field-map 320dp (ancla MGC-1324) +
+            identity-sticky-footer 240dp (ancla MGC-1286) + 59.6dp slack.
+            Cambios: padding form 16→4, gap form 16→4, Field label gap 8→0,
+            inputs minHeight 48→40, TextInput/Pressable paddingV 12→8,
+            label fontSize 14→12. Total estimado ~105dp. Patrón preserva:
+            field wrapper collapsable=false, label accessibilityRole=text,
+            input hit-box via minHeight:40 + paddingV:8 + border. Refs:
+            [[mgc1330-form-budget]], MGC-632, MGC-686, MGC-1286, MGC-1324. */}
+        <Field
+          label={t('identity.fieldName')}
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          <View
+            testID="input-name-wrapper"
+            collapsable={false}
+            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
+            // clicks, el TextInput hijo sí. Patrón recursivo Field wrapper.
+            pointerEvents="box-none"
+            style={{ minHeight: 36, width: '100%' }}
+          >
+            <TextInput
+              value={profile.name}
+              onChangeText={setName}
+              placeholder={t('identity.namePlaceholder')}
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+              autoCorrect={false}
+              maxLength={24}
+              collapsable={false}
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  borderColor: colors.borderStrong,
+                  borderRadius: radii.md,
+                  paddingHorizontal: spacing[3],
+                  // MGC-1874 — spacing[1] (4dp) en lugar de spacing[2] (8dp)
+                  // para compactar el form 16dp total (4 inputs × 4dp). Eso
+                  // combinado con NATIONALITY_FRESH_LIMIT=3 y minHeight de fila
+                  // 44 hace que identity-fixed-form quepa arriba del
+                  // identity-sticky-footer (footer top y=1530 ZY22G728HN).
+                  paddingVertical: 0,
+                  fontSize: fontSize.base,
+                },
+              ]}
+              accessibilityLabel={t('identity.nameA11y')}
+              testID="input-name"
+            />
+          </View>
+        </Field>
+
+        {/* MGC-1628 / WF1 — Apellido en input separado (wireframe §WF1).
+            Mismo patrón que Nombre: wrapper collapsable=false + box-none,
+            TextInput con autoCapitalize=words + maxLength 24 (rango
+            validado por isIdentityComplete: ≥2 chars). El setter
+            `setLastName` escribe a `profile.lastName` (campo nuevo,
+            ver identity-state.ts). testID `input-lastname` se publica
+            para que QA (MGC-1626 walk E2E) lo pueda apuntar. */}
+        <Field
+          label={t('identity.fieldLastName')}
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          <View
+            testID="input-lastname-wrapper"
+            collapsable={false}
+            pointerEvents="box-none"
+            style={{ minHeight: 36, width: '100%' }}
+          >
+            <TextInput
+              value={profile.lastName ?? ''}
+              onChangeText={setLastName}
+              placeholder={t('identity.lastNamePlaceholder')}
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+              autoCorrect={false}
+              maxLength={24}
+              collapsable={false}
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  borderColor: colors.borderStrong,
+                  borderRadius: radii.md,
+                  paddingHorizontal: spacing[3],
+                  // MGC-1874 — spacing[1] (4dp) en lugar de spacing[2] (8dp)
+                  // para compactar el form 16dp total (4 inputs × 4dp). Eso
+                  // combinado con NATIONALITY_FRESH_LIMIT=3 y minHeight de fila
+                  // 44 hace que identity-fixed-form quepa arriba del
+                  // identity-sticky-footer (footer top y=1530 ZY22G728HN).
+                  paddingVertical: 0,
+                  fontSize: fontSize.base,
+                },
+              ]}
+              accessibilityLabel={t('identity.lastNameA11y')}
+              testID="input-lastname"
+            />
+          </View>
+        </Field>
+
+        {/* MGC-1628 / WF1 — Edad 16-35. TextInput numérico, validación
+            inline en `setAge` (clamp 16-35). El hint debajo del input
+            (`t('identity.ageHelp')`) explica al usuario el rango y por qué
+            (la edad se incrementa temporada a temporada y la retirada
+            ocurre a los 35). testID `input-age` para QA walk. */}
+        <Field
+          label={t('identity.fieldAge')}
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          <View
+            testID="input-age-wrapper"
+            collapsable={false}
+            pointerEvents="box-none"
+            style={{ minHeight: 36, width: '100%' }}
+          >
+            {/* MGC-1760 — Pressable wrapper con hitSlop=12 cada lado para que el
+                tap perimetral (12dp = +24dp total por eje) abra el teclado. En
+                Android nativo, hitSlop en TextInput no extiende el hitbox de
+                focus (MGC-1760 QA walk PR #427 f08d22e). El Pressable hijo
+                captura el tap perimetral y llama ageInputRef.current?.focus() */}
+            <Pressable
+              onPress={() => ageInputRef.current?.focus()}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              collapsable={false}
+              testID="input-age-tap-target"
+              accessible={false}
+            >
+              <TextInput
+                ref={ageInputRef}
+                value={String(profile.age)}
+                onChangeText={(txt) => {
+                  // Acepta sólo dígitos. El clamp final lo hace setAge.
+                  const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
+                  const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
+                  setAge(parsed);
+                }}
+                placeholder={t('identity.agePlaceholder')}
+                placeholderTextColor={colors.textMuted}
+                keyboardType="number-pad"
+                inputMode="numeric"
+                maxLength={2}
+                collapsable={false}
+                style={[
+                  styles.input,
+                  {
+                    color: colors.text,
+                    borderColor: colors.borderStrong,
+                    borderRadius: radii.md,
+                    paddingHorizontal: spacing[3],
+                    // MGC-1874 — spacing[1] (4dp) en lugar de spacing[2] (8dp)
+                    // para compactar el form 16dp total (4 inputs × 4dp). Eso
+                    // combinado con NATIONALITY_FRESH_LIMIT=3 y minHeight de fila
+                    // 44 hace que identity-fixed-form quepa arriba del
+                    // identity-sticky-footer (footer top y=1530 ZY22G728HN).
+                    paddingVertical: 0,
+                    fontSize: fontSize.base,
+                  },
+                ]}
+                accessibilityLabel={t('identity.ageA11y')}
+                testID="input-age"
+              />
+            </Pressable>
+          </View>
+        </Field>
+
+        {/* Preferred foot — MGC-632: wrapper View collapsable=false +
+            minHeight:48. Pressable hijos sin collapsable={false} porque
+            RN-Android mide bounds reales desde el wrapper padre cuando
+            vive fuera del ScrollView (verificado por QA MGC-744 sobre
+            stepper). Si QA reporta flake en los Pressables individuales
+            (Izquierdo/Derecho/Ambos), replicar el patrón canónico del
+            stepper (collapsable={false} en cada Pressable hijo). */}
+        <Field
+          label={t('identity.fieldFoot')}
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          <View
+            testID="btn-foot-row"
+            collapsable={false}
+            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
+            // clicks, los 3 Pressables hijos sí. Patrón recursivo Field wrapper.
+            pointerEvents="box-none"
+            style={{
+              flexDirection: 'row',
+              gap: spacing[2],
+              width: '100%',
+              minHeight: 40,
+            }}
+          >
+            {(['left', 'right', 'both'] as Foot[]).map((f) => {
+              const active = profile.preferredFoot === f;
+              return (
+                <Pressable
+                  key={f}
+                  onPress={() => setPreferredFoot(f)}
+                  {...onKeyActivate(() => setPreferredFoot(f))}
+                  testID={`btn-foot-${f === 'left' ? 'izq' : f === 'right' ? 'der' : 'ambos'}`}
+                  collapsable={false}
+                  style={{
+                    flex: 1,
+                    paddingVertical: spacing[2],
+                    borderRadius: radii.md,
+                    borderWidth: 1,
+                    borderColor: active ? colors.primary : colors.borderStrong,
+                    backgroundColor: active ? colors.primarySoft : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Text
+                    style={{
+                      color: active ? colors.primary : colors.text,
+                      fontWeight: fontWeight.semibold,
+                      fontSize: fontSize.sm,
+                    }}
+                  >
+                    {f === 'left' ? t('identity.footLeft') : f === 'right' ? t('identity.footRight') : t('identity.footBoth')}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Field>
+      </View>
+
       {/* MGC-1533 — field-map-section EXTRAÍDA como fixed sibling absoluto.
           Antes vivía como SIBLING dentro del ScrollView (MGC-1428 intento-7
           opción B), pero el sticky-footer absolute bottom:0 height:240 opaco
