@@ -31,8 +31,10 @@ export default function TemporadaScreen() {
   const log = useCareerStore((s) => s.log);
   const stage = useCareerStore((s) => s.stage);
   const advanceSeason = useCareerStore((s) => s.advanceSeason);
-  // MGC-1802 P1-7 — retiro temprano (sin esperar RETIREMENT_AGE).
+// MGC-1802 P1-7 — retiro temprano (sin esperar RETIREMENT_AGE).
   const retireEarly = useCareerStore((s) => s.retireEarly);
+  // MGC-1803 (TR1) — transfer offers al cierre de temporada.
+  const transferState = useCareerStore((s) => s.transferState);
   // MGC-249: loop semanal con `advance()` para drenar lesión, bumpear
   // semana y rotar season cada 38 semanas. Botón "Siguiente semana"
   // abre el loop fino que QA necesita para validar feedback bar.
@@ -111,6 +113,20 @@ export default function TemporadaScreen() {
       router.replace('/simulador-carrera/fin-carrera');
     }
   }, [stage, router]);
+
+  // MGC-1803 (TR1) — tras `advanceSeason`, si el motor dejó un
+  // `transferState` abierto con ofertas, llevamos al usuario a la pantalla
+  // de ofertas antes de mostrar el hub. La redirección es idempotente: si
+  // ya estamos resolviendo (`resolved === true`) no re-disparamos.
+  useEffect(() => {
+    if (
+      transferState &&
+      !transferState.resolved &&
+      transferState.offers.length > 0
+    ) {
+      router.replace('/simulador-carrera/transfer-offers');
+    }
+  }, [transferState, router]);
 
   // MGC-1381 — presupuesto vertical exacto del `temporada-cta-footer`.
   // Cada `Button size="lg"` mide minHeight = max(52, tapTarget) = 52dp
