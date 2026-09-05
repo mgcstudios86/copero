@@ -68,7 +68,13 @@ export default function SocialEventsScreen() {
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
 
   const socialEventPending = useCareerStore((s) => s.socialEventPending);
-  const nextWeekModifiers = useCareerStore((s) => s.nextWeekModifiers);
+  // MGC-2011 — `nextWeekModifiers` es opcional en el save state (F2.x
+  // legacy sin el campo). Default a `NO_MODIFIERS` para que `ModifiersCard`
+  // reciba siempre un valor definido (TS2322 fix) y matches legacy sin
+  // modificadores previos no rompan el render.
+  const nextWeekModifiers = useCareerStore(
+    (s) => s.nextWeekModifiers ?? NO_MODIFIERS,
+  );
   const clearPostMatch = useCareerStore((s) => s.clearPostMatch);
 
   const onContinue = useCallback(async () => {

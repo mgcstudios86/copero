@@ -592,18 +592,74 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     },
     commitMatch: async () => {
       const { useMatchStore } = await import('@/shared/store/matchStore');
-      const { advanceWeek } = await import('@/features/career/simulation');
+      const { advanceWeek, weeklyRng, getPositionStats } = await import(
+        '@/features/career/simulation'
+      );
+      const { runPostMatch, ratingFromScore } = await import(
+        '@/features/career/events'
+      );
+      const { runSocialEvent, mergeModifiers } = await import(
+        '@/features/career/social-events'
+      );
+      const { createRngFromSnapshot } = await import('@/features/career/rng');
       const ms = useMatchStore.getState();
       if (!ms.outcome || !ms.nextProfile) {
         useMatchStore.getState().reset();
         return;
       }
+      const advanced = advanceWeek(ms.nextProfile!);
+
+      // MGC-2011 — bug HIGH del walk F4 (MGC-1915). El flujo dashboard
+      // (commitMatch) saltea `engine.step({type: 'resolveMatchweek'})`,
+      // así que `socialEventPending`/`postMatchPending`/`nextWeekModifiers`
+      // quedaban siempre `null` y `post-match.tsx:60` enrutaba directo al
+      // dashboard sin pasar por `/social-events`. Espejamos el bloque de
+      // `engine.ts#resolveMatchweek` (runPostMatch → runSocialEvent →
+      // mergeModifiers) usando el rating del outcome ya commiteado. El
+      // cursor RNG es `state.rng` (idéntico al semanal post-`applyWeekly
+      // Choice`); si por deeplink directo a /match no hay cursor previo,
+      // caemos a `weeklyRng(profile, 'match')` — mismo seed pattern que
+      // `resolveWeeklyMatch` (simulation.ts:645) para mantener paridad de
+      // determinismo con el semanal flow.
+      const state = get();
+      const baseRng = state.rng
+        ? createRngFromSnapshot(state.rng)
+        : weeklyRng(advanced, 'match').rng;
+      const positionStats = getPositionStats(advanced);
+      const ratingValue = ratingFromScore(ms.outcome.score);
+      const { event, modifiers: postModifiers } = runPostMatch(
+        {
+          position: advanced.position,
+          positionStats,
+          rating: ratingValue,
+          form: advanced.career.confianza,
+          week: advanced.week,
+        },
+        baseRng,
+      );
+      const socialResult = runSocialEvent(
+        {
+          position: advanced.position,
+          positionStats,
+          rating: ratingValue,
+          week: advanced.week,
+        },
+        baseRng.snapshot(),
+      );
+      const merged = mergeModifiers(postModifiers, socialResult.modifiers);
+      // Un solo setSnapshot para evitar la race entre el set anterior
+      // (sólo profile) y éste (eventos + rng): Zustand re-renderiza entre
+      // updates y `post-match.tsx` puede leer un estado intermedio donde
+      // `profile.week` ya avanzó pero `socialEventPending` aún es null.
       setSnapshot((s) => ({
         ...s,
-        profile: ms.nextProfile!,
+        profile: advanced,
+        postMatchPending: event,
+        socialEventPending: socialResult.event,
+        nextWeekModifiers: merged,
+        rng: socialResult.rngSnapshot,
       }));
-      const advanced = advanceWeek(ms.nextProfile!);
-      setSnapshot((s) => ({ ...s, profile: advanced }));
+
       persistSnapshot(get());
       await flushPendingSave();
       ms.commit();
