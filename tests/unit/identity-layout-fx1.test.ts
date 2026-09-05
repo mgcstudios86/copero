@@ -98,4 +98,45 @@ describe('FX1-B2 / MGC-1739 regresión /identity layout', () => {
     expect(src).toMatch(/adjustsFontSizeToFit/);
     expect(src).toMatch(/minimumFontScale=\{0\.7\}/);
   });
+
+  it('MGC-1874 — nationality-section cap ≤3 filas + minHeight ≤44dp para no tapar el form', () => {
+    // El walk WF1 PR #440 reveló que el form /identity quedaba COMPLETO
+    // debajo del sticky-footer: input-name bounds=[10,1989][1070,2089],
+    // input-lastname height=-4 (clipeado al bottom del viewport), input-age
+    // y btn-foot-{izq,der,ambos} AUSENTES del dump fresh-mount. Causa raíz:
+    // cap=5 + minHeight=56dp + paddingV=12dp consumían ≈793px del
+    // viewport, dejando al form sin espacio arriba del footer top y=1530.
+    //
+    // Guardia de regresión: cap declarado a 3 y minHeight de fila a 44dp
+    // (con paddingV spacing[2]=8dp) deja el form 100% visible sin scroll.
+    // country-ARG/BR/UY siguen visibles en fresh-mount (AC1 MGC-1737).
+    // country-CL/CO siguen accesibles vía search o "Ver todas (N)".
+    const src = readFileSync(
+      resolve(__dirname, '../../src/features/simulador-carrera/screens/identity.tsx'),
+      'utf8',
+    );
+    // cap declarado explícitamente (evita magia + comentarios).
+    const capMatch = src.match(/const NATIONALITY_FRESH_LIMIT = (\d+);/);
+    expect(capMatch).not.toBeNull();
+    const cap = Number.parseInt(capMatch![1], 10);
+    expect(cap).toBeGreaterThanOrEqual(1);
+    expect(cap).toBeLessThanOrEqual(3);
+
+    // minHeight de la fila country-* ≤44dp (era 56dp antes de MGC-1874).
+    expect(src).toMatch(/minHeight:\s*4[34],?/);
+  });
+
+  it('MGC-1874 — form inputs (input-name/lastname/age) usan paddingVertical spacing[1] para compactar', () => {
+    // spacing[2]=8dp × 4 inputs = 32dp liberados → form pasa de 620px a
+    // ~540px, entrando arriba del sticky-footer top y=1530 en ZY22G728HN.
+    // Combinado con cap=3 y minHeight=44dp libera el espacio completo.
+    const src = readFileSync(
+      resolve(__dirname, '../../src/features/simulador-carrera/screens/identity.tsx'),
+      'utf8',
+    );
+    // El bloque de style de los TextInputs del form llevan spacing[1].
+    const inputStyleBlocks = src.match(/styles\.input,[\s\S]{0,800}?paddingVertical:\s*spacing\[1\]/g);
+    expect(inputStyleBlocks).not.toBeNull();
+    expect(inputStyleBlocks!.length).toBeGreaterThanOrEqual(3); // name + lastname + age
+  });
 });

@@ -33,9 +33,14 @@ import type { Foot, PositionGroup } from '@/types/career';
 // contenido documentado en `filteredNationalities`: con las 33 inline el árbol
 // del scroll sumaba ≈8570px y dejaba identity-fixed-field-map ≈6000px bajo el
 // fold (fuera del alcance de cualquier swipe fijo y del hierarchy dump de QA).
-// Las 5 primeras cubren los testIDs del contrato E2E:
-// country-ARG / BR / UY / CL / CO.
-const NATIONALITY_FRESH_LIMIT = 5;
+// Las 3 primeras cubren los testIDs del contrato E2E core (country-ARG
+// es AC1 explícito de MGC-1737 — country visible sin scroll). country-CL
+// / CO siguen siendo accesibles vía search o expand "Ver todas".
+// MGC-1874 — antes 5 → form quedaba debajo del sticky-footer (input-age
+// y btn-foot-* sin bounds en fresh-mount). Reducir a 3 libera ~140dp del
+// nationality-section que el form necesita para entrar arriba del
+// sticky-footer (footer top y=1530 en ZY22G728HN 1080×2400 density 400).
+const NATIONALITY_FRESH_LIMIT = 3;
 
 // MGC-1628 / WF1 — chips de posición (wireframe §WF1). 4 grupos en una
 // sola fila horizontal. Cada chip tiene un `defaultPos` que es el
@@ -549,8 +554,12 @@ export default function IdentityScreen() {
                     alignItems: 'center',
                     gap: spacing[3],
                     paddingHorizontal: spacing[3],
-                    paddingVertical: spacing[3],
-                    minHeight: 56,
+                    paddingVertical: spacing[2],
+                    // MGC-1874 — minHeight 56→44 (saving 12dp × 3 filas = 36dp
+                    // antes NATIONALITY_FRESH_LIMIT=5 → 60dp con cap 5).
+                    // Libera budget vertical para que identity-fixed-form
+                    // quede arriba del sticky-footer (footer top y=1530).
+                    minHeight: 44,
                     borderBottomWidth: 1,
                     borderBottomColor: colors.border,
                     backgroundColor: active ? colors.primarySoft : 'transparent',
@@ -753,7 +762,12 @@ export default function IdentityScreen() {
                   borderColor: colors.borderStrong,
                   borderRadius: radii.md,
                   paddingHorizontal: spacing[3],
-                  paddingVertical: spacing[2],
+                  // MGC-1874 — spacing[1] (4dp) en lugar de spacing[2] (8dp)
+                  // para compactar el form 16dp total (4 inputs × 4dp). Eso
+                  // combinado con NATIONALITY_FRESH_LIMIT=3 y minHeight de fila
+                  // 44 hace que identity-fixed-form quepa arriba del
+                  // identity-sticky-footer (footer top y=1530 ZY22G728HN).
+                  paddingVertical: spacing[1],
                   fontSize: fontSize.base,
                 },
               ]}
@@ -797,7 +811,12 @@ export default function IdentityScreen() {
                   borderColor: colors.borderStrong,
                   borderRadius: radii.md,
                   paddingHorizontal: spacing[3],
-                  paddingVertical: spacing[2],
+                  // MGC-1874 — spacing[1] (4dp) en lugar de spacing[2] (8dp)
+                  // para compactar el form 16dp total (4 inputs × 4dp). Eso
+                  // combinado con NATIONALITY_FRESH_LIMIT=3 y minHeight de fila
+                  // 44 hace que identity-fixed-form quepa arriba del
+                  // identity-sticky-footer (footer top y=1530 ZY22G728HN).
+                  paddingVertical: spacing[1],
                   fontSize: fontSize.base,
                 },
               ]}
@@ -857,7 +876,12 @@ export default function IdentityScreen() {
                     borderColor: colors.borderStrong,
                     borderRadius: radii.md,
                     paddingHorizontal: spacing[3],
-                    paddingVertical: spacing[2],
+                    // MGC-1874 — spacing[1] (4dp) en lugar de spacing[2] (8dp)
+                    // para compactar el form 16dp total (4 inputs × 4dp). Eso
+                    // combinado con NATIONALITY_FRESH_LIMIT=3 y minHeight de fila
+                    // 44 hace que identity-fixed-form quepa arriba del
+                    // identity-sticky-footer (footer top y=1530 ZY22G728HN).
+                    paddingVertical: spacing[1],
                     fontSize: fontSize.base,
                   },
                 ]}
