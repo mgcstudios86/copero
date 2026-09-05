@@ -357,22 +357,22 @@ export default function IdentityScreen() {
         collapsable={false}
         style={{ gap: spacing[2], padding: spacing[4], flexShrink: 0 }}
       >
-        {/* MGC-1628 / WF1 — header reorganizado (wireframe §WF1).
-            eyebrow = marca + step ("COPERO · NUEVA CARRERA" / "Paso 1 de 2"),
-            title = "Creá tu jugador", subtitle = el step indicator explícito.
-            Se preserva el patrón de 2 roles header para screen readers. */}
+        {/* MGC-1628 / WF1 + FX1-B6 / MGC-1739 P1-2 — header reorganizado.
+            Antes (PR-427): eyebrow "COPERO · NUEVA CARRERA" + title "Creá tu
+            jugador" + subtitle "Paso 1 de 2 — Tu jugador". El eyebrow competía
+            visualmente con el SiteHeader global (brand "Copero" + nav
+            "Simulador de carrera" + badge de versión MGC-1506): dos marcas a
+            corta distancia, mismo letterSpacing small-caps. El catálogo
+            MGC-1739 P1-2 reportó "Title 'identity' del header duplica versión
+            del site-header" como regresión visible.
+
+            Fix: drop eyebrow Text. SiteHeader ya provee contexto de marca y
+            estado. title + subtitle se mantienen; title conserva su guardia
+            anti-truncado (FX1-B2 PR #449) y el subtitle sigue siendo el step
+            indicator explícito accesible para screen readers. `identity.eyebrow`
+            queda en copy.ts (es/en/zh-CN) por si se reutiliza en otro flow,
+            pero no se monta acá. */}
         <View style={{ gap: spacing[2] }}>
-          <Text
-            style={{
-              color: colors.primary,
-              letterSpacing: 4,
-              fontSize: fontSize.sm,
-              fontWeight: fontWeight.bold,
-            }}
-            accessibilityRole="header"
-          >
-            {t('identity.eyebrow')}
-          </Text>
           <Text
             style={{
               color: colors.textStrong,
