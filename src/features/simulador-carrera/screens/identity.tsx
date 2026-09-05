@@ -822,13 +822,16 @@ export default function IdentityScreen() {
         pointerEvents="box-none"
         style={{
           // MGC-1943 — fixed sibling del kavContent (sin ScrollView).
-          // position:absolute bottom:240 (encima del identity-sticky-footer
-          // height:240) + zIndex:15 (sobre el field-map z=10). flexShrink:0
-          // garantiza que el kavContent no comprima el form en el measure pass.
+          // MGC-1986 — bottom:240→120 (sticky-footer bajó 240→120dp tras dedup
+          // de identity-age-sticky, ver bloque arriba). Form top y=[965,1476]
+          // original overlappeaba country-ARG/BR/UY [926,1264]; con bottom:120
+          // form top queda y=[1265,1776] y NO toca country-UY bottom 1264.
+          // zIndex:15 sobre el field-map z=10. flexShrink:0 garantiza que el
+          // kavContent no comprima el form en el measure pass.
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: 240,
+          bottom: 120,
           zIndex: 15,
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
@@ -1108,7 +1111,11 @@ export default function IdentityScreen() {
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: 240, // encima del identity-sticky-footer height:240
+          // MGC-1986 — bottom:240→120 (sticky-footer height 240→120dp). Field-map
+          // y form ahora viven en bottom:120 con zIndex:10 vs zIndex:15 — el form
+          // sigue cubriendo los chips pos-XX (auto pointerEvents), preservando
+          // patrón MGC-1533 + box-none MGC-1578.
+          bottom: 120,
           paddingHorizontal: spacing[4],
           paddingTop: spacing[3],
           paddingBottom: spacing[3],
@@ -1290,6 +1297,16 @@ export default function IdentityScreen() {
           vacía deja pasar el touch hacia el ScrollView debajo.
           Mismo razonamiento que MGC-1348 v2 sobre identity-fixed-form:
           contenedor que solo estiliza → box-none, Pressables auto. */}
+      {/* MGC-1986 — sticky-footer height 240→120dp. Causa: PR #470 rebase perdió
+          el dedup MGC-1973 (commit 0372672) que removió el bloque
+          `identity-age-sticky` duplicado, dejando DOS inputs con testID
+          `input-age` (uno en el form, otro en el sticky-footer). Tras el
+          dedup, el contenido del sticky-footer se reduce a sólo el Continue
+          CTA (~86dp), así que la altura puede bajar de 240 a 120dp sin
+          clipping. Esta compactación es prerequisito para que el form
+          (fixed sibling bottom:120) no overlappee country-UY [1151,1264]
+          en fresh-mount ZY22G728HN density 400. Ver PR #467 MGC-1943 +
+          walk QA2 MGC-1985 evidencia /tmp/mgc1985-ui-dump.xml. */}
       <View
         testID="identity-sticky-footer"
         collapsable={false}
@@ -1300,7 +1317,7 @@ export default function IdentityScreen() {
             left: 0,
             right: 0,
             bottom: 0,
-            height: 240,
+            height: 120,
             justifyContent: 'flex-end',
             backgroundColor: colors.bg,
           },
@@ -1309,74 +1326,16 @@ export default function IdentityScreen() {
             : null,
         ]}
       >
-      {/* MGC-1647 (WF1): el campo Edad reemplaza al stepper de dorsal en el
-          sticky-footer. El dorsal (number) conserva default 9 en
-          initialProfile pero ya no se muestra en el alta — el form tiene
-          4 campos obligatorios: nombre, edad, posición, nacionalidad. El
-          input es numeric-keyboard para que el soft keyboard nativo no
-          muestre letras, y clamp 16–35 en el setter puro `setAge`
-          (identity-state.ts). a11y: accessibilityLabel + helperText abajo. */}
-      <View
-        testID="identity-age-sticky"
-        collapsable={false}
-        pointerEvents="box-none"
-        style={[
-          styles.stepperSticky,
-          {
-            backgroundColor: colors.bg,
-            borderTopColor: colors.border,
-            padding: spacing[4],
-          },
-        ]}
-      >
-        <Text
-          style={{
-            color: colors.textMuted,
-            fontSize: fontSize.sm,
-            fontWeight: fontWeight.semibold,
-            letterSpacing: 1,
-            marginBottom: spacing[2],
-          }}
-        >
-          {t('identity.ageLabel')}
-        </Text>
-        <TextInput
-          testID="input-age"
-          value={String(profile.age)}
-          onChangeText={(v) => {
-            const parsed = Number.parseInt(v, 10);
-            if (Number.isFinite(parsed)) setAge(parsed);
-          }}
-          keyboardType="number-pad"
-          maxLength={2}
-          accessibilityLabel={t('identity.ageA11y')}
-          hitSlop={44}
-          placeholder={t('identity.agePlaceholder')}
-          placeholderTextColor={colors.textMuted}
-          style={{
-            height: 48,
-            minHeight: 48,
-            borderWidth: 1,
-            borderColor: colors.borderStrong,
-            borderRadius: radii.md,
-            backgroundColor: colors.surface,
-            color: colors.textStrong,
-            fontSize: fontSize.lg,
-            fontWeight: fontWeight.bold,
-            paddingHorizontal: spacing[4],
-          }}
-        />
-      </View>
       {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
           el soft keyboard esté abierto o el form se desplace. El botón
           sigue siendo testeable por testID `btn-identity-continue` desde
           el footer (el subtree ya no es scrollable).
           MGC-1567 — `pointerEvents='box-none'` INCONDICIONAL. El bg del
-          footer (240dp, colors.bg) ocupa exactamente el área donde caen los
-          league-list-items cuando el wrapper se expande a 340dp; sin
-          box-none el bg captura el tap y bloquea la selección. El Pressable
-          btn-identity-continue (hijo directo, default auto) captura su
-          propio tap. Patrón MGC-1348 v2 / MGC-1578 (PR-394) extendido. */}
+          footer ocupa exactamente el área donde caen los league-list-items
+          cuando el wrapper se expande; sin box-none el bg captura el tap y
+          bloquea la selección. El Pressable btn-identity-continue (hijo
+          directo, default auto) captura su propio tap. Patrón MGC-1348 v2 /
+          MGC-1578 (PR-394) extendido. */}
       <View
         pointerEvents="box-none"
         style={[
