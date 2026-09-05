@@ -269,9 +269,13 @@ export default function TemporadaScreen() {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   paddingVertical: spacing[2],
-                  borderTopWidth: 1,
-                  borderTopColor: colors.border,
+                  paddingHorizontal: spacing[3],
+                  borderRadius: radii.md,
+                  borderWidth: selected ? 2 : 1,
+                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected ? colors.surface2 : colors.surface,
                   opacity: atCap ? 0.4 : 1,
+                  minHeight: 48,
                 }}
               >
                 <Text
