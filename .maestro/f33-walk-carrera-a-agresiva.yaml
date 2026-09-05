@@ -1,14 +1,15 @@
-# MGC-1786 / MGC-1633 — F3.3 Walk carrera-a agresiva.
+# MGC-1786 / MGC-1633 — F3.3 Walk carrera-a agresiva (REESCRITO sobre
+# a09ffbe / PR #470 UX1).
 #
 # Carrera corta agresiva: doble_turno consistente, peaks de fatiga al 30%,
-# fin-carrera en 4-6 temporadas. No espera lesión; si lesión aparece,
-# el flow sigue (regresión válida: el walk assertOnly valida que el motor
+# fin-carrera en 4-6 temporadas. No espera lesión; si lesión aparece, el
+# flow sigue (regresión válida: el walk assertOnly valida que el motor
 # no rompe con lesión).
 #
 # Precondiciones (ejecutar ANTES de `maestro test`):
-#   1. APK pineado al SHA del PR que cerró F3.2 motor (PR #425 c45c64c)
-#      o posterior. testIDs estables desde PR #421 (WF4 partido+WF5 post-
-#      match) + PR #427 (WF1 identidad reorganizada + chips + apellido).
+#   1. APK pineado al SHA del PR que cerró UX1 (PR #470 a09ffbe) o
+#      posterior. testIDs `team-select-card-${id}` y `btn-team-select-continue`
+#      sólo existen desde PR #470.
 #   2. adb shim en ~/.local/bin/adb (Homebrew adb 1.0.41 cuelga).
 #   3. Device físico ZY22G728HN conectado (`adb devices`).
 #   4. JAVA_HOME apuntando a openjdk@17:
@@ -19,20 +20,26 @@
 #
 # AC (MGC-1786 AC actualizado):
 #   - Carrera A: setup (identity con input-lastname + pos-ST + club velez)
-#     → debut match → draft 4 rondas → club final (velez) →
-#     loop agresivo 5 temporadas (doble_turno) → fin-carrera con resumen.
-#   - 5 partidos efectivos consumidos vía post-match (no asssertVisible
-#     temporada-screen sin haber pasado por post-match).
+#     → season-hub → 6 semanas de partido (doble_turno) → fin-carrera con
+#     resumen. 6 matchweeks consumidas vía week-decision.doble_turno (en
+#     UX1 el partido se resuelve en background via `resolveMatchweek()`;
+#     NO se visita /match ni /post-match — el matchStore sólo persiste el
+#     último outcome y el rating se ve en /temporada).
 #   - Termina en /simulador-carrera/fin-carrera con stage='retirement'.
 #
-# Diferencias vs MGC-1872 (4 sept):
-#   - input-lastname ahora REQUIRED (PR #427).
-#   - Chips pos-{GK|CB|CAM|ST}; carrera A usa pos-ST explícito.
-#   - btn-dashboard-academy bifurca: sin club → /academy; con club → /match
-#     (PR #421 WF4). Debut match ocurre ANTES de draft, no durante.
-#   - club-${id} en academy.tsx; club-pick-${id} en club.tsx (MGC-209 [4/6]).
-#   - btn-dashboard-draft visible mientras !profile.club OR stage==='clubStart'
-#     (NO por semana N como предполагал el issue original — ver comment MGC-1786).
+# Diferencias vs MGC-1786 PR #468 (a0354e1 sobre c33b9d2):
+#   - PR #468 recorría academy → debut match → /match → /post-match → 5
+#     temporadas de temporada con doble_turno. ESTE FLOW YA NO EXISTE en
+#     main post-UX1.
+#   - PR #470 reemplaza academy.tsx por team-select.tsx. El club pick es
+#     el primer paso post-identity. NO hay debut match, NO hay /draft
+#     inicial, NO hay /tu-jugador → /club final.
+#   - week-decision.doble_turno RESUELVE el partido en background (no
+#     navega a /match). Ver `weeklyDecisionTree.ts` línea 489. Carrera A
+#     sigue jugando 6 partidos pero NO visita /match ni /post-match.
+#   - retirement se fuerza vía btn-temporada-retire en /temporada tras N
+#     temporadas. Más rápido que el motor natural (que dispara tras N
+#     temporadas si la edad cruza el umbral).
 #
 # Ejecución:
 #   export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
@@ -51,6 +58,7 @@ tags:
   - mgc-1633
   - carrera-a
   - agresiva
+  - ux1
 
 ---
 # ── SETUP: home → identity (4 campos post-PR #427) ───────────────────
@@ -111,145 +119,40 @@ tags:
     timeout: 5000
 - tapOn:
     id: btn-identity-continue
-    label: "Continuar → /dashboard"
+    label: "Continuar → /team-select (PR #470 UX1)"
 
-# ── DASHBOARD 1ª vez (sin club) → ACADEMY → CLUB velez ──────────────
+# ── TEAM-SELECT (PR #470 UX1 — REEMPLAZA academy.tsx) ────────────────
 - assertVisible:
-    id: dashboard-screen
-    label: "Dashboard post-identity"
+    id: team-select-screen
+    label: "Pantalla team-select montada"
 - scrollUntilVisible:
     element:
-      id: btn-dashboard-academy
+      id: team-select-card-velez
     direction: DOWN
     timeout: 5000
 - tapOn:
-    id: btn-dashboard-academy
-    label: "Dashboard → /academy"
-
+    id: team-select-card-velez
+    label: "Pick Vélez (club inicial)"
 - assertVisible:
-    id: academy-screen
-    label: "Pantalla academy"
-- scrollUntilVisible:
-    element:
-      id: club-velez
-    direction: DOWN
-    timeout: 5000
+    id: btn-team-select-continue
+    label: "CTA Continuar habilitado tras pick"
 - tapOn:
-    id: club-velez
-    label: "Pick Vélez (1ª fichaje, academy)"
+    id: btn-team-select-continue
+    label: "Continuar → /season-hub"
+# PR #470 / MGC-1648: router.replace diferido 250ms (InteractionManager +
+# rAF + setTimeout). Necesario timeout generoso.
 - assertVisible:
-    text: "Firmar"
-- tapOn:
-    text: "Firmar"
-- waitForAnimationToEnd
+    id: season-hub-scroll
+    timeout: 8000
+    label: "Season hub montado tras team-select"
 
-# ── DEBUT MATCH (PR #421 WF4) ────────────────────────────────────────
-# Con club fichado, btn-dashboard-academy bifurca a /match vía startMatch().
-- assertVisible:
-    id: dashboard-screen
-    label: "Dashboard post-firma"
-- scrollUntilVisible:
-    element:
-      id: btn-dashboard-academy
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-dashboard-academy
-    label: "Dashboard → /match (debut)"
-
-- assertVisible:
-    id: match-screen
-    label: "Match debut"
-- assertVisible:
-    id: match-scoreboard
-- waitForAnimationToEnd
-- scrollUntilVisible:
-    element:
-      id: btn-match-finalize
-    direction: DOWN
-    timeout: 10000
-- tapOn:
-    id: btn-match-finalize
-    label: "Finalizar → /post-match"
-
-# ── POST-MATCH (PR #421 WF5) ─────────────────────────────────────────
-- assertVisible:
-    id: post-match-screen
-    label: "Post-match debut"
-- assertVisible:
-    id: post-match-rating
-- scrollUntilVisible:
-    element:
-      id: btn-post-match-next-week
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-post-match-next-week
-    label: "Siguiente semana → /dashboard"
-
-# ── DRAFT (MGC-209 [3/6], btn-dashboard-draft visible por stage='clubStart')
-- assertVisible:
-    id: dashboard-screen
-    label: "Dashboard post-debut (con club)"
-- scrollUntilVisible:
-    element:
-      id: btn-dashboard-draft
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-dashboard-draft
-    label: "Dashboard → /draft"
-
-- assertVisible:
-    id: draft-screen
+# ── TEMPORADA: 6 semanas con doble_turno (PR #470 UX1) ────────────────
+# season-hub → btn-season-hub-decide → /week-decision →
+# btn-week-option-doble_turno → resolveMatchweek (background) →
+# router.replace('/season-hub'). Sin visita a /match ni /post-match.
 - repeat:
-    times: 4
+    times: 6
     commands:
-      - scrollUntilVisible:
-          element:
-            id: btn-draft-confirm
-          direction: DOWN
-          timeout: 5000
-      - tapOn:
-          id: btn-draft-confirm
-      - waitForAnimationToEnd
-
-# ── TU-JUGADOR → CLUB final (MGC-209 [4/6]) ──────────────────────────
-- assertVisible:
-    id: tu-jugador-screen
-- scrollUntilVisible:
-    element:
-      id: btn-tu-jugador-club
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-tu-jugador-club
-    label: "Tu jugador → /club"
-
-- assertVisible:
-    id: club-pick-velez
-    label: "Club final Vélez"
-- tapOn:
-    id: club-pick-velez
-    label: "Pick Vélez (club final)"
-- waitForAnimationToEnd
-
-# ── TEMPORADA: 5 temporadas agresivas (doble_turno) ──────────────────
-- assertVisible:
-    id: temporada-screen
-- repeat:
-    times: 5
-    commands:
-      - scrollUntilVisible:
-          element:
-            id: btn-temporada-play
-          direction: DOWN
-          timeout: 5000
-      - tapOn:
-          id: btn-temporada-play
-          label: "Temporada → /season-hub"
-      - assertVisible:
-          id: season-hub-scroll
       - scrollUntilVisible:
           element:
             id: btn-season-hub-decide
@@ -257,9 +160,11 @@ tags:
           timeout: 5000
       - tapOn:
           id: btn-season-hub-decide
-          label: "Hub → /week-decision"
+          label: "Season hub → /week-decision"
       - assertVisible:
           id: week-decision-scroll
+          timeout: 5000
+          label: "Week decision montada"
       - scrollUntilVisible:
           element:
             id: btn-week-option-doble_turno
@@ -267,23 +172,27 @@ tags:
           timeout: 5000
       - tapOn:
           id: btn-week-option-doble_turno
-          label: "Pick doble_turno (resuelve partido)"
-      - waitForAnimationToEnd
+          label: "Pick doble_turno (consume partido en background)"
       - assertVisible:
           id: season-hub-scroll
-      - scrollUntilVisible:
-          element:
-            id: btn-season-hub-view-table
-          direction: DOWN
-          timeout: 5000
-      - tapOn:
-          id: btn-season-hub-view-table
-          label: "Volver a /temporada"
-      - waitForAnimationToEnd
+          timeout: 8000
+          label: "Vuelta a season-hub post-decisión"
 
-# ── FIN-CARRERA forzado (avanzar 4 semanas + retire manual) ──────────
+# ── TEMPORADA SCREEN: forzar retirement ──────────────────────────────
+- scrollUntilVisible:
+    element:
+      id: btn-season-hub-view-table
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: btn-season-hub-view-table
+    label: "Season hub → /temporada"
 - assertVisible:
     id: temporada-screen
+    timeout: 8000
+    label: "Pantalla temporada montada"
+# Avanzar 4 semanas (btn-temporada-next-week) para acumular más semanas
+# de historial antes del retiro forzado.
 - repeat:
     times: 4
     commands:
@@ -295,8 +204,6 @@ tags:
       - tapOn:
           id: btn-temporada-next-week
       - waitForAnimationToEnd
-- assertVisible:
-    id: temporada-last-season
 - scrollUntilVisible:
     element:
       id: btn-temporada-retire
@@ -304,12 +211,13 @@ tags:
     timeout: 5000
 - tapOn:
     id: btn-temporada-retire
-    label: "Retiro manual → /fin-carrera"
+    label: "Retiro forzado → /fin-carrera"
 - waitForAnimationToEnd
 
 # ── FIN-CARRERA ──────────────────────────────────────────────────────
 - assertVisible:
     id: fin-carrera-screen
+    timeout: 8000
     label: "Pantalla fin-carrera con resumen"
 # Resumen puede ser retire.summary (larga, 5+ temporadas) o
 # retire.notFinished (corta, motor decidió fin anticipado). Carrera A

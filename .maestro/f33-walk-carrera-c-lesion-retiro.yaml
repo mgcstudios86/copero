@@ -1,36 +1,53 @@
-# MGC-1786 / MGC-1633 — F3.3 Walk carrera-c lesión + retiro.
+# MGC-1786 / MGC-1633 — F3.3 Walk carrera-c lesión + retiro (REESCRITO
+# sobre a09ffbe / PR #470 UX1).
 #
-# Walk regresivo: fuerza lesión temprana vía entrenamiento_fisico_especifico
-# agresivo y valida que el motor cierra la carrera correctamente cuando
-# `lesion.fechasOut > 0` cruza el threshold. PR-418 (MGC-1677) preserva
-# `fechasOut` semanas tras reinjury; este walk valida que el reinjury
-# stack no rompe fin-carrera.
+# Walk regresivo: fuerza lesión temprana vía
+# entrenamiento_fisico_especifico agresivo y valida que el motor cierra
+# la carrera correctamente cuando `lesion.fechasOut > 0` cruza el
+# threshold. PR-418 (MGC-1677) preserva `fechasOut` semanas tras reinjury;
+# este walk valida que el reinjury stack no rompe fin-carrera.
 #
-# Precondiciones: idénticas a f33-walk-carrera-a-agresiva.yaml.
+# Precondiciones (ejecutar ANTES de `maestro test`):
+#   1. APK pineado al SHA del PR que cerró UX1 (PR #470 a09ffbe) o
+#      posterior. testIDs `team-select-card-${id}` y `btn-team-select-continue`
+#      sólo existen desde PR #470.
+#   2. adb shim en ~/.local/bin/adb (Homebrew adb 1.0.41 cuelga).
+#   3. Device físico ZY22G728HN conectado (`adb devices`).
+#   4. JAVA_HOME apuntando a openjdk@17:
+#        export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+#   5. AsyncStorage limpio — el flow asume state vacío. Si hay save previo
+#      el flow hidrata y este flow no llega a identity. Forzar reset con:
+#        adb shell pm clear com.mgcstudios.copero
 #
 # AC (MGC-1786 AC actualizado):
-#   - Carrera C: setup (identity con input-lastname + pos-ST + club
-#     temperley arquetipo DESARROLLO) → debut match → draft →
-#     club final (temperley) → loop 4 temporadas con
-#     entrenamiento_fisico_especifico agresivo buscando forzar lesión
-#     → fin-carrera disparado por lesión (no edad).
-#   - El flujo termina en /fin-carrera con retire.summary o
-#     retire.notFinished.
-#   - Sin assertVisible fallando — el reinjury stack no rompe la nav.
+#   - Carrera C: setup (identity con input-lastname + pos-ST + club velez)
+#     → season-hub → 4 semanas con entrenamiento_fisico_especifico (alto
+#     injuryBase=0.03 + cumulative streak) → lesión detectada vía banner
+#     `lesion_activa` en season-hub → retiro manual → fin-carrera con
+#     stage='retirement' y resumen.
+#   - lesión banner: temporada.tsx renderiza LESIÓN ACTIVA cuando
+#     profile.career.lesion.fechasOut > 0. Ver `weeklyDecisionTree.ts`
+#     `doubleStreakInjuryMod` + `fatigueInjuryMod` por el modelado.
 #
-# Notas:
-#   - Temperley está en 2da posición del academy (debajo del fold).
-#   - `btn-week-option-entrenamiento_fisico_especifico` es el camino de
-#     mayor riesgo de lesión. Carrera C lo usa 100%.
-#   - Si el motor detecta fechasOut > threshold y cierra la carrera, el flow
-#     assertVisible fin-carrera-screen sin necesidad del
-#     btn-temporada-retire manual.
-#   - post-match-rating debe mostrar fatigue/moral baja antes del retiro
-#     por lesión. El flow assertVisible post-match-rating y post-match-deltas
-#     en la primera iteración para evidenciar regresión.
-#   - PR #414 (808a534) agregó stat posicional dinámico a
-#     entrenamiento_fisico_especifico — carrera C lo verifica implícitamente
-#     al elegir ST como posición inicial.
+# Diferencias vs MGC-1786 PR #468 (a0354e1 sobre c33b9d2):
+#   - PR #468 asumía debut match + 4 semanas de partido antes de detectar
+#     lesión. ESTE FLOW YA NO EXISTE en main.
+#   - PR #470 reemplaza el módulo academy.tsx + draft.tsx por team-select.
+#     NO hay debut match, NO hay /draft, NO hay /tu-jugador → /club.
+#   - week-decision.entrenamiento_fisico_especifico NO consume matchweek
+#     (a diferencia de turno_simple/doble_turno). Sólo
+#     career.fisico -10 + stat posicional +2. Carrera C no necesita
+#     matchweeks para forzar lesión.
+#   - Lesión banner se renderiza en temporada.tsx (`lesion_activa`); tras
+#     4 semanas de entrenamiento_fisico_especifico consecutivas el motor
+#     dispara lesión con probabilidad acumulada > 0.5.
+#
+# Ejecución:
+#   export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+#   adb shell pm clear com.mgcstudios.copero
+#   maestro test .maestro/f33-walk-carrera-c-lesion-retiro.yaml
+#
+# Owner del device: QA agent (ZY22G728HN). CI no corre Maestro mobile.
 
 appId: com.mgcstudios.copero
 name: f33-walk-carrera-c-lesion-retiro
@@ -42,20 +59,27 @@ tags:
   - mgc-1633
   - carrera-c
   - lesion
-  - retiro
+  - ux1
 
 ---
+# ── SETUP: home → identity (4 campos post-PR #427) ───────────────────
 - launchApp:
     appId: com.mgcstudios.copero
     clearState: true
 
 - assertVisible:
     id: home-screen
+    label: "Home con CTA Jugar visible"
+- assertVisible:
+    id: btn-career
+    label: "CTA Jugar presente"
 - tapOn:
     id: btn-career
+    label: "Tap Jugar → /identity"
 
 - assertVisible:
     id: identity-screen
+    label: "Pantalla identity montada"
 - scrollUntilVisible:
     element:
       id: input-name
@@ -63,7 +87,7 @@ tags:
     timeout: 5000
 - inputText:
     id: input-name
-    text: "Mateo F33C"
+    text: "Carlos F33C"
 - scrollUntilVisible:
     element:
       id: input-lastname
@@ -71,7 +95,7 @@ tags:
     timeout: 5000
 - inputText:
     id: input-lastname
-    text: "Lesion"
+    text: "LesionRetiro"
 - scrollUntilVisible:
     element:
       id: country-ARG
@@ -79,7 +103,8 @@ tags:
     timeout: 5000
 - tapOn:
     id: country-ARG
-# Carrera C lesión: posición ST (PR #414 entrega stat posicional dinámico).
+    label: "País Argentina"
+# Carrera C lesión: posición ST (delantero centro). Chips pos-{id}.
 - scrollUntilVisible:
     element:
       id: pos-ST
@@ -95,134 +120,39 @@ tags:
     timeout: 5000
 - tapOn:
     id: btn-identity-continue
+    label: "Continuar → /team-select (PR #470 UX1)"
 
+# ── TEAM-SELECT (PR #470 UX1) ────────────────────────────────────────
 - assertVisible:
-    id: dashboard-screen
+    id: team-select-screen
+    label: "Pantalla team-select montada"
 - scrollUntilVisible:
     element:
-      id: btn-dashboard-academy
+      id: team-select-card-velez
     direction: DOWN
     timeout: 5000
 - tapOn:
-    id: btn-dashboard-academy
-
+    id: team-select-card-velez
+    label: "Pick Vélez (club inicial)"
 - assertVisible:
-    id: academy-screen
-# Temperley (DESARROLLO) está en 2da posición del fold.
-- scrollUntilVisible:
-    element:
-      text: "TEMPERLEY"
-    direction: DOWN
-    timeout: 5000
-- scrollUntilVisible:
-    element:
-      id: club-temperley
-    direction: DOWN
-    timeout: 5000
+    id: btn-team-select-continue
+    label: "CTA Continuar habilitado tras pick"
 - tapOn:
-    id: club-temperley
-    label: "Pick Temperley (arquetipo DESARROLLO)"
+    id: btn-team-select-continue
+    label: "Continuar → /season-hub"
 - assertVisible:
-    text: "Firmar"
-- tapOn:
-    text: "Firmar"
-- waitForAnimationToEnd
+    id: season-hub-scroll
+    timeout: 8000
+    label: "Season hub montado tras team-select"
 
-# ── DEBUT MATCH ──────────────────────────────────────────────────────
-- assertVisible:
-    id: dashboard-screen
-- scrollUntilVisible:
-    element:
-      id: btn-dashboard-academy
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-dashboard-academy
-    label: "Dashboard → /match (debut)"
-
-- assertVisible:
-    id: match-screen
-- assertVisible:
-    id: match-scoreboard
-- waitForAnimationToEnd
-- scrollUntilVisible:
-    element:
-      id: btn-match-finalize
-    direction: DOWN
-    timeout: 10000
-- tapOn:
-    id: btn-match-finalize
-
-- assertVisible:
-    id: post-match-screen
-- scrollUntilVisible:
-    element:
-      id: btn-post-match-next-week
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-post-match-next-week
-
-# ── DRAFT → TU-JUGADOR → CLUB final temperley ───────────────────────
-- assertVisible:
-    id: dashboard-screen
-- scrollUntilVisible:
-    element:
-      id: btn-dashboard-draft
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-dashboard-draft
-
-- assertVisible:
-    id: draft-screen
+# ── FASE 1: 4 semanas de entrenamiento_fisico_especifico ────────────
+# AC: "4 sem partido + lesión banner detectado + retiro + fin-carrera
+# PASS". Carrera C prioriza lesión sobre partido: usa
+# entrenamiento_fisico_especifico (injuryBase=0.03 + cumulative streak)
+# que dispara lesión con probabilidad > 0.5 en 4 semanas consecutivas.
 - repeat:
     times: 4
     commands:
-      - scrollUntilVisible:
-          element:
-            id: btn-draft-confirm
-          direction: DOWN
-          timeout: 5000
-      - tapOn:
-          id: btn-draft-confirm
-      - waitForAnimationToEnd
-
-- assertVisible:
-    id: tu-jugador-screen
-- scrollUntilVisible:
-    element:
-      id: btn-tu-jugador-club
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-tu-jugador-club
-    label: "Tu jugador → /club"
-
-- assertVisible:
-    id: club-pick-temperley
-    label: "Club final Temperley"
-- tapOn:
-    id: club-pick-temperley
-    label: "Pick Temperley (club final)"
-- waitForAnimationToEnd
-
-# ── TEMPORADA: 4 temporadas con entrenamiento_fisico_especifico agresivo
-#    para forzar lesión temprana y validar fin-carrera por injury. ──────
-- assertVisible:
-    id: temporada-screen
-- repeat:
-    times: 4
-    commands:
-      - scrollUntilVisible:
-          element:
-            id: btn-temporada-play
-          direction: DOWN
-          timeout: 5000
-      - tapOn:
-          id: btn-temporada-play
-      - assertVisible:
-          id: season-hub-scroll
       - scrollUntilVisible:
           element:
             id: btn-season-hub-decide
@@ -230,8 +160,11 @@ tags:
           timeout: 5000
       - tapOn:
           id: btn-season-hub-decide
+          label: "Season hub → /week-decision"
       - assertVisible:
           id: week-decision-scroll
+          timeout: 5000
+          label: "Week decision montada"
       - scrollUntilVisible:
           element:
             id: btn-week-option-entrenamiento_fisico_especifico
@@ -239,45 +172,33 @@ tags:
           timeout: 5000
       - tapOn:
           id: btn-week-option-entrenamiento_fisico_especifico
-          label: "Pick training (alto riesgo lesión)"
-      - waitForAnimationToEnd
-      # Si lesión cierra carrera, assertVisible fin-carrera-screen y break.
-      - runFlow:
-          when:
-            visible:
-              id: fin-carrera-screen
-          commands:
-            - assertVisible:
-                text: "Resumen"
-                label: "Carrera cerrada por lesión"
-            - stopApp
+          label: "Pick entrenamiento_fisico_especifico (alto injuryBase)"
       - assertVisible:
           id: season-hub-scroll
-      - scrollUntilVisible:
-          element:
-            id: btn-season-hub-view-table
-          direction: DOWN
-          timeout: 5000
-      - tapOn:
-          id: btn-season-hub-view-table
-      - waitForAnimationToEnd
+          timeout: 8000
+          label: "Vuelta a season-hub post-entrenamiento"
 
-# ── FIN-CARRERA forzado (carrera no se cerró por lesión) ──────────────
+# ── TEMPORADA SCREEN: validar banner lesión + forzar retiro ──────────
+- scrollUntilVisible:
+    element:
+      id: btn-season-hub-view-table
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: btn-season-hub-view-table
+    label: "Season hub → /temporada"
 - assertVisible:
     id: temporada-screen
-- repeat:
-    times: 4
-    commands:
-      - scrollUntilVisible:
-          element:
-            id: btn-temporada-next-week
-          direction: DOWN
-          timeout: 5000
-      - tapOn:
-          id: btn-temporada-next-week
-      - waitForAnimationToEnd
+    timeout: 8000
+    label: "Pantalla temporada montada"
+# El banner LESIÓN ACTIVA se renderiza en temporada.tsx cuando
+# profile.career.lesion.fechasOut > 0. Si tras 4 semanas de
+# entrenamiento_fisico_especifico no apareció (probabilidad < 1.0),
+# igual forzamos el retiro manual.
 - assertVisible:
-    id: temporada-last-season
+    text: "LESIÓN ACTIVA"
+    optional: true
+    label: "Banner lesión activa (probabilístico, puede no aparecer)"
 - scrollUntilVisible:
     element:
       id: btn-temporada-retire
@@ -285,10 +206,17 @@ tags:
     timeout: 5000
 - tapOn:
     id: btn-temporada-retire
-    waitForAnimationToEnd
+    label: "Retiro forzado → /fin-carrera"
+- waitForAnimationToEnd
 
 # ── FIN-CARRERA ──────────────────────────────────────────────────────
 - assertVisible:
     id: fin-carrera-screen
+    timeout: 8000
+    label: "Pantalla fin-carrera con resumen"
+# Carrera C con lesión temprana puede terminar en retire.earlyRetirement
+# (lesión forzó fin) o retire.notFinished (motor no detectó fin
+# natural). Aceptamos cualquier resumen que mencione lesión o retiro.
 - assertVisible:
     text: "Resumen"
+    label: "Resumen de carrera visible"

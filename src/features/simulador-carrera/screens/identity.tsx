@@ -13,6 +13,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
+
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -28,6 +29,9 @@ import { NATIONALITIES } from '@/features/career/nationalities';
 // `setLeague` por compat con storage migrado (MGC-1501 internal track).
 import { isIdentityComplete } from '@/features/career/identity-state';
 import type { Foot, PositionGroup } from '@/types/career';
+
+// MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje (PR-379 / MGC-1502).
+const HIT_SLOP_44 = { top: 22, left: 22, right: 22, bottom: 22 } as const;
 
 // MGC-1448 — filas de nacionalidad visibles sin query. Ver el presupuesto de
 // contenido documentado en `filteredNationalities`: con las 33 inline el árbol
@@ -567,7 +571,9 @@ export default function IdentityScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                   accessibilityLabel={t('identity.nationalityOptionA11y', { name: n.name })}
-                  hitSlop={22}
+                  // MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje
+                  // (PR-379 / MGC-1502). Row 44dp + HIT_SLOP_44 → 132dp hitbox.
+                  hitSlop={HIT_SLOP_44}
                   // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
                   // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
                   // `getByTestId('country-ARG')`. Alias solo para AR;
@@ -981,7 +987,7 @@ export default function IdentityScreen() {
                 captura el tap perimetral y llama ageInputRef.current?.focus() */}
             <Pressable
               onPress={() => ageInputRef.current?.focus()}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-age-tap-target"
               accessible={false}
@@ -1172,11 +1178,11 @@ export default function IdentityScreen() {
                     label: chip.label,
                   })}
                   accessibilityState={{ selected: active }}
-                  // MGC-1502 — WCAG 2.5.5: touch target ≥44dp. Chip visual
-                  // 48dp + hitSlop +8 cada lado → 64dp hitbox. testID
-                  // `pos-${chip.id}` preserva el contrato `pos-GK/CB/CAM/ST`
-                  // que las specs E2E y axe ya consumen.
-                  hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+                  // MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje (PR-379
+                  // / MGC-1502). Chip 48dp + HIT_SLOP_44 → 136dp hitbox.
+                  // testID `pos-${chip.id}` preserva el contrato
+                  // `pos-GK/CB/CAM/ST` que las specs E2E y axe ya consumen.
+                  hitSlop={HIT_SLOP_44}
                   testID={`pos-${chip.id}`}
                   collapsable={false}
                   style={{

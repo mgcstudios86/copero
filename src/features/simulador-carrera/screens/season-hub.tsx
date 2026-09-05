@@ -14,6 +14,9 @@ import {
 } from '@/features/career/position-stats';
 import type { Club } from '@/types/career';
 
+// MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje (PR-379 / MGC-1502).
+const HIT_SLOP_44 = { top: 22, left: 22, right: 22, bottom: 22 } as const;
+
 /**
  * MGC-1649 [WF3/6] — SEASON HUB.
  *
@@ -373,7 +376,7 @@ export default function SeasonHubScreen() {
           fullWidth
           testID="btn-season-hub-view-table"
           accessibilityHint={t('seasonHub.ctaViewTableHint')}
-          hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+          hitSlop={HIT_SLOP_44}
         />
         <Button
           label={t('seasonHub.ctaDecide')}
@@ -383,7 +386,7 @@ export default function SeasonHubScreen() {
           fullWidth
           testID="btn-season-hub-decide"
           accessibilityHint={t('seasonHub.ctaDecideHint')}
-          hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+          hitSlop={HIT_SLOP_44}
         />
       </View>
     </SafeAreaView>

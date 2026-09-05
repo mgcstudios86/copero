@@ -44,6 +44,9 @@ import { useLocale } from '@/i18n/locale-context';
 import { ACADEMY_CLUBS } from '@/features/career/clubs';
 import type { Club } from '@/types/career';
 
+// MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje (PR-379 / MGC-1502).
+const HIT_SLOP_44 = { top: 22, left: 22, right: 22, bottom: 22 } as const;
+
 const MAX_REPUTATION = 5;
 
 /**
@@ -219,9 +222,9 @@ export default function TeamSelectScreen() {
                       reputation,
                       maxReputation: MAX_REPUTATION,
                     })}
-                    // MGC-1502 / WCAG 2.5.5 — hitSlop +8 cada lado garantiza
-                    // touch target ≥44dp sin alterar layout visual.
-                    hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+                    // MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje
+                    // (PR-379 / MGC-1502). Card 88dp + HIT_SLOP_44 → 176dp hitbox.
+                    hitSlop={HIT_SLOP_44}
                     collapsable={false}
                     testID={`team-select-card-${club.id}`}
                     style={{

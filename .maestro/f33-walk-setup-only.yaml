@@ -1,59 +1,62 @@
-# MGC-1786 — F3.3 Walk setup-only.
+# MGC-1786 — F3.3 Walk setup-only (REESCRITO sobre a09ffbe / PR #470 UX1).
 #
-# Recorre el setup completo desde home hasta la pantalla /club, dejando la
-# carrera lista para que el flow carrera-{a,b,c} elija el club final y
-# arranque la temporada. NO incluye loop temporada ni fin-carrera.
+# Recorre el setup completo desde home hasta la pantalla /season-hub,
+# dejando la carrera lista para que el flow carrera-{a,b,c} arranque la
+# temporada. NO incluye loop temporada ni fin-carrera.
 #
-# Arquitectura (main @ c33b9d2, post-PR #427 WF1 identidad + chips +
-# apellido + PR #421 WF4 partido+post-match + PR #438/PR #466 F4 social +
-# draft MGC-209):
+# Arquitectura (origin/main @ a09ffbe, post-PR #470 UX1 + PR #467 cap 5→3
+# + PR #427 WF1 identidad reorganizada + chips + apellido):
 #
 #   home (btn-career)
-#     → /identity  (identity-screen; input-name, input-lastname,
-#                    country-ARG, pos-{GK|CB|CAM|ST}, btn-identity-continue)
-#     → /dashboard (dashboard-screen; btn-dashboard-academy +
-#                    btn-dashboard-draft; showDraftCta = !profile.club ||
-#                    stage === 'clubStart')
-#     → /academy   (academy-screen; club-${club.id}; Alert "Firmar")
-#     → /dashboard (con profile.club + stage='clubStart')
-#     → /match     (match-screen; btn-match-finalize; startMatch())
-#     → /post-match (post-match-screen; btn-post-match-next-week +
-#                    btn-post-match-back-hub → ambos router.replace a
-#                    /dashboard por PR-421 WF5)
-#     → /dashboard (post-match drain vía matchStore + clearPostMatch)
-#     → /draft     (draft-screen; 4 rondas btn-draft-confirm; startDraft)
-#     → /tu-jugador (tu-jugador-screen; btn-tu-jugador-club → /club)
-#     → /club      (MGC-209 [4/6] ELEGÍ TU CLUB; club-pick-${club.id})
-#     → [carrera-* toma control: club-pick-{velez|boca|temperley} +
-#        /temporada]
+#     → /identity          (identity-screen; input-name, input-lastname,
+#                            country-ARG, pos-{GK|CB|CAM|ST},
+#                            btn-identity-continue
+#                            → router.replace '/simulador-carrera/team-select')
+#     → /team-select       (team-select-screen; team-select-card-${club.id},
+#                            team-select-badge-${club.id},
+#                            btn-team-select-continue
+#                            → setInitialClub() + router.replace
+#                              '/simulador-carrera/season-hub')
+#     → /season-hub        (season-hub-scroll; btn-season-hub-decide,
+#                            btn-season-hub-view-table)
+#
+# UX1 (MGC-1737 / PR #470) ELIMINA el dashboard post-identity: el operator
+# pidió quitar el dashboard como pantalla inicial post-identity. Después de
+# elegir club en team-select el usuario va DIRECTO al hub de temporada
+# (WF3 / MGC-1649). El dashboard queda accesible sólo como ruta de resume
+# para sesiones guardadas con stage ∈ {dashboard, academy, clubStart}.
 #
 # Precondiciones (ejecutar ANTES de maestro test):
-#   1. APK pineado al SHA del PR que cerró F3.2 motor (PR #425 c45c64c)
-#      o posterior — testIDs estables desde PR #421.
+#   1. APK pineado al SHA del PR que cerró UX1 (PR #470 a09ffbe) o
+#      posterior. testIDs de team-select (`team-select-card-*`,
+#      `btn-team-select-continue`) sólo existen desde PR #470.
 #   2. adb shim en ~/.local/bin/adb (Homebrew adb 1.0.41 cuelga).
 #   3. Device físico ZY22G728HN conectado (`adb devices`).
 #   4. JAVA_HOME apuntando a openjdk@17:
 #        export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
 #   5. AsyncStorage limpio (reset completo):
 #        adb shell pm clear com.mgcstudios.copero
-#   6. App en frío (launchApp con clearState=false deja el state pre-poblado
-#      por el deeplink; usar clearState=true si querés reset duro).
+#   6. App en frío (launchApp con clearState=true para reset duro).
 #
 # AC:
-#   - Llega a /club con `club-${club.id}` visible en la grilla.
+#   - Llega a /season-hub con `season-hub-scroll` visible y `btn-season-hub-decide`.
 #   - Ningún assertVisible fallando durante setup.
 #   - Logs `/tmp/maestro-setup-debug/` con dumps intermedios.
 #
-# Diferencias vs flujos viejos (MGC-1872 / 4 sept):
-#   - `input-lastname` ahora es REQUIRED (PR #427). Antes era opcional.
-#   - Chips `pos-${chip.id}` pos-GK|CB|CAM|ST (4 visibles, no 6).
-#   - `btn-dashboard-academy` con club → /match (PR #421) — antes abría
-#     academy siempre. Ahora bifurca en onAcademyPress según profile.club.
-#   - `btn-dashboard-draft` se muestra cuando !profile.club OR
-#     stage==='clubStart'. NO depende de la semana (MGC-1786 issue
-#     describía "umbral semana N" pero el código real es por estado).
-#   - `club-${club.id}` en academy.tsx; `club-pick-${club.id}` en club.tsx
-#     (MGC-209 [4/6]). Dos testIDs distintos, no son el mismo botón.
+# Diferencias vs MGC-1786 PR #468 (a0354e1 sobre c33b9d2):
+#   - PR #468 asumía identity → dashboard (1ª vez) → btn-dashboard-academy →
+#     academy → club-velez → /dashboard → debut match → /draft → /tu-jugador
+#     → /club. ESTE FLOW YA NO EXISTE en main.
+#   - PR #470 reemplaza academy → team-select (testID `team-select-card-`,
+#     NO `club-`). El club pick es ANTES del season-hub, no antes del
+#     partido de debut (PR #468 asumía debut match antes de draft; UX1 lo
+#     elimina — el primer partido viene del week-decision dentro de
+#     season-hub).
+#   - dashboard queda relegado a `resumeRouteForStage` (sólo para stage ∈
+#     {dashboard, academy, clubStart}); los flujos nuevos no lo tocan.
+#   - NATIONALITY_FRESH_LIMIT=5→3 (PR #467/MGC-1882). country-ARG/BR/UY
+#     siguen visibles sin scroll. country-CL/CO requieren search o "Ver
+#     todas". El flow default usa ARG — sigue visible sin scroll.
 #
 # Ejecución:
 #   export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
@@ -69,6 +72,7 @@ tags:
   - mgc-1786
   - mgc-1633
   - setup
+  - ux1
 
 ---
 # ── HOME ──────────────────────────────────────────────────────────────
@@ -133,134 +137,40 @@ tags:
     timeout: 5000
 - tapOn:
     id: btn-identity-continue
-    label: "Continuar → /dashboard"
+    label: "Continuar → /team-select (PR #470 UX1)"
 
-# ── DASHBOARD (1ª vez, sin club) ─────────────────────────────────────
+# ── TEAM-SELECT (PR #470 UX1 — REEMPLAZA academy.tsx) ────────────────
 - assertVisible:
-    id: dashboard-screen
-    label: "Dashboard post-identity"
-# Path canónico: academy → club pick → "Firmar" → dashboard (con club).
+    id: team-select-screen
+    label: "Pantalla team-select montada"
+# team-select-card-${club.id} (NO club-${id}). El flow carrera puede
+# parametrizar el clubId (velez, temperley, moron, boca, river).
 - scrollUntilVisible:
     element:
-      id: btn-dashboard-academy
+      id: team-select-card-velez
     direction: DOWN
     timeout: 5000
 - tapOn:
-    id: btn-dashboard-academy
-    label: "Dashboard → /academy"
-
-# ── ACADEMY → CLUB (testID `club-${club.id}`, NO `club-pick-`) ───────
-- assertVisible:
-    id: academy-screen
-    label: "Pantalla academy"
-- scrollUntilVisible:
-    element:
-      id: club-velez
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: club-velez
+    id: team-select-card-velez
     label: "Pick Vélez (default setup)"
 - assertVisible:
-    text: "Firmar"
+    id: btn-team-select-continue
+    label: "CTA Continuar habilitado tras pick"
 - tapOn:
-    text: "Firmar"
-- waitForAnimationToEnd
+    id: btn-team-select-continue
+    label: "Continuar → /season-hub"
+# PR #470 / MGC-1648: el router.replace está diferido por
+# InteractionManager + rAF + setTimeout 250ms (race vs reanimated IME
+# dismiss + Stack animation). Por eso el assert siguiente necesita timeout
+# generoso.
+- assertVisible:
+    id: season-hub-scroll
+    timeout: 8000
+    label: "Season hub montado tras team-select"
 
-# ── DASHBOARD post-firma (con club, stage='clubStart') ────────────────
+# ── SEASON-HUB (estado listo, NO loop partido) ────────────────────────
+# La carrera-{a,b,c} toma control desde acá con btn-season-hub-decide
+# (→ /week-decision) y btn-season-hub-view-table (→ /temporada).
 - assertVisible:
-    id: dashboard-screen
-    label: "Dashboard con club fichado"
-# Debut match: btn-dashboard-academy bifurca a /match ahora que hay club.
-# (PR #421 WF4 partido + WF5 post-match).
-- scrollUntilVisible:
-    element:
-      id: btn-dashboard-academy
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-dashboard-academy
-    label: "Dashboard → /match (debut, con club)"
-
-# ── MATCH (debut) ─────────────────────────────────────────────────────
-- assertVisible:
-    id: match-screen
-    label: "Match screen"
-- assertVisible:
-    id: match-scoreboard
-    label: "Scoreboard visible"
-- waitForAnimationToEnd
-- scrollUntilVisible:
-    element:
-      id: btn-match-finalize
-    direction: DOWN
-    timeout: 10000
-- tapOn:
-    id: btn-match-finalize
-    label: "Finalizar debut match → /post-match"
-
-# ── POST-MATCH ────────────────────────────────────────────────────────
-- assertVisible:
-    id: post-match-screen
-    label: "Pantalla post-match"
-- assertVisible:
-    id: post-match-rating
-    label: "Rating post-match visible"
-- scrollUntilVisible:
-    element:
-      id: btn-post-match-next-week
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-post-match-next-week
-    label: "Siguiente semana → /dashboard"
-
-# ── DASHBOARD post-debut (sigue con club + stage='clubStart') ────────
-- assertVisible:
-    id: dashboard-screen
-    label: "Dashboard post-debut"
-# Draft module (MGC-209 [3/6]): 4 rondas de pick/swap.
-- scrollUntilVisible:
-    element:
-      id: btn-dashboard-draft
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-dashboard-draft
-    label: "Dashboard → /draft"
-
-# ── DRAFT (4 rondas confirm) ──────────────────────────────────────────
-- assertVisible:
-    id: draft-screen
-    label: "Draft screen"
-- repeat:
-    times: 4
-    commands:
-      - scrollUntilVisible:
-          element:
-            id: btn-draft-confirm
-          direction: DOWN
-          timeout: 5000
-      - tapOn:
-          id: btn-draft-confirm
-      - waitForAnimationToEnd
-
-# ── TU-JUGADOR → CLUB (MGC-209 [4/6]) ────────────────────────────────
-- assertVisible:
-    id: tu-jugador-screen
-    label: "Tu jugador screen"
-- scrollUntilVisible:
-    element:
-      id: btn-tu-jugador-club
-    direction: DOWN
-    timeout: 5000
-- tapOn:
-    id: btn-tu-jugador-club
-    label: "Tu jugador → /club"
-
-# ── CLUB screen ──────────────────────────────────────────────────────
-- assertVisible:
-    id: club-pick-velez
-    label: "Club Vélez visible en grilla"
-# El flow carrera-* toma el control desde acá con `runFlow` o continúa
-# inline con `club-pick-${carreraClub}`.
+    id: season-hub-cta-footer
+    label: "Footer season-hub con CTAs visibles"

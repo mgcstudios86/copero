@@ -33,7 +33,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
-import { copy } from '@/design/copy/es-AR/simulador-carrera';
+import { useSocialCopy } from '@/design/copy/social-events-i18n';
 import { useCareerStore } from '@/shared/store/careerStore';
 import {
   type SocialEvent,
@@ -84,24 +84,28 @@ export default function SocialEventsScreen() {
 
   const rolledOutcome = socialEventPending?.id ?? null;
 
+  // MGC-2006 — copy localizado. `useSocialCopy` resuelve contra el
+  // CopyMatrix del `locale` activo (es / en / zh-CN) con fallback a es-AR.
+  const t = useSocialCopy();
+
   const titleByOutcome = useMemo<Record<SocialEventId, string>>(
     () => ({
-      timba: copy.resolve(`social_timba_title`),
-      asado: copy.resolve(`social_asado_title`),
-      tour: copy.resolve(`social_tour_title`),
-      quedarse: copy.resolve(`social_quedarse_title`),
+      timba: t(`social_timba_title`),
+      asado: t(`social_asado_title`),
+      tour: t(`social_tour_title`),
+      quedarse: t(`social_quedarse_title`),
     }),
-    [],
+    [t],
   );
 
   const bodyByOutcome = useMemo<Record<SocialEventId, string>>(
     () => ({
-      timba: copy.resolve(`social_timba_body`),
-      asado: copy.resolve(`social_asado_body`),
-      tour: copy.resolve(`social_tour_body`),
-      quedarse: copy.resolve(`social_quedarse_body`),
+      timba: t(`social_timba_body`),
+      asado: t(`social_asado_body`),
+      tour: t(`social_tour_body`),
+      quedarse: t(`social_quedarse_body`),
     }),
-    [],
+    [t],
   );
 
   // Si el estado se vació por un clear desde otra pantalla (force-stop +
@@ -119,9 +123,9 @@ export default function SocialEventsScreen() {
     );
   }
 
-  const highlightLabel = copy.resolve('social_events_rolled_label');
+  const highlightLabel = t('social_events_rolled_label');
   const highlightA11y = (event: SocialEvent): string =>
-    copy.resolve('social_events_rolled_a11y', {
+    t('social_events_rolled_a11y', {
       name: titleByOutcome[event.id],
       body: bodyByOutcome[event.id],
     });
@@ -162,7 +166,7 @@ export default function SocialEventsScreen() {
               fontWeight: fontWeight.bold,
             }}
           >
-            {copy.resolve('social_events_eyebrow')}
+            {t('social_events_eyebrow')}
           </Text>
           <Text
             style={{
@@ -172,10 +176,10 @@ export default function SocialEventsScreen() {
             }}
             accessibilityRole="header"
           >
-            {copy.resolve('social_events_title')}
+            {t('social_events_title')}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
-            {copy.resolve('social_events_subtitle')}
+            {t('social_events_subtitle')}
           </Text>
         </View>
 
@@ -210,7 +214,7 @@ export default function SocialEventsScreen() {
               fontWeight: fontWeight.bold,
             }}
           >
-            {copy.resolve('social_events_mods_title')}
+            {t('social_events_mods_title')}
           </Text>
           {ALL_OUTCOMES.map((id) => (
             <OutcomeCard
@@ -232,6 +236,7 @@ export default function SocialEventsScreen() {
         <ModifiersCard
           modifiers={nextWeekModifiers ?? NO_MODIFIERS}
           luckGatePassed={socialEventPending.luckGatePassed}
+          t={t}
         />
       </ScrollView>
 
@@ -248,13 +253,13 @@ export default function SocialEventsScreen() {
         }}
       >
         <Button
-          label={copy.resolve('social_events_cta_continue')}
+          label={t('social_events_cta_continue')}
           onPress={onContinue}
           variant="primary"
           size="lg"
           fullWidth
           testID="btn-social-events-continue"
-          accessibilityHint={copy.resolve('social_events_cta_continue_hint')}
+          accessibilityHint={t('social_events_cta_continue_hint')}
           hitSlop={{ top: 12, left: 12, right: 12, bottom: 12 }}
         />
       </View>
@@ -358,9 +363,11 @@ function OutcomeCard({
 function ModifiersCard({
   modifiers,
   luckGatePassed,
+  t,
 }: {
   modifiers: NextWeekModifiers;
   luckGatePassed: boolean;
+  t: (id: string, values?: Record<string, string | number>) => string;
 }) {
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
 
@@ -393,10 +400,10 @@ function ModifiersCard({
             fontWeight: fontWeight.bold,
           }}
         >
-          {copy.resolve('social_events_mods_title')}
+          {t('social_events_mods_title')}
         </Text>
         <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
-          {copy.resolve('social_events_mods_empty')}
+          {t('social_events_mods_empty')}
         </Text>
       </View>
     );
@@ -422,12 +429,12 @@ function ModifiersCard({
           fontWeight: fontWeight.bold,
         }}
       >
-        {copy.resolve('social_events_mods_title')}
+        {t('social_events_mods_title')}
       </Text>
       {modifiers.luckBonus > 0 ? (
         <ModRow
           testID="social-events-mod-luck"
-          label={copy.resolve('social_outcome_mods_luck', {
+          label={t('social_outcome_mods_luck', {
             pct: Math.round(modifiers.luckBonus * 100),
           })}
         />
@@ -436,15 +443,15 @@ function ModifiersCard({
           testID="social-events-mod-luck"
           label={
             luckGatePassed
-              ? copy.resolve('social_outcome_mods_luck', { pct: 0 })
-              : copy.resolve('social_events_mods_odds_luck_blocked')
+              ? t('social_outcome_mods_luck', { pct: 0 })
+              : t('social_events_mods_odds_luck_blocked')
           }
         />
       )}
       {modifiers.injuryRiskMul !== 1 ? (
         <ModRow
           testID="social-events-mod-injury"
-          label={copy.resolve('social_outcome_mods_injury', {
+          label={t('social_outcome_mods_injury', {
             val: modifiers.injuryRiskMul.toFixed(2),
           })}
         />
@@ -452,7 +459,7 @@ function ModifiersCard({
       {modifiers.trainingBoost !== 1 ? (
         <ModRow
           testID="social-events-mod-training"
-          label={copy.resolve('social_outcome_mods_training', {
+          label={t('social_outcome_mods_training', {
             val: modifiers.trainingBoost.toFixed(2),
           })}
         />
@@ -460,7 +467,7 @@ function ModifiersCard({
       {modifiers.fatigueDelta !== 0 ? (
         <ModRow
           testID="social-events-mod-fatigue"
-          label={copy.resolve('social_outcome_mods_fatigue', {
+          label={t('social_outcome_mods_fatigue', {
             delta: formatDelta(modifiers.fatigueDelta),
           })}
         />
@@ -468,7 +475,7 @@ function ModifiersCard({
       {modifiers.moralDelta !== 0 ? (
         <ModRow
           testID="social-events-mod-moral"
-          label={copy.resolve('social_outcome_mods_moral', {
+          label={t('social_outcome_mods_moral', {
             delta: formatDelta(modifiers.moralDelta),
           })}
         />
@@ -476,7 +483,7 @@ function ModifiersCard({
       {modifiers.confianzaDelta !== 0 ? (
         <ModRow
           testID="social-events-mod-confianza"
-          label={copy.resolve('social_outcome_mods_confianza', {
+          label={t('social_outcome_mods_confianza', {
             delta: formatDelta(modifiers.confianzaDelta),
           })}
         />
