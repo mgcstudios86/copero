@@ -172,6 +172,16 @@ type CareerStore = CareerSnapshot & {
   /** Loop anual (MGC-208 §3). */
   advanceSeason: () => Promise<void>;
   runCareerToRetirement: () => Promise<void>;
+  /**
+   * MGC-1802 P1-7 — retiro temprano. Antes de llegar a
+   * `RETIREMENT_AGE = 34` (MGC-208 §3), el usuario puede cerrar la
+   * carrera YA. Setea stage='retirement' sin correr el motor; el log
+   * y profile actuales se preservan para que `fin-carrera.tsx`
+   * renderice el resumen con los datos parciales (sin esperar 38
+   * semanas). El walk MGC-1739 catalogó "WF6 fin-carrera bloquea
+   * retiro si carrera <38 sem — no permite retiro temprano".
+   */
+  retireEarly: () => Promise<void>;
   /** MGC-1730 (HIGH-1 fix sobre PR #425) — drena `postMatchPending`
    * después de que la UI F3.3 mostró el modal post-partido. Persiste
    * inmediatamente para sobrevivir force-stop. */
@@ -685,6 +695,16 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       // pendingSave para que el `stage: 'retirement'` + log final
       // queden en AsyncStorage antes de que el usuario salga de la
       // pantalla.
+      await persistAndFlush(get());
+    },
+    // MGC-1802 P1-7 — retiro temprano. Setea stage='retirement' sin
+    // correr el motor. Log y profile parciales quedan tal cual para
+    // que fin-carrera pinte el resumen. Persistencia con flush (mismo
+    // patrón que runCareerToRetirement) para sobrevivir force-stop.
+    retireEarly: async () => {
+      setSnapshot((s) =>
+        s.stage === 'retirement' ? s : { ...s, stage: 'retirement' as const },
+      );
       await persistAndFlush(get());
     },
     // MGC-1730 (HIGH-1 fix sobre PR #425) — drena el modal post-partido.

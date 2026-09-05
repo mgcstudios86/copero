@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { getCountryPalette, type CountryPalette } from '@/design/tokens';
+import { deriveContrastDorsal } from './jersey-contrast';
 
 /**
  * JerseyPreview — camiseta de espaldas con dorsal + apellido (MGC-466).
@@ -28,11 +29,36 @@ import { getCountryPalette, type CountryPalette } from '@/design/tokens';
 export type JerseyPreviewSize = 'sm' | 'md' | 'lg';
 
 export interface JerseyPreviewProps {
-  countryCode: string;
+  /**
+   * MGC-1802 P1-1 + cleanup — código ISO-2 (AR, BR, ES, …) opcional.
+   * Si se pasa `paletteOverride`, `countryCode` se ignora (no se manda
+   * sentinel `'unknown'` para forzar la rama neutra — antes el dashboard
+   * hackeaba `countryCode='unknown'` cuando había club override y la
+   * dependencia entre ambos props quedó implícita). Ahora basta con
+   * omitir `countryCode` para que el componente caiga al palette
+   * override sin contaminar el type con sentinels string-typed.
+   */
+  countryCode?: string;
   number: number | string;
   name: string;
   size?: JerseyPreviewSize;
   testID?: string;
+  /**
+   * MGC-1802 P1-1 — paleta custom (colores club). Si está presente,
+   * sobreescribe `countryCode`. Usado por dashboard cuando el jugador
+   * fichó por un club: el jersey muestra los colores del club
+   * (`crestColor` + `crestAccent`) en vez de la bandera del país.
+   *
+   * MGC-1950 (PR #464 cleanup CTO): todas las claves son OPCIONALES.
+   * `dorsal` se deriva del contraste WCAG contra `primary` cuando se
+   * omite; `pattern` siempre cae al del `countryCode` (jerseys club
+   * son block-style). El shape `Partial<...>` evita que el dashboard
+   * tenga que mandar dorsales sentinel cuando el contrato del club no
+   * lo provee — antes esto rompía `tsc --noEmit` con TS2322.
+   */
+  paletteOverride?: Partial<
+    Pick<CountryPalette, 'primary' | 'secondary' | 'accent' | 'dorsal' | 'name'>
+  >;
 }
 
 const SIZES: Record<JerseyPreviewSize, { w: number; h: number; numSize: number; nameSize: number }> = {
@@ -40,6 +66,13 @@ const SIZES: Record<JerseyPreviewSize, { w: number; h: number; numSize: number; 
   md: { w: 160, h: 200, numSize: 64, nameSize: 13 },
   lg: { w: 240, h: 320, numSize: 96, nameSize: 18 },
 };
+
+/**
+ * MGC-1950 (PR #464 cleanup CTO) — el algoritmo de derivación del
+ * contraste WCAG vive en `./jersey-contrast` (exportado y testeado de
+ * forma independiente). Aquí sólo invocamos `deriveContrastDorsal`
+ * cuando el override omite `dorsal`.
+ */
 
 function renderPattern(palette: CountryPalette, w: number, h: number): React.ReactNode {
   const { primary, secondary, accent, pattern } = palette;
@@ -204,8 +237,49 @@ export function JerseyPreview({
   name,
   size = 'md',
   testID = 'jersey-preview',
+  paletteOverride,
 }: JerseyPreviewProps): React.ReactElement {
-  const palette = useMemo(() => getCountryPalette(countryCode), [countryCode]);
+  // MGC-1802 cleanup — fallback explícito cuando NO hay countryCode
+  // (caso club override). Antes el dashboard hackeaba con sentinel
+  // string `'unknown'`; ahora la ausencia del prop cae a `unknown`
+  // palette de forma type-safe sin contaminar el contrato.
+  const countryPalette = useMemo(
+    () => getCountryPalette(countryCode ?? 'unknown'),
+    [countryCode],
+  );
+  // MGC-1950 (PR #464 cleanup CTO) — si hay paletteOverride, ganamos sobre
+  // el país. Mantenemos `pattern` del countryPalette (overrides proveen
+  // solo colores, no pattern — jerseys club son siempre block-style).
+  // Si el override NO incluye `dorsal`, lo derivamos maximizando el
+  // contraste WCAG contra las 3 capas renderizadas (primary + secondary
+  // + accent). Esto evita el bug de PR #459 donde dorsal=crestAccent
+  // quedaba invisible cuando crestColor≈crestAccent.
+  // MGC-1950: paletteOverride es `Partial<...>`, así que cualquier clave
+  // puede faltar. Resolvemos defaults seguros antes de derivar el dorsal
+  // y aplicamos el override contra countryPalette con spread.
+  let palette: CountryPalette = countryPalette;
+  if (paletteOverride) {
+    const resolvedPrimary = paletteOverride.primary ?? countryPalette.primary;
+    const resolvedSecondary = paletteOverride.secondary ?? countryPalette.secondary;
+    const resolvedAccent = paletteOverride.accent ?? countryPalette.accent;
+    const resolvedDorsal =
+      paletteOverride.dorsal ??
+      deriveContrastDorsal({
+        primary: resolvedPrimary,
+        secondary: resolvedSecondary,
+        accent: resolvedAccent,
+      }).color;
+    const resolvedName = paletteOverride.name ?? countryPalette.name;
+    palette = {
+      ...countryPalette,
+      primary: resolvedPrimary,
+      secondary: resolvedSecondary,
+      accent: resolvedAccent,
+      dorsal: resolvedDorsal,
+      name: resolvedName,
+      pattern: countryPalette.pattern,
+    };
+  }
   const dim = SIZES[size];
   const displayNumber = number === '' || number === null || number === undefined ? '—' : String(number);
   const displayName = (name ?? '').trim() || 'Tu nombre';

@@ -527,6 +527,13 @@ export type CareerSaveV2 = Omit<CareerSaveState, 'v'> & { v: 2 };
 /** Resumen del fin de carrera (MGC-208 §4). */
 export type RetirementSummary = {
   retirementAge: number;
+  /**
+   * MGC-1950 (PR #464 cleanup CTO) — true cuando el jugador se retiró
+   * por `retireEarly` antes de alcanzar `RETIREMENT_AGE`. La UI usa esto
+   * para mostrar copy contextual ("Retirado joven a los 16") en vez del
+   * resumen de carrera longeva.
+   */
+  retiredEarly: boolean;
   finalOvr: number;
   totalApps: number;
   totalGoals: number;

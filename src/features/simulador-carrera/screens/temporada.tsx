@@ -31,7 +31,8 @@ export default function TemporadaScreen() {
   const log = useCareerStore((s) => s.log);
   const stage = useCareerStore((s) => s.stage);
   const advanceSeason = useCareerStore((s) => s.advanceSeason);
-  const runCareerToRetirement = useCareerStore((s) => s.runCareerToRetirement);
+  // MGC-1802 P1-7 — retiro temprano (sin esperar RETIREMENT_AGE).
+  const retireEarly = useCareerStore((s) => s.retireEarly);
   // MGC-249: loop semanal con `advance()` para drenar lesión, bumpear
   // semana y rotar season cada 38 semanas. Botón "Siguiente semana"
   // abre el loop fino que QA necesita para validar feedback bar.
@@ -79,11 +80,14 @@ export default function TemporadaScreen() {
     await advanceSeason();
   };
 
-  const onRunAll = async () => {
-    // MGC-257/MGC-284: la última transición del flow ya esperaba
-    // flushPendingSave; el cambio de firma a Promise<void> es lo único
-    // que nos toca acá.
-    await runCareerToRetirement();
+  // MGC-1802 P1-7 — handler del CTA 'Retirarme'. Antes llamaba
+  // `runCareerToRetirement` que corría el motor hasta RETIREMENT_AGE
+  // y bloqueaba al usuario durante ~17 seasons; el walk MGC-1739
+  // catalogó "WF6 fin-carrera bloquea retiro si carrera <38 sem".
+  // Ahora `retireEarly` setea stage='retirement' con el log/profile
+  // actuales (parcial OK) y deja que fin-carrera pinte el resumen.
+  const onRetireNow = async () => {
+    await retireEarly();
   };
 
   // MGC-249: loop semanal fino. Dispara `advance()` que drena lesión
@@ -128,6 +132,17 @@ export default function TemporadaScreen() {
           {
             gap: spacing[5],
             padding: spacing[4],
+            // MGC-1802 P1-5 — el walk MGC-1739 catalogó "Stats row
+            // EDAD/CLUB/OVR/P/G/A clippeada debajo del sticky footer"
+            // porque el último row del Hero block (Tile EDAD/VALOR +
+            // Stat P/G/A) quedaba visualmente pegado al borde superior
+            // del `temporada-cta-footer` sin aire de separación. El
+            // footer es sibling fijo (no superpone), pero sin padding
+            // extra el último row se siente "cortado". Sumamos padding
+            // equivalente al alto del footer + 8dp de aire. Cuando el
+            // usuario scrollea al fondo, el último row queda con margen
+            // visual sobre el footer en vez de pegado a su borde.
+            paddingBottom: ctaFooterHeight + spacing[2],
             // MGC-1381: el paddingBottom +156 de PR-336 ya no hace falta —
             // los CTAs salieron del ScrollView a `temporada-cta-footer`
             // (sibling fijo), así que no hay nada que rescatar del borde
@@ -575,13 +590,13 @@ export default function TemporadaScreen() {
         />
         <Button
           label="Retirarme"
-          onPress={onRunAll}
+          onPress={onRetireNow}
           variant="secondary"
           size="lg"
           fullWidth
           testID="btn-temporada-retire"
           disabled={stage === 'retirement'}
-          accessibilityHint="Cierra la carrera y abre el resumen final con partidos, goles, asist y OVR final"
+          accessibilityHint="Cierra la carrera YA y abre el resumen final con los stats parciales"
         />
         {stage === 'retirement' ? (
           <Button

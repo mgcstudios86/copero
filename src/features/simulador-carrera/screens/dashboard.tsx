@@ -152,8 +152,33 @@ export default function DashboardScreen() {
               />
             }
           >
+            {/* MGC-1802 P1-1 — cuando el jugador ya fichó por un club, el
+                jersey hero muestra los colores del club (azul/amarillo
+                Boca, etc.) en lugar de la bandera del país. Antes el
+                hero siempre renderizaba `profile.nationalityCode ?? 'AR'`
+                y el walk MGC-1739 catalogó esto como P1-1: «Camiseta
+                muestra bandera país (AR) en vez de colores club (Boca
+                Juniors azul/amarillo)».
+
+                Cleanup CTO: ya no mandamos sentinel `countryCode='unknown'`
+                para forzar la rama neutra — JerseyPreview ahora acepta
+                countryCode opcional y cae a la paleta override cuando está
+                presente. Pre-fichaje (sin club) sigue mostrando el país. */}
             <JerseyPreview
-              countryCode={profile.nationalityCode ?? 'AR'}
+              {...(profile.club
+                ? {
+                    paletteOverride: {
+                      name: profile.club.name,
+                      primary: profile.club.crestColor,
+                      secondary: profile.club.crestAccent,
+                      accent: profile.club.crestAccent,
+                      // dorsal omitido a propósito: JerseyPreview lo
+                      // deriva del primary con WCAG ≥ 4.5:1 (cleanup
+                      // evita dorsal invisible cuando crestColor≈crestAccent,
+                      // p.ej. Boca azul+amarillo queda OK).
+                    },
+                  }
+                : { countryCode: profile.nationalityCode ?? 'AR' })}
               number={profile.number}
               name={profile.name}
               size="md"
