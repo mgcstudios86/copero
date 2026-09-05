@@ -584,10 +584,8 @@ export default function IdentityScreen() {
                   // sobre bounds=[43,926][1038,1039] clickable=true).
                   // Sin hitSlop el Pressable coincide 1:1 con su layout
                   // bounds y la gesture system routea el tap correctamente.
-                  // Mantenemos `delayPressIn={0}` como defensa contra
-                  // cualquier race con el `removeClippedSubviews={false}`
-                  // del outer ScrollView.
-                  delayPressIn={0}
+                  // Nota: WCAG 2.5.5 se sigue cumpliendo con `minHeight:44`
+                  // (44dp target ya está satisfecho por el style del Pressable).
                   // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
                   // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
                   // `getByTestId('country-ARG')`. Alias solo para AR;
