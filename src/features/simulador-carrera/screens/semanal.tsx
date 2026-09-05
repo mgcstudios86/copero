@@ -213,7 +213,7 @@ export default function SemanalScreen() {
             <Text
               style={{
                 color: colors.primary,
-                fontSize: fontWeight.bold as unknown as number,
+                fontSize: fontSize.lg,
                 fontWeight: fontWeight.bold,
               }}
             >
