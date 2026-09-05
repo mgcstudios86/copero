@@ -28,6 +28,11 @@ export default function PostMatchScreen() {
   const reset = useMatchStore((s) => s.reset);
   const discardMatch = useCareerStore((s) => s.discardMatch);
   const commitMatch = useCareerStore((s) => s.commitMatch);
+  // MGC-1903 — F4 social events. El motor (`engine.ts#resolveMatchweek`)
+  // popula `socialEventPending` junto con `postMatchPending`. Si hay un
+  // evento social rolado, enrutamos al usuario a `/social-events` antes
+  // de volver al hub para que vea y consuma el evento.
+  const socialEventPending = useCareerStore((s) => s.socialEventPending);
 
   useEffect(() => {
     if (!outcome || !preview || !previousProfile || !nextProfile) {
@@ -50,7 +55,13 @@ export default function PostMatchScreen() {
 
   const onNextWeek = async () => {
     await commitMatch();
-    router.replace('/simulador-carrera/dashboard');
+    // MGC-1903 — si el motor roleó un evento social, esa pantalla debe
+    // drenarlo. Si no hay pending, vamos directo al dashboard.
+    if (socialEventPending) {
+      router.replace('/simulador-carrera/social-events');
+    } else {
+      router.replace('/simulador-carrera/dashboard');
+    }
   };
 
   const ratingPct = useMemo(() => {

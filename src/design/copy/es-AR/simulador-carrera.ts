@@ -394,6 +394,35 @@ const ENTRIES: Record<string, CopyEntry> = {
   social_locked_stats: {
     raw: 'Necesitás el stat clave alto para que la suerte compense.',
   },
+
+  // ── MGC-1903 — pantalla F4 social-events (MGC-1738 / MGC-1762) ───
+  // Chrome de la screen que consume `socialEventPending`. Las keys de
+  // los 4 outcomes siguen siendo las de arriba (`social_*_title/body`)
+  // porque también las consume la card "Tu evento". Estas nuevas son
+  // las del marco de la pantalla + el resumen de modificadores.
+  social_events_eyebrow: { raw: 'EVENTO SOCIAL' },
+  social_events_title: { raw: 'Salida con amigos' },
+  social_events_subtitle: {
+    raw: 'El partido terminó. ¿Qué hiciste esta noche?',
+  },
+  social_events_rolled_label: { raw: 'Te tocó' },
+  social_events_rolled_a11y: {
+    raw: 'Evento sorteado: {name}. {body}',
+  },
+  social_events_mods_title: { raw: 'Modificadores de la semana' },
+  social_events_mods_empty: {
+    raw: 'Sin modificadores. Semana neutral.',
+  },
+  social_events_mods_odds_luck: {
+    raw: 'Suerte: +{pct}% (gate {gate})',
+  },
+  social_events_mods_odds_luck_blocked: {
+    raw: 'Suerte: gate no pasó (+0%)',
+  },
+  social_events_cta_continue: { raw: 'Continuar' },
+  social_events_cta_continue_hint: {
+    raw: 'Volvé al hub. Los modificadores ya quedaron aplicados.',
+  },
 };
 
 /** Catálogo expuesto al motor y a la UI. Inmutable. */
