@@ -287,7 +287,7 @@ export default function TemporadaScreen() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  {rasgo.toUpperCase()}
+                  {rasgo === 'magneto-mediatico' ? 'MAGNATE-MEDIÁTICO' : rasgo.toUpperCase()}
                 </Text>
                 <Pill
                   label={`${estilo.length} / 2`}
