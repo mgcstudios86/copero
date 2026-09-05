@@ -55,9 +55,14 @@ export default function PostMatchScreen() {
 
   const onNextWeek = async () => {
     await commitMatch();
+    // MGC-2078 — leer socialEventPending desde el store tras commitMatch.
+    // El closure capturó el valor anterior al commit; ahora `commitMatch`
+    // puede poblar el evento social rolado por el motor, y necesitamos el
+    // valor actualizado para enrutar a /social-events cuando exista.
+    const freshSocialEventPending = useCareerStore.getState().socialEventPending;
     // MGC-1903 — si el motor roleó un evento social, esa pantalla debe
     // drenarlo. Si no hay pending, vamos directo al dashboard.
-    if (socialEventPending) {
+    if (freshSocialEventPending) {
       router.replace('/simulador-carrera/social-events');
     } else {
       router.replace('/simulador-carrera/dashboard');
