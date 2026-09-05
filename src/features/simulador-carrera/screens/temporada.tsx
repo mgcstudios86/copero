@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
+import { useLocale } from '@/i18n/locale-context';
 import { RETIREMENT_AGE } from '@/features/career/season';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
 import {
@@ -26,6 +27,8 @@ import {
 export default function TemporadaScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
+  // MGC-1737 (UX1): selector de rasgos usa copy i18n en es/en/zh-CN.
+  const { t } = useLocale();
 
   const profile = useCareerStore((s) => s.profile);
   const log = useCareerStore((s) => s.log);
@@ -263,7 +266,7 @@ export default function TemporadaScreen() {
               letterSpacing: 2,
             }}
           >
-            TU ESTILO DE JUGADOR
+            {t('temporada.traits.eyebrow')}
           </Text>
           <Text
             style={{
@@ -272,17 +275,21 @@ export default function TemporadaScreen() {
               fontWeight: fontWeight.bold,
             }}
           >
-            ELEGÍ HASTA 2 RASGOS
+            {t('temporada.traits.title')}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
-            Cambian eventos, ofertas y desarrollo. Seleccioná 1 o 2.
+            {t('temporada.traits.subtitle')}
           </Text>
           {/* MGC-1505 — Rasgos como Pressable toggle (cap 2). El 3er tap
               sobre un rasgo no-seleccionado cuando ya hay 2 elegidos
               queda deshabilitado (defensa UI; el reducer también cap-a
               defensivamente). El Pill refleja el contador global
               `${seleccionados} / 2` y se pone verde cuando hay al menos
-              uno elegido. */}
+              uno elegido. MGC-1737 (UX1) — copy re-escrito: el copy
+              original ("ELEGÍ HASTA 2 RASGOS / Cambian eventos, ofertas
+              y desarrollo") resultaba confuso. Se reemplaza por frases
+              que muestran QUÉ hace cada rasgo individualmente y el cap
+              sólo aparece en el subtítulo, no en el heading. */}
           {ESTILO_RASGOS.map((rasgo) => {
             const selected = estilo.includes(rasgo);
             const atCap = !selected && estilo.length >= 2;
@@ -293,7 +300,12 @@ export default function TemporadaScreen() {
                 disabled={atCap}
                 accessibilityRole="button"
                 accessibilityState={{ selected, disabled: atCap }}
-                accessibilityLabel={`Rasgo ${rasgo}${selected ? ' seleccionado' : ' no seleccionado'}`}
+                accessibilityLabel={t('temporada.traits.itemA11y', {
+                  name: t(`temporada.traits.${rasgo}.name`),
+                  selected: selected
+                    ? t('temporada.traits.a11ySelected')
+                    : t('temporada.traits.a11yNotSelected'),
+                })}
                 testID={`btn-estilo-${rasgo}`}
                 style={{
                   flexDirection: 'row',
@@ -309,17 +321,32 @@ export default function TemporadaScreen() {
                   minHeight: 48,
                 }}
               >
-                <Text
-                  style={{
-                    color: colors.textStrong,
-                    fontSize: fontSize.xs,
-                    fontWeight: fontWeight.bold,
-                    letterSpacing: 2,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {rasgo === 'magneto-mediatico' ? 'MAGNATE-MEDIÁTICO' : rasgo.toUpperCase()}
-                </Text>
+<View style={{ flex: 1, gap: spacing[1] }}>
+                  <Text
+                    style={{
+                      color: colors.textStrong,
+                      fontSize: fontSize.base,
+                      fontWeight: fontWeight.bold,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {/* MGC-1802 P1-4 — display forzado 'MAGNATE-MEDIÁTICO' para
+                        rasgo magneto-mediatico (PR #447). */}
+                    {rasgo === 'magneto-mediatico'
+                      ? 'MAGNATE-MEDIÁTICO'
+                      : t(`temporada.traits.${rasgo}.name`)}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.textMuted,
+                      fontSize: fontSize.xs,
+                      lineHeight: fontSize.xs * 1.35,
+                    }}
+                    numberOfLines={3}
+                  >
+                    {t(`temporada.traits.${rasgo}.desc`)}
+                  </Text>
+                </View>
                 <Pill
                   label={`${estilo.length} / 2`}
                   bg={estilo.length > 0 ? colors.primary : colors.surface2}

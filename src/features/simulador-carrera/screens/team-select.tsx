@@ -1,7 +1,7 @@
 // src/features/simulador-carrera/screens/team-select.tsx — Copero
 //
 // MGC-1648 — WF2 selección de equipo obligatoria en el alta. Pantalla
-// intermedia entre `/identity` (WF1) y `/dashboard` (WF3). El usuario
+// intermedia entre `/identity` (WF1) y `/season-hub` (WF3). El usuario
 // llega con `profile.club === null` y debe elegir uno de los 5 clubes del
 // top popularidad antes de arrancar la carrera.
 //
@@ -120,15 +120,24 @@ export default function TeamSelectScreen() {
       // ocurre sólo con el snapshot ya en disco (AC7 — mismo patrón que
       // `commitIdentityAndStartDraft` de MGC-273).
       await selectInitialClub(club);
+      // MGC-1737 (UX1) — post-identity ya NO escala por `/dashboard`.
+      // El operador pidió quitar el dashboard como pantalla inicial post-
+      // identity: después de elegir club llevamos al usuario directo al
+      // hub de temporada (WF3 / MGC-1649), que ya concentra player card,
+      // fatiga, stats y CTAs a timeline + decisión semanal. El dashboard
+      // queda accesible sólo como ruta de resume (`resumeRouteForStage`)
+      // para sesiones guardadas con `stage === 'dashboard' | 'academy' |
+      // 'clubStart'` — los flujos nuevos no lo tocan.
+      //
       // MGC-374 + MGC-532 + MGC-633 — diferir la navegación a través de
       // InteractionManager + rAF + setTimeout 250ms para que RN termine de
-      // procesar el settle del tap + el lazy chunk del dashboard antes del
-      // push. Sin el defer el dashboard rebotaba al launcher en ZY22G728HN
+      // procesar el settle del tap + el lazy chunk del hub antes del
+      // push. Sin el defer el hub rebotaba al launcher en ZY22G728HN
       // (race entre reanimated IME dismiss y Stack animation).
       InteractionManager.runAfterInteractions(() => {
         requestAnimationFrame(() => {
           setTimeout(() => {
-            router.replace('/simulador-carrera/dashboard');
+            router.replace('/simulador-carrera/season-hub');
           }, 250);
         });
       });

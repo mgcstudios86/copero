@@ -124,9 +124,9 @@ export default function IdentityScreen() {
   const setAge = useCareerStore((s) => s.setAge);
   // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
   // WCAG 2.5.5) pueda disparar foco en tap perimetral. hitSlop en TextInput
-  // nativo Android no extiende el hitbox de focus.
+  // nativo Android no extiende el hitbox de focus. Compatible con el
+  // TextInput edad de WF1 (MGC-1647) que reemplaza al stepper dorsal.
   const ageInputRef = useRef<TextInput>(null);
-  const setNumber = useCareerStore((s) => s.setNumber);
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);
@@ -566,6 +566,8 @@ export default function IdentityScreen() {
                   }}
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
+                  accessibilityLabel={t('identity.nationalityOptionA11y', { name: n.name })}
+                  hitSlop={22}
                   // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
                   // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
                   // `getByTestId('country-ARG')`. Alias solo para AR;
@@ -1307,26 +1309,15 @@ export default function IdentityScreen() {
             : null,
         ]}
       >
-      {/* MGC-585 + MGC-744: stepper +/- en sticky footer entre el form scrollable
-          y el botón Continuar. MGC-585 (PR #223 / ea57f8b) extrajo el row del
-          ScrollView; MGC-744 agrega el wrapper canónico collapsable=false +
-          height:48 + minHeight:48 sobre el row padre porque, aunque los
-          Pressable hijos tuvieran collapsable={false}, en cold-start fresh
-          mount (no resume from dashboard) el View row padría colapsar a
-          wrap_content=0 en el primer layout pass de RN-Android y uiautomator
-          reportaba bounds=[40,1907][150,1907] height=0 — invisible=true y
-          Maestro tapOn saltaba silenciosamente. El wrapper colapsable=false
-          + altura explícita evita el colapso a ViewGroup h=0 desde el primer
-          frame del identity cold-start. testID row permite hook adicional en
-          Maestro para asserts de subtree. */}
-      {/* MGC-1567 — `pointerEvents='box-none'` INCONDICIONAL. Sticky
-          contenedor de stepper (120dp). El bg es la única razón visual;
-          los Pressables hijos (btn-number-{minus,plus}) mantienen `auto`
-          y capturan sus taps. Sin box-none el bg overlapea los
-          league-list-items cuando leagueOpen=true y bloquea el tap de
-          selección. */}
+      {/* MGC-1647 (WF1): el campo Edad reemplaza al stepper de dorsal en el
+          sticky-footer. El dorsal (number) conserva default 9 en
+          initialProfile pero ya no se muestra en el alta — el form tiene
+          4 campos obligatorios: nombre, edad, posición, nacionalidad. El
+          input es numeric-keyboard para que el soft keyboard nativo no
+          muestre letras, y clamp 16–35 en el setter puro `setAge`
+          (identity-state.ts). a11y: accessibilityLabel + helperText abajo. */}
       <View
-        testID="btn-number-sticky"
+        testID="identity-age-sticky"
         collapsable={false}
         pointerEvents="box-none"
         style={[
@@ -1347,87 +1338,34 @@ export default function IdentityScreen() {
             marginBottom: spacing[2],
           }}
         >
-          {t('identity.numberLabel')}
+          {t('identity.ageLabel')}
         </Text>
-        {/* MGC-1567 — `pointerEvents='box-none'` INCONDICIONAL. Fila flex de
-            los botones −N +N. Mismo razonamiento que btn-number-sticky:
-            row bg-only libera el área para que un tap sobre los
-            league-list-items llegue al Pressable hijo. */}
-        <View
-          testID="btn-number-row"
-          collapsable={false}
-          pointerEvents="box-none"
+        <TextInput
+          testID="input-age"
+          value={String(profile.age)}
+          onChangeText={(v) => {
+            const parsed = Number.parseInt(v, 10);
+            if (Number.isFinite(parsed)) setAge(parsed);
+          }}
+          keyboardType="number-pad"
+          maxLength={2}
+          accessibilityLabel={t('identity.ageA11y')}
+          hitSlop={44}
+          placeholder={t('identity.agePlaceholder')}
+          placeholderTextColor={colors.textMuted}
           style={{
-            flexDirection: 'row',
-            gap: spacing[3],
-            width: '100%',
             height: 48,
             minHeight: 48,
-            overflow: 'visible',
-            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: colors.borderStrong,
+            borderRadius: radii.md,
+            backgroundColor: colors.surface,
+            color: colors.textStrong,
+            fontSize: fontSize.lg,
+            fontWeight: fontWeight.bold,
+            paddingHorizontal: spacing[4],
           }}
-        >
-          <Pressable
-            onPress={() => setNumber(profile.number - 1)}
-            accessibilityRole="button"
-            accessibilityLabel={t('identity.numberDecrement')}
-            testID="btn-number-minus"
-            hitSlop={12}
-            collapsable={false}
-            {...onKeyActivate(() => setNumber(profile.number - 1))}
-            style={[
-              styles.stepBtn,
-              {
-                borderColor: colors.borderStrong,
-                borderRadius: radii.md,
-                backgroundColor: colors.surface,
-              },
-            ]}
-          >
-            <Text style={{ color: colors.text, fontSize: fontSize.lg }}>−</Text>
-          </Pressable>
-          <View
-            testID="btn-number-display"
-            collapsable={false}
-            style={[
-              styles.numberDisplay,
-              {
-                borderColor: colors.borderStrong,
-                borderRadius: radii.md,
-                backgroundColor: colors.surface,
-              },
-            ]}
-          >
-            <Text
-              style={{
-                color: colors.textStrong,
-                fontSize: fontSize['2xl'],
-                fontWeight: fontWeight.bold,
-              }}
-            >
-              {profile.number}
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => setNumber(profile.number + 1)}
-            accessibilityRole="button"
-            accessibilityLabel={t('identity.numberIncrement')}
-            testID="btn-number-plus"
-            hitSlop={12}
-            collapsable={false}
-            {...onKeyActivate(() => setNumber(profile.number + 1))}
-            style={[
-              styles.stepBtn,
-              {
-                borderColor: colors.borderStrong,
-                borderRadius: radii.md,
-                backgroundColor: colors.surface,
-              },
-            ]}
-          >
-            <Text style={{ color: colors.text, fontSize: fontSize.lg }}>+</Text>
-          </Pressable>
-        </View>
+        />
       </View>
       {/* MGC-517: footer fijo con el CTA primario. Permanece visible aunque
           el soft keyboard esté abierto o el form se desplace. El botón

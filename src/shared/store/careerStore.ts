@@ -22,6 +22,7 @@ import { create } from 'zustand';
 import {
   initialSnapshot,
   isIdentityComplete,
+  setAge,
 } from '@/features/career/identity-state';
 import {
   saveCareerSave,
@@ -425,10 +426,13 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     // profile; back-compat con saves v:1/v:2 (lastName undefined → '').
     setLastName: (lastName) =>
       applyAndPersist((s) => ({ ...s, profile: { ...s.profile, lastName } })),
-    // MGC-1628 / WF1 — edad editable. El clamp 16-35 vive en
-    // identity-state.setAge (single source of truth); acá sólo
-    // aplicamos el spread.
-    setAge: (age) => applyAndPersist((s) => ({ ...s, profile: { ...s.profile, age } })),
+    // MGC-1628 / WF1 + MGC-1938 — edad editable. El clamp 16-35 vive en
+    // identity-state.setAge (single source of truth); acá delegamos para
+    // que cualquier caller (TextInput, programmatic set, tests) herede la
+    // validación. MGC-1938 fix: antes el import se borraba por lint
+    // unused y el clamp quedaba como responsabilidad del UI; ahora el
+    // cablear aplica el clamp también en este entrypoint.
+    setAge: (age) => applyAndPersist((s) => setAge(s, age)),
     setNumber: (number) =>
       applyAndPersist((s) => ({ ...s, profile: { ...s.profile, number } })),
     setPosition: (position) =>

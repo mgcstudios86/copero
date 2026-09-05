@@ -111,9 +111,16 @@ export type Copy = {
     numberLabel: string;
     numberDecrement: string;
     numberIncrement: string;
+    /** MGC-1647 (WF1): edad reemplaza al stepper de dorsal. */
+    ageLabel: string;
+    ageErrorLow: string;
+    ageErrorHigh: string;
+    nameErrorShort: string;
+    nameErrorLong: string;
     continueHint: string;
     continue: string;
     continueA11yHint: string;
+    nationalityOptionA11y: string;
   };
   // MGC-1648 — strings de la pantalla /team-select (WF2 del alta). Clubs
   // se muestran en español independientemente del locale del jugador (el
@@ -172,6 +179,30 @@ export type Copy = {
     optTraining: string;
     optTrainingDesc: string;
     backHint: string;
+  };
+  // MGC-1737 (UX1) — selector de rasgos (cap 2). Copy re-escrito:
+  // cada rasgo expone nombre legible + descripción corta. El cap
+  // ("elegí hasta 2") sale del heading para no chocar con el body.
+  // Las claves dinámicas `temporada.traits.${rasgo}.name|desc`
+  // resuelven contra `EstiloRasgo` (MGC-1505).
+  temporada: {
+    traits: {
+      eyebrow: string;
+      title: string;
+      subtitle: string;
+      capHint: string;
+      itemA11y: string;
+      a11ySelected: string;
+      a11yNotSelected: string;
+      'magneto-mediatico': {
+        name: string;
+        desc: string;
+      };
+      trotamundos: {
+        name: string;
+        desc: string;
+      };
+    };
   };
   // MGC-1632 (F3.2) — eventos post-partido (ADR-0017 §1/§2).
   postMatch: {
@@ -411,9 +442,16 @@ export const COPY: Record<Locale, Copy> = {
       numberLabel: 'NÚMERO (1–99)',
       numberDecrement: 'Restar número',
       numberIncrement: 'Sumar número',
+      // MGC-1647 (WF1): edad reemplaza al stepper de dorsal.
+      ageLabel: 'EDAD (16–35)',
+      ageErrorLow: 'La edad mínima es 16 años.',
+      ageErrorHigh: 'La edad máxima es 35 años.',
+      nameErrorShort: 'El nombre debe tener al menos 2 caracteres.',
+      nameErrorLong: 'El nombre no puede superar los 24 caracteres.',
       continueHint: 'Completá los 4 campos para continuar.',
       continue: 'Continuar → Elegir equipo',
-      continueA11yHint: 'Guarda la identidad y abre la selección de equipo',
+      continueA11yHint: 'Guarda la identidad y abre la selección de club',
+      nationalityOptionA11y: 'Seleccionar nacionalidad {name}',
     },
     teamSelect: {
       eyebrow: 'ELEGÍ TU CLUB',
@@ -467,6 +505,25 @@ export const COPY: Record<Locale, Copy> = {
       optTraining: 'Entrenamiento físico',
       optTrainingDesc: 'Mejora stat posicional concreta.',
       backHint: 'Volver al hub de temporada',
+    },
+    temporada: {
+      traits: {
+        eyebrow: 'RASGOS DEL JUGADOR',
+        title: 'Cómo se comporta tu jugador',
+        subtitle: 'Tocá uno o dos rasgos para definir tu estilo. Cada uno cambia cómo se desarrollan los eventos y las ofertas de club.',
+        capHint: 'Máximo 2 rasgos',
+        itemA11y: 'Rasgo {name}, {selected}',
+        a11ySelected: 'seleccionado',
+        a11yNotSelected: 'no seleccionado',
+        'magneto-mediatico': {
+          name: 'Magneto mediático',
+          desc: 'Atrae sponsors y portadas. Más ofertas y eventos mediáticos, pero mayor exposición.',
+        },
+        trotamundos: {
+          name: 'Trotamundos',
+          desc: 'Se adapta rápido a ligas nuevas. Mejores transferencias internacionales y drift OVR en el exterior.',
+        },
+      },
     },
     postMatch: {
       eyebrow: 'DESPUÉS DEL PARTIDO',
@@ -695,9 +752,16 @@ export const COPY: Record<Locale, Copy> = {
       numberLabel: 'NUMBER (1–99)',
       numberDecrement: 'Decrease number',
       numberIncrement: 'Increase number',
-      continueHint: 'Fill the 4 fields to continue.',
-      continue: 'Continue → Pick team',
-      continueA11yHint: 'Saves your identity and opens the team picker',
+      // MGC-1647 (WF1): age replaces the jersey-number stepper.
+      ageLabel: 'AGE (16–35)',
+      ageErrorLow: 'Minimum age is 16.',
+      ageErrorHigh: 'Maximum age is 35.',
+      nameErrorShort: 'Name must be at least 2 characters.',
+      nameErrorLong: 'Name cannot exceed 24 characters.',
+      continueHint: 'Complete the 4 fields to continue.',
+      continue: 'Continue → Choose team',
+      continueA11yHint: 'Saves your identity and opens club selection',
+      nationalityOptionA11y: 'Select nationality {name}',
     },
     teamSelect: {
       eyebrow: 'PICK YOUR CLUB',
@@ -751,6 +815,25 @@ export const COPY: Record<Locale, Copy> = {
       optTraining: 'Physical training',
       optTrainingDesc: 'Boosts a specific position stat.',
       backHint: 'Back to the season hub',
+    },
+    temporada: {
+      traits: {
+        eyebrow: 'PLAYER TRAITS',
+        title: 'How your player behaves',
+        subtitle: 'Tap one or two traits to define your style. Each one changes how events unfold and which clubs come calling.',
+        capHint: 'Up to 2 traits',
+        itemA11y: 'Trait {name}, {selected}',
+        a11ySelected: 'selected',
+        a11yNotSelected: 'not selected',
+        'magneto-mediatico': {
+          name: 'Media magnet',
+          desc: 'Pulls sponsors and headlines. More offers and media events, but higher exposure.',
+        },
+        trotamundos: {
+          name: 'Globetrotter',
+          desc: 'Adapts quickly to new leagues. Better international transfers and OVR drift abroad.',
+        },
+      },
     },
     postMatch: {
       eyebrow: 'AFTER THE MATCH',
@@ -979,9 +1062,16 @@ export const COPY: Record<Locale, Copy> = {
       numberLabel: '号码 (1–99)',
       numberDecrement: '减少号码',
       numberIncrement: '增加号码',
-      continueHint: '填写 4 个字段后继续。',
+      // MGC-1647 (WF1): 年龄取代了号码步进器。
+      ageLabel: '年龄 (16–35)',
+      ageErrorLow: '最小年龄为 16 岁。',
+      ageErrorHigh: '最大年龄为 35 岁。',
+      nameErrorShort: '姓名至少需要 2 个字符。',
+      nameErrorLong: '姓名不能超过 24 个字符。',
+      continueHint: '完成全部 4 个字段后继续。',
       continue: '继续 → 选择球队',
       continueA11yHint: '保存身份并打开球队选择',
+      nationalityOptionA11y: '选择国籍 {name}',
     },
     teamSelect: {
       eyebrow: '选择你的俱乐部',
@@ -1035,6 +1125,25 @@ export const COPY: Record<Locale, Copy> = {
       optTraining: '专项体能训练',
       optTrainingDesc: '提升一个位置属性。',
       backHint: '返回赛季中心',
+    },
+    temporada: {
+      traits: {
+        eyebrow: '球员特质',
+        title: '你的球员表现如何',
+        subtitle: '选择一或两个特质来定义风格。每个特质会影响事件发展和俱乐部报价。',
+        capHint: '最多 2 个特质',
+        itemA11y: '特质 {name}，{selected}',
+        a11ySelected: '已选',
+        a11yNotSelected: '未选',
+        'magneto-mediatico': {
+          name: '媒体磁铁',
+          desc: '吸引赞助商和头条。报价与媒体事件更多，但曝光度更高。',
+        },
+        trotamundos: {
+          name: '世界游民',
+          desc: '快速适应新联赛。国际转会更顺利，海外 OVR 增长更快。',
+        },
+      },
     },
     postMatch: {
       eyebrow: '赛后',
