@@ -671,6 +671,24 @@ export default function IdentityScreen() {
           pointerEvents='box-none' mantiene el spec MGC-1348 para que el wrapper
           no intercepte clicks de los country-* Pressables que viven MÁS
           ARRIBA en el scroll. */}
+      </ScrollView>
+      {/* MGC-1943 — identidad-fixed-form EXTRAÍDA del ScrollView como sibling
+          fijo absoluto. Causa raíz de la regresión walk QA2 (APK vc=167 a09ffbe,
+          PR #470 rebase): el form vivía DENTRO del scroll y, al scrollear
+          para ver nationality-section tras field-map overlay, los bounds de
+          identity-fixed-form colisionaban con los country-* Pressables. La
+          extracción a View sibling position:absolute lo saca del measure pass
+          del contentContainer del scroll y garantiza que el form entero
+          (input-name / input-lastname / input-age / btn-foot-row) quede
+          siempre visible sin consumir flex space del scroll. z-order real:
+          el form es sibling del ScrollView, no hijo, por lo tanto su
+          absolute position no choca con nationality-section arriba. NO se
+          reintroduce identity-age-sticky: MGC-1953 (PR #428) consolidó la
+          edad en este único input-age.
+          Posición: bottom:432 (= field-map bottom:240 + altura field-map ≈192)
+          para anclar el form encima del field-map sin solaparse. zIndex:9
+          (debajo del field-map zIndex:10) garantiza que field-map gana el
+          overlap si por algún motivo el form se expande. */}
       <View
         testID="identity-fixed-form"
         collapsable={false}
@@ -680,18 +698,17 @@ export default function IdentityScreen() {
         // box-none es no-op cuando el wrapper tiene content visible.
         pointerEvents="box-none"
         style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 432, // encima del identity-fixed-field-map (bottom:240 + altura ~192)
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          // MGC-1339 — overshoot fix: padding spacing[1]=4 → spacing[0]=0
-          // (-8dp). Compactación preservada al mover dentro del scroll.
-          // MGC-1347 — restaurar paddingHorizontal spacing[1]=4dp para que
-          // TextInput Nombre y Pressables Pie hábil no peguen contra el
-          // borde lateral. paddingVertical=0 explícito para preservar el
-          // budget vertical de 113dp del AC MGC-1341.
           paddingHorizontal: spacing[1],
-          paddingVertical: 0,
+          paddingVertical: spacing[1],
           gap: spacing[1],
+          zIndex: 9,
           flexShrink: 0,
         }}
       >
@@ -1003,7 +1020,6 @@ export default function IdentityScreen() {
           y los bounds reportados en ZY22G728HN density 400 son ahora
           siempre positivos en fresh-mount (no más secciones clipeadas bajo
           el fold del ScrollView position:absolute full-bounds). */}
-      </ScrollView>
       {/* MGC-1533 — field-map-section EXTRAÍDA como fixed sibling absoluto.
           Antes vivía como SIBLING dentro del ScrollView (MGC-1428 intento-7
           opción B), pero el sticky-footer absolute bottom:0 height:240 opaco
