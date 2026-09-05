@@ -12,38 +12,22 @@
 #     `copero-ci, macOS`) con profile `preview-ios-sim` — único job que sí
 #     produce artefacto (`eas build --local --platform ios`).
 #
-# Cambios MGC-1263:
-#   1. `preview-android` → `smoke-android`. Sin `eas build`, sin artefacto,
-#      sin provenance gate, sin `qa-ac7-force-stop`.
-#   2. Trigger `push`/`pull_request` ya no encola build de Android — solo
-#      smoke barato (~2 min).
-#   3. `workflow_dispatch` removido: no hay build Android que disparar
-#      manualmente; el APK se hace en Mac local.
+# MGC-1880: el preview EAS se dispara solo bajo demanda. El smoke Android y
+# el build iOS son operaciones costosas y no deben encolarse en cada push de PR.
+# Usar `workflow_dispatch` sobre la rama/SHA que se quiere validar.
 
 name: eas-preview (copero)
 
 on:
-  push:
-    branches:
-      - 'feat/**'
-      - 'fix/**'
-      - 'chore/**'
-      - 'refactor/**'
-      - 'perf/**'
-      - 'docs/**'
-      - 'test/**'
-      - 'build/**'
-      # NOTE: 'main' queda fuera; los merges a main disparan ci.yml.
-    paths-ignore:
-      - '.github/**'
-      - '**/*.md'
-  pull_request:
-    branches:
-      - 'feat/**'
-      - 'fix/**'
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "SHA para identificar el grupo de concurrencia (opcional)"
+        required: false
+        type: string
 
 concurrency:
-  group: eas-preview-copero-${{ github.event.pull_request.number || github.ref }}
+  group: eas-preview-copero-${{ inputs.sha || github.ref }}
   cancel-in-progress: true
 
 permissions:

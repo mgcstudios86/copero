@@ -1,10 +1,10 @@
 # Runner bootstrap — Copero CI
 
-Tres runners self-hosted atienden los workflows `ci (copero)` y (en transición) `qa`:
+Tres runners self-hosted atienden los workflows `ci (copero)`, `qa` y releases:
 
 | Runner | Host | OS | vCPU | RAM | Label |
 |---|---|---|---|---|---|
-| `copero-ci-runner-01` | `146.235.246.167` (Oracle Cloud VPS) | Ubuntu 24.04 x86_64 | 2 | 1 GB | `self-hosted,Linux,X64,copero-ci` |
+| `copero-ci-runner-01` | `146.235.246.167` (Oracle Cloud VPS) | Ubuntu 24.04 x86_64 | 2 | 1 GB | `self-hosted,Linux,X64,copero-ci,copero-qa` |
 | `copero-ci-runner-02` | `192.168.68.71` (Mac mini local M4) | macOS 26 ARM64 | 8 | 16 GB | `self-hosted,copero-ci,macOS,ARM64` |
 | `mac-mini-pipeline-runner` | `192.168.68.71` (Mac mini local M4) | macOS 26 ARM64 | 8 | 16 GB | `self-hosted,macOS,ARM64` |
 
@@ -55,15 +55,15 @@ Los workflows leen `INFISICAL_TOKEN` (secret) y `INFISICAL_PROJECT_ID`
   y desbloquea paralelismo entre jobs de `ci (copero)`.
 - `mac-mini-pipeline-runner`: pre-existente, etiqueta genérica.
 
-## Migración Playwright a self-hosted (MGC-308)
+## Migración Playwright a runner dedicado (MGC-1880)
 
 El job `Playwright (web, headless)` del workflow `qa.yml` corre en
-`runs-on: [self-hosted, copero-ci, Linux]` para evitar minutos GH-hosted
-facturables (resuelve el error de billing del run 32611369496).
+`runs-on: [self-hosted, copero-qa, Linux]`. La label `copero-qa` está
+registrada en `copero-ci-runner-01` y separa las suites largas del pool
+`copero-ci`, usado por CI y releases en el runner-02 macOS.
 
-- **Runner destino**: `copero-ci-runner-01` (VPS, label `copero-ci`).
-  Si está ocupado, el job queda en cola — el dispatcher GH no reasigna a
-  runners sin la etiqueta `copero-ci`.
+- **Runner destino**: `copero-ci-runner-01` (VPS, labels `copero-qa` y `Linux`).
+  Si está ocupado, QA queda en su propia cola y no bloquea checks de CI.
 - **Bootstrap Playwright** en el runner (sin `--with-deps`):
   ```bash
   sudo apt-get update && sudo apt-get install -y \
@@ -86,8 +86,9 @@ facturables (resuelve el error de billing del run 32611369496).
 
 ## Bootstrap Playwright en macOS ARM64 (MGC-346 + MGC-351)
 
-`copero-ci-runner-02` es un Mac mini M4 (16 GB, macOS 26 ARM64). A partir
-de MGC-346 el pool `qa.yml` lo habilita junto con el runner-01 Linux.
+`copero-ci-runner-02` es un Mac mini M4 (16 GB, macOS 26 ARM64). MGC-1880
+reservó este runner para `ci (copero)` y releases; QA usa el label dedicado
+`copero-qa` en el runner Linux.
 
 - **Chromium binario**: NO requiere bootstrap manual. El job corre
   `npx playwright install chromium` y baja el binario ARM64 nativo a

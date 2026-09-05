@@ -5,8 +5,9 @@ name: qa
 # No corre Maestro mobile (hardware persistente — QA agent owns ZY22G728HN).
 # Trigger: PR contra main + push a main + manual dispatch.
 # Secrets inyectados por DevOps vía Infisical — placeholders abajo.
-# MGC-308: Playwright corre en runner self-hosted (Linux, label `copero-ci`)
-# para evitar minutos GH-hosted facturables. Runner: VPS mgcstudios-01.
+# MGC-308: Playwright corre en el runner Linux dedicado `copero-qa`
+# para evitar que suites largas compitan con el pool `copero-ci`.
+# Runner: VPS mgcstudios-01 (labels `copero-qa`, `Linux`).
 
 on:
   pull_request:
@@ -46,10 +47,9 @@ permissions:
 jobs:
   playwright-web:
     name: Playwright (web, headless)
-    # MGC-346: quitar label `Linux` para que el pool macOS ARM64 (copero-ci-runner-02)
-    # pueda tomar jobs de Playwright. Playwright/Chromium corren nativamente en macOS ARM64.
-    # El runner-01 sigue siendo Linux x64; runner-02 macOS. Ambos comparten label `copero-ci`.
-    runs-on: [self-hosted, copero-ci]
+    # MGC-1880: aislar QA del pool CI. El runner Linux dedicado mantiene
+    # Playwright largo fuera del runner-02 macOS que ejecuta CI y releases.
+    runs-on: [self-hosted, copero-qa, Linux]
     # MGC-380: 15min insuficiente; bump a 30min.
     # MGC-444: 30min insufficient cuando el runner self-hosted tiene
     # errores intermitentes de red al subir logs a
