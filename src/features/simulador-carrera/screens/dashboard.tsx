@@ -296,23 +296,50 @@ export default function DashboardScreen() {
                   paddingVertical: spacing[2],
                   backgroundColor: colors.surface2,
                 }}
+                // FX1-B5 / MGC-1739 P1-6 — el header del timeline tenía
+                // textos crípticos (EDAD/CLUB/OVR/APPS/G/AST) sin
+                // accessibilityLabel. TalkBack/VoiceOver los leía como
+                // letras sueltas sin contexto. Sumamos labels expandidos
+                // para screen readers y preservamos el visual compacto
+                // para usuarios visuales. Mismo patrón que el log timeline
+                // de /temporada (accessibilityLabel por fila).
+                accessibilityRole="header"
+                accessibilityLabel="Timeline del jugador: edad, club, overall, partidos jugados, goles y asistencias por temporada"
               >
-                <Text style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                <Text
+                  style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Edad"
+                >
                   EDAD
                 </Text>
-                <Text style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                <Text
+                  style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Club"
+                >
                   CLUB
                 </Text>
-                <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                <Text
+                  style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Overall"
+                >
                   OVR
                 </Text>
-                <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                <Text
+                  style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Partidos jugados"
+                >
                   APPS
                 </Text>
-                <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                <Text
+                  style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Goles"
+                >
                   G
                 </Text>
-                <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
+                <Text
+                  style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Asistencias"
+                >
                   AST
                 </Text>
               </View>

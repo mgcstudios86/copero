@@ -548,7 +548,13 @@ export default function TemporadaScreen() {
         }}
       >
         <Button
-          label={`Siguiente semana (${profile.week}/38)`}
+          // FX1-B5 / MGC-1739 P1-8 — el catálogo marcó "Siguiente semana
+          // (2/38)" como "paréntesis raro en español". El paréntesis
+          // alargado en label de CTA choca con la convención es-AR del
+          // producto (el resto del flow usa middot · para separar
+          // magnitudes, ver semanal.tsx SEMANA {week}/38 · {position}).
+          // Cambio a middot, mismo dato, lectura más natural.
+          label={`Siguiente semana · ${profile.week}/38`}
           onPress={onNextWeek}
           variant="primary"
           size="lg"
