@@ -701,15 +701,36 @@ export default function IdentityScreen() {
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: 608, // MGC-1993: encima del identity-fixed-field-map (bottom:240 + altura real ~220 = 460). Push-up +176 vs 432 para evitar overlap con chips pos-GK/CB/CAM/ST — form tenía bottom:432 y Pierna Hábil (último field, ~y=1641-1750) colisionaba con chips (y=1621-1746) → form opaco colors.bg cubría chips. walk QA2 APK vc=170 PR #472.
+          // MGC-2001 — restaurar renderización de input-age + btn-foot-row.
+          // Walk QA2 APK vc=171 fed7b7d (PR #471) detectó regresión crítica:
+          // bottom:608 + paddingVertical:spacing[1] + gap:spacing[1] dejaban
+          // el form con altura efectiva insuficiente — solo NOMBRE+APELLIDO
+          // labels visibles, input-age y Pierna Hábil off-screen / bounds
+          // invertidos. Causa raíz: la combinación de bottom:608 con la
+          // estructura de 4 fields (NOMBRE/APELLIDO/EDAD/PIERNA) excedía el
+          // budget vertical disponible sobre field-map sin que la altura del
+          // contenedor se propagara correctamente al measure pass Yoga.
+          //
+          // Estrategia del fix:
+          // 1) compactar paddingVertical:spacing[1]→0 + gap:spacing[1]→0
+          //    (ahorra ~20dp verticales). paddingHorizontal se preserva en
+          //    spacing[1] (4dp) para que los TextInput no peguen al borde.
+          // 2) minHeight:280 explícito para garantizar que los 4 fields
+          //    rendericen aún si Yoga colapsa la altura por clipping.
+          // 3) zIndex 9→15 sobre field-map zIndex:10 → el form gana cualquier
+          //    overlap accidental con chips pos-GK/CB/CAM/ST (defensa belt).
+          // 4) Mantener bottom:608 (no revertimos a 432 porque entonces el
+          //    form cubre los chips de field-map — bug original MGC-1993).
+          bottom: 608, // MGC-1993: push-up +176 sobre 432 evita overlap con chips pos-GK/CB/CAM/ST. MGC-2001 conserva esta decisión + agrega compactación interna + minHeight.
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
           paddingHorizontal: spacing[1],
-          paddingVertical: spacing[1],
-          gap: spacing[1],
-          zIndex: 9,
+          paddingVertical: 0,
+          gap: 0,
+          zIndex: 15,
           flexShrink: 0,
+          minHeight: 280,
         }}
       >
         {/* MGC-1330: compactación para liberar 86dp de budget vertical.
