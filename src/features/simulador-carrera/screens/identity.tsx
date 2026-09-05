@@ -382,10 +382,25 @@ export default function IdentityScreen() {
               lineHeight: fontSize['2xl'] * lineHeight.tight,
             }}
             accessibilityRole="header"
+            // FX1-B2 / MGC-1739 — guardia contra truncado de título
+            // (P0-3 catálogo: "Define tu identidad" → "Define tu identida[d]"
+            // en APK PR-420 vc=109). El copy actual ES "Creá tu jugador"
+            // (PR-427 MGC-1628, 17 chars a 30px Poppins bold ≈ 306px en
+            // viewport 1080px) cabe holgado, pero blindamos contra futuras
+            // traducciones largas (zh-CN "定义你的身份" = 6 chars, en-US
+            // "Define your identity" = 21 chars): una sola línea, ajuste
+            // automático de tamaño si excediera. numberOfLines={1} evita
+            // también que crezca verticalmente y desplace el field-map.
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
           >
             {t('identity.title')}
           </Text>
-          <Text style={{ color: colors.textMuted, fontSize: fontSize.base }}>
+          <Text
+            style={{ color: colors.textMuted, fontSize: fontSize.base }}
+            numberOfLines={2}
+          >
             {t('identity.subtitle')}
           </Text>
         </View>
