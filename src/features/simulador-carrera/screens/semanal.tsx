@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useTheme } from '@/design';
 import { useCareerStore } from '@/shared/store/careerStore';
 import {
@@ -27,9 +28,11 @@ import { WEEKLY_BASE_OPTIONS, type WeeklyBaseOptionId } from '@/features/career/
  */
 export default function SemanalScreen() {
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
+  const router = useRouter();
   const profile = useCareerStore((s) => s.profile);
   const weeklyChoice = useCareerStore((s) => s.weeklyChoice);
   const resolveMatchweek = useCareerStore((s) => s.resolveMatchweek);
+  const startMatch = useCareerStore((s) => s.startMatch);
 
   const positionStats: PositionStats = profile.positionStats ?? STAT_INIT;
 
@@ -46,6 +49,13 @@ export default function SemanalScreen() {
     if (optionId === 'doble_turno') {
       // doble turno consume partido → resolvemos matchweek tras la choice.
       await resolveMatchweek();
+      // MGC-1802 P0-6 — wire UI→match: cargamos el MatchOutcome en
+      // matchStore (transient) y navegamos a /match. Antes la mutación
+      // de apps/goals quedaba invisible porque ningún componente
+      // navegaba al resultado del partido (QA MGC-1739: 'Jugar temporada'
+      // simulaba 38 semanas silenciosamente).
+      await startMatch();
+      router.push('/simulador-carrera/match');
     }
   };
 
