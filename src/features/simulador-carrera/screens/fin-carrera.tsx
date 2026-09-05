@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,6 +41,17 @@ export default function FinCarreraScreen() {
   const card = useCareerStore((s) => s.card);
   const log = useCareerStore((s) => s.log);
   const resetAll = useCareerStore((s) => s.resetAll);
+  const resumeFromRetirement = useCareerStore((s) => s.resumeFromRetirement);
+
+  // MGC-1802 P0-5 — handler del CTA 'Volver a la temporada'. Cambia el
+  // stage de 'retirement' → 'season' ANTES de navegar, porque la pantalla
+  // /temporada tiene un useEffect que redirige a /fin-carrera si el stage
+  // sigue siendo 'retirement' (loop infinito de redirects). Sin este
+  // cambio el botón 'Volver' no transiciona (QA MGC-1739).
+  const onBackToSeason = useCallback(async () => {
+    await resumeFromRetirement();
+    router.replace('/simulador-carrera/temporada');
+  }, [resumeFromRetirement, router]);
 
   // MGC-1736 — el borrado es async; si la pantalla se desmonta antes
   // de que resuelva (back físico), no navegamos ni seteamos estado.
@@ -75,7 +86,7 @@ export default function FinCarreraScreen() {
           <View style={{ marginTop: spacing[4] }}>
             <Button
               label={t('retire.backSeason')}
-              onPress={() => router.replace('/simulador-carrera/temporada')}
+              onPress={onBackToSeason}
               variant="primary"
               fullWidth
               hitSlop={44}
@@ -337,7 +348,7 @@ export default function FinCarreraScreen() {
             <View style={{ flex: 1 }}>
               <Button
                 label={t('retire.backSeason')}
-                onPress={() => router.replace('/simulador-carrera/temporada')}
+                onPress={onBackToSeason}
                 variant="secondary"
                 fullWidth
                 accessibilityHint={t('retire.backSeasonA11y')}

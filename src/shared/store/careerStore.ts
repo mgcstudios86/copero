@@ -195,6 +195,9 @@ type CareerStore = CareerSnapshot & {
    * navegue a `/identity` con el disco ya vacío.
    */
   resetAll: () => Promise<void>;
+  // MGC-1802 P0-5 — sale del estado retirement y vuelve a season sin
+  // reiniciar la carrera. Persistido por applyAndPersist.
+  resumeFromRetirement: () => Promise<void>;
 };
 
 /**
@@ -479,6 +482,17 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       }));
       persistSnapshot(get());
       await flushPendingSave();
+    },
+    // MGC-1802 P0-5 — 'Volver a la temporada' desde fin-carrera.
+    // El usuario tapó 'Retirarme' o llegó a retiro por edad y desde el
+    // resumen quiere revisar la última temporada sin reiniciar la carrera.
+    // Sin este setter, `router.replace('/temporada')` es seguido
+    // inmediatamente por un redirect de vuelta a `/fin-carrera` en el
+    // useEffect de temporada.tsx (stage==='retirement').
+    resumeFromRetirement: async () => {
+      applyAndPersist((s) =>
+        s.stage === 'retirement' ? { ...s, stage: 'season' as const } : s,
+      );
     },
     // Acciones de simulación: dynamic import del engine. La navegación
     // ya ocurrió (la UI está en /dashboard), así que el update
