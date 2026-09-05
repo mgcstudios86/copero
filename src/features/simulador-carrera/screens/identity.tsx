@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -117,6 +117,10 @@ export default function IdentityScreen() {
   // incrementando `profile.age` cada temporada (season.ts:122) — este
   // setter sólo opera durante el alta.
   const setAge = useCareerStore((s) => s.setAge);
+  // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
+  // WCAG 2.5.5) pueda disparar foco en tap perimetral. hitSlop en TextInput
+  // nativo Android no extiende el hitbox de focus.
+  const ageInputRef = useRef<TextInput>(null);
   const setNumber = useCareerStore((s) => s.setNumber);
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
@@ -819,35 +823,48 @@ export default function IdentityScreen() {
             pointerEvents="box-none"
             style={{ minHeight: 40, width: '100%' }}
           >
-            <TextInput
+            {/* MGC-1760 — Pressable wrapper con hitSlop=12 cada lado para que el
+                tap perimetral (12dp = +24dp total por eje) abra el teclado. En
+                Android nativo, hitSlop en TextInput no extiende el hitbox de
+                focus (MGC-1760 QA walk PR #427 f08d22e). El Pressable hijo
+                captura el tap perimetral y llama ageInputRef.current?.focus() */}
+            <Pressable
+              onPress={() => ageInputRef.current?.focus()}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              value={String(profile.age)}
-              onChangeText={(txt) => {
-                // Acepta sólo dígitos. El clamp final lo hace setAge.
-                const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
-                const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
-                setAge(parsed);
-              }}
-              placeholder={t('identity.agePlaceholder')}
-              placeholderTextColor={colors.textMuted}
-              keyboardType="number-pad"
-              inputMode="numeric"
-              maxLength={2}
               collapsable={false}
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  borderColor: colors.borderStrong,
-                  borderRadius: radii.md,
-                  paddingHorizontal: spacing[3],
-                  paddingVertical: spacing[2],
-                  fontSize: fontSize.base,
-                },
-              ]}
-              accessibilityLabel={t('identity.ageA11y')}
-              testID="input-age"
-            />
+              testID="input-age-tap-target"
+              accessible={false}
+            >
+              <TextInput
+                ref={ageInputRef}
+                value={String(profile.age)}
+                onChangeText={(txt) => {
+                  // Acepta sólo dígitos. El clamp final lo hace setAge.
+                  const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
+                  const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
+                  setAge(parsed);
+                }}
+                placeholder={t('identity.agePlaceholder')}
+                placeholderTextColor={colors.textMuted}
+                keyboardType="number-pad"
+                inputMode="numeric"
+                maxLength={2}
+                collapsable={false}
+                style={[
+                  styles.input,
+                  {
+                    color: colors.text,
+                    borderColor: colors.borderStrong,
+                    borderRadius: radii.md,
+                    paddingHorizontal: spacing[3],
+                    paddingVertical: spacing[2],
+                    fontSize: fontSize.base,
+                  },
+                ]}
+                accessibilityLabel={t('identity.ageA11y')}
+                testID="input-age"
+              />
+            </Pressable>
             <Text
               testID="input-age-help"
               style={{
