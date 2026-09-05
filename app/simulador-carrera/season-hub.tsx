@@ -7,7 +7,6 @@
 // `lazy()` para preservar el code-split de pantalla.
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const SeasonHubScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/season-hub').then((m) => ({
@@ -21,7 +20,6 @@ export default function SeasonHubRoute() {
       <Suspense fallback={null}>
         <SeasonHubScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="season-hub-version-badge" />
     </View>
   );
 }

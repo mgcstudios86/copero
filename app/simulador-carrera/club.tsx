@@ -4,7 +4,6 @@
 // selector de club post-draft con arquetipo / reputación / minutos).
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const SeleccionClubScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/club').then((m) => ({
@@ -18,7 +17,6 @@ export default function SeleccionClubRoute() {
       <Suspense fallback={null}>
         <SeleccionClubScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="club-version-badge" />
     </View>
   );
 }

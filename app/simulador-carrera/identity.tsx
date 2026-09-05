@@ -21,7 +21,6 @@
 // testID distinto (ver MGC-429).
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const IdentityScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/identity').then((m) => ({
@@ -35,7 +34,6 @@ export default function IdentityRoute() {
       <Suspense fallback={null}>
         <IdentityScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="identity-version-badge" />
     </View>
   );
 }

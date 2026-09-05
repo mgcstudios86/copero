@@ -14,7 +14,6 @@
 // mismo id dentro del lazy chunk.
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const TeamSelectScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/team-select').then((m) => ({
@@ -28,7 +27,6 @@ export default function TeamSelectRoute() {
       <Suspense fallback={null}>
         <TeamSelectScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="team-select-version-badge" />
     </View>
   );
 }

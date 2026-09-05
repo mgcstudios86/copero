@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -10,10 +10,6 @@ import {
   type StatKey,
 } from '@/features/career/position-stats';
 import { WEEKLY_BASE_OPTIONS, type WeeklyBaseOptionId } from '@/features/career/position-tree';
-
-const VersionBadge = lazy(() =>
-  import('@/design/components/VersionBadge').then((m) => ({ default: m.VersionBadge })),
-);
 
 /**
  * MGC-1657 (F2.3) — Pantalla semanal V2.
@@ -261,9 +257,6 @@ export default function SemanalScreen() {
           </View>
         ) : null}
       </ScrollView>
-      <Suspense fallback={null}>
-        <VersionBadge variant="corner" testID="semanal-version-badge" />
-      </Suspense>
     </SafeAreaView>
   );
 }

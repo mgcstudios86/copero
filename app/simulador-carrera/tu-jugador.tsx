@@ -4,7 +4,6 @@
 // carta final con OVR inicial + potencial + picks).
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const TuJugadorScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/tu-jugador').then((m) => ({
@@ -18,7 +17,6 @@ export default function TuJugadorRoute() {
       <Suspense fallback={null}>
         <TuJugadorScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="tu-jugador-version-badge" />
     </View>
   );
 }

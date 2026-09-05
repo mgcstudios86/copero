@@ -4,7 +4,6 @@
 // dashboard temporal con timeline de temporadas).
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const TemporadaScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/temporada').then((m) => ({
@@ -18,7 +17,6 @@ export default function TemporadaRoute() {
       <Suspense fallback={null}>
         <TemporadaScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="temporada-version-badge" />
     </View>
   );
 }

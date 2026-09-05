@@ -4,7 +4,6 @@
 // resumen y veredicto al retiro).
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const FinCarreraScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/fin-carrera').then((m) => ({
@@ -18,7 +17,6 @@ export default function FinCarreraRoute() {
       <Suspense fallback={null}>
         <FinCarreraScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="fin-carrera-version-badge" />
     </View>
   );
 }

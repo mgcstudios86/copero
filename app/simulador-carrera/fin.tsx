@@ -12,7 +12,6 @@
 // porque apuntan a pantallas distintas del producto.
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const FinScreen = lazy(() =>
   import('@/features/game/screens/fin').then((m) => ({
@@ -26,7 +25,6 @@ export default function FinRoute() {
       <Suspense fallback={null}>
         <FinScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="fin-version-badge" />
     </View>
   );
 }

@@ -4,7 +4,6 @@
 // F1 con 4 opciones fijas; F2 lo reemplaza por el árbol posicional).
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const WeekDecisionScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/week-decision').then((m) => ({
@@ -18,7 +17,6 @@ export default function WeekDecisionRoute() {
       <Suspense fallback={null}>
         <WeekDecisionScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="week-decision-version-badge" />
     </View>
   );
 }

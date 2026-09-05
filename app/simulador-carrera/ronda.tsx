@@ -6,7 +6,6 @@
 // `@/features/game/screens/ronda` (MGC-782 code-split).
 import React, { Suspense, lazy } from 'react';
 import { View } from 'react-native';
-import { VersionBadge } from '@/design/components/VersionBadge';
 
 const RondaScreen = lazy(() =>
   import('@/features/game/screens/ronda').then((m) => ({
@@ -20,7 +19,6 @@ export default function RondaRoute() {
       <Suspense fallback={null}>
         <RondaScreen />
       </Suspense>
-      <VersionBadge variant="corner" testID="ronda-version-badge" />
     </View>
   );
 }
