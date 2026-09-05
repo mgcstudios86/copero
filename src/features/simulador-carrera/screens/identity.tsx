@@ -701,7 +701,7 @@ export default function IdentityScreen() {
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: 432, // encima del identity-fixed-field-map (bottom:240 + altura ~192)
+          bottom: 608, // MGC-1993: encima del identity-fixed-field-map (bottom:240 + altura real ~220 = 460). Push-up +176 vs 432 para evitar overlap con chips pos-GK/CB/CAM/ST — form tenía bottom:432 y Pierna Hábil (último field, ~y=1641-1750) colisionaba con chips (y=1621-1746) → form opaco colors.bg cubría chips. walk QA2 APK vc=170 PR #472.
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
@@ -1530,7 +1530,7 @@ const styles = StyleSheet.create({
   // y=600-512=88dp → form-top y=-25dp (off-screen al fondo del scroll) →
   // al scrollear arriba del todo el form queda en y=0-113dp totalmente
   // visible POR ENCIMA del overlay del field map.
-  scrollContent: { flexGrow: 1, paddingBottom: 512 },
+  scrollContent: { flexGrow: 1, paddingBottom: 320 },
   container: {},
   // MGC-517: footer fijo bajo SafeAreaView. No se mueve con el contenido
   // scrollable; el CTA primario permanece visible aunque el soft keyboard
