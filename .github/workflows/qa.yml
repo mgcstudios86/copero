@@ -46,10 +46,9 @@ permissions:
 jobs:
   playwright-web:
     name: Playwright (web, headless)
-    # MGC-346: quitar label `Linux` para que el pool macOS ARM64 (copero-ci-runner-02)
-    # pueda tomar jobs de Playwright. Playwright/Chromium corren nativamente en macOS ARM64.
-    # El runner-01 sigue siendo Linux x64; runner-02 macOS. Ambos comparten label `copero-ci`.
-    runs-on: [self-hosted, copero-ci]
+    # MGC-2092: enrutado al runner-02 (Mac mini, ARM64) via label `copero-heavy`.
+    # runner-01 (VPS Linux) queda reservado para ci.yml.
+    runs-on: [self-hosted, copero-heavy]
     # MGC-380: 15min insuficiente; bump a 30min.
     # MGC-444: 30min insufficient cuando el runner self-hosted tiene
     # errores intermitentes de red al subir logs a
