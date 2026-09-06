@@ -1,0 +1,109 @@
+# runner-watch.yml — Copero (ADR-0024, MGC-2159)
+# Alerta cuando runner self-hosted copero-ci está busy=false con jobs queued > 5min.
+# Política §8.3: corre --local en runner self-hosted copero-ci.
+
+name: runner watch (copero)
+
+on:
+  schedule:
+    # Cada 5min.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: runner-watch-copero
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  watch:
+    name: detectar runner stuck
+    runs-on: [self-hosted, copero-ci]
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
+      QUEUE_THRESHOLD_MIN: ${{ vars.QUEUE_THRESHOLD_MINUTES || '5' }}
+      PAPERCLIP_API_URL: ${{ secrets.PAPERCLIP_API_URL }}
+      PAPERCLIP_API_KEY: ${{ secrets.PAPERCLIP_API_KEY }}
+      PAPERCLIP_COMPANY_ID: ${{ vars.PAPERCLIP_COMPANY_ID }}
+    steps:
+      - name: Listar runners copero-ci
+        id: runners
+        run: |
+          set -euo pipefail
+          RUNNERS_JSON=$(gh api repos/mgcstudios/copero/actions/runners?per_page=100 \
+            | jq '[.runners[] | select(.labels[].name=="copero-ci") | {id: .id, name: .name, status: .status, busy: .busy}]')
+          echo "runners_count=$(echo "$RUNNERS_JSON" | jq 'length')"
+          echo "$RUNNERS_JSON" | jq '.'
+          ALL_IDLE=$(echo "$RUNNERS_JSON" | jq '[.[] | select(.busy==false)] | length')
+          TOTAL=$(echo "$RUNNERS_JSON" | jq 'length')
+          echo "all_idle=$ALL_IDLE total=$TOTAL"
+          echo "all_idle=$ALL_IDLE" >> "$GITHUB_OUTPUT"
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+
+      - name: Listar queued runs viejos
+        id: queued
+        if: steps.runners.outputs.all_idle == steps.runners.outputs.total && steps.runners.outputs.total != '0'
+        run: |
+          set -euo pipefail
+          NOW_EPOCH=$(date -u +%s)
+          THRESHOLD_EPOCH=$((NOW_EPOCH - QUEUE_THRESHOLD_MIN * 60))
+          THRESHOLD_ISO=$(date -u -d "@$THRESHOLD_EPOCH" +%Y-%m-%dT%H:%M:%SZ)
+          echo "threshold_iso=$THRESHOLD_ISO"
+
+          QUEUED_JSON=$(gh api repos/mgcstudios/copero/actions/runs \
+            --paginate \
+            --jq '.workflow_runs[] | select(.status=="queued") | {id: .id, name: .name, created_at: .created_at, head_branch: .head_branch, run_number: .run_number}' \
+            | jq -s '.')
+
+          STALE=$(echo "$QUEUED_JSON" | jq --arg ts "$THRESHOLD_ISO" \
+            '[.[] | select(.created_at < $ts)]')
+          STALE_COUNT=$(echo "$STALE" | jq 'length')
+          echo "stale_queued_count=$STALE_COUNT"
+          echo "$STALE" | jq '.[0:5]'
+          echo "stale_count=$STALE_COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Abrir ticket Paperclip si hay zombie
+        if: steps.queued.outputs.stale_count > 0
+        env:
+          PAPERCLIP_API_URL: ${{ env.PAPERCLIP_API_URL }}
+          PAPERCLIP_API_KEY: ${{ env.PAPERCLIP_API_KEY }}
+          PAPERCLIP_COMPANY_ID: ${{ env.PAPERCLIP_COMPANY_ID }}
+        run: |
+          set -euo pipefail
+          STALE_COUNT=${{ steps.queued.outputs.stale_count }}
+
+          # Buscar issue abierto reciente del mismo patrón para no duplicar.
+          TITLE_PREFIX="runner-stuck-copero"
+          EXISTING=$(curl -sS -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+            "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues?status=in_progress&status=todo&limit=20" \
+            | jq --arg pfx "$TITLE_PREFIX" '[.issues[]? | select(.title | startswith("[" + $pfx))] | .[0:3]')
+
+          if [[ "$(echo "$EXISTING" | jq 'length')" != "0" ]]; then
+            echo "open_already: existing issue found, skipping"
+            echo "$EXISTING" | jq '.[].identifier'
+            exit 0
+          fi
+
+          TITLE="[$(date -u +%Y%m%d-%H%M)]-${TITLE_PREFIX}-queued-${STALE_COUNT}"
+          BODY="## Runner copero-ci stuck detectado\n\n- runners copero-ci idle: ${{ steps.runners.outputs.all_idle }}/${{ steps.runners.outputs.total }}\n- queued runs > ${{ env.QUEUE_THRESHOLD_MIN }}min: ${STALE_COUNT}\n- threshold_iso: ${{ steps.queued.outputs.threshold_iso }}\n- detectado: $(date -u +%Y-%m-%dT%H:%M:%SZ)\n\nDiagnóstico: \`gh api repos/mgcstudios/copero/actions/runners\` y \`gh api repos/mgcstudios/copero/actions/runs?status=queued\`.\nSi todos los runners están idle y hay queued > threshold, el runner listener puede estar colgado. Acción: SSH a VPS y \`sudo systemctl restart actions.runner.mgcstudios-copero.copero-ci-runner-01.service\`."
+
+          PAYLOAD=$(jq -n \
+            --arg title "$TITLE" \
+            --arg body "$BODY" \
+            '{
+              title: $title,
+              description: $body,
+              priority: "high",
+              labels: ["runner-stuck"]
+            }')
+
+          curl -sS -X POST \
+            -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues" \
+            | jq '.identifier // .id // "ERROR"'
