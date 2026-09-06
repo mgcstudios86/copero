@@ -1,7 +1,7 @@
 /**
  * MGC-1650 — WF5 pantalla /post-match.
  */
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -28,11 +28,10 @@ export default function PostMatchScreen() {
   const reset = useMatchStore((s) => s.reset);
   const discardMatch = useCareerStore((s) => s.discardMatch);
   const commitMatch = useCareerStore((s) => s.commitMatch);
-  // MGC-1903 — F4 social events. El motor (`engine.ts#resolveMatchweek`)
-  // popula `socialEventPending` junto con `postMatchPending`. Si hay un
-  // evento social rolado, enrutamos al usuario a `/social-events` antes
-  // de volver al hub para que vea y consuma el evento.
-  const socialEventPending = useCareerStore((s) => s.socialEventPending);
+  // MGC-1903 / MGC-2085 — F4 social events. El motor (`commitMatch`
+  // desde PR #476) popula `socialEventPending` en el mismo tick que el
+  // `await` resuelve, por lo que NO leemos el hook (stale) sino el
+  // snapshot FRESCO via `useCareerStore.getState()` después del await.
 
   useEffect(() => {
     if (!outcome || !preview || !previousProfile || !nextProfile) {
@@ -53,14 +52,27 @@ export default function PostMatchScreen() {
     router.replace('/simulador-carrera/dashboard');
   };
 
+  const [committing, setCommitting] = useState(false);
   const onNextWeek = async () => {
-    await commitMatch();
-    // MGC-1903 — si el motor roleó un evento social, esa pantalla debe
-    // drenarlo. Si no hay pending, vamos directo al dashboard.
-    if (socialEventPending) {
-      router.replace('/simulador-carrera/social-events');
-    } else {
-      router.replace('/simulador-carrera/dashboard');
+    if (committing) return;
+    setCommitting(true);
+    try {
+      await commitMatch();
+      // MGC-2085 — leer el snapshot FRESCO del store post-commit. El
+      // hook `socialEventPending` capturado en el render quedó stale
+      // porque `commitMatch` (PR #476) escribe `socialEventPending` en
+      // el mismo tick que el `await` resuelve; sin el `getState()`
+      // post-await, `onNextWeek` decide con el valor pre-commit y
+      // enruta al dashboard aún cuando el motor roló un evento.
+      const freshSocialEventPending = useCareerStore.getState()
+        .socialEventPending;
+      if (freshSocialEventPending) {
+        router.replace('/simulador-carrera/social-events');
+      } else {
+        router.replace('/simulador-carrera/dashboard');
+      }
+    } finally {
+      setCommitting(false);
     }
   };
 
@@ -280,6 +292,7 @@ export default function PostMatchScreen() {
           <Button
             label={t('postMatch.ctaNextWeek')}
             onPress={onNextWeek}
+            disabled={committing}
             variant="primary"
             size="lg"
             fullWidth
