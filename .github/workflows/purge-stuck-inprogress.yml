@@ -1,0 +1,97 @@
+# purge-stuck-inprogress.yml — Copero (ADR-0024, MGC-2159)
+# Auto-cancela jobs in_progress > STUCK_THRESHOLD_MINUTES sin progreso.
+# Complementa purge-stale-runs.yml (que solo cubre queued).
+# Política §8.3: corre --local en el runner self-hosted copero-ci.
+
+name: purge stuck inprogress (copero)
+
+on:
+  schedule:
+    # Cada 15min. GitHub schedule puede tener jitter; aceptable.
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      threshold_minutes:
+        description: "Threshold en minutos (override; default = vars.STUCK_THRESHOLD_MINUTES o 30)"
+        required: false
+        type: number
+        default: 30
+
+# MGC-351 H3: serializar invocaciones para evitar canceles concurrentes.
+concurrency:
+  group: purge-stuck-inprogress-copero
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  purge:
+    name: purge stuck in_progress runs
+    runs-on: [self-hosted, copero-ci]
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
+      THRESHOLD_MIN: ${{ vars.STUCK_THRESHOLD_MINUTES || '30' }}
+    steps:
+      - name: Listar in_progress runs con started_at viejo
+        id: list
+        run: |
+          set -euo pipefail
+          NOW_EPOCH=$(date -u +%s)
+          THRESHOLD_EPOCH=$((NOW_EPOCH - THRESHOLD_MIN * 60))
+          echo "now=$NOW_EPOCH threshold_epoch=$THRESHOLD_EPOCH threshold_min=$THRESHOLD_MIN"
+
+          # gh CLI devuelve startedAt en ISO8601; convertimos con python.
+          INPROG_JSON=$(gh api repos/mgcstudios/copero/actions/runs \
+              --paginate \
+              --jq '.workflow_runs[] | select(.status=="in_progress") | {id: .id, name: .name, started_at: .started_at, head_branch: .head_branch, run_number: .run_number}' \
+              | jq -s '.')
+
+          # Filtrar runs cuyo started_at < threshold.
+          STUCK_IDS=$(echo "$INPROG_JSON" | jq -r --arg ts "$(date -u -d "@$THRESHOLD_EPOCH" +%Y-%m-%dT%H:%M:%SZ)" \
+            '.[] | select(.started_at < $ts) | .id')
+
+          echo "stuck_run_ids:"
+          printf '%s\n' "$STUCK_IDS" | head -50
+          {
+            echo "stuck_ids<<EOF"
+            printf '%s\n' "$STUCK_IDS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Cancelar stuck runs
+        env:
+          GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          STUCK_IDS=$(echo "${{ steps.list.outputs.stuck_ids }}")
+          if [[ -z "$STUCK_IDS" ]]; then
+            echo "no_stuck_runs"
+            exit 0
+          fi
+
+          CANCELLED=0
+          FAILED=0
+          while IFS= read -r RUN_ID; do
+            [[ -z "$RUN_ID" ]] && continue
+            echo "cancelling run=$RUN_ID"
+            if gh api -X POST "repos/mgcstudios/copero/actions/runs/$RUN_ID/cancel" >/dev/null 2>&1; then
+              echo "cancelled run=$RUN_ID"
+              CANCELLED=$((CANCELLED + 1))
+            else
+              echo "FAILED cancel run=$RUN_ID"
+              FAILED=$((FAILED + 1))
+            fi
+          done <<< "$STUCK_IDS"
+
+          echo "summary: cancelled=$CANCELLED failed=$FAILED"
+          # Resumen a Paperclip no es trivial desde aquí; el alert workflow (§2)
+          # es quien abre el ticket si el patrón persiste.
+
+      - name: Log resumen
+        if: always()
+        run: |
+          echo "purge-stuck-inprogress run completed at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "threshold_min=$THRESHOLD_MIN"
