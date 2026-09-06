@@ -571,9 +571,21 @@ export default function IdentityScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                   accessibilityLabel={t('identity.nationalityOptionA11y', { name: n.name })}
-                  // MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje
-                  // (PR-379 / MGC-1502). Row 44dp + HIT_SLOP_44 → 132dp hitbox.
-                  hitSlop={HIT_SLOP_44}
+                  // MGC-2081 — country Pressable SIN hitSlop. La fila ya tiene
+                  // `minHeight:44` (WCAG 2.5.5 target 44dp) y vive dentro del
+                  // outer ScrollView + parent View `overflow:'hidden'`. La
+                  // combinación hitSlop+HIT_SLOP_44 + overflow:hidden +
+                  // ScrollView gesture handler es la fuente del bug: el
+                  // touch DOWN cae dentro del hitSlop expandido, el
+                  // ScrollView reclama el gesto antes del UP, y `onPress`
+                  // nunca dispara (verificado por QA MGC-1763 F4 walk:
+                  // tapOn id/point/text/content-desc + longPress +
+                  // retryTapIfNoChange + scrollUntilVisible todos no-op
+                  // sobre bounds=[43,926][1038,1039] clickable=true).
+                  // Sin hitSlop el Pressable coincide 1:1 con su layout
+                  // bounds y la gesture system routea el tap correctamente.
+                  // Nota: WCAG 2.5.5 se sigue cumpliendo con `minHeight:44`
+                  // (44dp target ya está satisfecho por el style del Pressable).
                   // MGC-1348 v2 — FIFA code de Argentina = 'AR' pero
                   // specs Playwright usan ISO 3166-1 alpha-3 'ARG' en
                   // `getByTestId('country-ARG')`. Alias solo para AR;
