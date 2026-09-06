@@ -29,10 +29,9 @@ export default function PostMatchScreen() {
   const discardMatch = useCareerStore((s) => s.discardMatch);
   const commitMatch = useCareerStore((s) => s.commitMatch);
   // MGC-1903 — F4 social events. El motor (`engine.ts#resolveMatchweek`)
-  // popula `socialEventPending` junto con `postMatchPending`. Si hay un
-  // evento social rolado, enrutamos al usuario a `/social-events` antes
-  // de volver al hub para que vea y consuma el evento.
-  const socialEventPending = useCareerStore((s) => s.socialEventPending);
+  // popula `socialEventPending` junto con `postMatchPending`. Se lee vía
+  // `useCareerStore.getState()` post-await en `onNextWeek` para evitar
+  // snapshot stale (MGC-2078).
 
   useEffect(() => {
     if (!outcome || !preview || !previousProfile || !nextProfile) {
