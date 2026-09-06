@@ -25,7 +25,7 @@ permissions:
 jobs:
   changes:
     name: detect changed paths
-    runs-on: self-hosted
+    runs-on: [self-hosted, copero-ci]
     outputs:
       web: ${{ steps.filter.outputs.web }}
       lint: ${{ steps.filter.outputs.lint }}
@@ -83,7 +83,7 @@ jobs:
 
   lint:
     name: lint (eslint)
-    runs-on: self-hosted
+    runs-on: [self-hosted, copero-ci]
     needs: changes
     if: needs.changes.outputs.lint == 'true'
     steps:
@@ -112,7 +112,7 @@ jobs:
 
   typecheck:
     name: typecheck (tsc --noEmit)
-    runs-on: self-hosted
+    runs-on: [self-hosted, copero-ci]
     needs: changes
     if: needs.changes.outputs.typecheck == 'true'
     steps:
@@ -138,7 +138,7 @@ jobs:
 
   test-web:
     name: test web (vitest)
-    runs-on: self-hosted
+    runs-on: [self-hosted, copero-ci]
     needs: changes
     if: needs.changes.outputs.tests == 'true'
     steps:
@@ -165,7 +165,7 @@ jobs:
 
   build-web:
     name: build web (expo export --platform web)
-    runs-on: self-hosted
+    runs-on: [self-hosted, copero-ci]
     needs: changes
     if: needs.changes.outputs.web == 'true'
     steps:
@@ -209,7 +209,7 @@ jobs:
 
   devops-comment:
     name: devops-comment (gate §8.1)
-    runs-on: self-hosted
+    runs-on: [self-hosted, copero-ci]
     needs: [lint, typecheck, test-web, build-web]
     if: always() && github.event_name == 'pull_request'
     steps:
