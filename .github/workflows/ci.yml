@@ -213,10 +213,95 @@ jobs:
         run: node scripts/precompress-assets.mjs dist
       - name: Subir artefacto dist/
         uses: actions/upload-artifact@v4
-        # MGC-2194 (PR #494 ya mergeado en release-2): el quota de GitHub Actions
-        # artifact storage hace fallar el upload aunque el export sea correcto.
-        # Soft-fail para que el gate §8.1 no quede rojo por infra no-deterministica.
+        with:
+          name: copero-web-dist
+          path: dist
+          if-no-files-found: warn
+        # MGC-2194: la cuota de artefactos del runner self-hosted se satura de
+        # forma intermitente en jobs largos; un fallo aquí no debe tumbar CI.
+        # El artefacto sigue siendo necesario para QA, pero la pipeline puede
+        # seguir si está saturada.
         continue-on-error: true
+
+  devops-comment:
+    name: devops-comment (gate §8.1)
+    runs-on: [self-hosted, copero-ci]
+    # MGC-2236: `changes` debe estar en `needs:` para que
+    # `needs.changes.outputs.*` se evalúe (los outputs del job de paths-filter
+    # se propagan sólo si el job aparece en la lista de dependencias).
+    needs: [changes, lint, typecheck, test-web, build-web]
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compute status table + gate verdict
+        id: status
+        env:
+          LINT_RESULT: ${{ needs.lint.result }}
+          TYPECHECK_RESULT: ${{ needs.typecheck.result }}
+          TEST_RESULT: ${{ needs.test-web.result }}
+          BUILD_RESULT: ${{ needs.build-web.result }}
+          LINT_FILTER: ${{ needs.changes.outputs.lint }}
+          TYPECHECK_FILTER: ${{ needs.changes.outputs.typecheck }}
+          TESTS_FILTER: ${{ needs.changes.outputs.tests }}
+          WEB_FILTER: ${{ needs.changes.outputs.web }}
+        run: |
+          set -euo pipefail
+          icon() {
+            case "$1" in
+              success) echo "✅ pass";;
+              failure) echo "❌ fail";;
+              skipped) echo "⏭️ skipped";;
+              *) echo "⚠️ $1";;
+            esac
+          }
+          {
+            echo "result<<EOF"
+            echo "| Job | Result |"
+            echo "| --- | --- |"
+            echo "| lint (eslint) | $(icon "$LINT_RESULT") |"
+            echo "| typecheck (tsc --noEmit) | $(icon "$TYPECHECK_RESULT") |"
+            echo "| test-web (vitest) | $(icon "$TEST_RESULT") |"
+            echo "| build-web (expo export) | $(icon "$BUILD_RESULT") |"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          # MGC-1860 — gate §8.1 #3 sólo se cumple si cada job que debía
+          # correr terminó SUCCESS. ADR-0019 BLOQ-1: un job en `skipped`
+          # es legítimo sólo cuando el filtro de paths correspondiente
+          # lo excluyó (`changes.outputs.X == 'false'`). Si el filtro
+          # marcó el job como aplicable pero terminó `skipped`/`failure`
+          # /`cancelled`/`timed_out`, el gate FALLA y bloquea el merge.
+          ok() {
+            # $1 = job result, $2 = filter output ('true'|'false')
+            case "$1" in
+              success) return 0;;
+              skipped)
+                if [[ "$2" == "false" ]]; then
+                  return 0
+                fi
+                return 1
+                ;;
+              *) return 1;;
+            esac
+          }
+          lint_ok="no"
+          typecheck_ok="no"
+          test_ok="no"
+          build_ok="no"
+          if ok "$LINT_RESULT" "$LINT_FILTER"; then lint_ok="yes"; fi
+          if ok "$TYPECHECK_RESULT" "$TYPECHECK_FILTER"; then typecheck_ok="yes"; fi
+          if ok "$TEST_RESULT" "$TESTS_FILTER"; then test_ok="yes"; fi
+          if ok "$BUILD_RESULT" "$WEB_FILTER"; then build_ok="yes"; fi
+          if [[ "$lint_ok" == "yes" \
+             && "$typecheck_ok" == "yes" \
+             && "$test_ok" == "yes" \
+             && "$build_ok" == "yes" ]]; then
+            echo "verdict=PASS" >> "$GITHUB_OUTPUT"
+          else
+            echo "verdict=FAIL" >> "$GITHUB_OUTPUT"
+            echo "::error title=§8.1 gate #3 no cumplido:: lint=$LINT_RESULT(filter=$LINT_FILTER) typecheck=$TYPECHECK_RESULT(filter=$TYPECHECK_FILTER) test-web=$TEST_RESULT(filter=$TESTS_FILTER) build-web=$BUILD_RESULT(filter=$WEB_FILTER)"
+            exit 1
+          fi
+      - uses: marocchino/sticky-pull-request-comment@v2
         with:
           name: copero-web-build
           path: dist/
