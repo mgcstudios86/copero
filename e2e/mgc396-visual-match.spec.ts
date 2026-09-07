@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import { fillRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-396 — capturas visuales post-fix `palette.copero.primary` → verde.
@@ -34,14 +35,11 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
 
     // 2) Llenar el form mínimo (testIDs canónicos de e2e/simulador-carrera.spec.ts).
-    // MGC-2254 v2: pressSequentially para que onChangeText dispare en RNW.
-    const nameInput = page.locator('[data-testid="input-name"]');
-    await nameInput.click();
-    await nameInput.pressSequentially('Calvo', { delay: 30 });
+    // MGC-2254 v3 / MGC-2356: fillRnw = fill + dispatchEvent('input') para
+    // forzar que RNW dispare onChangeText en el runner self-hosted.
+    await fillRnw(page.locator('[data-testid="input-name"]'), 'Calvo');
     await page.locator('[data-testid="pos-ST"]').click();
-    const natSearch = page.locator('[data-testid="input-nationality-search"]');
-    await natSearch.click();
-    await natSearch.pressSequentially('arg', { delay: 30 });
+    await fillRnw(page.locator('[data-testid="input-nationality-search"]'), 'arg');
     await page.waitForTimeout(400);
     // MGC-1348 v3 — `force:true` por hit-test RNW (country-ARG).
     await page.getByTestId('country-ARG').click({ force: true });

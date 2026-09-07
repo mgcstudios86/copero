@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { fillRnw } from './fixtures/rnw-fill';
 
 /**
  * Copero — Evidencia E2E simulador-carrera (MGC-444).
@@ -40,19 +41,15 @@ async function completeIdentity(page: any, name: string) {
   // SPA fallback a index.html para rutas como /simulador-carrera/identity.
   await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
-  // MGC-2254 v2: pressSequentionally en lugar de fill. En el runner
-  // self-hosted (copero-heavy, Mac mini ARM64, Chromium headless), `fill`
-  // sobre RNW TextInput setea `value` pero no dispara `input` event de
-  // React antes del primer paint post-hidratacion; el state queda vacio
-  // y canContinue devuelve false -> btn-identity-continue disabled.
-  // pressSequentially fuerza keypresses que si disparan onChangeText.
-  const nameInput = page.getByTestId('input-name');
-  await nameInput.click();
-  await nameInput.pressSequentially(name, { delay: 30 });
+  // MGC-2254 v3 / MGC-2356: en el runner self-hosted (copero-heavy, Mac mini
+  // ARM64, Chromium headless) ni `fill` ni pressSequentially disparan
+  // `onChangeText` antes del primer paint post-hidratacion. `fillRnw`
+  // (fixtures/rnw-fill.ts) hace click + fill + dispatchEvent('input')
+  // con el setter nativo de HTMLInputElement.value, lo que fuerza a
+  // React a reconciliar el state y deja canContinue()=true.
+  await fillRnw(page.getByTestId('input-name'), name);
   await page.locator('[data-testid^="pos-"]').first().click();
-  const natSearch = page.getByTestId('input-nationality-search');
-  await natSearch.click();
-  await natSearch.pressSequentially('arg', { delay: 30 });
+  await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
   await page.waitForTimeout(400);
   // MGC-2254: click country-ARG tras el fill. MGC-1348 v3 — `force:true`
   // por hit-test RNW.
