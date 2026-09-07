@@ -28,10 +28,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-copero-${{ github.event.pull_request.number || github.ref }}
-  # MGC-2218: no cancelar runs en vuelo cuando el trigger es workflow_dispatch
-  # (typecheck ~13min paga el pato). push/PR mantienen cancel-in-progress para
-  # no apilar dos pushes seguidos sobre el mismo ref.
+  # MGC-2218: workflow_dispatch usa un group único (run_id) para que dos
+  # dispatch manuales sobre el mismo ref nunca compitan entre sí y typecheck
+  # (~13min) nunca pague cancelaciones. push y PR sí cancelan el run previo
+  # en el mismo ref (push repetido no apila).
+  group: >-
+    ci-copero-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'workflow_dispatch' && format('-{0}', github.run_id) || '' }}
   cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 permissions:
