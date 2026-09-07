@@ -138,6 +138,32 @@ export default function IdentityScreen() {
   // "stuck" tapando chips (pos-CAM) que Maestro no logra visibilizar.
   const nameInputRef = useRef<TextInput>(null);
   const lastNameInputRef = useRef<TextInput>(null);
+  // MGC-2304 — IME bridge rebind. Walk MGC-2296 sobre APK vc=227 (PR #491
+  // SHA 535301b) reveló que inputMethodManager.mServedView queda stale en
+  // input-name tras el primer tap; el segundo tap a un EditText hermano
+  // (input-lastname / input-age) genera focused=true pero mServedView=null,
+  // por lo que `adb shell input text` después concatena en input-name en
+  // lugar de ir al campo tapado. RN-Android sólo dispara
+  // InputMethodManager.restartInput() cuando hay un ciclo blur→focus real;
+  // un focus() sobre un input que ya estaba servido es idempotente. La
+  // solución: Pressable.onPress hace blur() de los OTROS EditText primero
+  // y defer del focus() al próximo frame con requestAnimationFrame para
+  // que el blur nativo procese antes del nuevo focus.
+  const rebindFocus = (
+    target: React.RefObject<TextInput>,
+    others: React.RefObject<TextInput>[],
+  ): void => {
+    others.forEach((r) => r.current?.blur());
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => {
+        target.current?.focus();
+      });
+    } else {
+      setTimeout(() => {
+        target.current?.focus();
+      }, 16);
+    }
+  };
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);
@@ -901,7 +927,14 @@ export default function IdentityScreen() {
             // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
             // clicks, el TextInput hijo sí. Patrón recursivo Field wrapper.
             pointerEvents="box-none"
-            style={{ minHeight: 36, width: '100%' }}
+            // MGC-2304 — minHeight 36→48dp para hitbox perimetral WCAG 2.5.5
+            // ≥44dp. Walk MGC-2296 sobre APK vc=227 midió wrapper 40dp H
+            // (100px ZY22G728HN density 400); threshold 44dp = 110px. El
+            // Pressable interno con hitSlop=22 cada lado (HIT_SLOP_44)
+            // extiende touch area pero uiautomator mide bounds del wrapper
+            // padre, no hitSlop. minHeight:48 + padding interior TextInput
+            // da hitbox efectivo 48dp centro + 22dp perimétrica × 2 = 92dp.
+            style={{ minHeight: 48, width: '100%' }}
           >
             {/* MGC-2061 — Pressable wrapper con hitSlop=22 cada lado. Patrón
                 idéntico al aplicado en input-age (MGC-1760 PR #454 d8d09fc).
@@ -909,11 +942,20 @@ export default function IdentityScreen() {
                 de focus, por lo que tap perimetral cae en el View padre y
                 no enfoca. El Pressable captura el tap y llama
                 nameInputRef.current?.focus() para garantizar focus estable.
+                MGC-2304 — el focus() explícito vía ref fuerza a RN-Android
+                a rebindear InputMethodManager.mServedView al EditText
+                destino, resolviendo el bug de IME bridge no-reflow entre
+                EditText siblings (walk MGC-2296 AC2/AC3 FAIL con mServedView
+                =null post-segundo-tap). Maestro `tapOn id: input-<X>` o
+                tap humano vía adb shell input tap caen en el Pressable →
+                onPress → ref.focus() del input correcto → IME rebindea.
                 Aditivo: `input-name-tap-target` testID para que QA pueda
                 conmutar focus entre inputs (workaround a focus leak post-
                 inputText reportado en MGC-1980 / MGC-2061). */}
             <Pressable
-              onPress={() => nameInputRef.current?.focus()}
+              onPress={() =>
+                rebindFocus(nameInputRef, [lastNameInputRef, ageInputRef])
+              }
               hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-name-tap-target"
@@ -968,7 +1010,9 @@ export default function IdentityScreen() {
             testID="input-lastname-wrapper"
             collapsable={false}
             pointerEvents="box-none"
-            style={{ minHeight: 36, width: '100%' }}
+            // MGC-2304 — minHeight 36→48dp para hitbox perimetral WCAG 2.5.5
+            // ≥44dp (walk MGC-2296 midió wrapper 36dp = 90px; threshold 110px).
+            style={{ minHeight: 48, width: '100%' }}
           >
             {/* MGC-2061 — Pressable wrapper con hitSlop=22 cada lado. Patrón
                 MGC-1760 aplicado a input-lastname (PR #454 d8d09fc). El bug
@@ -980,7 +1024,9 @@ export default function IdentityScreen() {
                 testID para que QA pueda enfocar/desenfocar de forma estable
                 sin que uiautomator dump pierda los chips posteriores. */}
             <Pressable
-              onPress={() => lastNameInputRef.current?.focus()}
+              onPress={() =>
+                rebindFocus(lastNameInputRef, [nameInputRef, ageInputRef])
+              }
               hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-lastname-tap-target"
@@ -1033,7 +1079,9 @@ export default function IdentityScreen() {
             testID="input-age-wrapper"
             collapsable={false}
             pointerEvents="box-none"
-            style={{ minHeight: 36, width: '100%' }}
+            // MGC-2304 — minHeight 36→48dp para hitbox perimetral WCAG 2.5.5
+            // ≥44dp (walk MGC-2296 midió wrapper 36dp = 90px; threshold 110px).
+            style={{ minHeight: 48, width: '100%' }}
           >
             {/* MGC-1760 — Pressable wrapper con hitSlop=12 cada lado para que el
                 tap perimetral (12dp = +24dp total por eje) abra el teclado. En
@@ -1041,7 +1089,9 @@ export default function IdentityScreen() {
                 focus (MGC-1760 QA walk PR #427 f08d22e). El Pressable hijo
                 captura el tap perimetral y llama ageInputRef.current?.focus() */}
             <Pressable
-              onPress={() => ageInputRef.current?.focus()}
+              onPress={() =>
+                rebindFocus(ageInputRef, [nameInputRef, lastNameInputRef])
+              }
               hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-age-tap-target"
