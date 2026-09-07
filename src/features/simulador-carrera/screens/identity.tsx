@@ -19,6 +19,7 @@ import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { onKeyActivate } from '@/design/utils/keyboardActivation';
 import { useCareerStore } from '@/shared/store/careerStore';
+import { useLocale } from '@/i18n/locale-context';
 import { POSITIONS, GROUP_COLOR } from '@/features/career/positions';
 import { NATIONALITIES } from '@/features/career/nationalities';
 import { LEAGUES, leagueNameByCode } from '@/features/career/leagues';
@@ -89,6 +90,16 @@ export default function IdentityScreen() {
   // dashboard (dashboard.tsx:352). Volvemos al patrón simple `commitIdentity +
   // router.push('/dashboard')` que existía antes de MGC-249/MGC-251.
   const commitIdentity = useCareerStore((s) => s.commitIdentity);
+
+  // MGC-2319 — restaurar binding `t` removido accidentalmente en el squash
+  // fix/mgc2301. PR #525 (75f55ab) simplificó headers hardcodeando strings
+  // ES y quitó el `useLocale()`/destructure, pero dejó 3 calls vivos en los
+  // pos-chips (líneas identity.fieldPosition / .positionChipsA11y /
+  // .positionGroup${chip.label}). Bundle minificado referencia `t`
+  // indefinido → FATAL EXCEPTION mqt_v_native al montar IdentityScreen.
+  // Mantener destructure (sólo se invoca para los 3 calls del pos-chip row;
+  // headers siguen hardcoded en español como decidió PR #525).
+  const { t } = useLocale();
 
   const [nationalityQuery, setNationalityQuery] = useState('');
   const filteredNationalities = useMemo(() => {
