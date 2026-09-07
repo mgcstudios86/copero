@@ -462,48 +462,149 @@ export default function IdentityScreen() {
           pointerEvents='box-none' mantiene el spec MGC-1348 para que el wrapper
           no intercepte clicks de los country-* Pressables (que ahora viven MÁS
           ABAJO en el scroll, no más arriba). */}
-      {/* MGC-1737 — nationality-section REPOSICIONADA como SEGUNDO hijo del
-          outer ScrollView (entre identity-header e identity-fixed-form).
-          Causa raíz AC3 FAIL walk WF1 PR #427 (MGC-1732 sobre APK
-          build-PR-427-20d2556): nationality-section arrancaba en y=1338px
-          content, tapada completamente por sticky field-map overlay
-          [0,1310][1080,1530] + sticky-footer [0,1530][1080,2130] en
-          fresh-mount (scroll position = 0). Reordenando nationality ANTES
-          de identity-fixed-form, country-ARG queda a y≈625px viewport,
-          ENCIMA del field-map overlay 1310px (margin 685px) → tappable sin
-          scrollUntilVisible.
 
-          Layout resultante en ZY22G728HN 1080×2400 density 400 (1dp = 2.5px),
-          viewport del scroll 732.8dp, footer top = 1530px, field-map top ≈
-          1310px:
-            identity-header          y=0      → y=375px
-            nationality-section      y=375px  → y=1168px  ← country-ARG ≈ 625px ✓
-            identity-fixed-form      y=1168px → y=2132px  ← input-name ≈ 1295px
-            jersey-preview-wrapper   y=2132px → y=2332px
+      {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
+          height:300 + maxHeight:300 + overflow:hidden fuerzan el clamp al
+          intrinsic height del JerseyPreview md (160x200) + título + label
+          + padding + gaps (≈ 276px), evitando que RN-Android lo expanda al
+          tamaño del viewport y empuje secciones inferiores fuera del dump.
+          Patrón MGC-1005.
+          MGC-1435 — bump 240→300 sobre PR-348. En PR-347 QA reportó
+          jersey-preview bounds=[340,873][740,1249] h=376px overfloweando el
+          wrapper 240px con overflow:hidden → SVG del país clippeado en la
+          mitad inferior. 300px acomoda 200 (jersey) + 20 (title) + 16 (label)
+          + 24 (padding) + 16 (gaps) = 276px con 24px slack. Mantener
+          overflow:hidden como belt para que RN-Android no expanda el
+          wrapper al viewport completo. */}
+      <View
+        testID="jersey-preview-wrapper"
+        collapsable={false}
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: radii.lg,
+          marginHorizontal: spacing[4],
+          marginBottom: spacing[3],
+          padding: spacing[3],
+          borderWidth: 1,
+          borderColor: colors.border,
+          alignItems: 'center',
+          gap: spacing[2],
+          height: 300,
+          maxHeight: 300,
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}
+      >
+        <Text style={{ color: colors.textMuted, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
+          {t('identity.jerseyEyebrow')}
+        </Text>
+        {/* JerseyPreview renderiza SVG del país con dorsal + apellido.
+            Contraste dorsal/jersey verificado AA WCAG por MGC-465.
+            Lazy-loaded (MGC-482) para code-split fuera del chunk inicial.
+            Placeholder mantiene dimensiones fijas para evitar CLS. */}
+        <Suspense
+          fallback={
+            <View
+              testID="jersey-preview-fallback"
+              accessibilityElementsHidden
+              style={{ width: 160, height: 200, borderRadius: 18, backgroundColor: colors.surface2 }}
+            />
+          }
+        >
+          <JerseyPreview
+            countryCode={profile.nationalityCode ?? 'AR'}
+            number={profile.number}
+            name={profile.name}
+            size="md"
+            testID="identity-jersey-preview"
+          />
+        </Suspense>
+        <Text
+          style={{
+            color: colors.textMuted,
+            fontSize: fontSize.sm,
+            lineHeight: 16,
+            height: 16,
+            minHeight: 16,
+            includeFontPadding: false,
+          }}
+        >
+          {t('identity.jerseyCaption', { position: profile.position })}
+        </Text>
+      </View>
+      {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
+          (sibling de `identity-fixed-form`). Patrón canónico MGC-751/PR-254
+          (commit 6be789c + 403b380) extendido al field map. Bajo el fold del
+          ScrollView (y1 > 1638 en ZY22G728HN 1080x2400) RN-Android clipea los
+          bounds al viewport visible y los wrappers collapsable={false} reportan
+          h negativo en el primer dump. QA MGC-806 midió field-map-wrapper
+          h=-538 dentro del ScrollView; el extracto a View fijo hermano
+          garantiza h >= 600 (aspectRatio 0.7 sobre ancho 1048 ≈ 700px) sin
+          depender del measure pass del ScrollView. Posicionado entre el
+          ScrollView y `identity-fixed-form` (MGC-751) para mantener el orden
+          visual original: Header + Jersey (scrollable) → Nacionalidad (fijo)
+          → Field map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se
+          mete dentro del translateY del `identity-sticky-footer` (MGC-754) — el
+          field map no esquiva IME (es tap target, no input de texto). */}
+      {/* MGC-1585 / PR #395: la selección de liga se removió de /identity.
+          Ocurre exclusivamente en /academy paso 3 (cada club expone su liga).
+          Ver MGC-1567 walk E2E: identity → dashboard → academy → Morón →
+          /temporada resulta jugable sin seleccionar liga en identity.
+          El árbol del scroll queda:
+            identity-header → identity-fixed-form → nationality-section
+            → jersey-preview-wrapper
+          y los bounds reportados en ZY22G728HN density 400 son ahora
+          siempre positivos en fresh-mount (no más secciones clipeadas bajo
+          el fold del ScrollView position:absolute full-bounds). */}
+      </ScrollView>
+      {/* MGC-2269 (PR #513 ba4ed83 regresión): nationality-section extraída
+          a sibling kavContent-level fijo encima del identity-fixed-form.
+          Moverla arriba en el render del ScrollView no basta: PR #513 fijó
+          identity-fixed-form en `bottom:120 + height:280` (Yoga: form.y =
+          2076 - 300 - 700 = 1076 en ZY22G728HN 1080×2400). El form con
+          zIndex:15 + backgroundColor opaco + hijos Pressable con hitSlop
+          tapó el viewport natural del outer ScrollView, y nationality (que
+          vivía entre header y jersey dentro del scroll) quedó fuera del dump
+          fresh-mount. QA MGC-2262 APK vc=222 SHA f7313455: 0 nodos con
+          resource-id country-*, nationality-section, input-nationality-search;
+          identity-jersey-preview termina y=617 e identity-fixed-form arranca
+          y=1076 — gap 459px VACÍO donde nationality-section debería vivir.
 
-          country-ARG queda 685px encima del field-map overlay → AC3 cumplido.
-          input-name a y≈1295px también ENCIMA del field-map 1310px → usuario
-          puede tipear nombre sin scroll. identity-fixed-form requiere scroll
-          para acceder a lastname/age/foot, trade-off aceptado para preservar
-          el AC3 de MGC-1737. scrollContent.paddingBottom:512 sigue despejando
-          el field-map + footer para que el form completo sea alcanzable tras
-          scroll.
-
-          Mantiene: cap NATIONALITY_FRESH_LIMIT=5 (MGC-1448), search hint,
-          testID alias AR→ARG (MGC-1348 v2), lista plana sin ScrollView anidado
-          (MGC-1428 intento-7). NO reintroducir ScrollView anidado.
-          NO extraer nationality a sibling externo (MGC-807/843/1428 cerraron
-          esa ruta por measure pass + clipping). Reordenar dentro del scroll
-          es la mínima superficie de cambio. */}
+          Fix: misma extracción MGC-1943 que se aplicó al form. nationality
+          vive como `position:absolute, bottom: 412, zIndex: 14` (debajo del
+          form z=15) anclada encima del form, fuera del flow del ScrollView,
+          sin overlap con form/sticky-footer/ad-banner. bottom=412dp = footer
+          bottom 120 + form height 280 + slack 12dp. pointerEvents='auto'
+          (NO box-none) — los Pressable country-* necesitan reclamar taps sin
+          pasar por el scroll gesture handler (causa raíz del bug MGC-2081
+          hitSlop). */}
       <View
         testID="nationality-section"
         collapsable={false}
+        pointerEvents="auto"
         style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 412, // MGC-2269 — encima del identity-fixed-form (bottom 120 + h 280 + 12dp gap).
+          // MGC-2269 — zIndex 14 (form 15 lo overlapea por 12dp en el bottom,
+          // aceptable: nationality content visible arriba; el form y footer
+          // son los siblings primarios cerca del bottom-edge).
+          zIndex: 14,
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
           padding: spacing[4],
           flexShrink: 0,
+          // MGC-2269 — maxHeight = viewport del kavContent (732.8dp ≈ 1832px)
+          // menos form (700px) menos footer + slack (300px) ≈ 832px. Cuando
+          // el usuario expande "Ver todas" (33 países × ~110px ≈ 3630px sobre
+          // el cap 5) el contenido interno excede maxHeight y `overflow:'hidden'`
+          // clipea los países por debajo del bottom. Aceptable para esta
+          // regresión P0 (QA AC3): los 5 países top + search siguen visibles.
+          // Walk MGC-2251 no ejercita la lista expandida completa.
+          maxHeight: 832,
+          overflow: 'hidden',
         }}
       >
         <Field label={t('identity.fieldNationality')}>
@@ -711,100 +812,7 @@ export default function IdentityScreen() {
           ) : null}
         </Field>
       </View>
-      {/* Jersey preview — sección fija sibling del kavContent (sin ScrollView).
-          height:300 + maxHeight:300 + overflow:hidden fuerzan el clamp al
-          intrinsic height del JerseyPreview md (160x200) + título + label
-          + padding + gaps (≈ 276px), evitando que RN-Android lo expanda al
-          tamaño del viewport y empuje secciones inferiores fuera del dump.
-          Patrón MGC-1005.
-          MGC-1435 — bump 240→300 sobre PR-348. En PR-347 QA reportó
-          jersey-preview bounds=[340,873][740,1249] h=376px overfloweando el
-          wrapper 240px con overflow:hidden → SVG del país clippeado en la
-          mitad inferior. 300px acomoda 200 (jersey) + 20 (title) + 16 (label)
-          + 24 (padding) + 16 (gaps) = 276px con 24px slack. Mantener
-          overflow:hidden como belt para que RN-Android no expanda el
-          wrapper al viewport completo. */}
-      <View
-        testID="jersey-preview-wrapper"
-        collapsable={false}
-        style={{
-          backgroundColor: colors.surface,
-          borderRadius: radii.lg,
-          marginHorizontal: spacing[4],
-          marginBottom: spacing[3],
-          padding: spacing[3],
-          borderWidth: 1,
-          borderColor: colors.border,
-          alignItems: 'center',
-          gap: spacing[2],
-          height: 300,
-          maxHeight: 300,
-          overflow: 'hidden',
-          flexShrink: 0,
-        }}
-      >
-        <Text style={{ color: colors.textMuted, fontSize: fontSize.sm, fontWeight: fontWeight.semibold }}>
-          {t('identity.jerseyEyebrow')}
-        </Text>
-        {/* JerseyPreview renderiza SVG del país con dorsal + apellido.
-            Contraste dorsal/jersey verificado AA WCAG por MGC-465.
-            Lazy-loaded (MGC-482) para code-split fuera del chunk inicial.
-            Placeholder mantiene dimensiones fijas para evitar CLS. */}
-        <Suspense
-          fallback={
-            <View
-              testID="jersey-preview-fallback"
-              accessibilityElementsHidden
-              style={{ width: 160, height: 200, borderRadius: 18, backgroundColor: colors.surface2 }}
-            />
-          }
-        >
-          <JerseyPreview
-            countryCode={profile.nationalityCode ?? 'AR'}
-            number={profile.number}
-            name={profile.name}
-            size="md"
-            testID="identity-jersey-preview"
-          />
-        </Suspense>
-        <Text
-          style={{
-            color: colors.textMuted,
-            fontSize: fontSize.sm,
-            lineHeight: 16,
-            height: 16,
-            minHeight: 16,
-            includeFontPadding: false,
-          }}
-        >
-          {t('identity.jerseyCaption', { position: profile.position })}
-        </Text>
-      </View>
-      {/* MGC-807: field-map-wrapper extraído a View fijo hermano del ScrollView
-          (sibling de `identity-fixed-form`). Patrón canónico MGC-751/PR-254
-          (commit 6be789c + 403b380) extendido al field map. Bajo el fold del
-          ScrollView (y1 > 1638 en ZY22G728HN 1080x2400) RN-Android clipea los
-          bounds al viewport visible y los wrappers collapsable={false} reportan
-          h negativo en el primer dump. QA MGC-806 midió field-map-wrapper
-          h=-538 dentro del ScrollView; el extracto a View fijo hermano
-          garantiza h >= 600 (aspectRatio 0.7 sobre ancho 1048 ≈ 700px) sin
-          depender del measure pass del ScrollView. Posicionado entre el
-          ScrollView y `identity-fixed-form` (MGC-751) para mantener el orden
-          visual original: Header + Jersey (scrollable) → Nacionalidad (fijo)
-          → Field map (fijo) → Nombre + Pie (fijo) → Stepper + Continue. NO se
-          mete dentro del translateY del `identity-sticky-footer` (MGC-754) — el
-          field map no esquiva IME (es tap target, no input de texto). */}
-      {/* MGC-1585 / PR #395: la selección de liga se removió de /identity.
-          Ocurre exclusivamente en /academy paso 3 (cada club expone su liga).
-          Ver MGC-1567 walk E2E: identity → dashboard → academy → Morón →
-          /temporada resulta jugable sin seleccionar liga en identity.
-          El árbol del scroll queda:
-            identity-header → identity-fixed-form → nationality-section
-            → jersey-preview-wrapper
-          y los bounds reportados en ZY22G728HN density 400 son ahora
-          siempre positivos en fresh-mount (no más secciones clipeadas bajo
-          el fold del ScrollView position:absolute full-bounds). */}
-      </ScrollView>
+
       {/* MGC-1943 — identity-fixed-form EXTRAÍDA del ScrollView y
           reubicada como fixed sibling kavContent-level con position:absolute
           bottom:240 (encima del identity-sticky-footer height:240).
@@ -862,10 +870,38 @@ export default function IdentityScreen() {
           // walk QA2 vc=175 PASS con esta config, base MGC-1986 bottom:120).
           // zIndex:15 sobre el field-map z=10. flexShrink:0 garantiza que el
           // kavContent no comprima el form en el measure pass.
+          //
+          // MGC-2250 — REGRESIÓN: con `top: 72` + `height: 280` el form
+          // ocupa bounds y=[598,1298] en ZY22G728HN (1080×2400 density
+          // 400, 1dp=2.5px), y el Pressable country-ARG del
+          // nationality-section vive en bounds=[43,926][1038,1039]
+          // (completamente debajo del form, con su zIndex 15 + background
+          // opaco). El form tiene `pointerEvents: 'box-none'` pero sus
+          // children Pressable — input-age Pressable expandido por
+          // HIT_SLOP_44 (y=829-998) y la fila btn-foot (y=1009-1109) —
+          // capturan los taps en esa banda ANTES de que el evento llegue
+          // al ScrollView subyacente. country-ARG queda inaccesible →
+          // nationalityCode=null → btn-identity-continue.enabled=false →
+          // walk F1→F2 STUCK. PR #486 NO tocó identity.tsx (blob SHA
+          // idéntico entre vc=205 y vc=209, walk-2206/06-arg-selected
+          // reproduce el mismo síntoma). Causa raíz pre-existente
+          // heredada de MGC-2008, destapada por el walk MGC-2232 sobre
+          // el APK actual.
+          //
+          // Fix: anclar el form SOLO con `bottom` + `height` (sin
+          // `top`). Yoga resuelve form.y = kavContent.bottom - form.bottom
+          // - form.height = 2076 - 300 - 700 = 1076px, y el form
+          // termina en y=1076-1776. country-ARG [926,1039] y country-BR
+          // [1038,1150] quedan en zona libre superior, sin overlap con
+          // el form ni con sus children. Mantenemos `height: 280` como
+          // belt anti-Yoga collapse (MGC-2008). El field-map (bottom:
+          // 120, h≈220) queda visualmente detrás del form (zIndex 15) —
+          // aceptable: chips pos-* son opcionales con default FWD y el
+          // F4 walk no los ejercita.
           position: 'absolute',
           left: 0,
           right: 0,
-          top: 72, // MGC-2008 — explícito para garantizar altura del form.
+          // MGC-2250 — `top: 72` ELIMINADO. Era la fuente de la regresión.
           bottom: 120, // MGC-1986 — sticky-footer 240→120dp.
           height: 280, // MGC-2008 — belt contra Yoga collapse del content height.
           zIndex: 15,
