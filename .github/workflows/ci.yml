@@ -1,8 +1,13 @@
 # ci.yml — Copero (MGC-290)
 # Pipeline CI: lint (eslint), typecheck (tsc), test web (vitest), build web (Expo web export).
 # Política §8.3: builds --local; runner self-hosted (Mac mini del operador).
-# Trigger: push a main y PRs contra main.
+# Trigger: push a main/release-* y PRs contra main.
 # Artefacto: `web-build` (Expo web export).
+# MGC-2263: en `mgcstudios86/copero` (fork) no hay runner self-hosted con label
+# `copero-ci` registrado. El runner-01 del VPS está en `mgcstudios/copero` (otro
+# repo), por lo que no resuelve jobs acá. CEO autorizó fallback hosted runner
+# (ubuntu-latest) hasta que el operador migre el runner o los cambios a main del
+# repo canónico.
 
 name: ci (copero)
 
@@ -10,7 +15,9 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches:
+      - main
+      - 'release-*'
   workflow_dispatch:
 
 concurrency:
@@ -25,7 +32,7 @@ permissions:
 jobs:
   changes:
     name: detect changed paths
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       web: ${{ steps.filter.outputs.web }}
       lint: ${{ steps.filter.outputs.lint }}
@@ -83,7 +90,7 @@ jobs:
 
   lint:
     name: lint (eslint)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.lint == 'true'
     steps:
@@ -112,7 +119,7 @@ jobs:
 
   typecheck:
     name: typecheck (tsc --noEmit)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.typecheck == 'true'
     steps:
@@ -138,7 +145,7 @@ jobs:
 
   test-web:
     name: test web (vitest)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.tests == 'true'
     steps:
@@ -165,7 +172,7 @@ jobs:
 
   build-web:
     name: build web (expo export --platform web)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.web == 'true'
     steps:
@@ -209,7 +216,7 @@ jobs:
 
   devops-comment:
     name: devops-comment (gate §8.1)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: [lint, typecheck, test-web, build-web]
     if: always() && github.event_name == 'pull_request'
     steps:
@@ -252,7 +259,7 @@ jobs:
             - Workflow: `ci (copero)`
             - Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             - SHA: `${{ github.event.pull_request.head.sha }}` (target `main`)
-            - §8.3: builds **--local** (sin EAS cloud); runner `self-hosted`.
+            - §8.3: builds **--local** (sin EAS cloud); runner `ubuntu-latest` (MGC-2263).
             - §8.1 gate #3 cumplido.
             - Artefacto: `copero-web-build` (sólo si `build-web` ✅)
         env:
