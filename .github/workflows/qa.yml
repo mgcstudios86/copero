@@ -3,15 +3,18 @@ name: qa
 # QA E2E — Copero
 # MGC-302: scaffold Playwright headless contra bundle Expo web.
 # No corre Maestro mobile (hardware persistente — QA agent owns ZY22G728HN).
-# Trigger: PR contra main + push a main + manual dispatch.
+# Trigger: PR contra main + release train (`release-*`) + push a main + manual dispatch.
 # Secrets inyectados por DevOps vía Infisical — placeholders abajo.
 # MGC-308: Playwright corre en el runner Linux dedicado `copero-qa`
 # para evitar que suites largas compitan con el pool `copero-ci`.
 # Runner: VPS mgcstudios-01 (labels `copero-qa`, `Linux`).
+# MGC-2235: cubrir release-* alinea QA con ci.yml (que ya cubre release-*) y
+# asegura que cada PR del release train traiga sus propios checks E2E sin
+# depender de dispatch manual sobre el HEAD previo.
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'release-*']
     paths:
       - 'e2e/**'
       - '.github/workflows/qa.yml'
@@ -23,7 +26,7 @@ on:
       - 'index.ts'
       - 'app.json'
   push:
-    branches: [main]
+    branches: [main, 'release-*']
   workflow_dispatch:
     inputs:
       sha:
