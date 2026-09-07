@@ -220,7 +220,23 @@ jobs:
         run: node scripts/precompress-assets.mjs dist
       - name: Subir artefacto dist/
         uses: actions/upload-artifact@v4
-    needs: [lint, typecheck, test-web, build-web]
+        with:
+          name: copero-web-dist
+          path: dist
+          if-no-files-found: warn
+        # MGC-2194: la cuota de artefactos del runner self-hosted se satura de
+        # forma intermitente en jobs largos; un fallo aquí no debe tumbar CI.
+        # El artefacto sigue siendo necesario para QA, pero la pipeline puede
+        # seguir si está saturada.
+        continue-on-error: true
+
+  devops-comment:
+    name: devops-comment (gate §8.1)
+    runs-on: [self-hosted, copero-ci]
+    # MGC-2236: `changes` debe estar en `needs:` para que
+    # `needs.changes.outputs.*` se evalúe (los outputs del job de paths-filter
+    # se propagan sólo si el job aparece en la lista de dependencias).
+    needs: [changes, lint, typecheck, test-web, build-web]
     if: always() && github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
