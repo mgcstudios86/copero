@@ -38,6 +38,8 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     await page.locator('[data-testid="pos-ST"]').click();
     await page.locator('[data-testid="input-nationality-search"]').fill('arg');
     await page.waitForTimeout(400);
+    // MGC-1348 v3 — `force:true` por hit-test RNW (country-ARG).
+    await page.getByTestId('country-ARG').click({ force: true });
     await page.locator('[data-testid="btn-identity-continue"]').click();
 
     // 3) Draft ronda 1

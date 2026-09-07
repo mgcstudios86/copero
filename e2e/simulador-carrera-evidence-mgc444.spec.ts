@@ -43,8 +43,11 @@ async function completeIdentity(page: any, name: string) {
   await page.getByTestId('input-name').fill(name);
   await page.locator('[data-testid^="pos-"]').first().click();
   await page.getByTestId('input-nationality-search').fill('arg');
-  // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e en simulador-carrera.spec.ts).
-  await page.getByRole('button', { name: /Argentina/i }).first().click({ force: true });
+  // MGC-2254: click country-ARG tras el fill (antes el test pasaba con
+  // fill solo porque el waitForURL del dispatcher bloqueaba el flujo;
+  // tras el fix MGC-2254 el fill sin click deja btn-identity-continue
+  // disabled). MGC-1348 v3 — `force:true` por hit-test RNW.
+  await page.getByTestId('country-ARG').click({ force: true });
   await page.getByTestId('btn-identity-continue').click();
   await page.waitForURL(/\/simulador-carrera\/dashboard/, { timeout: 10_000 });
   await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 10_000 });

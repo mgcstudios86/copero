@@ -104,7 +104,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
 
     // 2b. Número = 10. El estado inicial arranca en 9 (ver engine.ts:36),
     //     por lo que una pulsación sobre "Sumar número" deja 10.
-    await page.getByTestId('btn-number-plus').click();
+    await page.getByRole('button', { name: 'Sumar número' }).click();
     // MGC-405: el display del número en identity.tsx no expone aria-label
     // accesible para query directo (`getByLabel('Número 10')` falla). El Text
     // interno renderiza `{profile.number}` literal — verificamos que el texto
@@ -251,7 +251,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // Defaults mínimos para que el journey completo no bloquee otros
     // navigations.
     await page.getByTestId('input-name').fill('Regresion');
-    await page.getByTestId('btn-number-plus').click(); // 9 → 10
+    await page.getByRole('button', { name: 'Sumar número' }).click(); // 9 → 10
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await page.getByTestId('input-nationality-search').fill('arg');
@@ -289,7 +289,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
     await page.getByTestId('input-name').fill('CALVO');
-    await page.getByTestId('btn-number-plus').click();
+    await page.getByRole('button', { name: 'Sumar número' }).click();
     await page.getByTestId('pos-ST').click();
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
