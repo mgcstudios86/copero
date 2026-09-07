@@ -23,9 +23,18 @@
  */
 
 import type { CareerSaveState, SeasonLog } from '@/types/career';
+import { createRngSnapshot } from './rng';
 import { initialProfile } from './identity-state';
+import { STAT_INIT } from './position-stats';
+import { NO_MODIFIERS } from './events';
 
 const STORAGE_KEY = 'copero:career:save:v1';
+// MGC-1657 (F2.3) — la persistencia ahora escribe v:2. Mantenemos la
+// key estable; el discriminador es el campo `v` del payload (v:1 legacy
+// sigue funcionando gracias al back-compat `migrateV1ToV2` que se
+// ejecuta en cada load). El cambio de key implicaría invalidar todas
+// las partidas guardadas en device — no lo hacemos porque QA valida
+// continuidad de save entre runs (AC4).
 // MGC-227 migró la key `copero-career` (zustand persist middleware, formato
 // `{ state, version }`) a `copero:career:save:v1` (formato versionado manual).
 // Tests Playwright existentes (MGC-523/523/444) siguen sembrando
@@ -141,16 +150,54 @@ export async function loadCareerSave(): Promise<CareerSaveState | null> {
     if (raw) {
       try {
         const parsed = JSON.parse(raw) as CareerSaveState;
+        // MGC-1657 (F2.3) — aceptamos v:1 (legacy) y v:2. Si llega v:1
+        // aplicamos `migrateV1ToV2` antes de devolver; si llega v:2 lo
+        // entregamos tal cual. Otros versiones: log + null.
         if (parsed && parsed.v === 1) {
+          const migrated = migrateV1ToV2(parsed);
+          const hydrated = hydrateF3Fields(migrated);
           logPersist(
             'log',
-            `[persistence] hydrate=ok stage=${parsed.stage} profile=${parsed.profile?.name}`,
+            `[persistence] hydrate=ok stage=${hydrated.stage} profile=${hydrated.profile?.name} v=2 (migrated from v:1)`,
           );
-          return parsed;
+          // MGC-1678 (HIGH-3 PR #404) — antes se hacía `await
+          // storage.setItem(STORAGE_KEY, JSON.stringify(migrated))` acá,
+          // bloqueando el load con un write extra en cada cold start y
+          // dejando memory/disco inconsistente si el setItem fallaba
+          // (sesión en memoria v:2, disco v:1 → próxima launch repite
+          // migración). Ahora la migración es in-memory: devolvemos v:2
+          // ya migrado y disparamos el rewrite en background sin
+          // awaitear. Si el write falla, el `.catch` lo silencia (la
+          // memoria de la sesión sigue en v:2) y el próximo load reintenta
+          // la migración — nunca perdemos data, solo posponemos el
+          // fast-path un launch. Beneficio: load latency cae a la del
+          // solo `getItem` y no hay ventana de inconsistencia memory/disco.
+          storage
+            .setItem(STORAGE_KEY, JSON.stringify(hydrated))
+            .catch((err) => {
+              logPersist(
+                'error',
+                `[persistence] migrate-rewrite=fail reason=setItem-threw`,
+                err,
+              );
+            });
+          return hydrated;
+        }
+        if (parsed && parsed.v === 2) {
+          // MGC-1730 (HIGH-2 review CTO sobre PR #425) — incluso en v:2
+          // podemos recibir un save pre-F3.2 sin los 3 campos nuevos;
+          // aplicamos los defaults in-memory sin reescribir a disco
+          // (la próxima save los materializará).
+          const hydrated = hydrateF3Fields(parsed);
+          logPersist(
+            'log',
+            `[persistence] hydrate=ok stage=${hydrated.stage} profile=${hydrated.profile?.name} v=2`,
+          );
+          return hydrated;
         }
         logPersist(
           'log',
-          `[persistence] hydrate=null reason=version-mismatch expected=v1 got=${parsed?.v}`,
+          `[persistence] hydrate=null reason=version-mismatch expected=v1|v2 got=${parsed?.v}`,
         );
       } catch {
         logPersist('log', `[persistence] hydrate=null reason=json-parse-failed`);
@@ -181,14 +228,18 @@ export async function loadCareerSave(): Promise<CareerSaveState | null> {
       if (!inner || typeof inner !== 'object') continue;
       const migrated = migrateLegacyToV1(inner as Record<string, unknown>);
       if (!migrated) continue;
+      // MGC-1730 — legacy zustand persist es pre-F2.3 (no trae `v`); le
+      // aplicamos migrateV1ToV2 + hydrateF3Fields para que el caller
+      // reciba un save v:2 con los 3 campos F3.2 ya materializados.
+      const upgraded = hydrateF3Fields(migrateV1ToV2(migrated));
       // Migración silenciosa: escribe nueva key, deja legacy por si otra
       // surface (e.g. devtools) la inspecciona. clearCareerSave() borra ambas.
-      await storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      await storage.setItem(STORAGE_KEY, JSON.stringify(upgraded));
       logPersist(
         'log',
-        `[persistence] hydrate=migrated legacy-key=${legacyKey} stage=${migrated.stage}`,
+        `[persistence] hydrate=migrated legacy-key=${legacyKey} stage=${upgraded.stage}`,
       );
-      return migrated;
+      return upgraded;
     } catch {
       // legacy corrupto, seguir al próximo candidato.
       continue;
@@ -210,6 +261,7 @@ export function migrateLegacyToV1(legacy: Record<string, unknown>): CareerSaveSt
   if (typeof stage !== 'string' || !profile || typeof profile !== 'object') {
     return null;
   }
+  const seed = typeof legacy.seed === 'number' ? legacy.seed : Math.floor(Math.random() * 1_000_000);
   return {
     v: 1,
     stage: stage as CareerSaveState['stage'],
@@ -218,7 +270,71 @@ export function migrateLegacyToV1(legacy: Record<string, unknown>): CareerSaveSt
     card: (legacy.card as CareerSaveState['card']) ?? null,
     clubId: (legacy.clubId as CareerSaveState['clubId']) ?? null,
     log: normalizeLegacyLog(legacy.log),
-    seed: typeof legacy.seed === 'number' ? legacy.seed : Math.floor(Math.random() * 1_000_000),
+    seed,
+    rng: createRngSnapshot(seed),
+  };
+}
+
+/**
+ * MGC-1657 (F2.3) — migración v:1 → v:2. Suma los campos nuevos del
+ * motor V2 al profile y bumpea el discriminador. Idempotente: si el
+ * profile ya trae `positionStats` lo deja igual (test-friendly).
+ *
+ * Campos agregados (todos con default seguro para no invalidar saves
+ * viejos):
+ *  - profile.positionStats = STAT_INIT (50 por slot)
+ *  - profile.career.doubleShiftStreak = 0
+ *  - profile.career.matchweekStats = { clubId: '', apps: 0, goals: 0, ast: 0 }
+ */
+export function migrateV1ToV2(state: CareerSaveState): CareerSaveState {
+  if (state.v === 2) return state;
+  const profile = state.profile;
+  const migratedProfile = {
+    ...profile,
+    positionStats: profile.positionStats
+      ? profile.positionStats
+      : { ...STAT_INIT },
+    career: {
+      ...profile.career,
+      doubleShiftStreak: profile.career.doubleShiftStreak ?? 0,
+      matchweekStats: profile.career.matchweekStats ?? {
+        clubId: profile.club?.id ?? '',
+        apps: 0,
+        goals: 0,
+        ast: 0,
+      },
+    },
+  };
+  return {
+    ...state,
+    v: 2,
+    profile: migratedProfile,
+    rng: state.rng ?? createRngSnapshot(state.seed),
+  };
+}
+
+/**
+ * MGC-1730 (HIGH-2 review CTO sobre PR #425) — `postMatchPending`,
+ * `nextWeekModifiers` y `transferState` son **opcionales** en el shape
+ * de `CareerSaveState` (ADR-0017 §6 dice: default explícito en lugar de
+ * bump de versión para no invalidar saves viejos). Sin este helper, un
+ * save v:2 que llegó a disco antes de F3.2 (sin estos campos) hidrata
+ * `undefined` y la UI no puede diferenciar "no hay evento" de "el save
+ * está roto". Aplica los defaults del ADR:
+ *
+ *   - `postMatchPending`: `null`  (no hay modal post-partido que mostrar)
+ *   - `nextWeekModifiers`: `NO_MODIFIERS` (sin bonus ni castigos)
+ *   - `transferState`: `null`  (no hay decisión de transferencia abierta)
+ *
+ * Es pura: no muta el input. Se invoca después de `migrateV1ToV2` (en
+ * el fast-path de v:2) y antes de devolver al caller de `loadCareerSave`.
+ */
+export function hydrateF3Fields(state: CareerSaveState): CareerSaveState {
+  return {
+    ...state,
+    postMatchPending: state.postMatchPending ?? null,
+    nextWeekModifiers: state.nextWeekModifiers ?? { ...NO_MODIFIERS },
+    transferState: state.transferState ?? null,
   };
 }
 
@@ -283,10 +399,14 @@ export async function clearCareerSave(): Promise<void> {
 /**
  * Snapshot mínimo para arrancar la persistencia desde un stage inicial.
  * El caller completa luego con draft/card/log según corresponda.
+ *
+ * MGC-1657 (F2.3) — produce v:2 con `positionStats` ya hidratado en
+ * `STAT_INIT`. El reducer garantiza que cualquier estado en memoria
+ * también tiene `positionStats` antes de invocar `saveCareerSave`.
  */
 export function blankCareerSave(): CareerSaveState {
   return {
-    v: 1,
+    v: 2,
     stage: 'identity',
     profile: { ...initialProfile },
     draft: null,
@@ -294,5 +414,6 @@ export function blankCareerSave(): CareerSaveState {
     clubId: null,
     log: { timeline: [], events: [] },
     seed: 0,
+    rng: createRngSnapshot(0),
   };
 }

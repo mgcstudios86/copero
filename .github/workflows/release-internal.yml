@@ -60,32 +60,63 @@ jobs:
       - name: Patch expo-modules-core (worklets executeSync → runSync, MGC-366)
         run: node scripts/patch-expo-modules-core.js
 
-      - name: Load EXPO_TOKEN (Infisical /copero env=prod, MGC-379)
+      - name: Load EXPO_TOKEN (Infisical /copero env=prod, MGC-1486)
+        # MGC-1486: el secret INFISICAL_TOKEN largo de vida no tenía lectura sobre /copero.
+        # Switch a universal-auth JWT generado on-the-fly usando CLIENT_ID+CLIENT_SECRET
+        # (mismo principal que mi shell local — ya verificado que lee /copero OK).
         env:
-          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
         run: |
-          if [[ -z "${INFISICAL_TOKEN:-}" || -z "${INFISICAL_PROJECT_ID:-}" ]]; then
-            echo "ERROR: Infisical secrets ausentes en repo. POLICIES §3: escalar al CTO." >&2
+          if [[ -z "${INFISICAL_CLIENT_ID:-}" || -z "${INFISICAL_CLIENT_SECRET:-}" || -z "${INFISICAL_PROJECT_ID:-}" ]]; then
+            echo "ERROR: Infisical CLIENT_ID/CLIENT_SECRET/PROJECT_ID ausentes en repo. POLICIES §3: escalar al CTO." >&2
+            exit 1
+          fi
+          INFISICAL_JWT=$(infisical login --method universal-auth \
+            --client-id "${INFISICAL_CLIENT_ID}" \
+            --client-secret "${INFISICAL_CLIENT_SECRET}" \
+            --plain --silent 2>/dev/null | tail -1)
+          if [[ -z "${INFISICAL_JWT}" ]]; then
+            echo "ERROR: universal-auth login falló (JWT vacío). Escalar al CTO." >&2
             exit 1
           fi
           EXPO_TOKEN=$(infisical export \
             --projectId "${INFISICAL_PROJECT_ID}" \
-            --env=prod --path=/copero --format=dotenv 2>/dev/null \
-            | grep '^paperclip-expo-eas-token=' | cut -d= -f2-)
-          # Fallback: si la key tiene otro nombre en Infisical, intentar EXPO_TOKEN directo.
-          if [[ -z "${EXPO_TOKEN}" ]]; then
-            EXPO_TOKEN=$(infisical export \
-              --projectId "${INFISICAL_PROJECT_ID}" \
-              --env=prod --path=/copero --format=dotenv 2>/dev/null \
-              | grep '^EXPO_TOKEN=' | cut -d= -f2-)
-          fi
+            --env=prod --path=/copero --format=dotenv \
+            --token "${INFISICAL_JWT}" 2>/dev/null \
+            | grep -E '^(paperclip-expo-eas-token|EXPO_TOKEN)=' | head -1 | cut -d= -f2-)
+          # MGC-1486: dotenv format envuelve defensivamente en single quotes — strip.
+          EXPO_TOKEN="${EXPO_TOKEN#\'}"
+          EXPO_TOKEN="${EXPO_TOKEN%\'}"
+          EXPO_TOKEN="${EXPO_TOKEN#\"}"
+          EXPO_TOKEN="${EXPO_TOKEN%\"}"
           if [[ -z "${EXPO_TOKEN}" || "${EXPO_TOKEN}" == "test" || "${EXPO_TOKEN}" == "placeholder" ]]; then
             echo "ERROR: EXPO_TOKEN ausente o placeholder en Infisical /copero env=prod." >&2
             exit 1
           fi
           echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
           echo "[release-internal] EXPO_TOKEN cargado (length=${#EXPO_TOKEN})"
+
+          # MGC-1494: cargar PLAY_STORE_SERVICE_ACCOUNT_KEY desde Infisical /mgcstudios/playconsole env=prod
+          # y materializar ./secrets/play-store-service-account.json para eas submit.
+          # Double-jq: 1) extrae string JSON del array, 2) parsea y re-emite con \n reales.
+          mkdir -p secrets
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "ERROR: jq no instalado en runner. POLICIES §3: escalar al CTO." >&2
+            exit 1
+          fi
+          infisical export \
+            --projectId "${INFISICAL_PROJECT_ID}" \
+            --env=prod --path=/mgcstudios/playconsole --format=json \
+            --token "${INFISICAL_JWT}" 2>/dev/null \
+            | jq -r '.[] | select(.key=="PLAY_STORE_SERVICE_ACCOUNT_KEY") | .value' \
+            | jq -r . > secrets/play-store-service-account.json
+          if [[ ! -s secrets/play-store-service-account.json ]] || ! jq -e . secrets/play-store-service-account.json >/dev/null 2>&1; then
+            echo "ERROR: PLAY_STORE_SERVICE_ACCOUNT_KEY ausente o inválido en Infisical /mgcstudios/playconsole env=prod." >&2
+            exit 1
+          fi
+          echo "[release-internal] service-account.json (size=$(stat -f %z secrets/play-store-service-account.json))"
 
       - name: eas init (link proyecto no-interactive)
         env:
@@ -102,36 +133,95 @@ jobs:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
           mkdir -p dist
-          eas build --local --platform android --profile preview --non-interactive
+          # MGC-1492 + MGC-1495: preview profile produce app-bundle (.aab, no .apk).
+          # Forzar --output dist/app-release.aab para que Locate AAB pueda encontrarlo.
+          eas build --local --platform android --profile preview --non-interactive --output dist/app-release.aab
 
-      - name: Locate AAB Android
+      - name: Locate AAB/Android APK
+        # MGC-1491: eas build --local --profile preview produce app-release.apk por default
+        # (preview profile no setea android.buildType=app-bundle). Aceptamos *.aab o *.apk
+        # para que Submit to internal (Android) reciba el artefacto firmado real.
         id: locate
         run: |
-          AAB=$(find dist -maxdepth 3 -name '*.aab' -type f | head -1 || true)
-          if [[ -z "${AAB}" ]]; then
-            echo "ERROR: no se encontró AAB Android en dist/" >&2
-            find . -maxdepth 5 -name '*.aab' -type f 2>/dev/null
+          ARTIFACT=$(find dist -maxdepth 3 \( -name '*.aab' -o -name '*.apk' \) -type f | head -1 || true)
+          if [[ -z "${ARTIFACT}" ]]; then
+            echo "ERROR: no se encontró AAB/APK Android en dist/" >&2
+            find . -maxdepth 5 \( -name '*.aab' -o -name '*.apk' \) -type f 2>/dev/null
             exit 1
           fi
-          echo "aab_path=${AAB}" >> "$GITHUB_OUTPUT"
-          echo "AAB: ${AAB}"
+          echo "aab_path=${ARTIFACT}" >> "$GITHUB_OUTPUT"
+          echo "artifact: ${ARTIFACT}"
+
+      - name: Provision Play Store service account JSON (MGC-1494)
+        # eas.json submit.production.android.serviceAccountKeyPath apunta a
+        # ./secrets/play-store-service-account.json. eas submit lee ese path
+        # al momento de subir a Play Console internal; sin él, fall con
+        # "File ./secrets/play-store-service-account.json doesnt exist" (run 33785111961).
+        #
+        # El JSON de service account vive en Infisical en
+        # /mgcstudios/playconsole env=prod, secret PLAY_STORE_SERVICE_ACCOUNT_KEY
+        # (mismo principal que el shell local — ver MGC-428 / path memory).
+        # Lo exportamos con --format=json (Infisical lo devuelve crudo) y lo
+        # escribimos a ./secrets/play-store-service-account.json con mode 0600.
+        # ./secrets/ ya está gitignored (línea 51-56 de .gitignore).
+        env:
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          INFISICAL_JWT=$(infisical login --method universal-auth \
+            --client-id "${INFISICAL_CLIENT_ID}" \
+            --client-secret "${INFISICAL_CLIENT_SECRET}" \
+            --plain --silent 2>/dev/null | tail -1)
+          if [[ -z "${INFISICAL_JWT}" ]]; then
+            echo "ERROR: universal-auth login falló (JWT vacío). Escalar al CTO." >&2
+            exit 1
+          fi
+          # --format=json devuelve un array de {key, value, ...}. Filtramos por
+          # key PLAY_STORE_SERVICE_ACCOUNT_KEY para evitar falsos positivos del
+          # gotcha de la API raw (ver memory copero-playstore-service-account-path).
+          SA_JSON=$(infisical export \
+            --projectId "${INFISICAL_PROJECT_ID}" \
+            --env=prod --path=/mgcstudios/playconsole --format=json \
+            --token "${INFISICAL_JWT}" 2>/dev/null \
+            | python3 -c 'import json,sys
+          data=json.load(sys.stdin)
+          match=[s["value"] for s in data if s.get("key")=="PLAY_STORE_SERVICE_ACCOUNT_KEY"]
+          if not match:
+            sys.stderr.write("ERROR: PLAY_STORE_SERVICE_ACCOUNT_KEY no encontrado en /mgcstudios/playconsole env=prod.\n")
+            sys.exit(1)
+          sys.stdout.write(match[0])')
+          if [[ -z "${SA_JSON}" || "${SA_JSON}" == "placeholder" ]]; then
+            echo "ERROR: PLAY_STORE_SERVICE_ACCOUNT_KEY ausente o placeholder." >&2
+            exit 1
+          fi
+          # Validar que es JSON parseable antes de escribirlo al disco.
+          printf '%s' "${SA_JSON}" | python3 -c 'import json,sys; json.load(sys.stdin)' >/dev/null \
+            || { echo "ERROR: PLAY_STORE_SERVICE_ACCOUNT_KEY no es JSON válido." >&2; exit 1; }
+          mkdir -p secrets
+          printf '%s' "${SA_JSON}" > secrets/play-store-service-account.json
+          chmod 600 secrets/play-store-service-account.json
+          SIZE=$(stat -f %z secrets/play-store-service-account.json 2>/dev/null || stat -c %s secrets/play-store-service-account.json)
+          echo "[release-internal] secrets/play-store-service-account.json provisionado (size=${SIZE} bytes)"
 
       - name: Submit to internal (Android)
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
-          eas submit --platform android --track internal --non-interactive
+          # MGC-1493 + MGC-1495: track viene del submit profile. --path apunta al .aab localizado.
+          eas submit -p android -e production --path dist/app-release.aab --non-interactive
 
-      - name: Resumen + SHA256 del AAB Android
+      - name: Resumen + SHA256 del artefacto Android
         if: always()
         run: |
           set -euo pipefail
           AAB="${{ steps.locate.outputs.aab_path }}"
           if [[ -n "${AAB}" && -f "${AAB}" ]]; then
-            SHA=$(sha256sum "${AAB}" | awk '{print $1}')
-            SIZE=$(stat -c %s "${AAB}")
+            SHA=$(shasum -a 256 "${AAB}" | awk '{print $1}')
+            SIZE=$(stat -f %z "${AAB}")
             {
-              echo "## AAB Android firmado (copero)"
+              echo "## Artefacto Android firmado (copero)"
               echo "- path: ${AAB}"
               echo "- sha256: ${SHA}"
               echo "- size: ${SIZE} bytes"
@@ -140,7 +230,7 @@ jobs:
               echo "- workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             } >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "WARN: no se encontró AAB; revisa el step locate." >&2
+            echo "WARN: no se encontró artefacto; revisa el step locate." >&2
           fi
 
   ios-internal:
@@ -169,16 +259,37 @@ jobs:
         run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
       - name: Patch expo-modules-core (worklets executeSync → runSync, MGC-366)
         run: node scripts/patch-expo-modules-core.js
-      - name: Load EXPO_TOKEN (Infisical /copero env=prod)
+      - name: Load EXPO_TOKEN (Infisical /copero env=prod, MGC-1486)
+        # MGC-1486: ver android-internal — mismo patrón universal-auth JWT.
         env:
-          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
           INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
         run: |
+          INFISICAL_JWT=$(infisical login --method universal-auth \
+            --client-id "${INFISICAL_CLIENT_ID}" \
+            --client-secret "${INFISICAL_CLIENT_SECRET}" \
+            --plain --silent 2>/dev/null | tail -1)
+          if [[ -z "${INFISICAL_JWT}" ]]; then
+            echo "ERROR: universal-auth login falló (JWT vacío). Escalar al CTO." >&2
+            exit 1
+          fi
           EXPO_TOKEN=$(infisical export \
             --projectId "${INFISICAL_PROJECT_ID}" \
-            --env=prod --path=/copero --format=dotenv 2>/dev/null \
+            --env=prod --path=/copero --format=dotenv \
+            --token "${INFISICAL_JWT}" 2>/dev/null \
             | grep -E '^(paperclip-expo-eas-token|EXPO_TOKEN)=' | head -1 | cut -d= -f2-)
+          # MGC-1486: dotenv format envuelve defensivamente en single quotes — strip.
+          EXPO_TOKEN="${EXPO_TOKEN#\'}"
+          EXPO_TOKEN="${EXPO_TOKEN%\'}"
+          EXPO_TOKEN="${EXPO_TOKEN#\"}"
+          EXPO_TOKEN="${EXPO_TOKEN%\"}"
+          if [[ -z "${EXPO_TOKEN}" || "${EXPO_TOKEN}" == "test" || "${EXPO_TOKEN}" == "placeholder" ]]; then
+            echo "ERROR: EXPO_TOKEN ausente o placeholder en Infisical /copero env=prod." >&2
+            exit 1
+          fi
           echo "EXPO_TOKEN=${EXPO_TOKEN}" >> "$GITHUB_ENV"
+          echo "[release-internal ios] EXPO_TOKEN cargado (length=${#EXPO_TOKEN})"
       - name: eas init
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
@@ -195,4 +306,5 @@ jobs:
         env:
           EXPO_TOKEN: ${{ env.EXPO_TOKEN }}
         run: |
-          eas submit --platform ios --track internal --non-interactive
+          # MGC-1493: eas-cli removió --track; submit profile production define ios config.
+          eas submit -p ios -e production --latest --non-interactive

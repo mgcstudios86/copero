@@ -5,6 +5,7 @@
 // SHA 6629ccc3). Mismo patrón que `categoria.tsx` — chunk async desde
 // `@/features/game/screens/ronda` (MGC-782 code-split).
 import React, { Suspense, lazy } from 'react';
+import { View } from 'react-native';
 
 const RondaScreen = lazy(() =>
   import('@/features/game/screens/ronda').then((m) => ({
@@ -14,8 +15,10 @@ const RondaScreen = lazy(() =>
 
 export default function RondaRoute() {
   return (
-    <Suspense fallback={null}>
-      <RondaScreen />
-    </Suspense>
+    <View style={{ flex: 1 }} testID="ronda-screen">
+      <Suspense fallback={null}>
+        <RondaScreen />
+      </Suspense>
+    </View>
   );
 }

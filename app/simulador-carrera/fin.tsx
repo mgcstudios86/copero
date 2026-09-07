@@ -11,6 +11,7 @@
 // (score, mejor racha, CTA "Volver a Jugar"). Ambas coexisten en el árbol
 // porque apuntan a pantallas distintas del producto.
 import React, { Suspense, lazy } from 'react';
+import { View } from 'react-native';
 
 const FinScreen = lazy(() =>
   import('@/features/game/screens/fin').then((m) => ({
@@ -20,8 +21,10 @@ const FinScreen = lazy(() =>
 
 export default function FinRoute() {
   return (
-    <Suspense fallback={null}>
-      <FinScreen />
-    </Suspense>
+    <View style={{ flex: 1 }} testID="fin-screen">
+      <Suspense fallback={null}>
+        <FinScreen />
+      </Suspense>
+    </View>
   );
 }

@@ -26,7 +26,7 @@ import type {
   TimelineSeason,
   YearlyPlan,
 } from '@/types/career';
-import { YEARLY_PLAN_MODIFIERS } from '@/types/career';
+import { YEARLY_PLAN_MODIFIERS, affectedAttrFor } from '@/types/career';
 import { recomputeReputation } from './reputation';
 import type { Rng } from './rng';
 
@@ -151,16 +151,31 @@ export function advanceSeason(
 
   // 3) Lesión probabilística.
   const events: CareerEvent[] = [];
+  // MGC-1663: el reset a `ninguna` también pasa por `affectedAttrFor`
+  // para mantener un único punto de mapeo (kind → attribute).
   let career: CareerStats = {
     ...profile.career,
-    lesion: { kind: 'ninguna', fechasOut: 0 },
+    // MGC-1663 — `affectedAttr` vía helper canónico (M1 tabla en
+    // types/career.ts). Estado inicial sano: kind='ninguna' mapea a
+    // 'fisico' por convención.
+    lesion: { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: affectedAttrFor('ninguna') },
   };
   // MGC-1017: el plan anual también afecta la chance de lesión.
   const injuryChance = injuryChanceForAge(age, rng) * planMod.injury;
   if (rng.chance(injuryChance)) {
     const kind = rng.chance(0.7) ? 'leve' : rng.chance(0.6) ? 'media' : 'grave';
     const fechasOut = kind === 'leve' ? rng.int(2, 4) : kind === 'media' ? rng.int(6, 10) : rng.int(14, 24);
-    career = { ...career, lesion: { kind, fechasOut } };
+    // MGC-1628 rev 3 §M1 — `affectedAttr` se mapea via `affectedAttrFor`
+    // (mismo helper canónico que `injury-v2.ts` y `simulation.ts`).
+    // `startedAtWeek` queda en 0 porque el loop anual agrega la fila al
+    // `timeline` al cierre, no al disparo semanal.
+    // MGC-1663 — antes se reimplementaba con ternario; ahora consume el
+    // helper centralizado para evitar divergencia con injury-v2.ts.
+    const affectedAttr = affectedAttrFor(kind);
+    career = {
+      ...career,
+      lesion: { kind, fechasOut, startedAtWeek: 0, affectedAttr },
+    };
     events.push({
       season,
       kind: 'injury',

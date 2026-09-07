@@ -118,6 +118,19 @@ export default function AcademyScreen() {
                 <Text style={{ color: colors.textMuted, fontSize: fontSize.sm }}>
                   {club.league}
                 </Text>
+                {/* MGC-1802 P2-4 — eslogan distinto por club. El walk
+                    MGC-1739 catalogó "Diálogo 'Fichar por academia' usa
+                    copy idéntico para todos los clubes". Ahora cada club
+                    expone `description` con propuesta de valor acorde
+                    a su arquetipo (DESARROLLO/EQUILIBRIO/AMBICIÓN). */}
+                {club.description ? (
+                  <Text
+                    style={{ color: colors.textMuted, fontSize: fontSize.xs, fontStyle: 'italic' }}
+                    numberOfLines={2}
+                  >
+                    {club.description}
+                  </Text>
+                ) : null}
               </View>
               <Text style={{ color: colors.textMuted, fontSize: fontSize.xl }}>›</Text>
             </Pressable>

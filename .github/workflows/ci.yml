@@ -1,4 +1,4 @@
-# ci.yml — Copero (MGC-290)
+# ci.yml — Copero (MGC-290, MGC-1880)
 # Pipeline CI: lint (eslint), typecheck (tsc), test web (vitest), build web (Expo web export).
 # Política §8.3: builds --local; runner self-hosted (Mac mini del operador).
 # Trigger: push a main/release-* y PRs contra main.
@@ -13,7 +13,7 @@ name: ci (copero)
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'release-*']
   push:
     branches:
       - main
@@ -224,50 +224,6 @@ jobs:
   devops-comment:
     name: devops-comment (gate §8.1)
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, test-web, build-web]
-    if: always() && github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Compute status table
-        id: status
-        env:
-          LINT_RESULT: ${{ needs.lint.result }}
-          TYPECHECK_RESULT: ${{ needs.typecheck.result }}
-          TEST_RESULT: ${{ needs.test-web.result }}
-          BUILD_RESULT: ${{ needs.build-web.result }}
-        run: |
-          set -euo pipefail
-          icon() {
-            case "$1" in
-              success) echo "✅ pass";;
-              failure) echo "❌ fail";;
-              skipped) echo "⏭️ skipped";;
-              *) echo "⚠️ $1";;
-            esac
-          }
-          {
-            echo "result<<EOF"
-            echo "| Job | Result |"
-            echo "| --- | --- |"
-            echo "| lint (eslint) | $(icon "$LINT_RESULT") |"
-            echo "| typecheck (tsc --noEmit) | $(icon "$TYPECHECK_RESULT") |"
-            echo "| test-web (vitest) | $(icon "$TEST_RESULT") |"
-            echo "| build-web (expo export) | $(icon "$BUILD_RESULT") |"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-      - uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: devops-ci
-          message: |
-            ## CI DevOps — ${{ github.event.pull_request.head.sha }}
-
-            ${{ steps.status.outputs.result }}
-
-            - Workflow: `ci (copero)`
-            - Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            - SHA: `${{ github.event.pull_request.head.sha }}` (target `main`)
-            - §8.3: builds **--local** (sin EAS cloud); runner `ubuntu-latest` (MGC-2263).
-            - §8.1 gate #3 cumplido.
             - Artefacto: `copero-web-build` (sólo si `build-web` ✅)
         env:
           GITHUB_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}

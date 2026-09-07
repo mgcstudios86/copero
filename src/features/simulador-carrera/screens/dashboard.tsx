@@ -27,29 +27,46 @@ const JerseyPreview = lazy(() =>
   import('@/design/components/JerseyPreview').then((m) => ({ default: m.JerseyPreview })),
 );
 
+// MGC-1577 / MGC-1608 — fallback módulo-scope para `s.log ?? ...`. La
+// referencia es estable entre renders (Zustand v5 usa `Object.is`); un
+// objeto literal inline crearía referencia NUEVA cada render → loop
+// "Maximum update depth exceeded" en Dashboard. `as const` endurece el
+// tipo (readonly timeline/events) para que un caller no pueda mutar
+// el placeholder por accidente y disparar renders extra.
+const EMPTY_LOG = { timeline: [], events: [] } as const;
+
 export default function DashboardScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
 
   const profile = useCareerStore((s) => s.profile);
   const stage = useCareerStore((s) => s.stage);
+  // MGC-1577 / MGC-1608 — split selector en dos llamadas. La primera
+  // devuelve el snapshot real (o undefined); la segunda aplica el
+  // fallback módulo-scope. Evita el crash que QA reprodujo en MGC-1576
+  // sobre build-PR-392 vc=56 al volver a Dashboard tras fichar club
+  // (2da visita): el selector inline `s.log ?? { ... }` creaba
+  // referencia nueva cada render → Maximum update depth exceeded.
+  const storedLog = useCareerStore((s) => s.log);
+  const log = storedLog ?? EMPTY_LOG;
   const openAcademy = useCareerStore((s) => s.openAcademy);
   const startDraft = useCareerStore((s) => s.startDraft);
+  // MGC-1650 (WF4) — `startMatch` calcula el MatchOutcome y lo
+  // deposita en `matchStore` (transient).
+  const startMatch = useCareerStore((s) => s.startMatch);
 
-  const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
+  // MGC-1769 — nationalityCode puede ser `null` en /identity. En
+  // /dashboard la carrera ya pasó `commitIdentity` (gate exige no-null),
+  // pero TypeScript no lo infiere. `?? 'AR'` es fallback cosmético.
+  const nat = NATIONALITIES_BY_CODE[profile.nationalityCode ?? 'AR'];
 
-  // Placeholder timeline rows 16..38 con OVR/APPS/GOALS/AST
-  const timelineRows = Array.from({ length: 38 - 16 + 1 }, (_, i) => {
-    const age = 16 + i;
-    return {
-      age,
-      ovr: profile.ovr,
-      apps: 0,
-      goals: 0,
-      ast: 0,
-      club: profile.club?.name ?? copy.resolve('dashboard_badge_value_free'),
-    };
-  });
+  // MGC-1504 — Render condicional del timeline. Antes el dashboard
+  // pintaba 23 filas hardcoded (age 16..38, OVR/APPS/GOALS/AST en 0) para
+  // simular una carrera que aún no empezó. Eso engañaba al usuario: la tabla
+  // sugería "ya jugaste 23 temporadas y no marcaste ni un gol". Ahora, si la
+  // carrera está fresca (log.timeline vacío) mostramos una card motivadora
+  // con CTA al draft en lugar de la tabla mentirosa.
+  const timelineHasContent = log.timeline.length > 0;
 
   // Lazy-load del bloque "Estrategia recomendada" (MGC-482):
   // el cálculo `recommendStrategy(profile)` + `strategyCopy` corre dentro
@@ -57,15 +74,27 @@ export default function DashboardScreen() {
   // Ver <RecommendedStrategy> abajo.
 
   const onAcademyPress = async () => {
-    // MGC-722 — AWAIT del flush antes de navegar. Antes era
-    // fire-and-forget: openAcademy disparaba persistSnapshot y el
-    // router.push se ejecutaba antes de que AsyncStorage confirmara
-    // la transición a stage='academy'. Un force-stop del usuario
-    // durante ese gap perdía el snapshot y la home re-pintaba con
-    // initialSnapshot vacío tras relaunch.
-    openAcademy();
-    await flushPendingSave();
-    router.push('/simulador-carrera/academy');
+    // MGC-1531 — Branch sobre profile.club. Antes el CTA
+    // "Jugar la próxima fecha" llamaba openAcademy() incondicional y
+    // navegaba a /academy; tras fichar por un club, el tap re-abría
+    // el academy "Elegí tu primer club" (Paso 3 de 3) y la carrera
+    // quedaba atrapada en un loop sin poder avanzar al partido.
+    //
+    // Reglas:
+    //   · Sin club → abrir academy para que el jugador fiche (path
+    //     legacy pre-club; mismo flushPendingSave de MGC-722 para
+    //     sobrevivir force-stop).
+    //   · Con club → MGC-1650 (WF4 partido + WF5 post-partido). El
+    //     CTA "Jugar la próxima fecha" ahora dispara `startMatch()`
+    //     y navega a `/simulador-carrera/match`.
+    if (!profile.club) {
+      openAcademy();
+      await flushPendingSave();
+      router.push('/simulador-carrera/academy');
+      return;
+    }
+    await startMatch();
+    router.push('/simulador-carrera/match');
   };
 
   // MGC-209: CTA al flow de 6 pantallas (draft → tu-jugador → club → temporada → fin-carrera).
@@ -79,8 +108,15 @@ export default function DashboardScreen() {
   // 'clubStart' (no vuelve a 'dashboard'). Incluyo clubStart en el show
   // para que el CTA "Empezar draft de leyendas" sea visible y el flow AC7
   // (identity → dashboard → academy → clubStart → draft) no quede atrapado.
-  const showDraftCta =
-    stage === 'dashboard' || stage === 'identity' || stage === 'clubStart';
+  // MGC-1393: la heurística basada sólo en `stage` se rompe cuando el
+  // usuario entra a academy y vuelve via `academy_back_cta` — el back no
+  // revierte stage='academy', entonces el dashboard re-renderizaba con
+  // showDraftCta=false y ocultaba el CTA. La nueva heurística usa estado
+  // global de carrera (`profile.club`): el CTA queda visible mientras el
+  // jugador no haya fichado por un club, más el caso especial `clubStart`
+  // (MGC-698). Stages post-draft caen fuera porque `profile.club` ya quedó
+  // seteado por `acceptClub`/`pickClub`.
+  const showDraftCta = !profile.club || stage === 'clubStart';
   const onDraftPress = async () => {
     await startDraft();
     router.push('/simulador-carrera/draft');
@@ -116,8 +152,33 @@ export default function DashboardScreen() {
               />
             }
           >
+            {/* MGC-1802 P1-1 — cuando el jugador ya fichó por un club, el
+                jersey hero muestra los colores del club (azul/amarillo
+                Boca, etc.) en lugar de la bandera del país. Antes el
+                hero siempre renderizaba `profile.nationalityCode ?? 'AR'`
+                y el walk MGC-1739 catalogó esto como P1-1: «Camiseta
+                muestra bandera país (AR) en vez de colores club (Boca
+                Juniors azul/amarillo)».
+
+                Cleanup CTO: ya no mandamos sentinel `countryCode='unknown'`
+                para forzar la rama neutra — JerseyPreview ahora acepta
+                countryCode opcional y cae a la paleta override cuando está
+                presente. Pre-fichaje (sin club) sigue mostrando el país. */}
             <JerseyPreview
-              countryCode={profile.nationalityCode}
+              {...(profile.club
+                ? {
+                    paletteOverride: {
+                      name: profile.club.name,
+                      primary: profile.club.crestColor,
+                      secondary: profile.club.crestAccent,
+                      accent: profile.club.crestAccent,
+                      // dorsal omitido a propósito: JerseyPreview lo
+                      // deriva del primary con WCAG ≥ 4.5:1 (cleanup
+                      // evita dorsal invisible cuando crestColor≈crestAccent,
+                      // p.ej. Boca azul+amarillo queda OK).
+                    },
+                  }
+                : { countryCode: profile.nationalityCode ?? 'AR' })}
               number={profile.number}
               name={profile.name}
               size="md"
@@ -238,76 +299,154 @@ export default function DashboardScreen() {
           </View>
         </Section>
 
-        {/* Timeline */}
+        {/* Timeline — MGC-1504: render condicional. Carrera fresca →
+            card motivador con CTA al draft. Carrera avanzada → tabla
+            con filas reales del motor. Ver UX-006 audit-2026-09-04. */}
         <Section title={copy.resolve('dashboard_timeline_h2')}>
-          <View
-            style={{
-              borderRadius: radii.lg,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.surface,
-              overflow: 'hidden',
-            }}
-          >
+          {timelineHasContent ? (
             <View
+              testID="dashboard-timeline-table"
               style={{
-                flexDirection: 'row',
-                paddingHorizontal: spacing[3],
-                paddingVertical: spacing[2],
-                backgroundColor: colors.surface2,
+                borderRadius: radii.lg,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+                overflow: 'hidden',
               }}
             >
-              <Text style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                EDAD
-              </Text>
-              <Text style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                CLUB
-              </Text>
-              <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                OVR
-              </Text>
-              <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                APPS
-              </Text>
-              <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                G
-              </Text>
-              <Text style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}>
-                AST
-              </Text>
-            </View>
-            {timelineRows.map((row) => (
               <View
-                key={row.age}
                 style={{
                   flexDirection: 'row',
                   paddingHorizontal: spacing[3],
                   paddingVertical: spacing[2],
-                  borderTopWidth: 1,
-                  borderTopColor: colors.border,
+                  backgroundColor: colors.surface2,
                 }}
+                // FX1-B5 / MGC-1739 P1-6 — el header del timeline tenía
+                // textos crípticos (EDAD/CLUB/OVR/APPS/G/AST) sin
+                // accessibilityLabel. TalkBack/VoiceOver los leía como
+                // letras sueltas sin contexto. Sumamos labels expandidos
+                // para screen readers y preservamos el visual compacto
+                // para usuarios visuales. Mismo patrón que el log timeline
+                // de /temporada (accessibilityLabel por fila).
+                accessibilityRole="header"
+                accessibilityLabel="Timeline del jugador: edad, club, overall, partidos jugados, goles y asistencias por temporada"
               >
-                <Text style={[styles.colCell, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.age}
+                <Text
+                  style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Edad"
+                >
+                  EDAD
                 </Text>
-                <Text style={[styles.colCell, { color: colors.textMuted, fontSize: fontSize.sm }]}>
-                  {row.club}
+                <Text
+                  style={[styles.colHeader, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Club"
+                >
+                  CLUB
                 </Text>
-                <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.ovr}
+                <Text
+                  style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Overall"
+                >
+                  OVR
                 </Text>
-                <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.apps}
+                <Text
+                  style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Partidos jugados"
+                >
+                  APPS
                 </Text>
-                <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.goals}
+                <Text
+                  style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Goles"
+                >
+                  G
                 </Text>
-                <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
-                  {row.ast}
+                <Text
+                  style={[styles.colHeader, styles.colNum, { color: colors.textMuted, fontSize: fontSize.xs }]}
+                  accessibilityLabel="Asistencias"
+                >
+                  AST
                 </Text>
               </View>
-            ))}
-          </View>
+              {log.timeline.map((row) => (
+                <View
+                  key={`${row.season}-${row.clubId}`}
+                  style={{
+                    flexDirection: 'row',
+                    paddingHorizontal: spacing[3],
+                    paddingVertical: spacing[2],
+                    borderTopWidth: 1,
+                    borderTopColor: colors.border,
+                  }}
+                >
+                  <Text style={[styles.colCell, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.age}
+                  </Text>
+                  <Text style={[styles.colCell, { color: colors.textMuted, fontSize: fontSize.sm }]}>
+                    {row.clubName}
+                  </Text>
+                  <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.ovr}
+                  </Text>
+                  <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.apps}
+                  </Text>
+                  <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.goals}
+                  </Text>
+                  <Text style={[styles.colCell, styles.colNum, { color: colors.text, fontSize: fontSize.sm }]}>
+                    {row.assists}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View
+              testID="dashboard-timeline-empty"
+              style={{
+                borderRadius: radii.lg,
+                borderWidth: 1,
+                borderStyle: 'dashed',
+                borderColor: colors.borderStrong,
+                backgroundColor: colors.surface2,
+                padding: spacing[5],
+                alignItems: 'center',
+                gap: spacing[2],
+              }}
+            >
+              <Text
+                accessibilityRole="header"
+                style={{
+                  color: colors.textStrong,
+                  fontSize: fontSize.lg,
+                  fontWeight: fontWeight.bold,
+                  textAlign: 'center',
+                }}
+              >
+                {copy.resolve('dashboard_timeline_fresh_h2')}
+              </Text>
+              <Text
+                style={{
+                  color: colors.textMuted,
+                  fontSize: fontSize.sm,
+                  textAlign: 'center',
+                }}
+              >
+                {copy.resolve('dashboard_timeline_fresh_p')}
+              </Text>
+              {showDraftCta ? (
+                <View style={{ marginTop: spacing[2], alignSelf: 'stretch' }}>
+                  <Button
+                    label="Empezar draft de leyendas"
+                    onPress={onDraftPress}
+                    variant="primary"
+                    size="md"
+                    testID="btn-dashboard-timeline-cta"
+                  />
+                </View>
+              ) : null}
+            </View>
+          )}
         </Section>
 
         {/* National team */}
@@ -351,11 +490,41 @@ export default function DashboardScreen() {
           <RecommendedStrategy profile={profile} testID="dashboard-recommended" />
         </Suspense>
 
+        {/* MGC-565 — affordance dev-only para reset de carrera. Solo
+            visible bajo `__DEV__` o env flag; sin gate no renderiza. */}
+        <ResetCareerButton />
+      </ScrollView>
+      {/* MGC-1388 — Sibling extract del bloque de CTAs a un footer fijo
+          con alto reservado. Patrón validado en PR-337 (MGC-1381 temporada):
+          `flexBasis` + `flexGrow:0` + `flexShrink:0` + `collapsable={false}`
+          garantiza que UIAutomator reporte bounds reales para los botones
+          sin scrollUntilVisible. MGC-1393 fix dentro del footer (no del
+          ScrollView) con `size="md"` para mantener la altura 132dp reservada.
+          PR-339 (e16571a) había movido los botones DENTRO del ScrollView con
+          `size="lg"` para ocultar el CTA post-academy-back — eso eliminó el
+          wrapper `dashboard-cta-footer` y rompió todos los flows Maestro que
+          dependían de él. */}
+      <View
+        testID="dashboard-cta-footer"
+        collapsable={false}
+        style={{
+          height: 132,
+          flexBasis: 132,
+          flexGrow: 0,
+          flexShrink: 0,
+          gap: spacing[2],
+          paddingHorizontal: spacing[4],
+          paddingVertical: spacing[2],
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+        }}
+      >
         <Button
           label={copy.resolve('dashboard_cta_match')}
           onPress={onAcademyPress}
           variant="primary"
-          size="lg"
+          size="md"
           fullWidth
           testID="btn-dashboard-academy"
           accessibilityHint={copy.resolve('academy_h1')}
@@ -365,16 +534,13 @@ export default function DashboardScreen() {
             label="Empezar draft de leyendas"
             onPress={onDraftPress}
             variant="secondary"
-            size="lg"
+            size="md"
             fullWidth
             testID="btn-dashboard-draft"
             accessibilityHint="Inicia el draft de 8 rondas con leyendas"
           />
         ) : null}
-        {/* MGC-565 — affordance dev-only para reset de carrera. Solo
-            visible bajo `__DEV__` o env flag; sin gate no renderiza. */}
-        <ResetCareerButton />
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

@@ -1,0 +1,176 @@
+# MGC-1786 — F3.3 Walk setup-only (REESCRITO sobre a09ffbe / PR #470 UX1).
+#
+# Recorre el setup completo desde home hasta la pantalla /season-hub,
+# dejando la carrera lista para que el flow carrera-{a,b,c} arranque la
+# temporada. NO incluye loop temporada ni fin-carrera.
+#
+# Arquitectura (origin/main @ a09ffbe, post-PR #470 UX1 + PR #467 cap 5→3
+# + PR #427 WF1 identidad reorganizada + chips + apellido):
+#
+#   home (btn-career)
+#     → /identity          (identity-screen; input-name, input-lastname,
+#                            country-ARG, pos-{GK|CB|CAM|ST},
+#                            btn-identity-continue
+#                            → router.replace '/simulador-carrera/team-select')
+#     → /team-select       (team-select-screen; team-select-card-${club.id},
+#                            team-select-badge-${club.id},
+#                            btn-team-select-continue
+#                            → setInitialClub() + router.replace
+#                              '/simulador-carrera/season-hub')
+#     → /season-hub        (season-hub-scroll; btn-season-hub-decide,
+#                            btn-season-hub-view-table)
+#
+# UX1 (MGC-1737 / PR #470) ELIMINA el dashboard post-identity: el operator
+# pidió quitar el dashboard como pantalla inicial post-identity. Después de
+# elegir club en team-select el usuario va DIRECTO al hub de temporada
+# (WF3 / MGC-1649). El dashboard queda accesible sólo como ruta de resume
+# para sesiones guardadas con stage ∈ {dashboard, academy, clubStart}.
+#
+# Precondiciones (ejecutar ANTES de maestro test):
+#   1. APK pineado al SHA del PR que cerró UX1 (PR #470 a09ffbe) o
+#      posterior. testIDs de team-select (`team-select-card-*`,
+#      `btn-team-select-continue`) sólo existen desde PR #470.
+#   2. adb shim en ~/.local/bin/adb (Homebrew adb 1.0.41 cuelga).
+#   3. Device físico ZY22G728HN conectado (`adb devices`).
+#   4. JAVA_HOME apuntando a openjdk@17:
+#        export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+#   5. AsyncStorage limpio (reset completo):
+#        adb shell pm clear com.mgcstudios.copero
+#   6. App en frío (launchApp con clearState=true para reset duro).
+#
+# AC:
+#   - Llega a /season-hub con `season-hub-scroll` visible y `btn-season-hub-decide`.
+#   - Ningún assertVisible fallando durante setup.
+#   - Logs `/tmp/maestro-setup-debug/` con dumps intermedios.
+#
+# Diferencias vs MGC-1786 PR #468 (a0354e1 sobre c33b9d2):
+#   - PR #468 asumía identity → dashboard (1ª vez) → btn-dashboard-academy →
+#     academy → club-velez → /dashboard → debut match → /draft → /tu-jugador
+#     → /club. ESTE FLOW YA NO EXISTE en main.
+#   - PR #470 reemplaza academy → team-select (testID `team-select-card-`,
+#     NO `club-`). El club pick es ANTES del season-hub, no antes del
+#     partido de debut (PR #468 asumía debut match antes de draft; UX1 lo
+#     elimina — el primer partido viene del week-decision dentro de
+#     season-hub).
+#   - dashboard queda relegado a `resumeRouteForStage` (sólo para stage ∈
+#     {dashboard, academy, clubStart}); los flujos nuevos no lo tocan.
+#   - NATIONALITY_FRESH_LIMIT=5→3 (PR #467/MGC-1882). country-ARG/BR/UY
+#     siguen visibles sin scroll. country-CL/CO requieren search o "Ver
+#     todas". El flow default usa ARG — sigue visible sin scroll.
+#
+# Ejecución:
+#   export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+#   adb shell pm clear com.mgcstudios.copero
+#   maestro test .maestro/f33-walk-setup-only.yaml
+
+appId: com.mgcstudios.copero
+name: f33-walk-setup-only
+tags:
+  - career
+  - f3.3
+  - walk
+  - mgc-1786
+  - mgc-1633
+  - setup
+  - ux1
+
+---
+# ── HOME ──────────────────────────────────────────────────────────────
+- launchApp:
+    appId: com.mgcstudios.copero
+    clearState: true
+
+- assertVisible:
+    id: home-screen
+    label: "Home con CTA Jugar"
+- assertVisible:
+    id: btn-career
+    label: "CTA Jugar presente"
+- tapOn:
+    id: btn-career
+    label: "Tap Jugar → /identity"
+
+# ── IDENTITY (PR #427 — 4 campos: nombre, apellido, país, posición) ───
+- assertVisible:
+    id: identity-screen
+    label: "Pantalla identity montada"
+- scrollUntilVisible:
+    element:
+      id: input-name
+    direction: DOWN
+    timeout: 5000
+- inputText:
+    id: input-name
+    text: "Walk Setup"
+- scrollUntilVisible:
+    element:
+      id: input-lastname
+    direction: DOWN
+    timeout: 5000
+- inputText:
+    id: input-lastname
+    text: "F33"
+# País AR (Argentina) — default; el flow carrera puede parametrizar.
+- scrollUntilVisible:
+    element:
+      id: country-ARG
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: country-ARG
+    label: "País Argentina"
+# Posición default CAM (MID central). Chips visibles: pos-GK, pos-CB,
+# pos-CAM, pos-ST. PR #420 vc=109 recortó pos-RW/pos-RB por P0-2.
+- scrollUntilVisible:
+    element:
+      id: pos-CAM
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: pos-CAM
+    label: "Posición CAM (default)"
+# Edad 18 / Número 9 quedan en default (stepper +/- + slider, no input).
+- scrollUntilVisible:
+    element:
+      id: btn-identity-continue
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: btn-identity-continue
+    label: "Continuar → /team-select (PR #470 UX1)"
+
+# ── TEAM-SELECT (PR #470 UX1 — REEMPLAZA academy.tsx) ────────────────
+- assertVisible:
+    id: team-select-screen
+    label: "Pantalla team-select montada"
+# team-select-card-${club.id} (NO club-${id}). El flow carrera puede
+# parametrizar el clubId (velez, temperley, moron, boca, river).
+- scrollUntilVisible:
+    element:
+      id: team-select-card-velez
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: team-select-card-velez
+    label: "Pick Vélez (default setup)"
+- assertVisible:
+    id: btn-team-select-continue
+    label: "CTA Continuar habilitado tras pick"
+- tapOn:
+    id: btn-team-select-continue
+    label: "Continuar → /season-hub"
+# PR #470 / MGC-1648: el router.replace está diferido por
+# InteractionManager + rAF + setTimeout 250ms (race vs reanimated IME
+# dismiss + Stack animation). Por eso el assert siguiente necesita timeout
+# generoso.
+- assertVisible:
+    id: season-hub-scroll
+    timeout: 8000
+    label: "Season hub montado tras team-select"
+
+# ── SEASON-HUB (estado listo, NO loop partido) ────────────────────────
+# La carrera-{a,b,c} toma control desde acá con btn-season-hub-decide
+# (→ /week-decision) y btn-season-hub-view-table (→ /temporada).
+- assertVisible:
+    id: season-hub-cta-footer
+    label: "Footer season-hub con CTAs visibles"

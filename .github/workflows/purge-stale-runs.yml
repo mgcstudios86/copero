@@ -27,7 +27,7 @@ permissions:
 jobs:
   purge:
     name: purge queued runs sin PR
-    runs-on: [self-hosted, copero-ci]
+    runs-on: [self-hosted, copero-ci, macOS]
     timeout-minutes: 10
     steps:
       - name: Listar runs encolados y PRs abiertos contra main

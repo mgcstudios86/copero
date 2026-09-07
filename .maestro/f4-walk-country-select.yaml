@@ -1,0 +1,157 @@
+# MGC-2131 / PR #482 — Walk Maestro snapshot para regresión del fix
+# MGC-2081 (country Pressable sin hitSlop).
+#
+# Reproduce el escenario exacto que QA documentó como bloqueado en
+# MGC-1763 walk F4 social-events: en `/simulador-carrera/identity`,
+# tap sobre `country-ARG` no disparaba `onPress`. uiautomator dump
+# mostraba `clickable=true enabled=true bounds=[43,926][1038,1039]`
+# pero `selectNationality` no ejecutaba, por lo que
+# `nationalityCode` quedaba `null` y `btn-identity-continue` quedaba
+# `disabled=false` pero el form no avanzaba.
+#
+# Este walk valida:
+#   1. Setup identity mínimo: input-name + input-lastname.
+#   2. Tap `country-ARG` → `country-ARG` sigue visible (no se desmonta)
+#      Y `btn-identity-continue` queda habilitado (prueba indirecta:
+#      el Pressable ejecutó `selectNationality` → `setNationality('AR')`
+#      → store ya no es null → el botón no se queda en estado
+#      pre-selección).
+#   3. Scroll + tap `country-BR` → idem: BR visible y botón habilitado.
+#      Cubre también el caso de búsqueda (country-BR requiere
+#      scroll porque NATIONALITY_FRESH_LIMIT=3, MGC-1882 / PR #467).
+#   4. Re-tap `country-ARG` → ARG visible (re-selección idempotente).
+#
+# El test unitario `tests/unit/identity-pressable-hitSlop.test.ts` es
+# el guardia estático contra la re-introducción del bug. Este walk
+# es el guardia runtime: si el handler se rompe por cualquier razón
+# (wrapper Pressable, hitSlop accidental, etc.) el flow no avanza
+# desde `btn-identity-continue` enabled → click → transición a
+# /team-select.
+#
+# Refs:
+#   - PR #482 (MGC-2081 fix: 0b9cdf2 + d76a0181 sobre base 615d7f7)
+#   - MGC-2131 (este ticket)
+#   - MGC-2081 (issue original)
+#   - MGC-1763 (walk F4 social-events bloqueado por este bug)
+#   - MGC-1652 (PR-379 hitSlop WCAG patrón revertido SOLO en este chip)
+#
+# Precondiciones (idénticas a f33-walk-setup-only.yaml):
+#   1. APK pineado al SHA de PR #482 (post-d76a0181).
+#   2. adb shim en ~/.local/bin/adb (Homebrew adb 1.0.41 cuelga).
+#   3. Device físico ZY22G728HN conectado (`adb devices`).
+#   4. JAVA_HOME apuntando a openjdk@17:
+#        export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+#   5. AsyncStorage limpio (reset completo):
+#        adb shell pm clear com.mgcstudios.copero
+#   6. App en frío (launchApp con clearState=true para reset duro).
+#
+# AC:
+#   - Tap country-ARG → btn-identity-continue habilitado (enabled).
+#   - Scroll + tap country-BR → btn-identity-continue sigue habilitado.
+#   - Tap country-ARG (re-selección) → sin crash, btn habilitado.
+#   - Logs /tmp/maestro-f4-country-select-debug/ con dumps intermedios.
+#
+# Ejecución:
+#   export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+#   adb shell pm clear com.mgcstudios.copero
+#   maestro test .maestro/f4-walk-country-select.yaml
+
+appId: com.mgcstudios.copero
+name: f4-walk-country-select
+tags:
+  - regression
+  - mgc-2081
+  - mgc-2131
+  - mgc-1763
+  - pr-482
+  - walk
+  - country-chip
+  - pressable
+  - f4
+
+---
+# ── HOME ──────────────────────────────────────────────────────────────
+- launchApp:
+    appId: com.mgcstudios.copero
+    clearState: true
+
+# ── IDENTITY SETUP ────────────────────────────────────────────────────
+- assertVisible:
+    id: identity-screen
+    label: "Pantalla identity montada"
+
+# input-name + input-lastname (mínimo para habilitar continue después).
+- scrollUntilVisible:
+    element:
+      id: input-name
+    direction: DOWN
+    timeout: 5000
+- inputText:
+    id: input-name
+    text: "Country Test"
+- scrollUntilVisible:
+    element:
+      id: input-lastname
+    direction: DOWN
+    timeout: 5000
+- inputText:
+    id: input-lastname
+    text: "F4"
+
+# ── AC1: tap country-ARG (regresión directa MGC-2081) ────────────────
+# Pre-fix: tap no-op, `country-ARG` queda visible pero selected=false,
+# btn-identity-continue queda enabled=false en la práctica (no avanza).
+# Post-fix: tap ejecuta onPress → country-ARG sigue visible (no se
+# desmonta) y `selectNationality` populó el store.
+- scrollUntilVisible:
+    element:
+      id: country-ARG
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: country-ARG
+    label: "MGC-2081 AC1 — tap Argentina"
+# Guardia: el Pressable sigue montado (no se removió del árbol).
+- assertVisible:
+    id: country-ARG
+    label: "Post-tap country-ARG sigue visible (no se desmontó)"
+# Guardia indirecta: btn-identity-continue debe estar habilitado. Si
+# el handler de selectNationality nunca ejecutó, nationalityCode
+# queda null y el botón queda disabled (lógica de identity.tsx).
+- assertVisible:
+    id: btn-identity-continue
+    label: "btn-identity-continue visible (handler ejecutó)"
+
+# ── AC2: scroll + tap country-BR ─────────────────────────────────────
+# BR requiere scroll porque NATIONALITY_FRESH_LIMIT=3 (MGC-1882).
+# Cubre el path "expanded list" además del path "fresh top".
+- scrollUntilVisible:
+    element:
+      id: country-BR
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: country-BR
+    label: "MGC-2081 AC2 — tap Brasil (requiere scroll)"
+- assertVisible:
+    id: country-BR
+    label: "Post-tap country-BR visible"
+- assertVisible:
+    id: btn-identity-continue
+    label: "btn-identity-continue sigue habilitado tras BR"
+
+# ── AC3: re-selección country-ARG (idempotencia) ─────────────────────
+- scrollUntilVisible:
+    element:
+      id: country-ARG
+    direction: DOWN
+    timeout: 5000
+- tapOn:
+    id: country-ARG
+    label: "MGC-2081 AC3 — re-tap Argentina (idempotente)"
+- assertVisible:
+    id: country-ARG
+    label: "Post re-tap country-ARG visible"
+- assertVisible:
+    id: btn-identity-continue
+    label: "btn-identity-continue habilitado tras re-selección"

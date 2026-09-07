@@ -34,4 +34,6 @@ export { SiteHeader } from './SiteHeader';
 export type { SiteHeaderProps } from './SiteHeader';
 export { LanguageSwitcher } from './LanguageSwitcher';
 export type { LanguageSwitcherProps } from './LanguageSwitcher';
+export { VersionBadge } from './VersionBadge';
+export type { VersionBadgeProps, VersionBadgeVariant } from './VersionBadge';
 

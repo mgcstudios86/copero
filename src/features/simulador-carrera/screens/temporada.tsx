@@ -1,13 +1,19 @@
-import React, { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
+import { useLocale } from '@/i18n/locale-context';
 import { RETIREMENT_AGE } from '@/features/career/season';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
-import { YEARLY_PLAN_MODIFIERS, type YearlyPlan } from '@/types/career';
+import {
+  ESTILO_RASGOS,
+  YEARLY_PLAN_MODIFIERS,
+  type EstiloRasgo,
+  type YearlyPlan,
+} from '@/types/career';
 
 /**
  * MGC-209 [5/6] — TEMPORADA.
@@ -21,12 +27,17 @@ import { YEARLY_PLAN_MODIFIERS, type YearlyPlan } from '@/types/career';
 export default function TemporadaScreen() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
+  // MGC-1737 (UX1): selector de rasgos usa copy i18n en es/en/zh-CN.
+  const { t } = useLocale();
 
   const profile = useCareerStore((s) => s.profile);
   const log = useCareerStore((s) => s.log);
   const stage = useCareerStore((s) => s.stage);
   const advanceSeason = useCareerStore((s) => s.advanceSeason);
-  const runCareerToRetirement = useCareerStore((s) => s.runCareerToRetirement);
+// MGC-1802 P1-7 — retiro temprano (sin esperar RETIREMENT_AGE).
+  const retireEarly = useCareerStore((s) => s.retireEarly);
+  // MGC-1803 (TR1) — transfer offers al cierre de temporada.
+  const transferState = useCareerStore((s) => s.transferState);
   // MGC-249: loop semanal con `advance()` para drenar lesión, bumpear
   // semana y rotar season cada 38 semanas. Botón "Siguiente semana"
   // abre el loop fino que QA necesita para validar feedback bar.
@@ -34,8 +45,29 @@ export default function TemporadaScreen() {
   // MGC-1017: acción para fijar el plan anual (UI picker abajo).
   const setYearlyPlan = useCareerStore((s) => s.setYearlyPlan);
   const currentPlan = profile.career.yearlyPlan;
+  // MGC-1505: rasgos opt-in (multi-select, cap 2). Persistido en
+  // `profile.career.estilo` y consumido por el motor cuando corresponda.
+  const setEstilo = useCareerStore((s) => s.setEstilo);
+  const estilo: EstiloRasgo[] = useMemo(
+    () => profile.career.estilo ?? [],
+    [profile.career.estilo],
+  );
 
-  const nat = NATIONALITIES_BY_CODE[profile.nationalityCode];
+  // MGC-1505 — toggle de rasgo. La lista ya viene toggled (on tap
+  // off, off tap on); cap 2 lo enforce el reducer defensivo + UI
+  // deshabilita el 3er tap.
+  const onToggleRasgo = useCallback(
+    (rasgo: EstiloRasgo) => {
+      const isOn = estilo.includes(rasgo);
+      const next = isOn ? estilo.filter((r) => r !== rasgo) : [...estilo, rasgo].slice(0, 2);
+      void setEstilo(next);
+    },
+    [estilo, setEstilo],
+  );
+
+  // MGC-1769 — fallback 'AR' cosmético; en /temporada nationalityCode
+  // ya está seleccionado (gate exige no-null antes de commitIdentity).
+  const nat = NATIONALITIES_BY_CODE[profile.nationalityCode ?? 'AR'];
 
   // Construye filas de timeline: las del log + placeholders hasta retiro.
   const startAge = profile.age - (log?.timeline.length ?? 0);
@@ -53,11 +85,14 @@ export default function TemporadaScreen() {
     await advanceSeason();
   };
 
-  const onRunAll = async () => {
-    // MGC-257/MGC-284: la última transición del flow ya esperaba
-    // flushPendingSave; el cambio de firma a Promise<void> es lo único
-    // que nos toca acá.
-    await runCareerToRetirement();
+  // MGC-1802 P1-7 — handler del CTA 'Retirarme'. Antes llamaba
+  // `runCareerToRetirement` que corría el motor hasta RETIREMENT_AGE
+  // y bloqueaba al usuario durante ~17 seasons; el walk MGC-1739
+  // catalogó "WF6 fin-carrera bloquea retiro si carrera <38 sem".
+  // Ahora `retireEarly` setea stage='retirement' con el log/profile
+  // actuales (parcial OK) y deja que fin-carrera pinte el resumen.
+  const onRetireNow = async () => {
+    await retireEarly();
   };
 
   // MGC-249: loop semanal fino. Dispara `advance()` que drena lesión
@@ -82,6 +117,20 @@ export default function TemporadaScreen() {
     }
   }, [stage, router]);
 
+  // MGC-1803 (TR1) — tras `advanceSeason`, si el motor dejó un
+  // `transferState` abierto con ofertas, llevamos al usuario a la pantalla
+  // de ofertas antes de mostrar el hub. La redirección es idempotente: si
+  // ya estamos resolviendo (`resolved === true`) no re-disparamos.
+  useEffect(() => {
+    if (
+      transferState &&
+      !transferState.resolved &&
+      transferState.offers.length > 0
+    ) {
+      router.replace('/simulador-carrera/transfer-offers');
+    }
+  }, [transferState, router]);
+
   // MGC-1381 — presupuesto vertical exacto del `temporada-cta-footer`.
   // Cada `Button size="lg"` mide minHeight = max(52, tapTarget) = 52dp
   // (ver src/design/components/Button.tsx#dims). Reservamos
@@ -102,6 +151,17 @@ export default function TemporadaScreen() {
           {
             gap: spacing[5],
             padding: spacing[4],
+            // MGC-1802 P1-5 — el walk MGC-1739 catalogó "Stats row
+            // EDAD/CLUB/OVR/P/G/A clippeada debajo del sticky footer"
+            // porque el último row del Hero block (Tile EDAD/VALOR +
+            // Stat P/G/A) quedaba visualmente pegado al borde superior
+            // del `temporada-cta-footer` sin aire de separación. El
+            // footer es sibling fijo (no superpone), pero sin padding
+            // extra el último row se siente "cortado". Sumamos padding
+            // equivalente al alto del footer + 8dp de aire. Cuando el
+            // usuario scrollea al fondo, el último row queda con margen
+            // visual sobre el footer en vez de pegado a su borde.
+            paddingBottom: ctaFooterHeight + spacing[2],
             // MGC-1381: el paddingBottom +156 de PR-336 ya no hace falta —
             // los CTAs salieron del ScrollView a `temporada-cta-footer`
             // (sibling fijo), así que no hay nada que rescatar del borde
@@ -206,7 +266,7 @@ export default function TemporadaScreen() {
               letterSpacing: 2,
             }}
           >
-            TU ESTILO DE JUGADOR
+            {t('temporada.traits.eyebrow')}
           </Text>
           <Text
             style={{
@@ -215,37 +275,86 @@ export default function TemporadaScreen() {
               fontWeight: fontWeight.bold,
             }}
           >
-            ELEGÍ HASTA 2 RASGOS
+            {t('temporada.traits.title')}
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
-            Cambian eventos, ofertas y desarrollo. Seleccioná 1 o 2.
+            {t('temporada.traits.subtitle')}
           </Text>
-          {(['Magneto mediático', 'Trotamundos'] as const).map((r) => (
-            <View
-              key={r}
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingVertical: spacing[2],
-                borderTopWidth: 1,
-                borderTopColor: colors.border,
-              }}
-            >
-              <Text
+          {/* MGC-1505 — Rasgos como Pressable toggle (cap 2). El 3er tap
+              sobre un rasgo no-seleccionado cuando ya hay 2 elegidos
+              queda deshabilitado (defensa UI; el reducer también cap-a
+              defensivamente). El Pill refleja el contador global
+              `${seleccionados} / 2` y se pone verde cuando hay al menos
+              uno elegido. MGC-1737 (UX1) — copy re-escrito: el copy
+              original ("ELEGÍ HASTA 2 RASGOS / Cambian eventos, ofertas
+              y desarrollo") resultaba confuso. Se reemplaza por frases
+              que muestran QUÉ hace cada rasgo individualmente y el cap
+              sólo aparece en el subtítulo, no en el heading. */}
+          {ESTILO_RASGOS.map((rasgo) => {
+            const selected = estilo.includes(rasgo);
+            const atCap = !selected && estilo.length >= 2;
+            return (
+              <Pressable
+                key={rasgo}
+                onPress={() => onToggleRasgo(rasgo)}
+                disabled={atCap}
+                accessibilityRole="button"
+                accessibilityState={{ selected, disabled: atCap }}
+                accessibilityLabel={t('temporada.traits.itemA11y', {
+                  name: t(`temporada.traits.${rasgo}.name`),
+                  selected: selected
+                    ? t('temporada.traits.a11ySelected')
+                    : t('temporada.traits.a11yNotSelected'),
+                })}
+                testID={`btn-estilo-${rasgo}`}
                 style={{
-                  color: colors.textStrong,
-                  fontSize: fontSize.xs,
-                  fontWeight: fontWeight.bold,
-                  letterSpacing: 2,
-                  textTransform: 'uppercase',
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  paddingVertical: spacing[2],
+                  paddingHorizontal: spacing[3],
+                  borderRadius: radii.md,
+                  borderWidth: selected ? 2 : 1,
+                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected ? colors.surface2 : colors.surface,
+                  opacity: atCap ? 0.4 : 1,
+                  minHeight: 48,
                 }}
               >
-                {r.toUpperCase()}
-              </Text>
-              <Pill label="0 / 2" bg={colors.surface2} fg={colors.textMuted} />
-            </View>
-          ))}
+<View style={{ flex: 1, gap: spacing[1] }}>
+                  <Text
+                    style={{
+                      color: colors.textStrong,
+                      fontSize: fontSize.base,
+                      fontWeight: fontWeight.bold,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {/* MGC-1802 P1-4 — display forzado 'MAGNATE-MEDIÁTICO' para
+                        rasgo magneto-mediatico (PR #447). */}
+                    {rasgo === 'magneto-mediatico'
+                      ? 'MAGNATE-MEDIÁTICO'
+                      : t(`temporada.traits.${rasgo}.name`)}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.textMuted,
+                      fontSize: fontSize.xs,
+                      lineHeight: fontSize.xs * 1.35,
+                    }}
+                    numberOfLines={3}
+                  >
+                    {t(`temporada.traits.${rasgo}.desc`)}
+                  </Text>
+                </View>
+                <Pill
+                  label={`${estilo.length} / 2`}
+                  bg={estilo.length > 0 ? colors.primary : colors.surface2}
+                  fg={estilo.length > 0 ? colors.textOnPrimary : colors.textMuted}
+                />
+              </Pressable>
+            );
+          })}
         </View>
 
         {/* MGC-1381: los CTAs del loop viven ahora en
@@ -497,7 +606,13 @@ export default function TemporadaScreen() {
         }}
       >
         <Button
-          label={`Siguiente semana (${profile.week}/38)`}
+          // FX1-B5 / MGC-1739 P1-8 — el catálogo marcó "Siguiente semana
+          // (2/38)" como "paréntesis raro en español". El paréntesis
+          // alargado en label de CTA choca con la convención es-AR del
+          // producto (el resto del flow usa middot · para separar
+          // magnitudes, ver semanal.tsx SEMANA {week}/38 · {position}).
+          // Cambio a middot, mismo dato, lectura más natural.
+          label={`Siguiente semana · ${profile.week}/38`}
           onPress={onNextWeek}
           variant="primary"
           size="lg"
@@ -518,13 +633,13 @@ export default function TemporadaScreen() {
         />
         <Button
           label="Retirarme"
-          onPress={onRunAll}
+          onPress={onRetireNow}
           variant="secondary"
           size="lg"
           fullWidth
           testID="btn-temporada-retire"
           disabled={stage === 'retirement'}
-          accessibilityHint="Cierra la carrera y abre el resumen final con partidos, goles, asist y OVR final"
+          accessibilityHint="Cierra la carrera YA y abre el resumen final con los stats parciales"
         />
         {stage === 'retirement' ? (
           <Button

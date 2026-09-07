@@ -72,11 +72,13 @@ module.exports = ({ config } = {}) => ({
   slug: 'copero',
   owner: 'mgcstudios',
   scheme: 'copero',
-  version: '0.1.1',
+  version: '0.0.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
-  newArchEnabled: true,
+  experiments: {
+    newArchEnabled: true,
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.mgcstudios.copero',
@@ -88,6 +90,11 @@ module.exports = ({ config } = {}) => ({
   },
   android: {
     package: 'com.mgcstudios.copero',
+    // MGC-1498: versionCode explícito para alinear con app.json. Con
+    // `cli.appVersionSource: remote` en eas.json, el server EAS es la
+    // fuente de verdad al build; mantener ambos sincronizados evita drift
+    // entre `Constants.expoConfig` y `expo-application` en runtime.
+    versionCode: 15,
     // MGC-839: NO declarar AD_ID. Per MGC-4919 rootcause, play-services-ads-*
     // AARs autolinkeados la inyectan transitivamente y declarar el permiso
     // no la remueve. Copero no usa ads → Play Console warning se resuelve
@@ -109,6 +116,14 @@ module.exports = ({ config } = {}) => ({
   },
   plugins: [
     'expo-router',
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/splash.png',
+        resizeMode: 'contain',
+        backgroundColor: '#0B1320',
+      },
+    ],
     ...admobPlugin,
   ],
   // Variables `extra` quedan accesibles via `expo-constants` en runtime.
@@ -130,5 +145,12 @@ module.exports = ({ config } = {}) => ({
       testBannerUnitId: TEST_IDS.banner,
       testInterstitialUnitId: TEST_IDS.interstitial,
     },
+    // MGC-1506 — SHA del commit que produjo el build. EAS Build
+    // setea `EAS_BUILD_GIT_COMMIT_HASH` automáticamente; en local
+    // (`eas build --local`) el operador puede exportar la variable
+    // manualmente antes del build, o queda como null y la UI muestra
+    // "dev" como fallback. Solo lectura — la fuente de verdad sigue
+    // siendo `git rev-parse HEAD` en CI / Mac del developer.
+    buildSha: process.env.EAS_BUILD_GIT_COMMIT_HASH || null,
   },
 });

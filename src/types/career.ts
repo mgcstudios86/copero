@@ -9,6 +9,12 @@
  * la UI desde `src/design/copy/es-AR/simulador-carrera.ts`.
  */
 
+import type { NextWeekModifiers, PostMatchEvent } from '@/features/career/events';
+import type { SocialEvent } from '@/features/career/social-events';
+import type { PositionStats } from '@/features/career/position-stats';
+import type { RngSnapshot } from '@/features/career/rng';
+import type { TransferState } from '@/features/career/transfers';
+
 export type Foot = 'left' | 'right' | 'both';
 
 export type Position =
@@ -62,10 +68,76 @@ export type PlayerStats = {
 };
 
 export type InjuryKind = 'ninguna' | 'leve' | 'media' | 'grave';
+
+/**
+ * Mapeo canónico `severity ↔ kind` (MGC-1628 rev 3 §"Sistema de lesiones v2").
+ *
+ * Se conserva `InjuryKind` para compatibilidad con catálogos y tests
+ * preexistentes (MGC-1629 AC). `severityFor(kind)` centraliza la conversión
+ * a número 1..3 (1 = leve, 2 = media, 3 = grave, 0 = ninguna) para que la UI
+ * pueda mostrar un progress bar sin branching repetido.
+ *
+ * El 'media' NO se samplea (rev 3 del code-reviewer MGC-1640): la
+ * probabilidad de cada kind se decide por RNG en `injury-v2.ts#maybeRollInjury`
+ * (leve 0.6 / media 0.3 / grave 0.1). Si en F3+ queremos media sampleada
+ * (p.ej. media condicional a OVR < 70), se agrega acá sin tocar call sites.
+ */
+export function severityFor(kind: InjuryKind): 0 | 1 | 2 | 3 {
+  switch (kind) {
+    case 'ninguna':
+      return 0;
+    case 'leve':
+      return 1;
+    case 'media':
+      return 2;
+    case 'grave':
+      return 3;
+  }
+}
+
+/**
+ * Atributo afectado por la lesión (MGC-1628 rev 3 §"affectedAttr").
+ *
+ * Mapeo determinístico (no se samplea):
+ * - 'leve'  → 'fisico'   (muscular, recuperable con rehab).
+ * - 'media' → 'mental'   (baja confianza + moral del jugador).
+ * - 'grave' → 'tecnico'  (cirugía/largo plazo; el skill técnico se ve
+ *                         afectado porque el jugador pierde ritmo de
+ *                         competencia hasta su regreso).
+ * - 'ninguna' → 'fisico' (no se usa; placeholder para shape estable).
+ *
+ * El atributo es un signal para `applyTrainingDelta` (L1): durante la
+ * rehabilitación, los deltas al atributo afectado se dividen por 2.
+ * Mantiene el `Injury` schema chico y predecible.
+ */
+export function affectedAttrFor(kind: InjuryKind): AttributeKey {
+  switch (kind) {
+    case 'leve':
+      return 'fisico';
+    case 'media':
+      return 'mental';
+    case 'grave':
+      return 'tecnico';
+    case 'ninguna':
+      return 'fisico';
+  }
+}
+
 export type Injury = {
   kind: InjuryKind;
   /** Fechas restantes para volver a jugar. 0 = sano. */
   fechasOut: number;
+  /**
+   * Semana (1-indexed, dentro de la temporada actual) en la que se
+   * disparó la lesión. Permite que `applyTrainingDelta` decremente el
+   * `attr` afectado en función del tiempo transcurrido desde el
+   * disparo (regla F3+: a partir de la semana 4 sin rehab, el delta
+   * negativo se acumula 1.5×). `0` para lesiones en `initialProfile`
+   * o en fixtures de tests sin week.
+   */
+  startedAtWeek: number;
+  /** Atributo del player afectado durante la rehabilitación (ver `affectedAttrFor`). */
+  affectedAttr: AttributeKey;
 };
 
 /**
@@ -103,6 +175,16 @@ export const YEARLY_PLAN_MODIFIERS: Record<
   },
 };
 
+/**
+ * MGC-1505 — Rasgos opt-in del jugador que modifican eventos / drift OVR.
+ * Lista cerrada: por ahora `Magneto mediático` y `Trotamundos`. UI lo
+ * expone como multi-select (cap 2) en `temporada.tsx`.
+ */
+export type EstiloRasgo = 'magneto-mediatico' | 'trotamundos';
+
+/** Catálogo canónico de etiquetas que se persisten y se renderean. */
+export const ESTILO_RASGOS: readonly EstiloRasgo[] = ['magneto-mediatico', 'trotamundos'] as const;
+
 /** Stats globales del jugador (MGC-439 §sistema de stats). */
 export type CareerStats = {
   presupuesto: number; // €
@@ -114,6 +196,28 @@ export type CareerStats = {
   reputation: Reputation;
   /** Plan elegido al cierre de la temporada anterior (MGC-1017). */
   yearlyPlan?: YearlyPlan;
+  /** Rasgos opt-in del jugador (MGC-1505). Cap 2 enforced en UI. */
+  estilo?: EstiloRasgo[];
+  /** MGC-1657 — contador de semanas consecutivas de doble turno. Se
+   * persiste junto al career porque `injury-v2.maybeRollInjury` lo
+   * consume para modular la chance de lesión. Lo resetea el `descanso`
+   * semanal y el switch a otras opciones distintas a `doble_turno`. */
+  doubleShiftStreak?: number;
+  /** MGC-1657 — flag emitido por `applyWeeklyChoice` cuando la semana
+   * en curso disparó una lesión v2. La UI lo lee para mostrar feedback
+   * inline en el weekly screen. Se drena con `clearWeeklyInjury` al
+   * mostrar la rehabilitación. */
+  weeklyInjuryFlipped?: boolean;
+  /** MGC-1657 — goles y asist por club en la matchweek actual. El
+   * motor `resolveMatch()` los escribe y el `advanceWeek` los vuelca
+   * a `profile.stats` acumulado. Estructura por clubId permite agregar
+   * por temporada cuando hay cambios de club. */
+  matchweekStats?: {
+    clubId: string;
+    goals: number;
+    ast: number;
+    apps: number;
+  };
 };
 
 export type Club = {
@@ -150,9 +254,19 @@ export type League = {
 
 export type PlayerProfile = {
   name: string;
+  // MGC-1628 / WF1 — apellido separado del nombre. El form del alta los pide
+  // en inputs distintos; el seed del motor sigue usando sólo `name` para no
+  // invalidar partidas guardadas. Opcional para back-compat con saves v:1/v:2
+  // existentes — la migración `migrateV1ToV2` lo hidrata con ''.
+  lastName?: string;
   number: number;
   position: Position;
-  nationalityCode: string;
+  // MGC-1769 / WF1 — nationalityCode arranca en `null` (sin selección) y
+  // se popula con un código FIFA válido cuando el usuario confirma un
+  // chip / opción en el form. Esto fuerza que el botón «Continuar» no
+  // se habilite sólo con los 3 gates de nombre+apellido+edad mientras
+  // nationalityCode sigue con su default histórico ('AR').
+  nationalityCode: string | null;
   /** MGC-955: código de liga ('' si sin selección). */
   leagueCode: string;
   preferredFoot: Foot;
@@ -163,6 +277,11 @@ export type PlayerProfile = {
   stats: PlayerStats;
   attrs: Attributes;
   career: CareerStats;
+  /** MGC-1657 (F2.3) — 4 stats específicos por línea (GK/DEF/MID/FWD)
+   * consumidos por el árbol semanal V2 y `resolveMatch`. Opcional para
+   * back-compat con saves v:1; la migración `migrateV1ToV2` lo hidrata
+   * con `STAT_INIT` (50 en cada slot). */
+  positionStats?: PositionStats;
   /** Semana actual dentro de la temporada (1-indexed). */
   week: number;
   /** Temporada actual (1-indexed). */
@@ -184,6 +303,29 @@ export type CareerSnapshot = {
   log?: SeasonLog;
   /** Seed determinista para reproducibilidad (MGC-208 §5). */
   seed?: number;
+  /** Cursor persistible del stream RNG; se completa al serializar. */
+  rng?: RngSnapshot;
+  /**
+   * F3.2 (MGC-1632) / ADR-0017 §6 — campos del motor de Fase 3, vivos en
+   * el state machine para que la UI pueda reabrir el modal post-partido
+   * y la pantalla de transferencias tras un force-stop. Se hidratan con
+   * defaults en `loadCareerSave` cuando el save no los trae (ver
+   * `persistence.ts#hydrateF3Fields`).
+   */
+  /** Evento post-partido pendiente de mostrar. La UI lo lee y drena. */
+  postMatchPending?: PostMatchEvent | null;
+  /**
+   * MGC-1738 / MGC-1762 — evento social pendiente de mostrar (F4). Sale
+   * tras el post-partido y modula la semana siguiente vía `mergeModifiers`
+   * (compose `runPostMatch` + `runSocialEvent`). La UI F4 lo lee y drena
+   * junto con `postMatchPending`. Opcional: saves pre-F4 lo omiten y
+   * `hydrateF3Fields` lo rellena con `null`.
+   */
+  socialEventPending?: SocialEvent | null;
+  /** Modificadores que el evento dejó para la semana siguiente. */
+  nextWeekModifiers?: NextWeekModifiers;
+  /** Estado del transfer system al cierre de temporada. */
+  transferState?: TransferState | null;
 };
 
 /** Identificadores de decisión del catálogo de strategies.md (MGC-439). */
@@ -331,9 +473,13 @@ export type SeasonLog = {
   events: CareerEvent[];
 };
 
-/** Estado de la partida entre etapas (MGC-208 §5 persistencia). */
+/** Estado de la partida entre etapas (MGC-208 §5 persistencia).
+ *
+ * Versión 2 (MGC-1657 / F2.3): suma `profile.positionStats` para
+ * persistir las stats posicionales V2. El loader de persistencia
+ * detecta v:1 y aplica `migrateV1ToV2` antes de hidratar. */
 export type CareerSaveState = {
-  v: 1;
+  v: 1 | 2;
   stage: CareerStage;
   profile: PlayerProfile;
   draft: DraftBoard | null;
@@ -341,11 +487,53 @@ export type CareerSaveState = {
   clubId: string | null;
   log: SeasonLog;
   seed: number;
+  /** Cursor determinista; v1 legacy puede no incluirlo. */
+  rng?: RngSnapshot;
+  /**
+   * F3.2 / ADR-0017 §6 — campos nuevos, **opcionales con default**. Un
+   * save de F2.x que no los traiga se hidrata con `null` /
+   * `NO_MODIFIERS` sin migración ni bump de versión: por eso son
+   * opcionales y no entran en el discriminador `v`.
+   */
+  /** Evento post-partido pendiente de mostrar. `loadState` reabre el modal. */
+  postMatchPending?: PostMatchEvent | null;
+  /** Modificadores que el evento dejó para la semana siguiente. */
+  nextWeekModifiers?: NextWeekModifiers;
+  /** Estado del transfer system al cierre de temporada. */
+  transferState?: TransferState | null;
 };
+
+/**
+ * MGC-1628 rev 3 §L2 — `CareerSaveV2`.
+ *
+ * Mismo shape que `CareerSaveState` (`v: 1`) pero con `v: 2` para
+ * reflejar la extensión del tipo `Injury` (M1: `affectedAttr`,
+ * `startedAtWeek`). El bump de versión obliga a:
+ *
+ * 1. `loadCareerSave` rechaza `v: 1` legacy y delega a `migrateV1ToV2`
+ *    antes de devolver el snapshot hidratado.
+ * 2. `getSnapshot()` (en `careerStore.ts`) emite SIEMPRE `v: 2`.
+ * 3. La rama de F3+ que introduzca nuevos campos persistibles (p.ej.
+ *    `currentFatigue`, `lastAction`) agrega el discriminador `v: 3` y
+ *    un `migrateV2ToV3`. Ver `arquitectura-motor.md` rev 3 §"Upgrade
+ *    path F3+".
+ *
+ * Hoy la migración V1→V2 sólo normaliza los `Injury` saves legacy
+ * (rellena `affectedAttr` desde el `kind` vía `affectedAttrFor` y
+ * `startedAtWeek` a `0` para los disparos sin week persistido).
+ */
+export type CareerSaveV2 = Omit<CareerSaveState, 'v'> & { v: 2 };
 
 /** Resumen del fin de carrera (MGC-208 §4). */
 export type RetirementSummary = {
   retirementAge: number;
+  /**
+   * MGC-1950 (PR #464 cleanup CTO) — true cuando el jugador se retiró
+   * por `retireEarly` antes de alcanzar `RETIREMENT_AGE`. La UI usa esto
+   * para mostrar copy contextual ("Retirado joven a los 16") en vez del
+   * resumen de carrera longeva.
+   */
+  retiredEarly: boolean;
   finalOvr: number;
   totalApps: number;
   totalGoals: number;

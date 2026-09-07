@@ -7,6 +7,7 @@ import {
   StyleSheet,
   AccessibilityRole,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 
 // `expo-constants` se carga lazy para no romper `vitest` (su transitivo
@@ -105,6 +106,13 @@ const SDK = Platform.OS === 'web' ? null : resolveSdk();
 
 export const Banner = () => {
   const { colors, fontSize } = useTheme();
+  // MGC-1802 P2-3 — el walk MGC-1739 catalogó "Ad banner superpone
+  // system nav bar" porque el banner se montaba como sibling del
+  // Stack sin respetar `insets.bottom` del system nav bar (gesture
+  // bar en Android, home indicator en iOS). Sumamos paddingBottom =
+  // insets.bottom para que el banner quede ARRIBA del nav bar sin
+  // taparlo. Patrón canónico MGC-394 (SafeAreaView edges=['bottom']).
+  const insets = useSafeAreaInsets();
   const cfg = useMemo(() => readAdMobConfig(), []);
   // SDK se resuelve sincrónicamente en module-load (resolveSdk).
   // Derivar `sdkReady` evita setState dentro de useEffect
@@ -120,7 +128,15 @@ export const Banner = () => {
       <View
         testID="ad-banner-native"
         accessibilityLabel="Espacio publicitario"
-        style={[styles.banner, { borderColor: colors.border, backgroundColor: colors.surface2 }]}
+        style={[
+          styles.banner,
+          {
+            borderColor: colors.border,
+            backgroundColor: colors.surface2,
+            // MGC-1802 P2-3 — respeta system nav bar inset.
+            paddingBottom: insets.bottom,
+          },
+        ]}
       >
         <SDK.BannerAd unitId={unitId} size={SDK.BannerAdSize?.BANNER ?? 'BANNER'} />
       </View>
@@ -135,7 +151,12 @@ export const Banner = () => {
       accessibilityLabel="Espacio publicitario"
       style={[
         styles.banner,
-        { borderColor: colors.border, backgroundColor: colors.surface2 },
+        {
+          borderColor: colors.border,
+          backgroundColor: colors.surface2,
+          // MGC-1802 P2-3 — respeta system nav bar inset.
+          paddingBottom: insets.bottom,
+        },
       ]}
     >
       <Text

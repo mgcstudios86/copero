@@ -105,13 +105,34 @@ describe('career engine', () => {
     expect(s).toEqual(initialSnapshot());
   });
 
-  it('isIdentityComplete exige nombre de al menos 2 chars y número válido', () => {
+  it('isIdentityComplete exige nombre + apellido (≥2 c/u) + edad 16-35 + nacionalidad', () => {
+    // MGC-1769 / WF1 — nationalityCode arranca en `null` y exige selección
+    // explícita. Antes el default 'AR' permitía habilitar el botón con
+    // sólo nombre+apellido+edad (3/4 gates). Repro del bug walk #427.
     let s = initialSnapshot();
     expect(isIdentityComplete(s.profile)).toBe(false);
-    s = step(s, { type: 'setName', name: 'M' });
-    expect(isIdentityComplete(s.profile)).toBe(false);
+    // Default nationalityCode es null, no 'AR'.
+    expect(s.profile.nationalityCode).toBeNull();
     s = step(s, { type: 'setName', name: 'Ma' });
+    expect(isIdentityComplete(s.profile)).toBe(false);
+    s = step(s, { type: 'setLastName', lastName: 'Ro' });
+    // Sin nationality sigue incompleto — gate exige selección explícita.
+    expect(isIdentityComplete(s.profile)).toBe(false);
+    s = step(s, { type: 'setNationality', code: 'AR' });
     expect(isIdentityComplete(s.profile)).toBe(true);
+  });
+
+  it('isIdentityComplete rechaza nationalityCode string vacío o whitespace', () => {
+    // MGC-1769 — guard defensivo: aunque el setter filtra strings no
+    // FIFA-válidos, el gate debe rechazar '' / '   ' por si llegan vía
+    // migración de save o import manual.
+    let s = initialSnapshot();
+    s = step(s, { type: 'setName', name: 'Ma' });
+    s = step(s, { type: 'setLastName', lastName: 'Ro' });
+    s = step(s, { type: 'setNationality', code: '' });
+    expect(isIdentityComplete(s.profile)).toBe(false);
+    s = step(s, { type: 'setNationality', code: '   ' });
+    expect(isIdentityComplete(s.profile)).toBe(false);
   });
 
   it('decide aplica una decision y avanza la semana manteniendo stage', () => {
@@ -194,13 +215,17 @@ describe('career fixtures', () => {
     expect(new Set(POSITIONS.map((p) => p.id)).size).toBe(12);
   });
 
-  it('ACADEMY_CLUBS tiene 4 ofertas (Vélez / Temperley / Morón / Boca)', () => {
-    expect(ACADEMY_CLUBS).toHaveLength(4);
+  it('ACADEMY_CLUBS tiene 5 ofertas (Vélez / Temperley / Morón / Boca / River)', () => {
+    // MGC-1648 — WF2 team-select obligatorio exige top-5 popular. Se
+    // agregó River Plate al catálogo canónico. El test cubre que el
+    // club esté presente; el resto del catálogo sigue intacto.
+    expect(ACADEMY_CLUBS).toHaveLength(5);
     const names = ACADEMY_CLUBS.map((c) => c.name);
     expect(names).toContain('Vélez Sarsfield');
     expect(names).toContain('Temperley');
     expect(names).toContain('Morón');
     expect(names).toContain('Boca Juniors');
+    expect(names).toContain('River Plate');
   });
 
   it('ACADEMY_CLUBS cubre los 3 arquetipos (DESARROLLO / EQUILIBRIO / AMBICIÓN)', () => {

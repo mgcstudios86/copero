@@ -90,6 +90,10 @@ const ENTRIES: Record<string, CopyEntry> = {
   dashboard_timeline_h2: { raw: 'Tu carrera' },
   dashboard_timeline_current: { raw: 'Hoy: {age} años' },
   dashboard_timeline_empty: { raw: 'Aún no fichaste por ningún club.' },
+  dashboard_timeline_fresh_h2: { raw: 'Aún no empezaste tu carrera' },
+  dashboard_timeline_fresh_p: {
+    raw: 'Tu primera temporada se escribe cuando arrancás el draft. Cada decisión te define.',
+  },
   dashboard_selection_h2: { raw: 'Selección nacional' },
   dashboard_selection_empty: { raw: 'Todavía no debutaste.' },
   dashboard_cta_training: { raw: 'Ir a entrenar' },
@@ -358,6 +362,67 @@ const ENTRIES: Record<string, CopyEntry> = {
   event_v7_apelar: { raw: 'Apelar' },
   feedback_fine_pay: { raw: 'Multa pagada. -{monto}.', tone: 'warning' },
   feedback_fine_appeal: { raw: 'Apelación en curso. La decisión queda pendiente.', tone: 'neutral' },
+
+  // ── MGC-1738 / MGC-1762 — eventos sociales F4 ─────────────────────
+  // 4 outcomes: timba / asado / tour / quedarse. La UI los muestra tras
+  // el modal post-partido; el motor ya aplicó los modificadores vía
+  // `mergeModifiers(post, social)`. Voz consistente con el resto del
+  // catálogo (vos, rioplatense). Cuando se agregue en/zh-CN locales,
+  // replicar estas keys con el mismo id (`social_*`).
+  social_timba_title: { raw: 'Timba con los pibes', tone: 'warning' },
+  social_timba_body: {
+    raw: 'Saliste a apostar con amigos. La noche se desmadró.',
+  },
+  social_asado_title: { raw: 'Asado en casa de un compañero' },
+  social_asado_body: {
+    raw: 'Carne, vino y risas. Una noche tranquila con la banda.',
+  },
+  social_tour_title: { raw: 'Tour por la noche' },
+  social_tour_body: {
+    raw: 'Salida a boliches con el grupo. Salís recargado.',
+  },
+  social_quedarse_title: { raw: 'Te quedaste en casa' },
+  social_quedarse_body: {
+    raw: 'Noche tranquila. Dormís bien y el cuerpo lo agradece.',
+  },
+  social_outcome_mods_luck: { raw: 'Bonus suerte: +{pct}%' },
+  social_outcome_mods_injury: { raw: 'Riesgo lesión: x{val}' },
+  social_outcome_mods_training: { raw: 'Entrenamiento: x{val}' },
+  social_outcome_mods_fatigue: { raw: 'Fatiga: {delta}' },
+  social_outcome_mods_moral: { raw: 'Moral: {delta}' },
+  social_outcome_mods_confianza: { raw: 'Confianza: {delta}' },
+  social_locked_stats: {
+    raw: 'Necesitás el stat clave alto para que la suerte compense.',
+  },
+
+  // ── MGC-1903 — pantalla F4 social-events (MGC-1738 / MGC-1762) ───
+  // Chrome de la screen que consume `socialEventPending`. Las keys de
+  // los 4 outcomes siguen siendo las de arriba (`social_*_title/body`)
+  // porque también las consume la card "Tu evento". Estas nuevas son
+  // las del marco de la pantalla + el resumen de modificadores.
+  social_events_eyebrow: { raw: 'EVENTO SOCIAL' },
+  social_events_title: { raw: 'Salida con amigos' },
+  social_events_subtitle: {
+    raw: 'El partido terminó. ¿Qué hiciste esta noche?',
+  },
+  social_events_rolled_label: { raw: 'Te tocó' },
+  social_events_rolled_a11y: {
+    raw: 'Evento sorteado: {name}. {body}',
+  },
+  social_events_mods_title: { raw: 'Modificadores de la semana' },
+  social_events_mods_empty: {
+    raw: 'Sin modificadores. Semana neutral.',
+  },
+  social_events_mods_odds_luck: {
+    raw: 'Suerte: +{pct}% (gate {gate})',
+  },
+  social_events_mods_odds_luck_blocked: {
+    raw: 'Suerte: gate no pasó (+0%)',
+  },
+  social_events_cta_continue: { raw: 'Continuar' },
+  social_events_cta_continue_hint: {
+    raw: 'Volvé al hub. Los modificadores ya quedaron aplicados.',
+  },
 };
 
 /** Catálogo expuesto al motor y a la UI. Inmutable. */

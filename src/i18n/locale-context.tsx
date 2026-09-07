@@ -1,24 +1,41 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { COPY, Locale, SUPPORTED_LOCALES } from './copy';
 
-/**
- * LocaleProvider — MGC-653.
- *
- * Estado mínimo del locale activo (default `es`). Sin persistencia (se
- * decide en ADR-0014 si se commitea a `AsyncStorage`); sin detección
- * automática del sistema (fuera de alcance del header). El `setLocale`
- * es libre; cualquier consumidor que dependa del locale debe re-renderizar.
- *
- * API:
- * - `locale`: locale activo
- * - `setLocale(next)`: cambia el locale
- * - `t(path)`: lookup con fallback a `es`
- */
+// LocaleProvider - MGC-653. Estado minimo del locale activo (default es).
+// Sin persistencia (ADR-0014); sin deteccion automatica. Cualquier consumidor
+// que dependa del locale debe re-renderizar al cambiarlo (suscribirse via
+// useLocale). MGC-1534 extiende t() con segundo arg opcional para interpolar
+// placeholders {key} en strings parametrizadas.
+
+type TValues = Record<string, string | number>;
+
+function interpolate(template: string, values: TValues): string {
+  let out = '';
+  let i = 0;
+  while (i < template.length) {
+    const open = template.indexOf('{', i);
+    if (open === -1) {
+      out += template.slice(i);
+      break;
+    }
+    out += template.slice(i, open);
+    const close = template.indexOf('}', open + 1);
+    if (close === -1) {
+      out += template.slice(open);
+      break;
+    }
+    const key = template.slice(open + 1, close);
+    const v = values[key];
+    out += v === undefined ? '{' + key + '}' : String(v);
+    i = close + 1;
+  }
+  return out;
+}
 
 type LocaleContextValue = {
   locale: Locale;
   setLocale: (next: Locale) => void;
-  t: (path: string) => string;
+  t: (path: string, values?: TValues) => string;
 };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -45,7 +62,10 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (path: string) => lookup(COPY[locale], path) ?? lookup(COPY.es, path) ?? path,
+    (path: string, values?: TValues) => {
+      const raw = lookup(COPY[locale], path) ?? lookup(COPY.es, path) ?? path;
+      return values ? interpolate(raw, values) : raw;
+    },
     [locale],
   );
 
