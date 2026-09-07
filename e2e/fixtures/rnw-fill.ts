@@ -27,8 +27,8 @@ async function focusInput(input: Locator): Promise<void> {
   } catch {
     // Fallback: foco programático si el click force sigue bloqueado por un
     // overlay que capture pointer events a nivel de captura de Playwright.
-    await input.evaluate((el) => {
-      (el as HTMLInputElement).focus({ preventScroll: true });
+    await input.evaluate((el: HTMLInputElement) => {
+      el.focus({ preventScroll: true });
     });
   }
 }
@@ -43,7 +43,7 @@ export async function fillRnw(
   await input.fill(value);
   // Forzar el input event sintetico que React escucha para useState.
   // El evento debe llevar la misma value (bubbles: true para RNW).
-  await input.evaluate((el, v) => {
+  await input.evaluate((el: HTMLInputElement, v: string) => {
     const setter = Object.getOwnPropertyDescriptor(
       window.HTMLInputElement.prototype,
       'value',
