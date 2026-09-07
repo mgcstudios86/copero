@@ -901,7 +901,14 @@ export default function IdentityScreen() {
             // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
             // clicks, el TextInput hijo sí. Patrón recursivo Field wrapper.
             pointerEvents="box-none"
-            style={{ minHeight: 36, width: '100%' }}
+            // MGC-2304 — minHeight 36→48dp para hitbox perimetral WCAG 2.5.5
+            // ≥44dp. Walk MGC-2296 sobre APK vc=227 midió wrapper 40dp H
+            // (100px ZY22G728HN density 400); threshold 44dp = 110px. El
+            // Pressable interno con hitSlop=22 cada lado (HIT_SLOP_44)
+            // extiende touch area pero uiautomator mide bounds del wrapper
+            // padre, no hitSlop. minHeight:48 + padding interior TextInput
+            // da hitbox efectivo 48dp centro + 22dp perimétrica × 2 = 92dp.
+            style={{ minHeight: 48, width: '100%' }}
           >
             {/* MGC-2061 — Pressable wrapper con hitSlop=22 cada lado. Patrón
                 idéntico al aplicado en input-age (MGC-1760 PR #454 d8d09fc).
@@ -909,6 +916,13 @@ export default function IdentityScreen() {
                 de focus, por lo que tap perimetral cae en el View padre y
                 no enfoca. El Pressable captura el tap y llama
                 nameInputRef.current?.focus() para garantizar focus estable.
+                MGC-2304 — el focus() explícito vía ref fuerza a RN-Android
+                a rebindear InputMethodManager.mServedView al EditText
+                destino, resolviendo el bug de IME bridge no-reflow entre
+                EditText siblings (walk MGC-2296 AC2/AC3 FAIL con mServedView
+                =null post-segundo-tap). Maestro `tapOn id: input-<X>` o
+                tap humano vía adb shell input tap caen en el Pressable →
+                onPress → ref.focus() del input correcto → IME rebindea.
                 Aditivo: `input-name-tap-target` testID para que QA pueda
                 conmutar focus entre inputs (workaround a focus leak post-
                 inputText reportado en MGC-1980 / MGC-2061). */}
@@ -968,7 +982,9 @@ export default function IdentityScreen() {
             testID="input-lastname-wrapper"
             collapsable={false}
             pointerEvents="box-none"
-            style={{ minHeight: 36, width: '100%' }}
+            // MGC-2304 — minHeight 36→48dp para hitbox perimetral WCAG 2.5.5
+            // ≥44dp (walk MGC-2296 midió wrapper 36dp = 90px; threshold 110px).
+            style={{ minHeight: 48, width: '100%' }}
           >
             {/* MGC-2061 — Pressable wrapper con hitSlop=22 cada lado. Patrón
                 MGC-1760 aplicado a input-lastname (PR #454 d8d09fc). El bug
@@ -1033,7 +1049,9 @@ export default function IdentityScreen() {
             testID="input-age-wrapper"
             collapsable={false}
             pointerEvents="box-none"
-            style={{ minHeight: 36, width: '100%' }}
+            // MGC-2304 — minHeight 36→48dp para hitbox perimetral WCAG 2.5.5
+            // ≥44dp (walk MGC-2296 midió wrapper 36dp = 90px; threshold 110px).
+            style={{ minHeight: 48, width: '100%' }}
           >
             {/* MGC-1760 — Pressable wrapper con hitSlop=12 cada lado para que el
                 tap perimetral (12dp = +24dp total por eje) abra el teclado. En
