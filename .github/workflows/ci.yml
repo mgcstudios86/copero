@@ -1,7 +1,15 @@
 # ci.yml — Copero (MGC-290, MGC-1880)
 # Pipeline CI: lint (eslint), typecheck (tsc), test web (vitest), build web (Expo web export).
 # Política §8.3: builds --local; runner self-hosted (Mac mini del operador).
-# Trigger: push a main y PRs contra main.
+# Trigger: push/PRs contra main y contra ramas de release train (`release-*`).
+#
+# MGC-2212/MGC-2217: antes solo disparaba en `main`, así que las PRs del release
+# train (RFC-001, target `release-1`/`release-2`) quedaban sin checks y el gate
+# CI se validaba a mano con `workflow_dispatch` repetido. Como `concurrency` tiene
+# `cancel-in-progress: true`, cada dispatch nuevo cancelaba el run en vuelo y el
+# job más largo (typecheck, ~14min en `npm ci`) moría con exit 143 — leído por
+# error como SIGTERM del daemon de runner-01. Cubrir `release-*` elimina la causa:
+# la PR trae sus propios checks y no hace falta dispatch manual.
 # Artefacto: `web-build` (Expo web export).
 #
 # MGC-1880: CI comparte el pool `copero-ci` (runner-01 Linux + runner-02 macOS)
@@ -14,9 +22,9 @@ name: ci (copero)
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'release-*']
   push:
-    branches: [main]
+    branches: [main, 'release-*']
   workflow_dispatch:
 
 concurrency:
