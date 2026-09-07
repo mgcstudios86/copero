@@ -24,7 +24,31 @@ import { POSITIONS, GROUP_COLOR } from '@/features/career/positions';
 import { NATIONALITIES } from '@/features/career/nationalities';
 import { LEAGUES, leagueNameByCode } from '@/features/career/leagues';
 import { isIdentityComplete } from '@/features/career/identity-state';
-import type { Foot } from '@/types/career';
+import type { Foot, PositionGroup } from '@/types/career';
+
+// MGC-2322 — restaurar constante POSITION_CHIPS perdida al extraer chips
+// absolutos en PR #525 (75f55ab). El archivo referencia
+// `POSITION_CHIPS.map((chip) => ...)` pero nunca declaró el array, lo que
+// produce ReferenceError: Property POSITION_CHIPS doesnt exist en el primer
+// render (FATAL EXCEPTION mqt_v_native). El array coincide con el contrato
+// E2E / axe (PR #427 MGC-1628 §L4): 4 chips — GK / CB / CAM / ST — uno por
+// grupo (goalkeeper / defense / midfield / attack). Cada chip declara
+// `ids` cubriendo sub-posiciones legacy para que el chip siga seleccionado
+// cuando el profile hidrata con LH/RW/etc. (MGC-1628 §L4). MGC-2319
+// (0298510) restauró `useLocale t()` pero omitió esta constante.
+type PositionChip = {
+  id: string;
+  label: 'Gk' | 'Def' | 'Mid' | 'Fwd';
+  group: PositionGroup;
+  defaultPos: (typeof POSITIONS)[number]['id'];
+  ids: (typeof POSITIONS)[number]['id'][];
+};
+const POSITION_CHIPS: PositionChip[] = [
+  { id: 'GK', label: 'Gk', group: 'goalkeeper', defaultPos: 'GK', ids: ['GK'] },
+  { id: 'CB', label: 'Def', group: 'defense', defaultPos: 'CB', ids: ['LB', 'CB', 'RB'] },
+  { id: 'CAM', label: 'Mid', group: 'midfield', defaultPos: 'CAM', ids: ['LM', 'CAM', 'RM', 'CM', 'CDM'] },
+  { id: 'ST', label: 'Fwd', group: 'attack', defaultPos: 'ST', ids: ['LW', 'ST', 'RW'] },
+];
 
 // Lazy-load JerseyPreview (MGC-482): separa el SVG patterns (~10 KB)
 // del chunk inicial de /identity. Mejora LCP sin cambiar UX
