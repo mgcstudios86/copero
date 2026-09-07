@@ -15,7 +15,10 @@ on:
 
 concurrency:
   group: ci-copero-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # MGC-2218: no cancelar runs en vuelo cuando el trigger es workflow_dispatch
+  # (typecheck ~13min paga el pato). push/PR mantienen cancel-in-progress para
+  # no apilar dos pushes seguidos sobre el mismo ref.
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 permissions:
   contents: read
@@ -201,6 +204,10 @@ jobs:
         run: node scripts/precompress-assets.mjs dist
       - name: Subir artefacto dist/
         uses: actions/upload-artifact@v4
+        # MGC-2194 (PR #494 ya mergeado en release-2): el quota de GitHub Actions
+        # artifact storage hace fallar el upload aunque el export sea correcto.
+        # Soft-fail para que el gate §8.1 no quede rojo por infra no-deterministica.
+        continue-on-error: true
         with:
           name: copero-web-build
           path: dist/
