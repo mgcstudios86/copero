@@ -110,8 +110,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Cachear npm (~/.npm)
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
       - name: Instalar deps (npm ci)
-        run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+        run: npm ci --cache ~/.npm --prefer-offline --include=dev --ignore-scripts --no-audit --no-fund
       - name: Cargar secretos de Infisical (lint usa sólo PUBLIC_* si los hay)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
@@ -139,7 +146,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Cachear npm (~/.npm)
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+      - run: npm ci --cache ~/.npm --prefer-offline --include=dev --ignore-scripts --no-audit --no-fund
       - name: Cargar secretos (no requerido para tsc; placeholder si .env lo lee app.config.js)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
@@ -165,7 +179,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Cachear npm (~/.npm)
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+      - run: npm ci --cache ~/.npm --prefer-offline --include=dev --ignore-scripts --no-audit --no-fund
       - name: Cargar secretos para tests
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
@@ -194,7 +215,14 @@ jobs:
           node-version: '20'
       - name: Instalar eas-cli
         run: bash scripts/install-eas-cli.sh
-      - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Cachear npm (~/.npm)
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+      - run: npm ci --cache ~/.npm --prefer-offline --include=dev --ignore-scripts --no-audit --no-fund
       - name: Cargar secretos desde Infisical (path=/copero)
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
@@ -232,7 +260,7 @@ jobs:
   devops-comment:
     name: devops-comment (gate §8.1)
     runs-on: [self-hosted, copero-ci]
-    needs: [lint, typecheck, test-web, build-web]
+    needs: [changes, lint, typecheck, test-web, build-web]
     if: always() && github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
