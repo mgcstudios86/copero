@@ -35,12 +35,10 @@ test.beforeEach(async ({ context }) => {
 });
 
 async function completeIdentity(page: any, name: string) {
-  // SPA navigation: python3 -m http.server en qa.yml NO hace fallback de
-  // rutas desconocidas a index.html, así que page.goto('/simulador-carrera/identity')
-  // devuelve 404. Hay que entrar por `/` y el dispatcher (MGC-1188) redirige
-  // a /simulador-carrera/identity porque no hay perfil persistido.
-  await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 15_000 });
+  // MGC-2254: goto directo a identity (home ya no es dispatcher
+  // tras MGC-1397 / PR #340). El serve-spa.py del workflow hace
+  // SPA fallback a index.html para rutas como /simulador-carrera/identity.
+  await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
   await page.getByTestId('input-name').fill(name);
   await page.locator('[data-testid^="pos-"]').first().click();
@@ -68,12 +66,9 @@ async function scanRoute(page: any, testId: string, label: string) {
 }
 
 test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
-  test('1) dispatcher `/` → identity (MGC-1188)', async ({ page }, testInfo) => {
-    // MGC-1188: el home es un dispatcher puro. Sin carrera persistida, el
-    // redirect lleva directo a /simulador-carrera/identity. No hay pantalla
-    // propia para el dispatcher (es un `<Redirect>` invisible).
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
-    await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 15_000 });
+  test('1) identity (MGC-2254)', async ({ page }, testInfo) => {
+    // MGC-2254: goto directo a identity (home ya no es dispatcher).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await expect(page.getByTestId('identity-screen')).toBeVisible();
     await page.screenshot({
       path: testInfo.outputPath('mgc444-01-identity.png'),
@@ -129,9 +124,8 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
     // pantalla `home` propia para escanear. El landing del dispatcher es
     // el identity screen, que ya cubrimos como segundo axe scan.
 
-    // identity (estado limpio) — vía dispatcher de `/`, no page.goto directo (404)
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await page.waitForURL(/\/simulador-carrera\/identity/, { timeout: 15_000 });
+    // identity (estado limpio) — MGC-2254: goto directo (serve-spa.py hace fallback)
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded' });
     const axeIdentity = await scanRoute(page, 'identity-screen', 'identity');
     await page.screenshot({
       path: testInfo.outputPath('mgc444-06-axe-identity.png'),

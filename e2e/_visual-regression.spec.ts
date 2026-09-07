@@ -20,10 +20,9 @@ test.describe('Copero — visual regression MGC-505 / MGC-1188', () => {
     test.setTimeout(90_000);
     mkdirSync('/tmp/mgc373', { recursive: true });
 
-    // MGC-1188: el dispatcher de `/` redirige a /simulador-carrera/identity
-    // porque no hay perfil persistido. Capturamos el landing directamente.
-    await page.goto('/', { waitUntil: 'load' });
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    // MGC-2254: goto directo a identity (home dejo de ser dispatcher
+    // tras MGC-1397 / PR #340 — ahora splash visible con CTA Jugar).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 15_000 });
     await page.waitForTimeout(500);
     await page.screenshot({ path: '/tmp/mgc373/identity.png', fullPage: true });

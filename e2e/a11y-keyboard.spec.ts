@@ -24,9 +24,9 @@ test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
   test('teclado puro navega home → identity → dashboard sin mouse', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
 
-    // 1) DISPATCHER — `/` redirige a /simulador-carrera/identity.
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    // 1) LANDING — MGC-2254: goto directo (home ya no es dispatcher
+    // tras MGC-1397 / PR #340).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 15_000 });
     await page.screenshot({ path: testInfo.outputPath('kbd-1-identity.png'), fullPage: true });
 

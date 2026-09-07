@@ -18,11 +18,8 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     test.setTimeout(90_000);
     mkdirSync(OUT, { recursive: true });
 
-    // MGC-1188: el dispatcher de `/` redirige a /simulador-carrera/identity
-    // porque no hay perfil persistido. Capturamos el landing directamente
-    // (no hay home splash visible para MGC-396).
-    await page.goto('/', { waitUntil: 'load' });
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    // MGC-2254: goto directo a identity (home ya no es dispatcher tras MGC-1397).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${OUT}/02-identity.png`, fullPage: true });
@@ -32,9 +29,8 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     test.setTimeout(180_000);
     mkdirSync(OUT, { recursive: true });
 
-    // 1) Entrar al dispatcher → identity (MGC-1188)
-    await page.goto('/', { waitUntil: 'load' });
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    // 1) MGC-2254: goto directo a identity (home ya no es dispatcher tras MGC-1397).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
 
     // 2) Llenar el form mínimo (testIDs canónicos de e2e/simulador-carrera.spec.ts)
