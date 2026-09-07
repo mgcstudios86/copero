@@ -295,15 +295,22 @@ jobs:
           # MGC-1860 — gate §8.1 #3 sólo se cumple si cada job que debía
           # correr terminó SUCCESS. ADR-0019 BLOQ-1: un job en `skipped`
           # es legítimo sólo cuando el filtro de paths correspondiente
-          # lo excluyó (`changes.outputs.X == 'false'`). Si el filtro
-          # marcó el job como aplicable pero terminó `skipped`/`failure`
-          # /`cancelled`/`timed_out`, el gate FALLA y bloquea el merge.
+          # lo excluyó (`changes.outputs.X == 'false'` o vacío, MGC-2297).
+          # Si el filtro marcó el job como aplicable (`true`) pero terminó
+          # `skipped`/`failure`/`cancelled`/`timed_out`, el gate FALLA y
+          # bloquea el merge.
           ok() {
-            # $1 = job result, $2 = filter output ('true'|'false')
+            # $1 = job result, $2 = filter output ('true'|'false'|'')
+            # MGC-2297: cuando filter marca el path como no aplicable,
+            # `needs.changes.outputs.X` puede llegar como string vacío
+            # en el env var del job (refs: needs con if: always()). Un
+            # filter ausente o vacío se considera "no aplicable" → skipped
+            # legítimo. Sólo `true` exige que el job corra y termine
+            # SUCCESS.
             case "$1" in
               success) return 0;;
               skipped)
-                if [[ "$2" == "false" ]]; then
+                if [[ -z "$2" || "$2" == "false" ]]; then
                   return 0
                 fi
                 return 1
