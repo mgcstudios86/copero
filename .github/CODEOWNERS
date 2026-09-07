@@ -1,0 +1,13 @@
+# CODEOWNERS — Copero
+# Default reviewers for every path. Aplica a todas las ramas (incluye main y release-*).
+# El fleet usa un único login GitHub (mgcstudios86, ADR-0011 self-approval waiver),
+# por lo que CODEOWNERS funciona como contrato de auditoría + reviewer automático en
+# PRs contra main y contra ramas del release train (release-1, release-2, release-3, etc.).
+# MGC-2235: alineación de cobertura para el release train.
+
+# Default reviewer para todo el repo
+*    @mgcstudios86
+
+# Workflows y CODEOWNERS requieren review explícito antes de mergear a main
+/.github/workflows/    @mgcstudios86
+/.github/CODEOWNERS    @mgcstudios86
