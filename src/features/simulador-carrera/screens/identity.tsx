@@ -862,10 +862,38 @@ export default function IdentityScreen() {
           // walk QA2 vc=175 PASS con esta config, base MGC-1986 bottom:120).
           // zIndex:15 sobre el field-map z=10. flexShrink:0 garantiza que el
           // kavContent no comprima el form en el measure pass.
+          //
+          // MGC-2250 — REGRESIÓN: con `top: 72` + `height: 280` el form
+          // ocupa bounds y=[598,1298] en ZY22G728HN (1080×2400 density
+          // 400, 1dp=2.5px), y el Pressable country-ARG del
+          // nationality-section vive en bounds=[43,926][1038,1039]
+          // (completamente debajo del form, con su zIndex 15 + background
+          // opaco). El form tiene `pointerEvents: 'box-none'` pero sus
+          // children Pressable — input-age Pressable expandido por
+          // HIT_SLOP_44 (y=829-998) y la fila btn-foot (y=1009-1109) —
+          // capturan los taps en esa banda ANTES de que el evento llegue
+          // al ScrollView subyacente. country-ARG queda inaccesible →
+          // nationalityCode=null → btn-identity-continue.enabled=false →
+          // walk F1→F2 STUCK. PR #486 NO tocó identity.tsx (blob SHA
+          // idéntico entre vc=205 y vc=209, walk-2206/06-arg-selected
+          // reproduce el mismo síntoma). Causa raíz pre-existente
+          // heredada de MGC-2008, destapada por el walk MGC-2232 sobre
+          // el APK actual.
+          //
+          // Fix: anclar el form SOLO con `bottom` + `height` (sin
+          // `top`). Yoga resuelve form.y = kavContent.bottom - form.bottom
+          // - form.height = 2076 - 300 - 700 = 1076px, y el form
+          // termina en y=1076-1776. country-ARG [926,1039] y country-BR
+          // [1038,1150] quedan en zona libre superior, sin overlap con
+          // el form ni con sus children. Mantenemos `height: 280` como
+          // belt anti-Yoga collapse (MGC-2008). El field-map (bottom:
+          // 120, h≈220) queda visualmente detrás del form (zIndex 15) —
+          // aceptable: chips pos-* son opcionales con default FWD y el
+          // F4 walk no los ejercita.
           position: 'absolute',
           left: 0,
           right: 0,
-          top: 72, // MGC-2008 — explícito para garantizar altura del form.
+          // MGC-2250 — `top: 72` ELIMINADO. Era la fuente de la regresión.
           bottom: 120, // MGC-1986 — sticky-footer 240→120dp.
           height: 280, // MGC-2008 — belt contra Yoga collapse del content height.
           zIndex: 15,
