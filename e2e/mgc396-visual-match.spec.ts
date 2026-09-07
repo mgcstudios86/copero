@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 /**
@@ -33,13 +33,19 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
 
-    // 2) Llenar el form mínimo (testIDs canónicos de e2e/simulador-carrera.spec.ts)
-    await page.locator('[data-testid="input-name"]').fill('Calvo');
+    // 2) Llenar el form mínimo (testIDs canónicos de e2e/simulador-carrera.spec.ts).
+    // MGC-2254 v2: pressSequentially para que onChangeText dispare en RNW.
+    const nameInput = page.locator('[data-testid="input-name"]');
+    await nameInput.click();
+    await nameInput.pressSequentially('Calvo', { delay: 30 });
     await page.locator('[data-testid="pos-ST"]').click();
-    await page.locator('[data-testid="input-nationality-search"]').fill('arg');
+    const natSearch = page.locator('[data-testid="input-nationality-search"]');
+    await natSearch.click();
+    await natSearch.pressSequentially('arg', { delay: 30 });
     await page.waitForTimeout(400);
     // MGC-1348 v3 — `force:true` por hit-test RNW (country-ARG).
     await page.getByTestId('country-ARG').click({ force: true });
+    await expect(page.locator('[data-testid="btn-identity-continue"]')).toBeEnabled({ timeout: 15_000 });
     await page.locator('[data-testid="btn-identity-continue"]').click();
 
     // 3) Draft ronda 1

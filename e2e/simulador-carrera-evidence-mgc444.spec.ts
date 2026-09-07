@@ -40,14 +40,25 @@ async function completeIdentity(page: any, name: string) {
   // SPA fallback a index.html para rutas como /simulador-carrera/identity.
   await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
-  await page.getByTestId('input-name').fill(name);
+  // MGC-2254 v2: pressSequentionally en lugar de fill. En el runner
+  // self-hosted (copero-heavy, Mac mini ARM64, Chromium headless), `fill`
+  // sobre RNW TextInput setea `value` pero no dispara `input` event de
+  // React antes del primer paint post-hidratacion; el state queda vacio
+  // y canContinue devuelve false -> btn-identity-continue disabled.
+  // pressSequentially fuerza keypresses que si disparan onChangeText.
+  const nameInput = page.getByTestId('input-name');
+  await nameInput.click();
+  await nameInput.pressSequentially(name, { delay: 30 });
   await page.locator('[data-testid^="pos-"]').first().click();
-  await page.getByTestId('input-nationality-search').fill('arg');
-  // MGC-2254: click country-ARG tras el fill (antes el test pasaba con
-  // fill solo porque el waitForURL del dispatcher bloqueaba el flujo;
-  // tras el fix MGC-2254 el fill sin click deja btn-identity-continue
-  // disabled). MGC-1348 v3 — `force:true` por hit-test RNW.
+  const natSearch = page.getByTestId('input-nationality-search');
+  await natSearch.click();
+  await natSearch.pressSequentially('arg', { delay: 30 });
+  await page.waitForTimeout(400);
+  // MGC-2254: click country-ARG tras el fill. MGC-1348 v3 — `force:true`
+  // por hit-test RNW.
   await page.getByTestId('country-ARG').click({ force: true });
+  // Espera explicita a que el boton se habilite (canContinue = true).
+  await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
   await page.getByTestId('btn-identity-continue').click();
   await page.waitForURL(/\/simulador-carrera\/dashboard/, { timeout: 10_000 });
   await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 10_000 });
