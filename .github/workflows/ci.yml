@@ -218,6 +218,18 @@ jobs:
         run: node scripts/precompress-assets.mjs dist
       - name: Subir artefacto dist/
         uses: actions/upload-artifact@v4
+        with:
+          name: copero-web-dist
+          path: dist
+          if-no-files-found: warn
+        # MGC-2194: cuota de artefactos del runner self-hosted puede saturarse
+        # intermitentemente; fallo en upload no debe tumbar CI (artefacto
+        # sigue siendo necesario para QA, pero el pipeline puede continuar).
+        continue-on-error: true
+
+  devops-comment:
+    name: devops-comment (gate §8.1)
+    runs-on: [self-hosted, copero-ci]
     needs: [lint, typecheck, test-web, build-web]
     if: always() && github.event_name == 'pull_request'
     steps:
