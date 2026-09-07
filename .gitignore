@@ -70,3 +70,10 @@ e2e/.cache/
 e2e/playwright-report/
 test-results/
 playwright-report/
+
+# MGC-1511 — artefactos de build local (eas --local). Los logs y los scripts
+# ad-hoc por ticket viven en el workspace del agente, no en el repo: un log de
+# eas son ~1300 líneas por corrida y quedan obsoletos apenas cambia el SHA.
+builds/
+build-*.log
+build-mgc-*.sh

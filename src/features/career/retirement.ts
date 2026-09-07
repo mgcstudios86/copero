@@ -26,8 +26,19 @@ export function buildRetirementSummary(
 
   const legado = buildLegado(profile, log);
 
+  // MGC-1950 (PR #464 cleanup CTO) — preservar la edad real cuando el
+  // jugador se retiró temprano (vía `careerStore.retireEarly`). Antes,
+  // `Math.max(profile.age, RETIREMENT_AGE=34)` siempre devolvía 34 aunque
+  // la edad real fuera 16. Ahora exponemos `retiredEarly` y usamos la
+  // edad real del profile cuando el retiro es temprano. Para retiro
+  // natural, `profile.age >= RETIREMENT_AGE` y el comportamiento previo
+  // se conserva (con la guarda explícita retiredEarly=false).
+  const retiredEarly = profile.age < RETIREMENT_AGE;
+  const retirementAge = retiredEarly ? profile.age : profile.age;
+
   return {
-    retirementAge: Math.max(profile.age, RETIREMENT_AGE),
+    retirementAge,
+    retiredEarly,
     finalOvr: profile.ovr,
     totalApps: profile.stats.apps,
     totalGoals: profile.stats.goals,

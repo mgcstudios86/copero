@@ -5,8 +5,9 @@ name: qa
 # No corre Maestro mobile (hardware persistente — QA agent owns ZY22G728HN).
 # Trigger: PR contra main + push a main + manual dispatch.
 # Secrets inyectados por DevOps vía Infisical — placeholders abajo.
-# MGC-308: Playwright corre en runner self-hosted (Linux, label `copero-ci`)
-# para evitar minutos GH-hosted facturables. Runner: VPS mgcstudios-01.
+# MGC-308: Playwright corre en el runner Linux dedicado `copero-qa`
+# para evitar que suites largas compitan con el pool `copero-ci`.
+# Runner: VPS mgcstudios-01 (labels `copero-qa`, `Linux`).
 
 on:
   pull_request:

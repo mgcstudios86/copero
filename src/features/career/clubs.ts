@@ -19,6 +19,14 @@ export type ClubWithPosition = Club & {
   positionGroups: PositionGroup[];
   /** Bonus de fit (1=neutro, 2=afinidad alta) que se suma al OVR inicial en `pickClub`. */
   fitBonus?: number;
+  /**
+   * MGC-1802 P2-4 — eslogan corto por club para diferenciar el copy
+   * del academy. Antes cada club mostraba el mismo texto neutro
+   * ("Fichar por {club.name}") y el walk MGC-1739 lo marcó como copy
+   * idéntico. Cada club ahora expone una propuesta de valor distinta
+   * acorde a su arquetipo.
+   */
+  description?: string;
 };
 
 export const ACADEMY_CLUBS: ClubWithPosition[] = [
@@ -33,6 +41,7 @@ export const ACADEMY_CLUBS: ClubWithPosition[] = [
     reputation: 4,
     positionGroups: ['attack', 'midfield', 'defense'],
     fitBonus: 1,
+    description: 'Tradición + minutos + cantera. El equilibrio clásico.',
   },
   {
     id: 'temperley',
@@ -45,6 +54,7 @@ export const ACADEMY_CLUBS: ClubWithPosition[] = [
     reputation: 2,
     positionGroups: ['midfield', 'defense', 'goalkeeper'],
     fitBonus: 2,
+    description: 'Minutos desde el día uno. Crecé jugando, no en el banco.',
   },
   {
     id: 'moron',
@@ -57,6 +67,7 @@ export const ACADEMY_CLUBS: ClubWithPosition[] = [
     reputation: 1,
     positionGroups: ['defense', 'midfield', 'goalkeeper'],
     fitBonus: 1,
+    description: 'Pura formación. Tu techo de OVR se trabaja semana a semana.',
   },
   {
     id: 'boca',
@@ -69,6 +80,28 @@ export const ACADEMY_CLUBS: ClubWithPosition[] = [
     reputation: 5,
     positionGroups: ['attack', 'midfield'],
     fitBonus: 2,
+    description: 'La Bombonera te espera. Máxima presión, máxima vitrina.',
+  },
+  // MGC-1648 — F1 WF2 (team-select obligatorio) requiere 5 clubes
+  // seleccionables con reputación visible. River Plate cierra el top 5 de
+  // popularité (Boca/River/Vélez + los dos de Primera Nacional). Sin este
+  // quinto club la pantalla del alta no podía cumplir el AC del ticket
+  // («lista de 5 clubes»). Mantiene shape ClubWithPosition para no romper
+  // `clubsForPosition` que el academy (F2+) sigue consumiendo: un ST sigue
+  // viendo Boca/River/Vélez primero; un GK ve Temperley/Morón. La reputación
+  // 5 lo posiciona como AMBICIÓN para los drills de draft.
+  {
+    id: 'river',
+    name: 'River Plate',
+    league: 'Liga Profesional',
+    crestColor: '#FFFFFF',
+    crestAccent: '#D4AF37',
+    presupuesto: 24,
+    archetype: 'AMBICIÓN',
+    reputation: 5,
+    positionGroups: ['attack', 'midfield', 'defense'],
+    fitBonus: 2,
+    description: 'El Monumental te espera. Plantel profesional + copas.',
   },
 ];
 

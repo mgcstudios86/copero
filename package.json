@@ -23,6 +23,7 @@
     "@expo/metro-runtime": "~57.0.0",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "expo": "~57.0.15",
+    "expo-application": "~57.0.2",
     "expo-constants": "~57.0.13",
     "expo-linking": "~57.0.7",
     "expo-router": "^57.0.15",
@@ -51,7 +52,7 @@
     "eslint-config-expo": "~57.0.1",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import": "^2.32.0",
-    "typescript": "~6.0.3",
+    "typescript": "~5.9",
     "vitest": "^2.1.9"
   },
   "overrides": {

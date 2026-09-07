@@ -3,6 +3,7 @@
 // Wrapper file-based para `/simulador-carrera/fin-carrera` (pantalla 6/6:
 // resumen y veredicto al retiro).
 import React, { Suspense, lazy } from 'react';
+import { View } from 'react-native';
 
 const FinCarreraScreen = lazy(() =>
   import('@/features/simulador-carrera/screens/fin-carrera').then((m) => ({
@@ -12,8 +13,10 @@ const FinCarreraScreen = lazy(() =>
 
 export default function FinCarreraRoute() {
   return (
-    <Suspense fallback={null}>
-      <FinCarreraScreen />
-    </Suspense>
+    <View style={{ flex: 1 }} testID="fin-carrera-screen">
+      <Suspense fallback={null}>
+        <FinCarreraScreen />
+      </Suspense>
+    </View>
   );
 }

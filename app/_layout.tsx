@@ -179,6 +179,20 @@ function ThemedShell() {
           NO via root Stack.Screen (provoca Unmatched Route, MGC-1158).
         */}
         <Stack.Screen name="simulador-carrera" />
+        {/*
+          MGC-1506 — `/settings` modal global accesible desde el link
+          ⚙️ del SiteHeader. `presentation: 'modal'` evita que se
+          renderice dentro del flow del simulador; permite swipe-down
+          en iOS y back nativo en Android para volver al contexto previo
+          (home o pantalla de carrera).
+        */}
+        <Stack.Screen
+          name="settings"
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
       </Stack>
       {/*
         MGC-394 — SiteFooter global removido. El footer exponía enlaces

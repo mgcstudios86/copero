@@ -30,6 +30,38 @@ vi.mock('expo-router', () => ({
   Slot: 'Slot',
 }));
 
+// MGC-1506 — VersionBadge re-exportado desde el barrel de design/components
+// importa expo-constants → expo-modules-core Y react-native-safe-area-context.
+// Ambos jalan Flow-typed source de `react-native` que Node no parsea en SSR.
+// Mockeamos los dos con shape mínimo para que el barrel entero no rompa el
+// suite en environment:node.
+vi.mock('expo-constants', () => ({
+  default: {
+    expoConfig: { version: '0.0.1', android: { versionCode: 15 } },
+    nativeAppVersion: '0.0.1',
+    nativeBuildVersion: 15,
+  },
+}));
+
+// MGC-1602 — VersionLabel y VersionBadge ahora importan `expo-application`
+// (Application.nativeBuildVersion) además de expo-constants. El barrel de
+// `expo-application` carga `expo-modules-core` que accede a `global.EventEmitter`,
+// undefined en el environment `node` de vitest. Stub con shape mínimo para
+// evitar el TypeError en `EventEmitter.ts:5:38` durante la collect.
+vi.mock('expo-application', () => ({
+  nativeApplicationVersion: '0.0.1',
+  nativeBuildVersion: 15,
+  applicationName: 'MGC Copero',
+  applicationId: 'com.mgcstudios.copero',
+}));
+
+vi.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  SafeAreaProvider: ({ children }: { children: unknown }) => children,
+  SafeAreaView: ({ children }: { children: unknown }) => children,
+  SafeAreaInsetsContext: { Consumer: () => null },
+}));
+
 // Mock react-native con un subset mínimo para que ThemeProvider pueda correr
 // en el entorno `node` de vitest sin un DOM real.
 vi.mock('react-native', () => {

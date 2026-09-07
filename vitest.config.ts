@@ -14,6 +14,14 @@ export default defineConfig({
       'react-native': path.resolve(__dirname, 'tests/mocks/react-native.ts'),
     },
   },
+  // MGC-1523 — define `__DEV__` para que expo-modules-core, arrastrado por
+  // expo-constants al importarse VersionBadge (re-export en
+  // src/design/components/index.ts:37) desde el barrel de tests, no falle
+  // con `ReferenceError: __DEV__ is not defined` en environment:node.
+  // El runtime de Expo lo inyecta en bundle/web/native; vitest no.
+  define: {
+    __DEV__: 'true',
+  },
   test: {
     globals: false,
     environment: 'node',

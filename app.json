@@ -4,17 +4,11 @@
     "slug": "copero",
     "scheme": "copero",
     "owner": "mgcstudios",
-    "version": "0.1.0",
+    "version": "0.0.1",
     "description": "Ideologia Futbolistica",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0B1320"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mgcstudios.copero",
@@ -24,6 +18,7 @@
     },
     "android": {
       "package": "com.mgcstudios.copero",
+      "versionCode": 15,
       "adaptiveIcon": {
         "backgroundColor": "#0B1320",
         "foregroundImage": "./assets/android-icon-foreground.png",

@@ -21,13 +21,21 @@ import type {
   PlayerProfile,
   Position,
 } from '@/types/career';
+import { affectedAttrFor } from '@/types/career';
 
 /** Profile por defecto. Espejo de `engine.ts#initialProfile` pero standalone. */
 export const initialProfile: PlayerProfile = {
   name: '',
+  // MGC-1628 / WF1 — apellido separado. Default '' hasta que el form lo pida.
+  lastName: '',
   number: 9,
   position: 'ST',
-  nationalityCode: 'AR',
+  // MGC-1769 — nationalityCode arranca en `null`. El default histórico
+  // 'AR' permitía habilitar el botón Continuar con sólo 3/4 gates
+  // (nombre + apellido + edad), dejando nationality sin selección real
+  // del usuario. Cambiar el default a `null` fuerza al gate a esperar
+  // una selección explícita en el form.
+  nationalityCode: null,
   leagueCode: '',
   preferredFoot: 'right',
   age: 16,
@@ -42,13 +50,24 @@ export const initialProfile: PlayerProfile = {
     fisico: 80,
     confianza: 60,
     racha: 0,
-    lesion: { kind: 'ninguna', fechasOut: 0 },
+    // MGC-1663: pasar por helper para mantener un único punto de mapeo.
+    lesion: { kind: 'ninguna', fechasOut: 0, startedAtWeek: 0, affectedAttr: affectedAttrFor('ninguna') },
     reputation: {
       prensa: 'neutral',
       hinchada: 'aceptado',
       vestuario: 'integrado',
       seleccionConvocado: false,
     },
+    // MGC-1657 (F2.3) — campos nuevos persistidos en v:2.
+    doubleShiftStreak: 0,
+    matchweekStats: { clubId: '', apps: 0, goals: 0, ast: 0 },
+  },
+  // MGC-1657 (F2.3) — stats posicionales V2 inicializadas en 50.
+  positionStats: {
+    reflejos: 50, posicionamiento: 50, salida: 50, manos: 50,
+    marcaje: 50, cabeceo: 50, anticipacion: 50,
+    vision: 50, pase: 50, dribling: 50, resistencia: 50,
+    definicion: 50, velocidad: 50, regate: 50, juegoAereo: 50,
   },
   week: 1,
   season: 1,
@@ -62,10 +81,20 @@ export const initialSnapshot = (): CareerSnapshot => ({
 });
 
 /** ¿El profile tiene los campos mínimos para pasar de identity a dashboard? */
+// MGC-1628 / WF1 — el form exige nombre + apellido (≥2 chars c/u) +
+// edad 16-35 + nacionalidad obligatoria. La validación inline muestra
+// el motivo exacto (campo vacío / fuera de rango) y el botón
+// «Continuar → Elegir equipo» permanece disabled hasta cubrir las 4.
 export function isIdentityComplete(profile: PlayerProfile): boolean {
-  return (
-    profile.name.trim().length >= 2 && profile.number >= 1 && profile.number <= 99
-  );
+  const firstName = profile.name.trim();
+  const lastName = (profile.lastName ?? '').trim();
+  const ageValid = profile.age >= 16 && profile.age <= 35;
+  // MGC-1769 — nationalityCode puede ser `null` hasta que el usuario
+  // confirme un código FIFA en el form. La validación exige un valor
+  // no-vacío para habilitar el botón Continuar.
+  const natValid =
+    profile.nationalityCode != null && profile.nationalityCode.trim().length > 0;
+  return firstName.length >= 2 && lastName.length >= 2 && ageValid && natValid;
 }
 
 /** Setters inmutables para los 5 campos de identidad. Sin tocar `engine.ts`. */
@@ -73,6 +102,22 @@ export const setName = (state: CareerSnapshot, name: string): CareerSnapshot => 
   ...state,
   profile: { ...state.profile, name },
 });
+
+// MGC-1628 / WF1 — setter puro para el apellido. Reutiliza el patrón de
+// `setName`: spread inmutable, sin tocar motor ni stage.
+export const setLastName = (state: CareerSnapshot, lastName: string): CareerSnapshot => ({
+  ...state,
+  profile: { ...state.profile, lastName },
+});
+
+// MGC-1628 / WF1 — setter puro para la edad con clamp 16-35 (rango
+// wireframe MGC-1625 §WF1 + retirement.ts §RETIREMENT_AGE). El TextInput
+// del form valida inline; acá sólo aseguramos que el motor nunca vea
+// edades fuera del rango persistible.
+export const setAge = (state: CareerSnapshot, age: number): CareerSnapshot => {
+  const a = Math.max(16, Math.min(35, Math.floor(Number.isFinite(age) ? age : 16)));
+  return { ...state, profile: { ...state.profile, age: a } };
+};
 
 export const setNumber = (state: CareerSnapshot, number: number): CareerSnapshot => {
   const n = Math.max(1, Math.min(99, Math.floor(number)));

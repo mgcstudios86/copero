@@ -22,6 +22,7 @@ import { create } from 'zustand';
 import {
   initialSnapshot,
   isIdentityComplete,
+  setAge,
 } from '@/features/career/identity-state';
 import {
   saveCareerSave,
@@ -29,8 +30,19 @@ import {
   clearCareerSave,
   isPersistentStorage,
 } from '@/features/career/persistence';
+import { createRngSnapshot } from '@/features/career/rng';
 import type { CareerAction } from '@/features/career/engine';
-import type { CareerSnapshot, Club, Foot, Position, StrategyId, YearlyPlan } from '@/types/career';
+import type {
+CareerSaveState,
+CareerSaveV2,
+  CareerSnapshot,
+  Club,
+  EstiloRasgo,
+  Foot,
+  Position,
+  StrategyId,
+  YearlyPlan,
+} from '@/types/career';
 
 type CareerStore = CareerSnapshot & {
   /**
@@ -43,6 +55,14 @@ type CareerStore = CareerSnapshot & {
    */
   hydrated: boolean;
   setName: (name: string) => void;
+  // MGC-1628 / WF1 — apellido separado del nombre. Mismo patrón que
+  // `setName`: applyAndPersist spread inmutable, sin tocar motor.
+  setLastName: (lastName: string) => void;
+  // MGC-1628 / WF1 — edad editable en el form. El setter hace clamp
+  // 16-35 (ver `setAge` en identity-state). La edad sigue siendo
+  // mutable por el motor (season.ts la incrementa) — este setter sólo
+  // opera en la pantalla de alta.
+  setAge: (age: number) => void;
   setNumber: (number: number) => void;
   setPosition: (position: Position) => void;
   setNationality: (code: string) => void;
@@ -67,6 +87,20 @@ type CareerStore = CareerSnapshot & {
   commitIdentityAndStartDraft: (seed?: number) => Promise<void>;
   openAcademy: () => void;
   acceptClub: (club: Club) => void;
+  /**
+   * MGC-1648 — WF2 team-select obligatorio. Setea el club inicial del
+   * jugador en el alta SIN cambiar de stage (queda en `dashboard`). La
+   * pantalla /team-select se monta después de `commitIdentity` (stage ya
+   * en `dashboard`), así que un transition extra a `clubStart` sacaría
+   * al usuario del flujo de WF3 (hub de temporada). La persistencia es
+   * async + await `flushPendingSave()` para que un `await caller.navigate()`
+   * post-acción bloquee hasta que AsyncStorage confirme la escritura — el
+   * mismo patrón AC7 de MGC-273 / MGC-284. Antes de MGC-1648 el club se
+   * elegía dentro del academy (F2+ post-draft) y llegaba a `profile.club`
+   * vía `acceptClub` + flujo `clubStart`. La ruta F1 obligatoria requiere
+   * un setter independiente que no toque stage.
+   */
+  selectInitialClub: (club: Club) => Promise<void>;
   decide: (strategyId: StrategyId, choiceId: string) => void;
   /**
    * MGC-1017 — setYearlyPlan: persiste el plan anual elegido por el
@@ -75,6 +109,41 @@ type CareerStore = CareerSnapshot & {
    * persistencia que `decide` para sobrevivir force-stop.
    */
   setYearlyPlan: (plan: YearlyPlan) => Promise<void>;
+  /**
+   * MGC-1505 — setEstilo: setter para los rasgos opt-in del jugador
+   * (multi-select, cap 2). La UI pasa el array ya toggled; el reducer
+   * re-sanitiza defensivamente (dedupe + cap 2 + descartar valores no
+   * canónicos). Persistencia inmediata vía flushPendingSave para
+   * sobrevivir force-stop, patrón idéntico a setYearlyPlan.
+   */
+  setEstilo: (rasgos: EstiloRasgo[]) => Promise<void>;
+  /**
+   * MGC-1657 (F2.3) — weeklyChoice dispara la decisión semanal V2
+   * (`applyWeeklyChoice`). Persiste tras `flushPendingSave` para que el
+   * snapshot con `positionStats` actualizado llegue a AsyncStorage.
+   */
+  weeklyChoice: (optionId: import('@/features/career/position-tree').WeeklyBaseOptionId) => Promise<void>;
+  /**
+   * MGC-1657 (F2.3) — resolveMatchweek cierra la matchweek
+   * (`resolveWeeklyMatch` → `resolveMatch`). Suma goals + apps a
+   * `profile.stats` y deja el resultado en `career.matchweekStats`.
+   */
+  resolveMatchweek: () => Promise<void>;
+  /**
+   * MGC-1650 (WF4) — startMatch: calcula el MatchOutcome y lo
+   * deposita en matchStore (transient) sin tocar careerStore.
+   */
+  startMatch: () => Promise<void>;
+  /**
+   * MGC-1650 (WF5) — commitMatch: aplica el nextProfile del
+   * matchStore al careerStore, avanza la semana y persiste.
+   */
+  commitMatch: () => Promise<void>;
+  /**
+   * MGC-1650 (WF5) — discardMatch: resetea matchStore sin tocar
+   * careerStore (botón «Volver al hub»).
+   */
+  discardMatch: () => void;
   advance: () => void;
   /**
    * Draft de leyendas (MGC-208 §1) — MGC-209.
@@ -104,28 +173,56 @@ type CareerStore = CareerSnapshot & {
   /** Loop anual (MGC-208 §3). */
   advanceSeason: () => Promise<void>;
   runCareerToRetirement: () => Promise<void>;
+  /**
+   * MGC-1802 P1-7 — retiro temprano. Antes de llegar a
+   * `RETIREMENT_AGE = 34` (MGC-208 §3), el usuario puede cerrar la
+   * carrera YA. Setea stage='retirement' sin correr el motor; el log
+   * y profile actuales se preservan para que `fin-carrera.tsx`
+   * renderice el resumen con los datos parciales (sin esperar 38
+   * semanas). El walk MGC-1739 catalogó "WF6 fin-carrera bloquea
+   * retiro si carrera <38 sem — no permite retiro temprano".
+   */
+  retireEarly: () => Promise<void>;
+  /** MGC-1730 (HIGH-1 fix sobre PR #425) — drena `postMatchPending`
+   * después de que la UI F3.3 mostró el modal post-partido. Persiste
+   * inmediatamente para sobrevivir force-stop. */
+  clearPostMatch: () => Promise<void>;
+  /** MGC-1730 (HIGH-1 fix sobre PR #425) — resuelve el transfer system
+   * con el id aceptado o `null` (declinar todas). Sin efecto si no hay
+   * `transferState` abierto (temporada sin cierre reciente). */
+  resolveTransfer: (acceptedOfferId: string | null) => Promise<void>;
   /** MGC-227: hidrata la store desde AsyncStorage vía `loadCareerSave`.
    * Llamado una vez durante el bootstrap de la app (`app/_layout.tsx`).
    * Devuelve `true` si encontró un save previo y lo aplicó. */
   hydrateFromSave: () => Promise<boolean>;
   reset: () => void;
+  /**
+   * MGC-1736 (WF6) — reset destructivo AWAITABLE para el CTA
+   * "Nueva carrera" en `fin-carrera.tsx`. A diferencia de `reset()`
+   * (fire-and-forget), drena `flushPendingSave()` ANTES del clear para
+   * que una save en vuelo no reescriba la carrera vieja después del
+   * `clearCareerSave` (datos fantasma del AC de no-mutación), y AWAITA
+   * el borrado de AsyncStorage antes de resolver, para que el caller
+   * navegue a `/identity` con el disco ya vacío.
+   */
+  resetAll: () => Promise<void>;
+  // MGC-1802 P0-5 — sale del estado retirement y vuelve a season sin
+  // reiniciar la carrera. Persistido por applyAndPersist.
+  resumeFromRetirement: () => Promise<void>;
 };
 
 /**
- * Snapshot persistible (alineado con `CareerSaveState` salvo `clubId`,
+* Snapshot persistible (alineado con `CareerSaveState` salvo `clubId`,
  * que la store no expone — `profile.club.id` lo cubre). Lo construimos
  * desde el estado actual de la store en cada save.
+ *
+ * MGC-1628 rev 3 §L2: `snapshotToSave` retorna shape `v: 1` para no
+ * romper las saves legacy en disco. La conversión al shape `v: 2`
+ * ocurre en `getSnapshot()` (helper público), que además normaliza el
+ * `Injury` con `affectedAttr`/`startedAtWeek` para los callers que
+ * quieran consumir el snapshot sin pasar por `loadCareerSave`.
  */
-function snapshotToSave(s: CareerStore): {
-  v: 1;
-  stage: CareerSnapshot['stage'];
-  profile: CareerSnapshot['profile'];
-  draft: NonNullable<CareerSnapshot['draft']> | null;
-  card: NonNullable<CareerSnapshot['card']> | null;
-  clubId: string | null;
-  log: NonNullable<CareerSnapshot['log']>;
-  seed: number;
-} {
+function snapshotToSave(s: CareerStore): CareerSaveState {
   return {
     v: 1,
     stage: s.stage,
@@ -135,6 +232,52 @@ function snapshotToSave(s: CareerStore): {
     clubId: s.profile.club ? s.profile.club.id : null,
     log: s.log ?? { timeline: [], events: [] },
     seed: s.seed ?? 0,
+    rng: s.rng ?? createRngSnapshot(s.seed ?? 0),
+    // MGC-1730 (HIGH-2 fix sobre PR #425) — persistir los 3 campos F3.2
+    // para que sobrevivan force-stop. Los defaults los aplica
+    // `loadCareerSave` (ver `persistence.ts#hydrateF3Fields`); acá sólo
+    // copiamos lo que está en memoria (puede ser `null`/`undefined` y
+    // es válido — el loader los normaliza).
+    postMatchPending: s.postMatchPending ?? null,
+    nextWeekModifiers: s.nextWeekModifiers,
+    transferState: s.transferState ?? null,
+  };
+}
+
+/**
+ * MGC-1628 rev 3 §L2 — `getSnapshot(): CareerSaveV2`.
+ *
+ * Helper público que toma el estado actual de la store y lo proyecta al
+ * shape `v: 2`. Casos de uso:
+ *
+ * - Tests E2E que necesitan un snapshot completo sin pasar por el
+ *   ciclo `saveCareerSave` → `loadCareerSave`.
+ * - Debug / telemetry: exponer el snapshot vía `Sentry` o el panel de
+ *   QA sin filtrar estado runtime (`hydrated`, setters).
+ * - Migración on-the-fly V1→V2 para clientes que aún tienen saves v1.
+ *
+ * Es función pura: no muta la store, no llama a AsyncStorage, no
+ * dispara listeners. Vinculada a `commit()` (cada save v2 emite este
+ * shape) y a `loadCareerSave()` (v1 legacy se normaliza vía
+ * `migrateV1ToV2` antes de hidratar la store).
+ */
+export function getSnapshot(): CareerSaveV2 {
+  const s = useCareerStore.getState();
+  return {
+    v: 2,
+    stage: s.stage,
+    profile: s.profile,
+    draft: s.draft ?? null,
+    card: s.card ?? null,
+    clubId: s.profile.club ? s.profile.club.id : null,
+    log: s.log ?? { timeline: [], events: [] },
+    seed: s.seed ?? 0,
+    // MGC-1730 (HIGH-1 fix sobre PR #425) — exponer los 3 campos F3.2
+    // también en `getSnapshot` para que tests E2E / telemetry vean el
+    // shape completo sin pasar por save/load.
+    postMatchPending: s.postMatchPending ?? null,
+    nextWeekModifiers: s.nextWeekModifiers,
+    transferState: s.transferState ?? null,
   };
 }
 
@@ -181,16 +324,7 @@ export function flushPendingSave(): Promise<void> {
  * `flushPendingSave` final), el listener de AppState escribe el
  * último snapshot conocido sin depender de la cadena de promesas.
  */
-type SnapshotPayload = {
-  v: 1;
-  stage: CareerSnapshot['stage'];
-  profile: CareerSnapshot['profile'];
-  draft: NonNullable<CareerSnapshot['draft']> | null;
-  card: NonNullable<CareerSnapshot['card']> | null;
-  clubId: string | null;
-  log: NonNullable<CareerSnapshot['log']>;
-  seed: number;
-};
+type SnapshotPayload = CareerSaveState;
 let lastSnapshot: SnapshotPayload | null = null;
 
 export function getLastSnapshot(): SnapshotPayload | null {
@@ -288,6 +422,17 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     hydrated: false,
     // Setters livianos: identity-state, sin motor.
     setName: (name) => applyAndPersist((s) => ({ ...s, profile: { ...s.profile, name } })),
+    // MGC-1628 / WF1 — apellido separado. Persiste junto al resto del
+    // profile; back-compat con saves v:1/v:2 (lastName undefined → '').
+    setLastName: (lastName) =>
+      applyAndPersist((s) => ({ ...s, profile: { ...s.profile, lastName } })),
+    // MGC-1628 / WF1 + MGC-1938 — edad editable. El clamp 16-35 vive en
+    // identity-state.setAge (single source of truth); acá delegamos para
+    // que cualquier caller (TextInput, programmatic set, tests) herede la
+    // validación. MGC-1938 fix: antes el import se borraba por lint
+    // unused y el clamp quedaba como responsabilidad del UI; ahora el
+    // cablear aplica el clamp también en este entrypoint.
+    setAge: (age) => applyAndPersist((s) => setAge(s, age)),
     setNumber: (number) =>
       applyAndPersist((s) => ({ ...s, profile: { ...s.profile, number } })),
     setPosition: (position) =>
@@ -334,6 +479,35 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
           clubInteres: true,
         },
       })),
+    // MGC-1648 — WF2 team-select obligatorio. Setea club + presupuesto +
+    // interes sin tocar stage (la pantalla /team-select llega cuando
+    // stage ya está en `dashboard` post `commitIdentity`). Persistencia
+    // async + flushPendingSave para que el `router.replace('/dashboard')`
+    // posterior bloquee hasta que AsyncStorage confirme la escritura.
+    selectInitialClub: async (club) => {
+      setSnapshot((s) => ({
+        ...s,
+        profile: {
+          ...s.profile,
+          club,
+          clubPresupuesto: club.presupuesto,
+          clubInteres: true,
+        },
+      }));
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    // MGC-1802 P0-5 — 'Volver a la temporada' desde fin-carrera.
+    // El usuario tapó 'Retirarme' o llegó a retiro por edad y desde el
+    // resumen quiere revisar la última temporada sin reiniciar la carrera.
+    // Sin este setter, `router.replace('/temporada')` es seguido
+    // inmediatamente por un redirect de vuelta a `/fin-carrera` en el
+    // useEffect de temporada.tsx (stage==='retirement').
+    resumeFromRetirement: async () => {
+      applyAndPersist((s) =>
+        s.stage === 'retirement' ? { ...s, stage: 'season' as const } : s,
+      );
+    },
     // Acciones de simulación: dynamic import del engine. La navegación
     // ya ocurrió (la UI está en /dashboard), así que el update
     // asincrónico no rompe el flujo de pantalla.
@@ -349,10 +523,167 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       persistSnapshot(get());
       await flushPendingSave();
     },
+    // MGC-1657 (F2.3) — decisión semanal V2. Dispatchea el action
+    // `weeklyChoice` que el reducer conecta con `applyWeeklyChoice` (motor
+    // puro F2.3). Persistencia idéntica a `decide` (await
+    // flushPendingSave) para sobrevivir force-stop.
+    weeklyChoice: async (optionId) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'weeklyChoice', optionId } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    // MGC-1657 (F2.3) — invocación de `resolveMatch` al cierre de la
+    // matchweek. La UI semanal lo llama después del weekly choice de
+    // tipo partido. Acumula goals + apps en `profile.stats`.
+    resolveMatchweek: async () => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'resolveMatchweek' } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    // MGC-1650 (WF4 + WF5 partido y post-partido). El flujo de 3
+    // pantallas usa `matchStore` (transient) como buffer; este par de
+    // acciones maneja el ciclo de vida.
+    startMatch: async () => {
+      const { resolveWeeklyMatch } = await import('@/features/career/simulation');
+      const {
+        ratingFromOutcome,
+        deltasFromRating,
+        clampCareerStat,
+      } = await import('@/features/career/match');
+      const { useMatchStore } = await import('@/shared/store/matchStore');
+      const current = get().profile;
+      const { profile: nextProfile, match } = resolveWeeklyMatch(current);
+      const rating = ratingFromOutcome(match);
+      const { moralDelta, fisicoDelta, confianzaDelta } =
+        deltasFromRating(rating);
+      const preview = {
+        rating,
+        moralDelta,
+        fisicoDelta,
+        confianzaDelta,
+        reputationChanged: false,
+        cleanSheet: match.cleanSheet,
+        goals: match.goals,
+        score: match.score,
+      };
+      const previewedProfile = {
+        ...nextProfile,
+        career: {
+          ...nextProfile.career,
+          moral: clampCareerStat(nextProfile.career.moral + moralDelta),
+          fisico: clampCareerStat(nextProfile.career.fisico + fisicoDelta),
+          confianza: clampCareerStat(
+            nextProfile.career.confianza + confianzaDelta,
+          ),
+        },
+      };
+      useMatchStore.getState().setMatch({
+        outcome: match,
+        previousProfile: current,
+        nextProfile: previewedProfile,
+        preview,
+      });
+    },
+    commitMatch: async () => {
+      const { useMatchStore } = await import('@/shared/store/matchStore');
+      const { advanceWeek, weeklyRng, getPositionStats } = await import(
+        '@/features/career/simulation'
+      );
+      const { runPostMatch, ratingFromScore } = await import(
+        '@/features/career/events'
+      );
+      const { runSocialEvent, mergeModifiers } = await import(
+        '@/features/career/social-events'
+      );
+      const { createRngFromSnapshot } = await import('@/features/career/rng');
+      const ms = useMatchStore.getState();
+      if (!ms.outcome || !ms.nextProfile) {
+        useMatchStore.getState().reset();
+        return;
+      }
+      const advanced = advanceWeek(ms.nextProfile!);
+
+      // MGC-2011 — bug HIGH del walk F4 (MGC-1915). El flujo dashboard
+      // (commitMatch) saltea `engine.step({type: 'resolveMatchweek'})`,
+      // así que `socialEventPending`/`postMatchPending`/`nextWeekModifiers`
+      // quedaban siempre `null` y `post-match.tsx:60` enrutaba directo al
+      // dashboard sin pasar por `/social-events`. Espejamos el bloque de
+      // `engine.ts#resolveMatchweek` (runPostMatch → runSocialEvent →
+      // mergeModifiers) usando el rating del outcome ya commiteado. El
+      // cursor RNG es `state.rng` (idéntico al semanal post-`applyWeekly
+      // Choice`); si por deeplink directo a /match no hay cursor previo,
+      // caemos a `weeklyRng(profile, 'match')` — mismo seed pattern que
+      // `resolveWeeklyMatch` (simulation.ts:645) para mantener paridad de
+      // determinismo con el semanal flow.
+      const state = get();
+      const baseRng = state.rng
+        ? createRngFromSnapshot(state.rng)
+        : weeklyRng(advanced, 'match').rng;
+      const positionStats = getPositionStats(advanced);
+      const ratingValue = ratingFromScore(ms.outcome.score);
+      const { event, modifiers: postModifiers } = runPostMatch(
+        {
+          position: advanced.position,
+          positionStats,
+          rating: ratingValue,
+          form: advanced.career.confianza,
+          week: advanced.week,
+        },
+        baseRng,
+      );
+      const socialResult = runSocialEvent(
+        {
+          position: advanced.position,
+          positionStats,
+          rating: ratingValue,
+          week: advanced.week,
+        },
+        baseRng.snapshot(),
+      );
+      const merged = mergeModifiers(postModifiers, socialResult.modifiers);
+      // Un solo setSnapshot para evitar la race entre el set anterior
+      // (sólo profile) y éste (eventos + rng): Zustand re-renderiza entre
+      // updates y `post-match.tsx` puede leer un estado intermedio donde
+      // `profile.week` ya avanzó pero `socialEventPending` aún es null.
+      setSnapshot((s) => ({
+        ...s,
+        profile: advanced,
+        postMatchPending: event,
+        socialEventPending: socialResult.event,
+        nextWeekModifiers: merged,
+        rng: socialResult.rngSnapshot,
+      }));
+
+      persistSnapshot(get());
+      await flushPendingSave();
+      ms.commit();
+    },
+    discardMatch: () => {
+      void import('@/shared/store/matchStore').then((m) =>
+        m.useMatchStore.getState().reset(),
+      );
+    },
     setYearlyPlan: async (plan) => {
       const { step } = await import('@/features/career/engine');
       setSnapshot((s) =>
         step(s, { type: 'setYearlyPlan', plan } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    // MGC-1505: setter de rasgos (multi-select, cap 2 enforced en reducer).
+    // Misma cadencia async + await flushPendingSave que setYearlyPlan para
+    // sobrevivir force-stop (AC persistence gate).
+    setEstilo: async (rasgos) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'setEstilo', rasgos } satisfies CareerAction),
       );
       persistSnapshot(get());
       await flushPendingSave();
@@ -426,6 +757,37 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       // pantalla.
       await persistAndFlush(get());
     },
+    // MGC-1802 P1-7 — retiro temprano. Setea stage='retirement' sin
+    // correr el motor. Log y profile parciales quedan tal cual para
+    // que fin-carrera pinte el resumen. Persistencia con flush (mismo
+    // patrón que runCareerToRetirement) para sobrevivir force-stop.
+    retireEarly: async () => {
+      setSnapshot((s) =>
+        s.stage === 'retirement' ? s : { ...s, stage: 'retirement' as const },
+      );
+      await persistAndFlush(get());
+    },
+    // MGC-1730 (HIGH-1 fix sobre PR #425) — drena el modal post-partido.
+    // Misma cadencia que `setEstilo` (async + await flush) para que el
+    // snapshot sin `postMatchPending` llegue a disco.
+    clearPostMatch: async () => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) => step(s, { type: 'clearPostMatch' } satisfies CareerAction));
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
+    // MGC-1730 (HIGH-1 fix sobre PR #425) — resuelve el transfer system.
+    // `null` declina todas las ofertas (`declineAllOffers` en el reducer);
+    // un `offerId` válido lo acepta y la UI F3.3 puede mover al jugador
+    // de club.
+    resolveTransfer: async (acceptedOfferId) => {
+      const { step } = await import('@/features/career/engine');
+      setSnapshot((s) =>
+        step(s, { type: 'resolveTransfer', acceptedOfferId } satisfies CareerAction),
+      );
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
     // MGC-227: hidratación desde AsyncStorage. Llamado una vez en el
     // bootstrap de la app (ver `app/_layout.native.tsx` + `_layout.web.tsx`).
     // Aplica el save al estado actual; si no hay save, devuelve `false`
@@ -457,6 +819,14 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         card: saved.card ?? null,
         log: saved.log,
         seed: saved.seed,
+        rng: saved.rng,
+        // MGC-1730 (HIGH-2 fix sobre PR #425) — copiar los 3 campos F3.2
+        // del save al store. `loadCareerSave` ya aplicó
+        // `hydrateF3Fields`, así que vienen con defaults si eran
+        // `undefined` en disco.
+        postMatchPending: saved.postMatchPending ?? null,
+        nextWeekModifiers: saved.nextWeekModifiers,
+        transferState: saved.transferState ?? null,
       }));
       set((s) => ({ ...s, hydrated: true }));
       return true;
@@ -465,6 +835,29 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     reset: () => {
       setSnapshot(() => initialSnapshot());
       void clearCareerSave().catch(() => {
+        // best-effort: si falla el clear, el próximo save sobrescribe.
+      });
+    },
+    // MGC-1736 (WF6) — variant awaitable de reset. Ordena:
+    //   1) flushPendingSave: drena la save en vuelo al disco para
+    //      que NO compita con el clear siguiente.
+    //   2) reset memoria: vuelve al initialSnapshot.
+    //   3) await clearCareerSave: borra la entry de AsyncStorage y
+    //      ESPERA a que termine antes de resolver, así el caller
+    //      (CTA "Nueva carrera") navega con disco vacío.
+    // El `try/catch` alrededor de clearCareerSave es best-effort
+    // (idéntico a `reset()`): si falla el clear, el próximo save
+    // sobrescribe; pero el flush previo igual cierra la ventana de
+    // datos fantasma que el AC de no-mutación prohíbe.
+    resetAll: async () => {
+      try {
+        await flushPendingSave();
+      } catch {
+        // best-effort: si flush falla seguimos con el reset memoria
+        // y el clear; el peor caso es la misma ventana que reset().
+      }
+      setSnapshot(() => initialSnapshot());
+      await clearCareerSave().catch(() => {
         // best-effort: si falla el clear, el próximo save sobrescribe.
       });
     },

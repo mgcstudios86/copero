@@ -94,6 +94,33 @@ describe('reputation pure function', () => {
     );
     expect(mayor.seleccionConvocado).toBe(true);
   });
+
+  // MGC-1705 — boundary tests para normalización 0-indexed del ciclo
+  // prensa (weekIdx % 3 === 2). Semana 1 (weekIdx=0) no es prensa-active,
+  // semanas 3 y 6 (weekIdx=2, 5) sí lo son.
+  it('semana 1 (weekIdx=0): prensa neutral, no es semana de prensa', () => {
+    const rep = recomputeReputation(
+      { ...initialProfile.career, moral: 80 },
+      { ovr: 70, age: 24, week: 1 },
+    );
+    expect(rep.prensa).toBe('neutral');
+  });
+
+  it('semana 3 (weekIdx=2): prensa refleja moral (ciclo match)', () => {
+    const rep = recomputeReputation(
+      { ...initialProfile.career, moral: 80 },
+      { ovr: 70, age: 24, week: 3 },
+    );
+    expect(rep.prensa).toBe('ensalzada');
+  });
+
+  it('semana 6 (weekIdx=5): prensa refleja moral (ciclo consistente)', () => {
+    const rep = recomputeReputation(
+      { ...initialProfile.career, moral: 20 },
+      { ovr: 70, age: 24, week: 6 },
+    );
+    expect(rep.prensa).toBe('hostil');
+  });
 });
 
 describe('recomputeOvrForPosition', () => {
@@ -208,23 +235,54 @@ describe('recommendStrategy', () => {
 
   it('L1 cuando lesionado leve', () => {
     const p = profileFixture({
-      career: { ...initialProfile.career, lesion: { kind: 'leve', fechasOut: 1 } },
+      career: {
+        ...initialProfile.career,
+        lesion: { kind: 'leve', fechasOut: 1, startedAtWeek: 1, affectedAttr: 'fisico' },
+      },
     });
     expect(recommendStrategy(p)).toBe('L1');
   });
 
   it('L2 cuando lesionado medio', () => {
     const p = profileFixture({
-      career: { ...initialProfile.career, lesion: { kind: 'media', fechasOut: 2 } },
+      career: {
+        ...initialProfile.career,
+        lesion: { kind: 'media', fechasOut: 2, startedAtWeek: 1, affectedAttr: 'mental' },
+      },
     });
     expect(recommendStrategy(p)).toBe('L2');
   });
 
   it('L3 cuando lesionado grave', () => {
     const p = profileFixture({
-      career: { ...initialProfile.career, lesion: { kind: 'grave', fechasOut: 4 } },
+      career: {
+        ...initialProfile.career,
+        lesion: { kind: 'grave', fechasOut: 4, startedAtWeek: 1, affectedAttr: 'tecnico' },
+      },
     });
     expect(recommendStrategy(p)).toBe('L3');
+  });
+
+  // MGC-1664 — boundary checks tras normalizar week index a 0-indexed.
+  it('semana 1 → WEEKLY[0]=E1 (no salta E1 por off-by-one)', () => {
+    expect(recommendStrategy(profileFixture({ week: 1 }))).toBe('E1');
+  });
+
+  it('semana 3 → MATCH_STRATEGIES[0]=M1 (cada 3 semanas desde 0-indexed)', () => {
+    expect(recommendStrategy(profileFixture({ week: 3 }))).toBe('M1');
+  });
+
+  it('semana 6 → MATCH_STRATEGIES[0]=M1 (ciclo match consistente)', () => {
+    expect(recommendStrategy(profileFixture({ week: 6 }))).toBe('M1');
+  });
+
+  it('semana 5 → WEEKLY[4]=E5 (último weekly antes de match en week 6)', () => {
+    expect(recommendStrategy(profileFixture({ week: 5 }))).toBe('E5');
+  });
+
+  it('semana 38 (boundary season end) → weekly, no match', () => {
+    const id = recommendStrategy(profileFixture({ week: 38 }));
+    expect(id).toMatch(/^E\d$/);
   });
 });
 

@@ -47,3 +47,43 @@ export const GROUP_COLOR: Record<PositionGroup, string> = {
   defense: '#93C5FD',
   goalkeeper: '#FBBF24',
 };
+
+/**
+ * MGC-1628 rev 3 §L4 — `groupOf(position)`.
+ *
+ * Resuelve el `PositionGroup` (attack / midfield / defense / goalkeeper)
+ * para una `Position` arbitraria. Es el helper canónico que motor
+ * (`stats.ts`), match (`match.ts`) y reputación consumen para agrupar
+ * las 12 posiciones del field map en las 4 familias que entiende el
+ * `positionFactor` y los pesos del `match.ts`.
+ *
+ * Pure function. Sin lookup table (las 12 ramas se resuelven vía el
+ * switch, no un `Record<Position, PositionGroup>` para evitar diverger
+ * si F2.1+ agrega una posición como `RW2` o alias).
+ *
+ * AGREGADO en F2.1 (MGC-1628 rev 3 §L4): antes la resolución vivía
+ * inline en `match.ts#groupOf` (privado) y se duplicaba en
+ * `engine.ts#pickClub` como un `groupMap` Record literal. Ahora es un
+ * helper único importable, y los call sites consumen la versión
+ * exportada.
+ */
+export function groupOf(position: Position): PositionGroup {
+  switch (position) {
+    case 'GK':
+      return 'goalkeeper';
+    case 'CB':
+    case 'LB':
+    case 'RB':
+      return 'defense';
+    case 'CDM':
+    case 'CM':
+    case 'CAM':
+    case 'LM':
+    case 'RM':
+      return 'midfield';
+    case 'ST':
+    case 'LW':
+    case 'RW':
+      return 'attack';
+  }
+}
