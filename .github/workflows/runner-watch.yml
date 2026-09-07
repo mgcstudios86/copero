@@ -1,0 +1,168 @@
+# runner-watch.yml — Copero (ADR-0024 detección + ADR-0025 Telegram/mute, MGC-2159 + MGC-2191)
+# Detecta runner self-hosted copero-ci busy=0 con runs queued > 5min y notifica:
+#  - Paperclip ticket (ADR-0024, ya mergeado PR #490).
+#  - Telegram vía paperclip/scripts/send-md.sh (ADR-0025, capa de notificación al operador).
+# Política §8.3: corre --local en runner self-hosted copero-ci.
+
+name: runner watch (copero)
+
+on:
+  schedule:
+    # ADR-0025: */3min para minimizar ventana entre detección y notificación.
+    # Si GitHub jitter retrasa >3min, la ventana sigue siendo aceptable porque
+    # mute_window=30min solo evita spam, no es la fuente de verdad.
+    - cron: '*/3 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry-run: solo imprime diagnóstico, no abre ticket ni Telegram"
+        required: false
+        type: boolean
+        default: false
+      mute_seconds:
+        description: "Override del mute_window (segundos). 0 desactiva mute."
+        required: false
+        type: number
+        default: 1800
+
+concurrency:
+  group: runner-watch-copero
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  watch:
+    name: detectar runner stuck
+    runs-on: [self-hosted, copero-ci]
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
+      QUEUE_THRESHOLD_MIN: ${{ vars.QUEUE_THRESHOLD_MINUTES || '5' }}
+      MUTE_SECONDS: ${{ github.event.inputs.mute_seconds || '1800' }}
+      DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+      PAPERCLIP_API_URL: ${{ secrets.PAPERCLIP_API_URL }}
+      PAPERCLIP_API_KEY: ${{ secrets.PAPERCLIP_API_KEY }}
+      PAPERCLIP_COMPANY_ID: ${{ vars.PAPERCLIP_COMPANY_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Listar runners copero-ci
+        id: runners
+        run: |
+          set -euo pipefail
+          RUNNERS_JSON=$(gh api repos/mgcstudios/copero/actions/runners?per_page=100 \
+            | jq '[.runners[] | select(.labels[].name=="copero-ci") | {id: .id, name: .name, status: .status, busy: .busy}]')
+          echo "runners_count=$(echo "$RUNNERS_JSON" | jq 'length')"
+          echo "$RUNNERS_JSON" | jq '.'
+          ALL_IDLE=$(echo "$RUNNERS_JSON" | jq '[.[] | select(.busy==false)] | length')
+          TOTAL=$(echo "$RUNNERS_JSON" | jq 'length')
+          echo "all_idle=$ALL_IDLE total=$TOTAL"
+          echo "all_idle=$ALL_IDLE" >> "$GITHUB_OUTPUT"
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+
+      - name: Listar queued runs viejos
+        id: queued
+        if: steps.runners.outputs.all_idle == steps.runners.outputs.total && steps.runners.outputs.total != '0'
+        run: |
+          set -euo pipefail
+          NOW_EPOCH=$(date -u +%s)
+          THRESHOLD_EPOCH=$((NOW_EPOCH - QUEUE_THRESHOLD_MIN * 60))
+          THRESHOLD_ISO=$(date -u -d "@$THRESHOLD_EPOCH" +%Y-%m-%dT%H:%M:%SZ)
+          echo "threshold_iso=$THRESHOLD_ISO"
+
+          QUEUED_JSON=$(gh api repos/mgcstudios/copero/actions/runs \
+            --paginate \
+            --jq '.workflow_runs[] | select(.status=="queued") | {id: .id, name: .name, created_at: .created_at, head_branch: .head_branch, run_number: .run_number}' \
+            | jq -s '.')
+
+          STALE=$(echo "$QUEUED_JSON" | jq --arg ts "$THRESHOLD_ISO" \
+            '[.[] | select(.created_at < $ts)]')
+          STALE_COUNT=$(echo "$STALE" | jq 'length')
+          echo "stale_queued_count=$STALE_COUNT"
+          echo "$STALE" | jq '.[0:5]'
+          echo "stale_count=$STALE_COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Verificar mute window
+        id: mute
+        if: steps.queued.outputs.stale_count > 0
+        run: |
+          set -euo pipefail
+          STATE_DIR="$RUNNER_TEMP/runner-watch-state"
+          mkdir -p "$STATE_DIR"
+          STATE_FILE="$STATE_DIR/last-alert"
+
+          # Si MUTE_SECONDS == 0 → bypass mute.
+          if [[ "${MUTE_SECONDS:-1800}" == "0" ]]; then
+            echo "skip_mute=true" >> "$GITHUB_OUTPUT"
+            echo "can_alert=true"
+            exit 0
+          fi
+
+          if [[ -f "$STATE_FILE" ]]; then
+            LAST_EPOCH=$(cat "$STATE_FILE")
+            NOW=$(date -u +%s)
+            DELTA=$((NOW - LAST_EPOCH))
+            echo "last_alert_epoch=$LAST_EPOCH delta=${DELTA}s"
+            if (( DELTA < MUTE_SECONDS )); then
+              echo "skip_alert=true mute_remaining=$((MUTE_SECONDS - DELTA))s"
+              echo "skip_alert=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          echo "skip_alert=false" >> "$GITHUB_OUTPUT"
+          echo "can_alert=true"
+
+      - name: Abrir ticket Paperclip + notificar Telegram
+        if: steps.queued.outputs.stale_count > 0 && steps.mute.outputs.skip_alert != 'true'
+        run: |
+          set -euo pipefail
+          STALE_COUNT=${{ steps.queued.outputs.stale_count }}
+
+          if [[ "${DRY_RUN:-false}" == "true" ]]; then
+            echo "DRY-RUN runner-watch: skipping ticket + telegram"
+            echo "stale_count=$STALE_COUNT"
+            echo "all_idle=${{ steps.runners.outputs.all_idle }}/${{ steps.runners.outputs.total }}"
+            echo "threshold_iso=${{ steps.queued.outputs.threshold_iso }}"
+            exit 0
+          fi
+
+          # 1) Buscar issue abierto reciente con prefijo para no duplicar.
+          TITLE_PREFIX="runner-stuck-copero"
+          EXISTING=$(curl -sS -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+            "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues?status=in_progress&status=todo&limit=20" \
+            | jq --arg pfx "$TITLE_PREFIX" '[.issues[]? | select(.title | startswith("[" + $pfx))] | .[0:3]')
+
+          IDENTIFIER=""
+          if [[ "$(echo "$EXISTING" | jq 'length')" == "0" ]]; then
+            TITLE="[$(date -u +%Y%m%d-%H%M)]-${TITLE_PREFIX}-queued-${STALE_COUNT}"
+            BODY="## Runner copero-ci stuck detectado\n\n- runners copero-ci idle: ${{ steps.runners.outputs.all_idle }}/${{ steps.runners.outputs.total }}\n- queued runs > ${{ env.QUEUE_THRESHOLD_MIN }}min: ${STALE_COUNT}\n- threshold_iso: ${{ steps.queued.outputs.threshold_iso }}\n- detectado: $(date -u +%Y-%m-%dT%H:%M:%SZ)\n\nDiagnóstico: gh api repos/mgcstudios/copero/actions/runners.\nAcción: SSH a VPS y sudo systemctl restart actions.runner.mgcstudios-copero.copero-ci-runner-01.service."
+
+            PAYLOAD=$(jq -n \
+              --arg title "$TITLE" \
+              --arg body "$BODY" \
+              '{title: $title, description: $body, priority: "high", labels: ["runner-stuck"]}')
+
+            CREATE_RESP=$(curl -sS -X POST \
+              -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$PAYLOAD" \
+              "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues")
+            IDENTIFIER=$(printf '%s' "$CREATE_RESP" | jq -r '.identifier // .id // ""')
+            echo "paperclip_issue=$IDENTIFIER"
+          else
+            IDENTIFIER=$(echo "$EXISTING" | jq -r '.[0].identifier // .[0].id')
+            echo "paperclip_issue=existing=$IDENTIFIER"
+          fi
+
+          # 2) Telegram alert (ADR-0025).
+          TG_MSG="🚨 *runner copero-ci stuck*\n\n• queued > ${QUEUE_THRESHOLD_MIN}min: *${STALE_COUNT}*\n• runners idle: ${{ steps.runners.outputs.all_idle }}/${{ steps.runners.outputs.total }}\n• Paperclip: \`${IDENTIFIER}\`\n• threshold: \`${{ steps.queued.outputs.threshold_iso }}\`\n• acción: \`sudo systemctl restart actions.runner.*\`"
+          bash paperclip/scripts/send-md.sh "$TG_MSG"
+
+          # 3) Marcar timestamp para mute.
+          date -u +%s > "$RUNNER_TEMP/runner-watch-state/last-alert"

@@ -37,7 +37,7 @@ permissions:
 jobs:
   changes:
     name: detect changed paths
-    runs-on: [self-hosted, copero-ci, Linux]
+    runs-on: [self-hosted, copero-heavy]
     # MGC-1374: el runner-01 es single-job self-hosted; un checkout colgado o un
     # paths-filter trabado bloquea todo el FIFO detrás. 10 min es generoso para
     # checkout + paths-filter sobre el árbol de Copero.
@@ -83,7 +83,7 @@ jobs:
     # MGC-1374: timeout explícito. Históricamente un `npm ci` se colgaba al
     # final del job y bloqueaba el runner horas (run 33572157012 + 6 más FIFO).
     name: smoke android (lint + typecheck + config validate)
-    runs-on: [self-hosted, copero-ci, Linux]
+    runs-on: [self-hosted, copero-heavy]
     timeout-minutes: 20
     needs: changes
     if: needs.changes.outputs.android == 'true' || needs.changes.outputs.core == 'true'
@@ -161,7 +161,7 @@ jobs:
     # demorar 25-35 min en cold cache; 50 deja margen sin quedar colgado
     # indefinidamente si la queue de EAS no responde.
     name: preview ios (eas build --local, simulator)
-    runs-on: [self-hosted, copero-ci, macOS]
+    runs-on: [self-hosted, copero-heavy]
     timeout-minutes: 50
     needs: changes
     if: needs.changes.outputs.ios == 'true' || needs.changes.outputs.core == 'true'

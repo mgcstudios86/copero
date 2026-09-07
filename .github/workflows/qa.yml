@@ -47,9 +47,9 @@ permissions:
 jobs:
   playwright-web:
     name: Playwright (web, headless)
-    # MGC-1880: aislar QA del pool CI. El runner Linux dedicado mantiene
-    # Playwright largo fuera del runner-02 macOS que ejecuta CI y releases.
-    runs-on: [self-hosted, copero-qa, Linux]
+    # MGC-2092: enrutado al runner-02 (Mac mini, ARM64) via label `copero-heavy`.
+    # runner-01 (VPS Linux) queda reservado para ci.yml.
+    runs-on: [self-hosted, copero-heavy]
     # MGC-380: 15min insuficiente; bump a 30min.
     # MGC-444: 30min insufficient cuando el runner self-hosted tiene
     # errores intermitentes de red al subir logs a

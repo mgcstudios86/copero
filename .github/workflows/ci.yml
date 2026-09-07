@@ -21,7 +21,10 @@ on:
 
 concurrency:
   group: ci-copero-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # MGC-2218: no cancelar runs en vuelo cuando el trigger es workflow_dispatch
+  # (typecheck ~13min paga el pato). push/PR mantienen cancel-in-progress para
+  # no apilar dos pushes seguidos sobre el mismo ref.
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 permissions:
   contents: read
@@ -207,17 +210,7 @@ jobs:
         run: node scripts/precompress-assets.mjs dist
       - name: Subir artefacto dist/
         uses: actions/upload-artifact@v4
-        continue-on-error: true
-        with:
-          name: copero-web-build
-          path: dist/
-          if-no-files-found: error
-          retention-days: 14
-
-  devops-comment:
-    name: devops-comment (gate §8.1)
-    runs-on: [self-hosted, copero-ci]
-    needs: [changes, lint, typecheck, test-web, build-web]
+    needs: [lint, typecheck, test-web, build-web]
     if: always() && github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
