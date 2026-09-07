@@ -813,7 +813,138 @@ export default function IdentityScreen() {
           </View>
         </Field>
       </View>
-      {/* MGC-1314: cierre del ScrollView externo tras league-selector-wrapper.
+      {/* MGC-1533 — field-map-section EXTRAÍDA como fixed sibling absoluto.
+          Antes vivía como SIBLING dentro del ScrollView (MGC-1428 intento-7
+          opción B), pero el sticky-footer absolute bottom:0 height:240 opaco
+          (MGC-1448) overlapeaba la mitad inferior del wrapper cuando el
+          usuario scrolleaba para revelar el field map: positions LM (y=0.42)
+          / CAM (y=0.40) / RM / CM / CDM / LB / RB / CB / GK caían con sus
+          bounds detrás del footer top y=1530px en ZY22G728HN density 400 →
+          Pressables pos-XX no interceptaban el tap (RN-Android hit-testea
+          top-most view, sube por el árbol y nunca baja al Pressable oculto).
+          Como fixed sibling kavContent-level con position:absolute bottom:240
+          el field map queda anclado ARRIBA del sticky-footer sin solaparse
+          con btn-identity-continue (z-index natural del árbol de pintado: el
+          ScrollView va antes que el field map, el field map antes que el
+          sticky-footer). Todas las Pressables pos-XX quedan siempre tappable
+          independientemente del scroll position. HitSlop +8dp WCAG 2.5.5
+          (MGC-1502) preservado. zIndex:10 explícito por si RN-Android
+          empata con siblings sin position:absolute declarada en la rama
+          del ScrollView. flexShrink:0 garantiza que el sticky-footer (240dp
+          absolute) no consume flex space que achique el section a 0 en
+          flex-shrink pass. */}
+      {/* MGC-1578 — `pointerEvents="box-none"` INCONDICIONAL sobre
+          identity-fixed-field-map. Mismo patrón que sticky-footer abajo.
+          El field-map solo dibuja fondo + field-map-wrapper; los Pressables
+          pos-* siguen auto y capturan sus taps. Liberar el área vacía
+          permite que un swipe iniciado en el centro del viewport (540,1400)
+          llegue al ScrollView y haga scroll, en lugar de ser consumido por
+          el field-map absoluto. */}
+      <View
+        testID="identity-fixed-field-map"
+        collapsable={false}
+        pointerEvents="box-none"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          // MGC-1986 — bottom:240→120 (sticky-footer height 240→120dp). Field-map
+          // y form ahora viven en bottom:120 con zIndex:10 vs zIndex:15 — el form
+          // sigue cubriendo los chips pos-XX (auto pointerEvents), preservando
+          // patrón MGC-1533 + box-none MGC-1578.
+          bottom: 120,
+          paddingHorizontal: spacing[4],
+          paddingTop: spacing[3],
+          paddingBottom: spacing[3],
+          gap: spacing[2],
+          backgroundColor: colors.bg,
+          zIndex: 10,
+          flexShrink: 0,
+        }}
+      >
+        <Field
+          label={t('identity.fieldPosition')}
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          {/* MGC-1628 / WF1 — chips de posición (wireframe §WF1):
+              GK DEF MID FWD en una sola fila horizontal. El chip
+              seleccionado persiste `profile.position` a un representante
+              del grupo (GK → 'GK', DEF → 'CB', MID → 'CAM', FWD → 'ST').
+              F2 reemplaza esta fila por el árbol de decisión posicional
+              completo (MGC-1628 §L4 / MGC-1675). testIDs preservan el
+              contrato E2E existente (pos-GK / pos-CB / pos-CAM / pos-ST
+              en e2e/simulador-carrera.spec.ts + axe mgc-462-contrast). */}
+          <View
+            testID="position-chips-row"
+            collapsable={false}
+            pointerEvents="box-none"
+            style={{
+              flexDirection: 'row',
+              gap: spacing[2],
+              width: '100%',
+              minHeight: 48,
+            }}
+          >
+            {POSITION_CHIPS.map((chip) => {
+              const active = chip.ids.includes(profile.position);
+              return (
+                <Pressable
+                  key={chip.id}
+                  onPress={() => setPosition(chip.defaultPos)}
+                  {...onKeyActivate(() => setPosition(chip.defaultPos))}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('identity.positionChipsA11y', {
+                    label: chip.label,
+                  })}
+                  accessibilityState={{ selected: active }}
+                  // MGC-2301 — WCAG 2.5.5 (Target Size Enhanced): hitbox ≥44dp
+                  // en ambas dimensiones. QA walk MGC-2168 dump /tmp/u12.xml
+                  // detectó chip 36×36dp (paddingVertical+text sin minHeight).
+                  // HitSlop extiende el área tappable fuera del bounds visuales
+                  // para a11y (TalkBack), pero uiautomator reporta bounds del
+                  // view nativo: necesitamos tamaño visible ≥44dp. Solución:
+                  // minHeight:48 + minWidth:48 explícitos sobre el Pressable
+                  // (independiente de minHeight del row padre y del ancho que
+                  // imponga flex:1 en viewports estrechos). hitSlop 44dp se
+                  // mantiene → hitbox efectivo 48+44=92dp.
+                  // testID `pos-${chip.id}` preserva el contrato
+                  // `pos-GK/CB/CAM/ST` que las specs E2E y axe ya consumen.
+                  hitSlop={HIT_SLOP_44}
+                  testID={`pos-${chip.id}`}
+                  collapsable={false}
+                  style={{
+                    flex: 1,
+                    minHeight: 48,
+                    minWidth: 48,
+                    paddingVertical: spacing[3],
+                    borderRadius: radii.md,
+                    borderWidth: 2,
+                    borderColor: active ? GROUP_COLOR[chip.group] : colors.borderStrong,
+                    backgroundColor: active
+                      ? GROUP_COLOR[chip.group]
+                      : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: active ? '#0A120E' : colors.text,
+                      fontSize: fontSize.base,
+                      fontWeight: fontWeight.bold,
+                      letterSpacing: 1,
+                    }}
+                  >
+                    {t(`identity.positionGroup${chip.label}`)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Field>
+      </View>
+      {/* MGC-1314: cierre del ScrollView externo tras wrappers extraídos.
           identity-fixed-form e identity-fixed-field-map NO son hijos del
           ScrollView — viven como siblings (líneas 786+) entre el ScrollView y
           identity-sticky-footer. Causa raíz MGC-1309 / MGC-1035: en fresh-mount
