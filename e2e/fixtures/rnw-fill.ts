@@ -260,15 +260,6 @@ async function maybeRetryIdentityBatch(page: Page): Promise<void> {
   const exists = await continueBtn.count().catch(() => 0);
   if (exists === 0) return;
 
-  // v13.1 — Fast-path: si el botón está enabled inmediatamente, return sin
-  // esperar 1500ms. Esto evita ~1.5s de overhead por cada fillRnw call
-  // (×31 specs × ~4 fillRnw/spec = ~3 min de waits innecesarios que
-  // colgaban la suite completa en run 34201851806).
-  const initiallyEnabled = await continueBtn
-    .evaluate((el: HTMLButtonElement): boolean => !(el as HTMLButtonElement).disabled)
-    .catch(() => false);
-  if (initiallyEnabled) return;
-
   const batch = _identityBatch.get(page);
   if (!batch || batch.length === 0) return;
 
