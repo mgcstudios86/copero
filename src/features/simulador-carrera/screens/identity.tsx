@@ -1,4 +1,5 @@
-import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -126,6 +127,29 @@ export default function IdentityScreen() {
   // incrementando `profile.age` cada temporada (season.ts:122) — este
   // setter sólo opera durante el alta.
   const setAge = useCareerStore((s) => s.setAge);
+  // MGC-2494 — React 18/19 automatic batching descartaba el primer setState
+  // cuando dos fills del helper e2e `fillRnw` ocurren tight (7/31 specs
+  // inestables en PR #544). `flushSync` (react-dom, RFC-21) fuerza el commit
+  // sincrónico de cada onChangeText. Beneficio colateral: menos
+  // inconsistencias de UI en mobile real al tipear rápido.
+  const setNameSync = useCallback(
+    (value: string) => {
+      flushSync(() => setName(value));
+    },
+    [setName],
+  );
+  const setLastNameSync = useCallback(
+    (value: string) => {
+      flushSync(() => setLastName(value));
+    },
+    [setLastName],
+  );
+  const setAgeSync = useCallback(
+    (value: number | string) => {
+      flushSync(() => setAge(typeof value === 'number' ? value : Number(value)));
+    },
+    [setAge],
+  );
   // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
   // WCAG 2.5.5) pueda disparar foco en tap perimetral. hitSlop en TextInput
   // nativo Android no extiende el hitbox de focus. Compatible con el
@@ -964,7 +988,7 @@ export default function IdentityScreen() {
               <TextInput
                 ref={nameInputRef}
                 value={profile.name}
-                onChangeText={setName}
+                onChangeText={setNameSync}
                 placeholder={t('identity.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1035,7 +1059,7 @@ export default function IdentityScreen() {
               <TextInput
                 ref={lastNameInputRef}
                 value={profile.lastName ?? ''}
-                onChangeText={setLastName}
+                onChangeText={setLastNameSync}
                 placeholder={t('identity.lastNamePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1104,7 +1128,7 @@ export default function IdentityScreen() {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
                   const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
-                  setAge(parsed);
+                  setAgeSync(parsed);
                 }}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}
