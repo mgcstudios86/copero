@@ -102,6 +102,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // ── 2. IDENTITY: completar los 5 campos del AC ────────────────────
     // 2a. Nombre = CALVO
     await fillRnw(page.getByTestId('input-name'), 'CALVO');
+    // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
+    await fillRnw(page.getByTestId('input-lastname'), 'TEST');
 
     // 2b. Número = 10. El estado inicial arranca en 9 (ver engine.ts:36),
     //     por lo que una pulsación sobre "Sumar número" deja 10.
@@ -255,6 +257,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // Defaults mínimos para que el journey completo no bloquee otros
     // navigations.
     await fillRnw(page.getByTestId('input-name'), 'Regresion');
+    // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
+    await fillRnw(page.getByTestId('input-lastname'), 'QA');
     await page.getByTestId('btn-number-plus').click(); // 9 → 10
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
@@ -293,6 +297,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
     await fillRnw(page.getByTestId('input-name'), 'CALVO');
+    // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
+    await fillRnw(page.getByTestId('input-lastname'), 'TEST');
     await page.getByTestId('btn-number-plus').click();
     await page.getByTestId('pos-ST').click();
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
