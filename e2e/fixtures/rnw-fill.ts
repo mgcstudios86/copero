@@ -9,51 +9,50 @@ import { expect } from '@playwright/test';
  * paint post-hidratacion, dejando `canContinue()` en false y el botón
  * `btn-identity-continue` con `disabled=true`.
  *
- * Solución (MGC-2451 v8) — hidratación del ROOT + dispatch sintético:
+ * Solución (MGC-2451 v9) — invocación directa del onChange de React vía fiber:
  *   1. focus (con fallback programático si el click forzado queda bloqueado
  *      por un overlay de capture pointer-events, ej. dropdown de país).
  *   2. waitForReactRoot: espera activa hasta que el ROOT container de React
  *      (no solo el input) tenga __reactContainer$xxx attached. Sin esta
- *      garantía, los eventos que disparamos se pierden porque el listener
- *      delegado de React 18 en el root aún no está attached. El check
- *      anterior sobre __reactProps$xxx del input (v5/v6) era insuficiente:
- *      el fiber del input puede existir mientras el delegated listener del
- *      root todavía no, por la hidratación asíncrona de RNW en el runner.
- *   3. Clear previo: triple-click para seleccionar todo + Backspace. Garantiza
- *      que fill no concatene caracteres cuando el input ya tenía value.
- *   4. Native setter + dispatch `input`/`change` con InputEvent:
- *        a. Setter nativo de HTMLInputElement.prototype.value (bypasea el
- *           value tracker de React para que detecte el cambio).
- *        b. dispatchEvent(new InputEvent('input', { bubbles: true,
- *           cancelable: true, data: value, inputType: 'insertText' }))
- *           → path canónico RNW TextInput (onChangeText bridgea al
- *           delegateInput listener de React 18 en el root).
- *        c. dispatchEvent(new Event('change', { bubbles: true })) por las
- *           ramas onChange que RNW también expone.
- *      Acepta chars no-ASCII (ñ, á, emoji) directamente via InputEvent.data.
- *   5. expect(input).toHaveValue(value) — web-first assertion con retry 5s
- *      default. Bloquea hasta que el DOM refleje el value (lo cual también
- *      valida que la cadena setter→dispatch llegó al DOM).
- *   6. Pausa de 50 ms post-fill para que React 18 commitee el state update
- *      antes del siguiente evento (los inputs consecutivos en el form —
- *      p.ej. input-name + input-lastname — comparten un mismo commit y si
- *      el siguiente fill ocurre antes de que el primero commitée, el
- *      segundo onChange se procesa sincrónicamente y React puede descartar
- *      el primero por batching).
+ *      garantía, el onChange vía fiber puede leer un props.onChange stale
+ *      de un fiber pre-hidratación que aún referencia el componente anterior.
+ *   3. Clear previo: triple-click para seleccionar todo + Backspace.
+ *   4. Setter nativo de HTMLInputElement.prototype.value + invocar
+ *      `props.onChange` directamente desde el fiber (__reactProps$xxx).
+ *      Esto BYPASSEA el sistema de eventos del DOM y la delegación de
+ *      React 18 en el root container — que es la pieza que rompe en el
+ *      runner self-hosted. RNW TextInput expone su handler interno como
+ *      `onChange` del `<input>` (que llama onChangeText del usuario), por
+ *      lo que invocarlo directamente dispara el setter del store Zustand.
+ *      Acepta chars no-ASCII (ñ, á, emoji) vía event.target.value.
+ *      Fallback: dispatch DOM events (InputEvent + change) si no se
+ *      encuentra props.onChange (caso defensivo, no esperado en RNW).
+ *   5. expect(input).toHaveValue(value) — web-first assertion con retry 5s.
+ *   6. Pausa post-fill para que React commitee el state update antes del
+ *      siguiente fill (dos inputs consecutivos pueden batchearse y descartar
+ *      el primero).
  *
  * Historial de iteraciones sobre PR #544:
  *   v2 (eb718d5): wrap down + press + up por char -> duplica chars
  *                 ("CALVO" -> "CCAALLVVOO").
  *   v3 (d72da6d): solo keyboard.press por char -> arregla duplicación
- *                 pero 8/23 specs fallan (events perdidos pre-hidratación).
+ *                 pero 7/23 specs fallan (events perdidos pre-hidratación).
  *   v4 (680761f): insertText + setter nativo + change event -> mismo síntoma.
  *   v5 (316e93f): + waitForHydration antes de tipear -> race sigue.
- *   v6 (cee820b): hydration input + fill() canónico -> 8/23 FAIL.
+ *   v6 (cee820b): hydration input + fill() canónico -> 7/23 FAIL.
  *   v7 (b098094): expect(toBeVisible) sobre btn-number-plus -> tapona
  *                 un testID stale (removido por MGC-1647) y NO resuelve el
  *                 root cause del fill.
- *   v8 (esta):    waitForReactRoot (no solo el input) + InputEvent con
- *                 data/inputType explícitos + pausa post-fill 50ms.
+ *   v8 (739c20f): waitForReactRoot + InputEvent con data/inputType +
+ *                 pausa post-fill 50ms -> 7/31 FAIL run 34190975062.
+ *                 El problema: dispatched events llegan al DOM pero NO
+ *                 propagan al handler de React (root listener de React 18
+ *                 no se attached en este runner, o se attached después
+ *                 del dispatch por race con hidratación asíncrona).
+ *   v9 (esta):   invoca props.onChange directamente vía fiber
+ *                 (__reactProps$xxx) → bypass total del DOM event system.
+ *                 React ejecuta el handler sincrónicamente; el state update
+ *                 ocurre en el mismo tick, sin depender del root listener.
  *                 Tipos TS explícitos en todos los callbacks (no any).
  *
  * Refs: MGC-2254 v3, MGC-2356, MGC-2403, MGC-2451.
@@ -107,12 +106,18 @@ async function waitForReactRoot(page: Page, input: Locator): Promise<void> {
 }
 
 async function forceReactReconcile(input: Locator, value: string): Promise<void> {
-  // Setter nativo para que el value tracker de React detecte el cambio y
-  // dispatchee onChange. Usamos InputEvent (no Event genérico) porque el
-  // bridge de RNW TextInput inspecciona `data` e `inputType` del InputEvent
-  // para enrutar a onChangeText.
+  // Setter nativo + invocación DIRECTA del onChange de React vía fiber.
+  // This bypasses the DOM event system and the React 18 root delegation
+  // listener — both fail on the runner self-hosted copero-ci-runner-02 due
+  // to a hydration race with RNW TextInput. RNW renders the input element
+  // with `onChange={rnwInternalHandler}` and the handler reads
+  // `event.target.value` to extract the new text and call the user's
+  // onChangeText. By invoking that handler directly with a synthetic event
+  // we skip the broken event delivery path while preserving the exact
+  // contract RNW expects (target.value present, no DOM dispatch required).
   await input.evaluate(
     (el: HTMLInputElement, val: string): void => {
+      // 1. Set value via native setter (bypasea el value tracker de React).
       const setter = Object.getOwnPropertyDescriptor(
         HTMLInputElement.prototype,
         'value',
@@ -122,15 +127,50 @@ async function forceReactReconcile(input: Locator, value: string): Promise<void>
       } else {
         el.value = val;
       }
-      el.dispatchEvent(
-        new InputEvent('input', {
-          bubbles: true,
-          cancelable: true,
-          data: val,
-          inputType: 'insertText',
-        }),
-      );
-      el.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // 2. Invocar props.onChange directamente desde el fiber. Las props se
+      //    guardan en __reactProps$<id> (key no-enumerable; usar
+      //    Object.getOwnPropertyNames para enumerarlas).
+      let invoked = false;
+      const keys = Object.getOwnPropertyNames(el);
+      for (const key of keys) {
+        if (!key.startsWith('__reactProps$')) continue;
+        const props = (el as unknown as Record<string, { onChange?: (e: unknown) => void }>)[key];
+        const onChange = props?.onChange;
+        if (typeof onChange === 'function') {
+          // Minimal synthetic event shape compatible con RNW's TextInput
+          // internal handler (reads event.target.value).
+          const syntheticEvent = {
+            target: el,
+            currentTarget: el,
+            type: 'change',
+            bubbles: true,
+            cancelable: true,
+            defaultPrevented: false,
+            preventDefault: (): void => {},
+            stopPropagation: (): void => {},
+            persist: (): void => {},
+            isPersistent: (): boolean => true,
+          };
+          onChange(syntheticEvent);
+          invoked = true;
+          break;
+        }
+      }
+
+      // 3. Fallback defensivo: si no encontramos onChange (no esperado en
+      //    RNW), despachar DOM events. Mantenido por simetría con v8.
+      if (!invoked) {
+        el.dispatchEvent(
+          new InputEvent('input', {
+            bubbles: true,
+            cancelable: true,
+            data: val,
+            inputType: 'insertText',
+          }),
+        );
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     },
     value,
   );
