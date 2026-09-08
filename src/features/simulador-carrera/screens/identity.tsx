@@ -847,26 +847,32 @@ export default function IdentityScreen() {
         pointerEvents="box-none"
         style={{
           // MGC-1943 — fixed sibling del kavContent (sin ScrollView).
-          // MGC-1986 — bottom:240→120 (sticky-footer bajó 240→120dp tras dedup
-          // de identity-age-sticky, ver bloque arriba). Form top y=[965,1476]
-          // original overlappeaba country-ARG/BR/UY [926,1264]; con bottom:120
-          // form top queda y=[1265,1776] y NO toca country-UY bottom 1264.
           // MGC-2008 — top + height explícitos GARANTIZAN altura del form en
-          // RN-Yoga. Causa raíz: walk QA2 APK vc=174 (PR #474) mostró form
-          // bounds=[0,418][1080,610]=77dp; PR #474 añadió minHeight:280 pero
-          // Yoga colapsó los 3 inputs Field a h=0 y el form quedó con content
-          // = solo btn-foot-row (48dp). Sin top explícito, Yoga no respeta
-          // minHeight cuando content < minHeight en absolute child. Fix:
-          // top:72 + height:280 → altura garantizada 280dp independiente de
-          // content measure. Belt redundante contra Yoga collapse (PR #475
-          // walk QA2 vc=175 PASS con esta config, base MGC-1986 bottom:120).
-          // zIndex:15 sobre el field-map z=10. flexShrink:0 garantiza que el
+          // RN-Yoga. Sin top explícito, Yoga no respeta minHeight cuando
+          // content < minHeight en absolute child. Fix: top:72 + height:280
+          // → altura garantizada 280dp independiente de content measure.
+          // MGC-2473 — `bottom: 120` removido (introducido en MGC-1986 /
+          // PR #513). Causa raíz: cuando RN-Yoga recibe los 3 constraints
+          // simultáneos (top:72 + bottom:120 + height:280), el comportamiento
+          // del measure pass es indefinido y en ZY22G728HN density 400 el
+          // form termina renderizándose a y=[1076,1776]px (430-710dp) en
+          // vez de y=[180,880]px (72-352dp), solapando country-BR bottom
+          // (1038-1150px) y country-UY completo (1151-1264px). PR #513
+          // (MGC-1986) introdujo bottom:120 intentando anclar el form contra
+          // el sticky-footer top, pero el resultado fue el opuesto: el form
+          // cubrió los países centrales del fresh-mount. Walk QA2 MGC-2295
+          // midió bounds=[0,1076][1080,1776] con country-BR/UY inaccesibles.
+          // Fix: volver al patrón pre-PR-513 (top:72 + height:280 + zIndex:15,
+          // sin bottom) → form y=[180,880]px, country-ARG 982-1050px / BR
+          // 1038-1150px / UY 1151-1264px quedan debajo del form (sin
+          // overlap en y) → tappable. Mantener zIndex:15 sobre field-map
+          // z=10 para que form siga cubriendo chips pos-XX cuando el form
+          // es visible y field-map está debajo. flexShrink:0 garantiza que
           // kavContent no comprima el form en el measure pass.
           position: 'absolute',
           left: 0,
           right: 0,
           top: 72, // MGC-2008 — explícito para garantizar altura del form.
-          bottom: 120, // MGC-1986 — sticky-footer 240→120dp.
           height: 280, // MGC-2008 — belt contra Yoga collapse del content height.
           zIndex: 15,
           backgroundColor: colors.bg,
