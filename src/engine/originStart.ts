@@ -115,7 +115,7 @@ export function originClubChoices(state: GameState): Team[] {
   const balancedPool = pool.filter((team) => team.international_reputation >= 2 && team.international_reputation <= 3)
   const ambitiousPool = pool.filter((team) => team.international_reputation >= Math.max(2, maxRep - 1))
 
-  const slots: Array<{ pool: Team[]; salt: string; targetRep: number; lowerDivision?: boolean }> = [
+  const slots: { pool: Team[]; salt: string; targetRep: number; lowerDivision?: boolean }[] = [
     { pool: developmentPool.length ? developmentPool : pool, salt: 'development', targetRep: 1, lowerDivision: true },
     { pool: balancedPool.length ? balancedPool : pool, salt: 'balanced', targetRep: Math.min(2, maxRep) },
     { pool: ambitiousPool.length ? ambitiousPool : pool, salt: 'ambitious', targetRep: maxRep },

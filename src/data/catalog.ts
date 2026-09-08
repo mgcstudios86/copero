@@ -4,14 +4,12 @@ import type { Competition, Country, Team } from '../engine/types'
 type RawCatalog = {
   countries: Country[]
   competitions: Competition[]
-  teams: Array<
-    Omit<Team, 'competition_id' | 'country_fifa_code' | 'confederation'> & {
-      competition_id?: string
-      country_fifa_code?: string
-      confederation?: string
-      domestic_reputation?: number
-    }
-  >
+  teams: (Omit<Team, 'competition_id' | 'country_fifa_code' | 'confederation'> & {
+    competition_id?: string
+    country_fifa_code?: string
+    confederation?: string
+    domestic_reputation?: number
+  })[]
 }
 
 const data = raw as RawCatalog

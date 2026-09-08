@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react'
 
-export function cx(...values: Array<string | false | null | undefined>): string {
+export function cx(...values: (string | false | null | undefined)[]): string {
   return values.filter(Boolean).join(' ')
 }
 

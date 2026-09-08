@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { AdsterraAd } from '../ads/AdsterraAd'
 import {
@@ -23,7 +23,7 @@ function ensureMeta(name: string, content: string) {
 export function NotFoundPage() {
   const location = useLocation()
   const locale: Locale = localeFromPathname(location.pathname) ?? DEFAULT_LOCALE
-  const t = (key: string) => translate(locale, 'common', key)
+  const t = useCallback((key: string) => translate(locale, 'common', key), [locale])
 
   useEffect(() => {
     document.documentElement.lang = LOCALE_META[locale].htmlLang
@@ -35,7 +35,7 @@ export function NotFoundPage() {
     document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((node) => node.remove())
     document.head.querySelectorAll('meta[property="og:locale:alternate"]').forEach((node) => node.remove())
     document.head.querySelector('#copero-structured-data')?.remove()
-  }, [locale])
+  }, [locale, t])
 
   return (
     <div className="game-page-shell">

@@ -22,6 +22,14 @@ type Props = {
   onCommit: (choiceId: string) => void
 }
 
+function randomSpinDuration(): number {
+  return 2800 + Math.random() * 800
+}
+
+function randomTickCount(): number {
+  return 14 + Math.floor(Math.random() * 7)
+}
+
 function buildDecelDelays(totalMs: number, tickCount: number): number[] {
   const weights: number[] = []
   for (let i = 0; i < tickCount; i += 1) {
@@ -97,8 +105,8 @@ export function EventChoiceCards({
 
     setSpinning(true)
     setHighlightPill(null)
-    const duration = 2800 + Math.random() * 800
-    const tickCount = 14 + Math.floor(Math.random() * 7)
+    const duration = randomSpinDuration()
+    const tickCount = randomTickCount()
     const delays = buildDecelDelays(duration, tickCount)
     let elapsed = 0
     let tickIdx = 0

@@ -146,24 +146,11 @@ export default function IdentityScreen() {
   // lugar de ir al campo tapado. RN-Android sólo dispara
   // InputMethodManager.restartInput() cuando hay un ciclo blur→focus real;
   // un focus() sobre un input que ya estaba servido es idempotente. La
-  // solución: Pressable.onPress hace blur() de los OTROS EditText primero
-  // y defer del focus() al próximo frame con requestAnimationFrame para
-  // que el blur nativo procese antes del nuevo focus.
-  const rebindFocus = (
-    target: React.RefObject<TextInput | null>,
-    others: React.RefObject<TextInput | null>[],
-  ): void => {
-    others.forEach((r) => r.current?.blur());
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() => {
-        target.current?.focus();
-      });
-    } else {
-      setTimeout(() => {
-        target.current?.focus();
-      }, 16);
-    }
-  };
+  // solución aplicada: los Pressable wrappers de cada input llaman
+  // ref.current?.focus() directamente — el bridge de RN-Android dispara
+  // restartInput cuando la EditText destino cambia, y el patrón de
+  // conmutar focus por tap explícito (MGC-2061 / MGC-1760) basta para
+  // que Maestro o `adb shell input` enfoquen el input correcto.
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);

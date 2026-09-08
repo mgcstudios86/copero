@@ -4,6 +4,15 @@ import { AnimatedNumber } from './AnimatedNumber'
 
 type IconProps = { className?: string }
 
+type NumProps = { n: number; animate: boolean }
+function Num({ n, animate }: NumProps) {
+  return animate ? (
+    <AnimatedNumber value={n} className="tabular-nums" />
+  ) : (
+    <span className="tabular-nums">{n}</span>
+  )
+}
+
 export function MatchesIcon({ className = 'h-5 w-5' }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden>
@@ -67,8 +76,6 @@ export function StatIcons({
 }) {
   const { t } = useI18n()
   const gameT: GameTranslate = (key, params) => t('game', key, params)
-  const Num = ({ n }: { n: number }) =>
-    animate ? <AnimatedNumber value={n} className="tabular-nums" /> : <span className="tabular-nums">{n}</span>
   const matchesLabel = gameT('summary.matches')
   const goalsLabel = gameT('summary.goals')
   const assistsLabel = gameT('summary.assists')
@@ -79,15 +86,15 @@ export function StatIcons({
       <div className="flex items-center gap-2.5 text-[11px] font-semibold">
         <span className="inline-flex min-w-[2.25rem] items-center gap-0.5 text-[color:var(--copero-accent)]" title={matchesLabel}>
           <MatchesIcon className={icon} />
-          <Num n={appearances} />
+          <Num n={appearances} animate={animate} />
         </span>
         <span className="inline-flex min-w-[2.25rem] items-center gap-0.5 text-[color:var(--copero-fg)]" title={goalsLabel}>
           <GoalsIcon className={icon} />
-          <Num n={goals} />
+          <Num n={goals} animate={animate} />
         </span>
         <span className="inline-flex min-w-[2.25rem] items-center gap-0.5 text-sky-300" title={assistsLabel}>
           <AssistsIcon className={icon} />
-          <Num n={assists} />
+          <Num n={assists} animate={animate} />
         </span>
       </div>
     )
@@ -97,17 +104,17 @@ export function StatIcons({
     <div className="flex flex-wrap gap-4 text-sm font-semibold">
       <div className="flex items-center gap-1.5 text-[color:var(--copero-accent)]" title={matchesLabel}>
         <MatchesIcon className="h-5 w-5" />
-        <Num n={appearances} />
+        <Num n={appearances} animate={animate} />
         <span className="font-[family-name:var(--copero-font-mono)] text-[9px] font-medium uppercase tracking-wide opacity-65">M</span>
       </div>
       <div className="flex items-center gap-1.5 text-[color:var(--copero-fg)]" title={goalsLabel}>
         <GoalsIcon className="h-5 w-5" />
-        <Num n={goals} />
+        <Num n={goals} animate={animate} />
         <span className="font-[family-name:var(--copero-font-mono)] text-[9px] font-medium uppercase tracking-wide opacity-55">G</span>
       </div>
       <div className="flex items-center gap-1.5 text-sky-300" title={assistsLabel}>
         <AssistsIcon className="h-5 w-5" />
-        <Num n={assists} />
+        <Num n={assists} animate={animate} />
         <span className="font-[family-name:var(--copero-font-mono)] text-[9px] font-medium uppercase tracking-wide opacity-65">A</span>
       </div>
     </div>
