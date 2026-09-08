@@ -89,12 +89,58 @@ import { expect } from '@playwright/test';
  */
 
 async function focusInput(input: Locator): Promise<void> {
+  // MGC-2494 — ROOT CAUSE de los 7 specs estables de PR #544 (v2..v14
+  // atacaron el síntoma equivocado: nunca fue pérdida de eventos de React ni
+  // batching, era falta de focus real sobre el input).
+  //
+  // Evidencia (probe local sobre el bundle de 627ddd8):
+  //   ACTIVE after lastname fill:      INPUT#input-lastname
+  //   ACTIVE after pos click:          BUTTON#pos-GK
+  //   ACTIVE right after force click:  INPUT#input-lastname   ← ¡no es el target!
+  //   value after insertText:          ""                      ← texto al vacío
+  //
+  // `click({ force: true })` salta los actionability checks de Playwright: no
+  // verifica hit-target, así que el click aterriza sobre el contenedor que
+  // cubre a `input-nationality-search` y el focus se queda donde estaba. Como
+  // `force` tampoco lanza, el fallback programático del catch jamás corría, y
+  // el `keyboard.insertText` posterior escribía en el input anterior →
+  // `expect(input).toHaveValue(value)` recibía "".
+  //
+  // Además, `rebindFocus` (MGC-2304, identity.tsx) difiere su `focus()` con
+  // requestAnimationFrame, así que un focus robado puede llegar DESPUÉS de
+  // nuestro focus programático. Por eso cedemos dos frames antes de verificar
+  // y re-forzamos hasta que el focus sea realmente nuestro.
+  await input.scrollIntoViewIfNeeded();
   try {
-    await input.scrollIntoViewIfNeeded();
-    await input.click({ force: true, timeout: 5000 });
+    // Sin `force`: Playwright verifica el hit-target y clickea el input real.
+    await input.click({ timeout: 5000 });
   } catch {
-    // Fallback: foco programático si el click force sigue bloqueado por un
-    // overlay que capture pointer events a nivel de captura de Playwright.
+    // Overlay que captura pointer events: caemos al click forzado y, si
+    // tampoco toma el focus, lo forzamos programáticamente más abajo.
+    await input.click({ force: true, timeout: 5000 }).catch(() => undefined);
+  }
+  await ensureFocused(input);
+}
+
+/**
+ * MGC-2494 — garantiza que `input` sea `document.activeElement` antes de
+ * tipear. Cede dos frames entre intentos para que cualquier `focus()` diferido
+ * con requestAnimationFrame (rebindFocus, MGC-2304) ya haya corrido y no nos
+ * robe el focus después de la verificación.
+ */
+async function ensureFocused(input: Locator): Promise<void> {
+  const page: Page = input.page();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await page.evaluate(
+      (): Promise<void> =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
+    const focused = await input.evaluate(
+      (el: HTMLInputElement): boolean => document.activeElement === el,
+    );
+    if (focused) return;
     await input.evaluate((el: HTMLInputElement): void => {
       el.focus({ preventScroll: true });
     });
@@ -298,4 +344,47 @@ export async function fillRnwByTestId(
   opts: { delay?: number } = {},
 ): Promise<void> {
   return fillRnw(page.getByTestId(testId), value, opts);
+}
+
+/**
+ * MGC-2494 — click sobre un `Pressable` de React Native Web que SÍ entrega el
+ * `onPress`.
+ *
+ * `click({ force: true })` salta los actionability checks de Playwright: no
+ * verifica hit-target, así que si otro nodo cubre el centro del elemento el
+ * evento aterriza en ese nodo y el `onPress` del Pressable nunca corre. Sobre
+ * `country-ARG` eso dejaba `profile.nationalityCode = null` y por lo tanto
+ * `btn-identity-continue` disabled — el síntoma que v2..v14 del helper
+ * atribuyeron (incorrectamente) a pérdida de eventos de React o batching.
+ *
+ * Evidencia (probe local, bundle de PR #544):
+ *   nat before:                 null
+ *   nat after force click:      null   ← el onPress no llegó
+ *   nat after plain click:      AR     ← btn-identity-continue enabled
+ *
+ * Estrategia: click normal (Playwright espera actionability y acierta el
+ * hit-target). Solo si eso falla realmente caemos al click forzado, y como
+ * último recurso al `click()` del DOM, que dispara el handler sin depender del
+ * hit-test.
+ */
+export async function pressRnw(target: Locator): Promise<void> {
+  await target.scrollIntoViewIfNeeded();
+  try {
+    await target.click({ timeout: 5000 });
+    return;
+  } catch {
+    // Overlay real que captura pointer events: seguimos con los fallbacks.
+  }
+  try {
+    await target.click({ force: true, timeout: 5000 });
+    return;
+  } catch {
+    await target.evaluate((el: HTMLElement): void => {
+      el.click();
+    });
+  }
+}
+
+export async function pressRnwByTestId(page: Page, testId: string): Promise<void> {
+  return pressRnw(page.getByTestId(testId));
 }

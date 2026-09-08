@@ -1,5 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -127,29 +126,6 @@ export default function IdentityScreen() {
   // incrementando `profile.age` cada temporada (season.ts:122) — este
   // setter sólo opera durante el alta.
   const setAge = useCareerStore((s) => s.setAge);
-  // MGC-2494 — React 18/19 automatic batching descartaba el primer setState
-  // cuando dos fills del helper e2e `fillRnw` ocurren tight (7/31 specs
-  // inestables en PR #544). `flushSync` (react-dom, RFC-21) fuerza el commit
-  // sincrónico de cada onChangeText. Beneficio colateral: menos
-  // inconsistencias de UI en mobile real al tipear rápido.
-  const setNameSync = useCallback(
-    (value: string) => {
-      flushSync(() => setName(value));
-    },
-    [setName],
-  );
-  const setLastNameSync = useCallback(
-    (value: string) => {
-      flushSync(() => setLastName(value));
-    },
-    [setLastName],
-  );
-  const setAgeSync = useCallback(
-    (value: number | string) => {
-      flushSync(() => setAge(typeof value === 'number' ? value : Number(value)));
-    },
-    [setAge],
-  );
   // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
   // WCAG 2.5.5) pueda disparar foco en tap perimetral. hitSlop en TextInput
   // nativo Android no extiende el hitbox de focus. Compatible con el
@@ -204,17 +180,6 @@ export default function IdentityScreen() {
   const { t } = useLocale();
 
   const [nationalityQuery, setNationalityQuery] = useState('');
-  // MGC-2494 — este input ES el que falla en los 7 specs de PR #544
-  // (`expect(input-nationality-search).toHaveValue('arg')` resolvía a
-  // value=""). Diferencia con input-name/lastname/age: aquellos escriben al
-  // store zustand (notificación sincrónica), mientras `nationalityQuery` es
-  // useState local → sujeto al automatic batching de React. Cuando el batch
-  // descarta el update, el controlled TextInput vuelve a renderizar con el
-  // value viejo ('') y el texto tipeado se pierde. `flushSync` fuerza el
-  // commit sincrónico.
-  const setNationalityQuerySync = useCallback((value: string) => {
-    flushSync(() => setNationalityQuery(value));
-  }, []);
   // MGC-1503 — UX-005 P0 del audit MGC-1500. Por defecto la pantalla cape el
   // listado a las 5 primeras (MGC-1448) para no romper el budget vertical del
   // scroll (33 inline ≈6000px bajo el fold). El usuario puede tap "Ver todas
@@ -570,7 +535,7 @@ export default function IdentityScreen() {
         <Field label={t('identity.fieldNationality')}>
           <TextInput
             value={nationalityQuery}
-            onChangeText={setNationalityQuerySync}
+            onChangeText={setNationalityQuery}
             placeholder={t('identity.nationalityPlaceholder')}
             placeholderTextColor={colors.textMuted}
             autoCorrect={false}
@@ -999,7 +964,7 @@ export default function IdentityScreen() {
               <TextInput
                 ref={nameInputRef}
                 value={profile.name}
-                onChangeText={setNameSync}
+                onChangeText={setName}
                 placeholder={t('identity.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1070,7 +1035,7 @@ export default function IdentityScreen() {
               <TextInput
                 ref={lastNameInputRef}
                 value={profile.lastName ?? ''}
-                onChangeText={setLastNameSync}
+                onChangeText={setLastName}
                 placeholder={t('identity.lastNamePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1139,7 +1104,7 @@ export default function IdentityScreen() {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
                   const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
-                  setAgeSync(parsed);
+                  setAge(parsed);
                 }}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}

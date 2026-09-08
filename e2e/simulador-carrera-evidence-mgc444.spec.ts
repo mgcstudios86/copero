@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { fillRnw } from './fixtures/rnw-fill';
+import { fillRnw, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * Copero — Evidencia E2E simulador-carrera (MGC-444).
@@ -57,7 +57,10 @@ async function completeIdentity(page: any, name: string) {
   await page.waitForTimeout(400);
   // MGC-2254: click country-ARG tras el fill. MGC-1348 v3 — `force:true`
   // por hit-test RNW.
-  await page.getByTestId('country-ARG').click({ force: true });
+  // MGC-2494: `force: true` salta el hit-test y el onPress del Pressable
+    // RNW nunca corría → nationalityCode quedaba null. `pressRnw` clickea de
+    // verdad (con fallbacks).
+    await pressRnw(page.getByTestId('country-ARG'));
   // Espera explicita a que el boton se habilite (canContinue = true).
   await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
   await page.getByTestId('btn-identity-continue').click();

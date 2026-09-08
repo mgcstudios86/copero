@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { fillRnw } from './fixtures/rnw-fill';
+import { fillRnw, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-431 — E2E + axe + Lighthouse integral para simulador-carrera (MGC-427).
@@ -130,7 +130,10 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // Patrón adopted: `force:true` es el workaround estándar de Playwright
     // para RNW hit-test flake; el componente sigue funcionando en Maestro.
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
-    await page.getByTestId('country-ARG').click({ force: true });
+    // MGC-2494: `force: true` salta el hit-test y el onPress del Pressable
+    // RNW nunca corría → nationalityCode quedaba null. `pressRnw` clickea de
+    // verdad (con fallbacks).
+    await pressRnw(page.getByTestId('country-ARG'));
 
     // axe gate 1: identity
     await expectZeroSeriousAxe(page, 'identity');
@@ -258,7 +261,10 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await page.getByRole('button', { name: 'Derecha', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
-    await page.getByTestId('country-ARG').click({ force: true });
+    // MGC-2494: `force: true` salta el hit-test y el onPress del Pressable
+    // RNW nunca corría → nationalityCode quedaba null. `pressRnw` clickea de
+    // verdad (con fallbacks).
+    await pressRnw(page.getByTestId('country-ARG'));
 
     // Ciclar las 4 posiciones de grupos distintos y axeear cada estado.
     const positions = [
@@ -300,7 +306,10 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await page.getByRole('button', { name: 'Derecha', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
-    await page.getByTestId('country-ARG').click({ force: true });
+    // MGC-2494: `force: true` salta el hit-test y el onPress del Pressable
+    // RNW nunca corría → nationalityCode quedaba null. `pressRnw` clickea de
+    // verdad (con fallbacks).
+    await pressRnw(page.getByTestId('country-ARG'));
     // MGC-2254 v3: espera explicita a que el boton este enabled.
     await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
     await page.getByTestId('btn-identity-continue').click();
