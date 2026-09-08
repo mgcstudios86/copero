@@ -8,6 +8,14 @@
 # repo), por lo que no resuelve jobs acá. CEO autorizó fallback hosted runner
 # (ubuntu-latest) hasta que el operador migre el runner o los cambios a main del
 # repo canónico.
+#
+# MGC-1880 + MGC-2107: pool CI dedicado `[self-hosted, copero-ci]` (runner-01
+# Linux VPS, runner-03 Linux provision) — ADR-0026 reservó este label al gate
+# de merge. Las suites largas se separaron en clases propias para que una
+# corrida de 60min de Playwright o un build APK de 40min no acaparen el runner
+# del gate: qa.yml usa `[self-hosted, copero-qa]` (runner-01, Playwright
+# headless) y eas.yml usa `[self-hosted, copero-heavy]` (runner-02 Mac mini,
+# builds EAS). Mapping label→runner→workflow en AGENTS.md §Runners.
 
 name: ci (copero)
 
