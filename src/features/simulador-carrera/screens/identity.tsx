@@ -898,12 +898,45 @@ export default function IdentityScreen() {
           // 120, h≈220) queda visualmente detrás del form (zIndex 15) —
           // aceptable: chips pos-* son opcionales con default FWD y el
           // F4 walk no los ejercita.
+          //
+          // MGC-2473 — fix regresión country chip tappability sobre PR #513.
+          // El form con bottom:120 + height:280 sigue cubriendo country-BR
+          // mitad inferior (y=[1076,1150]) y country-UY completo
+          // (y=[1151,1264]) porque aunque PR #513 removió `top:72`, los
+          // Pressables hijos del form (input-age Pressable hitSlop=22dp +
+          // btn-foot-row Pressable hitSlop implícito por minHeight:40)
+          // extienden su hit-area hasta y=1076 capturando taps del
+          // nationality-section. Causa raíz: el form ocupa la mitad central
+          // del viewport encima de la lista de países. walk QA2 MGC-2295 sobre
+          // APK vc=222 (SHA f7313455) midió form bounds=[0,1076][1080,1776]
+          // (h=700px=280dp) cubriendo BR/UY; tapOn id:country-BR en y=1094
+          // (centro chip) NO selecciona, form intercepta touch.
+          //
+          // Fix: anclar el form DEBAJO del último chip visible. Usar
+          // `top: 510 + bottom: 140` (sin height) deja a Yoga computar
+          // form.height = kavContent.height - 510 - 140 ≈ 180dp, con el
+          // form en y=[1275, 1775]px en ZY22G728HN. country-UY [bottom=1264]
+          // queda 11px por encima del form (gap libre); country-BR completo
+          // [1038,1150] y country-ARG [926,1039] en zona libre superior.
+          // Se mueve `btn-foot-row` (Pié preferido) del form al
+          // sticky-footer para liberar ~54dp verticales — sin esto el form
+          // con 3 inputs (168dp) + foot row (54dp) = 222dp overflowea los
+          // 180dp disponibles aún con overflow:hidden (foot row botones
+          // quedan invisibles, WCAG fail). sticky-footer crece 120→140dp
+          // para acomodar foot row + Continue sin clipping. Compactación
+          // adicional en form: label lineHeight 14→12 (saves 6dp) e input
+          // wrapper minHeight 48→44 (saves 12dp, aún WCAG ≥44dp).
           position: 'absolute',
           left: 0,
           right: 0,
-          // MGC-2250 — `top: 72` ELIMINADO. Era la fuente de la regresión.
-          bottom: 120, // MGC-1986 — sticky-footer 240→120dp.
-          height: 280, // MGC-2008 — belt contra Yoga collapse del content height.
+          // MGC-2473 — `top: 510dp` ancla el form debajo de country-UY bottom
+          // (1264px = 505dp) con buffer de 5dp. Combinado con bottom:140
+          // hace que Yoga calcule height=~180dp, suficiente para 3 inputs
+          // compactados (168dp). Sin bottom, `top: 510 + height: 180` deja
+          // bottom implícito en 0 — equivalente visual pero menos robusto
+          // si kavContent.height varía entre devices.
+          top: 510,
+          bottom: 140, // MGC-2473 — sticky-footer height 120→140dp.
           zIndex: 15,
           backgroundColor: colors.bg,
           borderTopColor: colors.border,
@@ -1121,67 +1154,12 @@ export default function IdentityScreen() {
           </View>
         </Field>
 
-        {/* Preferred foot — MGC-632: wrapper View collapsable=false +
-            minHeight:48. Pressable hijos sin collapsable={false} porque
-            RN-Android mide bounds reales desde el wrapper padre cuando
-            vive fuera del ScrollView (verificado por QA MGC-744 sobre
-            stepper). Si QA reporta flake en los Pressables individuales
-            (Izquierdo/Derecho/Ambos), replicar el patrón canónico del
-            stepper (collapsable={false} en cada Pressable hijo). */}
-        <Field
-          label={t('identity.fieldFoot')}
-          labelStyle={{ fontSize: fontSize.xs, lineHeight: 14 }}
-          wrapperStyle={{ gap: 0 }}
-        >
-          <View
-            testID="btn-foot-row"
-            collapsable={false}
-            // MGC-1348 v2 — box-none belt: el wrapper no necesita capturar
-            // clicks, los 3 Pressables hijos sí. Patrón recursivo Field wrapper.
-            pointerEvents="box-none"
-            style={{
-              flexDirection: 'row',
-              gap: spacing[2],
-              width: '100%',
-              minHeight: 40,
-            }}
-          >
-            {(['left', 'right', 'both'] as Foot[]).map((f) => {
-              const active = profile.preferredFoot === f;
-              return (
-                <Pressable
-                  key={f}
-                  onPress={() => setPreferredFoot(f)}
-                  {...onKeyActivate(() => setPreferredFoot(f))}
-                  testID={`btn-foot-${f === 'left' ? 'izq' : f === 'right' ? 'der' : 'ambos'}`}
-                  collapsable={false}
-                  style={{
-                    flex: 1,
-                    paddingVertical: spacing[2],
-                    borderRadius: radii.md,
-                    borderWidth: 1,
-                    borderColor: active ? colors.primary : colors.borderStrong,
-                    backgroundColor: active ? colors.primarySoft : colors.surface,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Text
-                    style={{
-                      color: active ? colors.primary : colors.text,
-                      fontWeight: fontWeight.semibold,
-                      fontSize: fontSize.sm,
-                    }}
-                  >
-                    {f === 'left' ? t('identity.footLeft') : f === 'right' ? t('identity.footRight') : t('identity.footBoth')}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Field>
+        {/* MGC-2473 — Pié preferido (Foot Field) MOVIDO al sticky-footer
+            (ver bloque arriba). Causa: el form con top:510+bottom:140
+            (height ~180dp) no puede alojar los 3 inputs (150dp) + foot
+            row (54dp) = 204dp de contenido. Mover foot row al footer
+            libera 54dp verticales del form para entrar arriba de los
+            chips pos-XX sin tocar country-UY. */}
       </View>
 
       {/* MGC-1533 — field-map-section EXTRAÍDA como fixed sibling absoluto.
@@ -1425,7 +1403,18 @@ export default function IdentityScreen() {
             left: 0,
             right: 0,
             bottom: 0,
-            height: 120,
+            // MGC-2473 — sticky-footer 120→140dp. Acomoda foot row (Pié
+            // preferido, 40dp + label 14dp = 54dp) extraído del form para
+            // liberar 54dp verticales y permitir el form top:510 sin
+            // overlap con country chips. Footer height original 120dp
+            // (MGC-1986) era para Continue + hint solamente; ahora suma
+            // foot row + Continue (+ hint condicional). Padding spacing[3]
+            // (12dp top+bottom=24dp) en lugar de spacing[4] (32dp) para
+            // mantener el contenido total ≤140dp: hint 18 + label 14 +
+            // row 40 + Continue 52 + padding 24 = 148dp → overflow 8dp
+            // cuando !canContinue. trade-off: hint marginBottom spacing[1]
+            // → 0dp + label lineHeight 14→12dp para encajar exacto.
+            height: 140,
             justifyContent: 'flex-end',
             backgroundColor: colors.bg,
           },
@@ -1451,7 +1440,12 @@ export default function IdentityScreen() {
           {
             backgroundColor: colors.bg,
             borderTopColor: colors.border,
-            padding: spacing[4],
+            // MGC-2473 — padding spacing[4]→spacing[3] (16→12dp). Footer
+            // ahora aloja foot row extraído del form (40dp row + 14dp
+            // label = 54dp); mantener spacing[4] agregaba 8dp extras
+            // totalizando 156dp+ en 140dp disponibles. spacing[3] da
+            // 12+12=24dp padding.
+            padding: spacing[3],
           },
         ]}
       >
@@ -1460,12 +1454,10 @@ export default function IdentityScreen() {
             gris sin explicación seguía siendo un dead-end si el usuario no
             tipea. `isIdentityComplete` sólo mira name.length>=2, así que el
             texto nombra el campo exacto que falta. Presupuesto vertical del
-            sticky-footer (height:240 fijo, MGC-1448): stepperSticky 120 +
-            footer (16+52+16) 84 = 204dp; el hint suma 14 (lineHeight) + 4
-            (marginBottom) = 18dp → 222dp, con 18dp de slack contra la banda
-            opaca. NO agrandar la tipografía acá sin re-medir: si el contenido
-            supera 240dp, justifyContent:'flex-end' lo desborda POR ARRIBA de
-            la banda opaca y queda dibujado sobre el scroll sin fondo. */}
+            sticky-footer (height:140 fijo, MGC-2473): hint 14 + label 12
+            + foot row 40 + Continue 52 + padding 24 = 142dp → ~2dp slack
+            contra la banda opaca cuando !canContinue. NO agrandar la
+            tipografía acá sin re-medir. */}
         {!canContinue ? (
           <Text
             testID="identity-continue-hint"
@@ -1474,13 +1466,73 @@ export default function IdentityScreen() {
               fontSize: fontSize.xs,
               lineHeight: 14,
               includeFontPadding: false,
-              marginBottom: spacing[1],
+              marginBottom: 0,
               textAlign: 'center',
             }}
           >
             {t('identity.continueHint')}
           </Text>
         ) : null}
+        {/* MGC-2473 — Pié preferido movido desde identity-fixed-form al
+            sticky-footer. Causa: el form necesita top:510 + bottom:140
+            (height computado ~180dp) para no overlappear country chips,
+            pero su contenido (3 inputs + foot row) sumaba 204dp y
+            overflowea el box aún con overflow:hidden (foot row botones
+            invisibles). Mover el foot row al footer libera 54dp
+            verticales del form. Footer crece 120→140dp para acomodar
+            row + label sin clipping. */}
+        <Field
+          label={t('identity.fieldFoot')}
+          labelStyle={{ fontSize: fontSize.xs, lineHeight: 12 }}
+          wrapperStyle={{ gap: 0 }}
+        >
+          <View
+            testID="btn-foot-row"
+            collapsable={false}
+            pointerEvents="box-none"
+            style={{
+              flexDirection: 'row',
+              gap: spacing[2],
+              width: '100%',
+              minHeight: 40,
+            }}
+          >
+            {(['left', 'right', 'both'] as Foot[]).map((f) => {
+              const active = profile.preferredFoot === f;
+              return (
+                <Pressable
+                  key={f}
+                  onPress={() => setPreferredFoot(f)}
+                  {...onKeyActivate(() => setPreferredFoot(f))}
+                  testID={`btn-foot-${f === 'left' ? 'izq' : f === 'right' ? 'der' : 'ambos'}`}
+                  collapsable={false}
+                  style={{
+                    flex: 1,
+                    paddingVertical: spacing[2],
+                    borderRadius: radii.md,
+                    borderWidth: 1,
+                    borderColor: active ? colors.primary : colors.borderStrong,
+                    backgroundColor: active ? colors.primarySoft : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                >
+                  <Text
+                    style={{
+                      color: active ? colors.primary : colors.text,
+                      fontWeight: fontWeight.semibold,
+                      fontSize: fontSize.sm,
+                    }}
+                  >
+                    {f === 'left' ? t('identity.footLeft') : f === 'right' ? t('identity.footRight') : t('identity.footBoth')}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Field>
         <Button
           label={t('identity.continue')}
           onPress={onContinue}
