@@ -9,7 +9,8 @@ import { expect } from '@playwright/test';
  * paint post-hidratacion, dejando `canContinue()` en false y el botón
  * `btn-identity-continue` con `disabled=true`.
  *
- * Solución (MGC-2451 v9) — invocación directa del onChange de React vía fiber:
+ * Solución (MGC-2451 v10) — invocación directa del onChange de RNW vía fiber
+ * con `nativeEvent` poblado:
  *   1. focus (con fallback programático si el click forzado queda bloqueado
  *      por un overlay de capture pointer-events, ej. dropdown de país).
  *   2. waitForReactRoot: espera activa hasta que el ROOT container de React
@@ -49,10 +50,20 @@ import { expect } from '@playwright/test';
  *                 propagan al handler de React (root listener de React 18
  *                 no se attached en este runner, o se attached después
  *                 del dispatch por race con hidratación asíncrona).
- *   v9 (esta):   invoca props.onChange directamente vía fiber
+ *   v9 (f428175): invoca props.onChange directamente vía fiber
  *                 (__reactProps$xxx) → bypass total del DOM event system.
- *                 React ejecuta el handler sincrónicamente; el state update
- *                 ocurre en el mismo tick, sin depender del root listener.
+ *                 Crash: handleChange de RNW hace `e.nativeEvent.text = text`
+ *                 sobre el synthetic event, pero `nativeEvent` no estaba
+ *                 definido → TypeError en TODOS los specs que llaman
+ *                 fillRnw. Run 34192727621 FAIL.
+ *   v10 (esta):   mismo enfoque que v9 pero el synthetic event incluye
+ *                 `nativeEvent: { text: val }` poblado. handleChange puede
+ *                 escribir `e.nativeEvent.text = hostNode.value` sin crash
+ *                 y propaga a onChangeText (setName/setLastName del store
+ *                 Zustand). React ejecuta el handler sincrónicamente; el
+ *                 state update ocurre en el mismo tick, sin depender del
+ *                 root listener delegado de React 18 en el runner self-
+ *                 hosted copero-ci-runner-02.
  *                 Tipos TS explícitos en todos los callbacks (no any).
  *
  * Refs: MGC-2254 v3, MGC-2356, MGC-2403, MGC-2451.
@@ -138,8 +149,14 @@ async function forceReactReconcile(input: Locator, value: string): Promise<void>
         const props = (el as unknown as Record<string, { onChange?: (e: unknown) => void }>)[key];
         const onChange = props?.onChange;
         if (typeof onChange === 'function') {
-          // Minimal synthetic event shape compatible con RNW's TextInput
-          // internal handler (reads event.target.value).
+          // Synthetic event compatible con RNW TextInput handleChange.
+          // handleChange (node_modules/react-native-web/src/exports/TextInput/index.js:265)
+          // hace `e.nativeEvent.text = hostNode.value` ANTES de invocar onChange,
+          // por lo que `nativeEvent` debe estar definido (aunque sea {}) en el
+          // synthetic event. Sin esto: TypeError "Cannot set properties of
+          // undefined (setting 'text')" — run 34192727621 (v9) FAIL.
+          // `target` apunta al input element para que handleChange pueda leer
+          // `e.target.value` y propagarlo a onChangeText (setName/setLastName).
           const syntheticEvent = {
             target: el,
             currentTarget: el,
@@ -151,6 +168,7 @@ async function forceReactReconcile(input: Locator, value: string): Promise<void>
             stopPropagation: (): void => {},
             persist: (): void => {},
             isPersistent: (): boolean => true,
+            nativeEvent: { text: val },
           };
           onChange(syntheticEvent);
           invoked = true;
