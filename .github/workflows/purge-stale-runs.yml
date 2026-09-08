@@ -27,7 +27,11 @@ permissions:
 jobs:
   purge:
     name: purge queued runs sin PR
-    runs-on: [self-hosted, copero-ci, macOS]
+    # ADR-0026 (MGC-2466): housekeeping de la API con gh CLI, sin toolchain.
+    # Removido el `macOS`: runner-02 pasa a `copero-heavy` exclusivo, así que
+    # `[copero-ci, macOS]` no matchearía ningún runner y el job quedaría queued
+    # para siempre. `copero-ci` resuelve a runner-03 (Linux).
+    runs-on: [self-hosted, copero-ci]
     timeout-minutes: 10
     steps:
       - name: Listar runs encolados y PRs abiertos contra main

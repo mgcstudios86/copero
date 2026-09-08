@@ -31,7 +31,10 @@ jobs:
     # en MGC-1263. Concurrency cancel-in-progress ya está arriba; con un único job
     # por runner self-hosted, no hay contención cruzada entre android-internal e
     # ios-internal porque la job ios usa el mismo label y se serializa naturalmente.
-    runs-on: [self-hosted, copero-ci, macOS]
+    # ADR-0026 (MGC-2466): release es clase `copero-heavy` (runner-02, el único
+    # host con keystore y sesión de Expo). Antes decía `[copero-ci, macOS]`, que
+    # tras la separación de labels no matchearía ningún runner.
+    runs-on: [self-hosted, copero-heavy]
     timeout-minutes: 60
     env:
       # Skill local-build §Java setup: en el runner copero-ci JDK 17 está disponible vía default.
@@ -235,9 +238,11 @@ jobs:
 
   ios-internal:
     name: ios build + submit internal (simulator preview, best-effort) [MGC-360]
-    # MGC-1132: mismo motivo que eas.yml preview-ios — iOS va al runner macOS ARM64
-    # (runner-02) y deja libre el slot Linux para el build Android de este workflow.
-    runs-on: [self-hosted, copero-ci, macOS]
+    # MGC-1132: mismo motivo que eas.yml preview-ios — iOS necesita el runner
+    # macOS ARM64 (runner-02).
+    # ADR-0026 (MGC-2466): clase `copero-heavy`. `macOS` se mantiene porque iOS
+    # requiere Xcode; runner-02 es el único host macOS con `copero-heavy`.
+    runs-on: [self-hosted, copero-heavy, macOS]
     timeout-minutes: 60
     continue-on-error: true
     env:
