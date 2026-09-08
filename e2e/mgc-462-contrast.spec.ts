@@ -50,12 +50,9 @@ test.describe('MGC-462 — axe contrast /simulador-carrera/identity', () => {
   }, testInfo) => {
     test.setTimeout(120_000);
 
-    // MGC-522: usar baseURL del config (EXPO_WEB_PORT default 8081 en CI)
-    // en lugar de hardcodear :8082. Otros specs navegan con '/' relativo.
-    // MGC-1188: el dispatcher de `/` redirige a /simulador-carrera/identity
-    // cuando no hay perfil persistido.
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    // MGC-522: usar baseURL del config (EXPO_WEB_PORT default 8081 en CI).
+    // MGC-2254: goto directo a identity (home ya no es dispatcher tras MGC-1397).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
     await page.waitForSelector('[data-testid="identity-jersey-preview"]', { timeout: 10_000 });
 

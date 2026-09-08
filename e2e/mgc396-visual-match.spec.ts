@@ -1,5 +1,6 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
+import { fillRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-396 — capturas visuales post-fix `palette.copero.primary` → verde.
@@ -18,11 +19,8 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     test.setTimeout(90_000);
     mkdirSync(OUT, { recursive: true });
 
-    // MGC-1188: el dispatcher de `/` redirige a /simulador-carrera/identity
-    // porque no hay perfil persistido. Capturamos el landing directamente
-    // (no hay home splash visible para MGC-396).
-    await page.goto('/', { waitUntil: 'load' });
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    // MGC-2254: goto directo a identity (home ya no es dispatcher tras MGC-1397).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${OUT}/02-identity.png`, fullPage: true });
@@ -32,16 +30,20 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     test.setTimeout(180_000);
     mkdirSync(OUT, { recursive: true });
 
-    // 1) Entrar al dispatcher → identity (MGC-1188)
-    await page.goto('/', { waitUntil: 'load' });
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    // 1) MGC-2254: goto directo a identity (home ya no es dispatcher tras MGC-1397).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
 
-    // 2) Llenar el form mínimo (testIDs canónicos de e2e/simulador-carrera.spec.ts)
-    await page.locator('[data-testid="input-name"]').fill('Calvo');
+    // 2) Llenar el form mínimo (testIDs canónicos de e2e/simulador-carrera.spec.ts).
+    // MGC-2254 v3 / MGC-2356: fillRnw = fill + dispatchEvent('input') para
+    // forzar que RNW dispare onChangeText en el runner self-hosted.
+    await fillRnw(page.locator('[data-testid="input-name"]'), 'Calvo');
     await page.locator('[data-testid="pos-ST"]').click();
-    await page.locator('[data-testid="input-nationality-search"]').fill('arg');
+    await fillRnw(page.locator('[data-testid="input-nationality-search"]'), 'arg');
     await page.waitForTimeout(400);
+    // MGC-1348 v3 — `force:true` por hit-test RNW (country-ARG).
+    await page.getByTestId('country-ARG').click({ force: true });
+    await expect(page.locator('[data-testid="btn-identity-continue"]')).toBeEnabled({ timeout: 15_000 });
     await page.locator('[data-testid="btn-identity-continue"]').click();
 
     // 3) Draft ronda 1

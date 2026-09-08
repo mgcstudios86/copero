@@ -25,6 +25,11 @@ on:
         description: "SHA para identificar el grupo de concurrencia (opcional)"
         required: false
         type: string
+      ref:
+        description: "Rama o SHA que deben validar los jobs (opcional)"
+        required: false
+        default: ${{ github.ref }}
+        type: string
 
 concurrency:
   group: eas-preview-copero-${{ inputs.sha || github.ref }}
@@ -49,6 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
       - id: filter
         uses: dorny/paths-filter@v3
@@ -90,6 +96,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -168,6 +175,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
