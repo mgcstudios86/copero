@@ -9,22 +9,26 @@ import { expect } from '@playwright/test';
  * paint post-hidratacion, dejando `canContinue()` en false y el botón
  * `btn-identity-continue` con `disabled=true`.
  *
- * Solución (MGC-2451): secuencia explícita de eventos por caracter
+ * Solución (MGC-2451 v3): secuencia explícita de eventos por caracter
  *   1. focus (con fallback programático si el click forzado queda bloqueado
  *      por un overlay de capture pointer-events, ej. dropdown de país).
  *   2. por cada `char` del value:
- *        keyboard.down(char)   -> keydown
- *        keyboard.press(char)  -> keydown + keyup
- *        keyboard.up(char)     -> keyup
+ *        keyboard.press(char)  -> keydown + keyup (UNA inserción por char).
  *      Para chars no-ASCII (ñ, á, …) `keyboard.press` no mapea a un Key
  *      válido; usamos `keyboard.insertText(char)` que dispara el `input`
  *      event con la string cruda (RNW lo acepta).
  *   3. dispatchEvent('input', { bubbles: true }) explícito sobre el input
  *      para garantizar que React reconcilie el state sin esperar al
  *      siguiente tick del event loop.
- *   4. waitFor(() => expect(input).toHaveValue(value)) — bloquea hasta que
- *      el `value` del DOM refleje exactamente lo tipeado, evitando race
- *      con re-renders.
+ *   4. expect(input).toHaveValue(value) — web-first assertion con retry
+ *      5s default; bloquea hasta que el `value` del DOM refleje exactamente
+ *      lo tipeado, evitando race con re-renders.
+ *
+ * Nota importante (iteración 3 sobre PR #544): un wrap `down + press + up`
+ * emite DOS keydown por caracter y React inserta el caracter DOS veces
+ * (recibido = "CCAALLVVOO" cuando se tipea "CALVO"). `keyboard.press` ya
+ * hace `down + up` internamente; envolverlo duplica. Por eso esta versión
+ * usa solo `press`.
  *
  * Detalle de implementación: usamos `click({ force: true })` con scroll
  * previo en `focusInput` para evitar overlays (ej. dropdown de país en
@@ -53,13 +57,11 @@ async function focusInput(input: Locator): Promise<void> {
 async function typeChar(page: Page, char: string): Promise<void> {
   if (char === '') return;
   if (ASCII_KEY_PATTERN.test(char)) {
-    // Secuencia down + press + up: dispara keydown/keypress/keyup reales.
-    // `press` por sí solo ya hace down+up; el down+up explícito que lo
-    // envuelve garantiza que el `input` event se emita con la value final
-    // sincronizada y React reconcilie en el mismo tick.
-    await page.keyboard.down(char);
+    // `press` = keydown + keyup (un solo ciclo). React inserta el caracter
+    // una vez. NO envolver con down/up adicionales: cada down adicional
+    // duplica la inserción (regression observada en run 34178994028: "CALVO"
+    // -> "CCAALLVVOO").
     await page.keyboard.press(char);
-    await page.keyboard.up(char);
   } else {
     // Chars fuera del rango ASCII imprimible (tildes, ñ, emoji): insertText
     // escribe la string cruda en el input focused sin pasar por key mapping.
