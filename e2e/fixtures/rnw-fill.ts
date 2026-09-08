@@ -277,14 +277,24 @@ export async function fillRnw(
 }
 
 /**
- * v11 — si existe `btn-identity-continue` en el DOM y sigue `disabled`
- * después de 800ms post-fillRnw, retry con `page.keyboard.insertText`
- * (CDP nativo) que emite UN input event que React 18 root listener
- * procesa sincrónicamente. La carrera con focus shift se resuelve
- * porque el input event nativo no compite con el blur batching de RNW.
+ * v12 — Probe + retry multi-intento. v11 con 1 retry CDP no resolvio
+ * la race de 7/31 specs (run 34195576159 FAIL mismo patron que v10).
+ * Diagnostico revisado: la race NO es entre fillRnw y el siguiente
+ * click; es entre DOS fills consecutivos cuando React 18 batchea ambos
+ * setState en el mismo commit. handleChange corre sincronico y llama
+ * setName(text) -> React commit -> pero el siguiente fill llega antes
+ * del commit y React descarta el primero.
  *
- * Si el botón no existe (helpers usados fuera del flow /identity),
- * skip silencioso. Sin locator del botón, no retry.
+ * Estrategia v12:
+ * 1. Despues del fill v10, espera 1500ms (vs 800ms v11) para dar tiempo
+ *    al commit de React 18.
+ * 2. Si sigue disabled, retry via CDP insertText (sincronico).
+ * 3. Re-espera 1500ms. Si sigue disabled, segundo retry.
+ * 4. Limite: max 3 reintentos. Si tras 3 retries sigue disabled,
+ *    abandona y deja que el spec falle con toBeEnabled (el caller
+ *    vera el contexto correcto en el trace).
+ *
+ * Si el boton no existe (helpers fuera de /identity), skip silencioso.
  */
 async function maybeRetryWithCdpInsertText(
   input: Locator,
@@ -295,29 +305,25 @@ async function maybeRetryWithCdpInsertText(
   const exists = await continueBtn.count().catch(() => 0);
   if (exists === 0) return;
 
-  // Espera 800ms post-fill. Si el botón se habilita antes, skip retry.
-  // En specs que v10 ya resuelve, el state reconcilia en <100ms — el
-  // skip es invisible. En specs con race, el botón sigue disabled tras
-  // 800ms y entramos al retry.
-  await page.waitForTimeout(800);
+  const MAX_RETRIES = 3;
+  const WAIT_BETWEEN_MS = 1500;
 
-  const stillDisabled = await continueBtn
-    .evaluate((el: HTMLButtonElement): boolean => (el as HTMLButtonElement).disabled)
-    .catch(() => true);
-  if (!stillDisabled) return;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    await page.waitForTimeout(WAIT_BETWEEN_MS);
+    const stillDisabled = await continueBtn
+      .evaluate((el: HTMLButtonElement): boolean => (el as HTMLButtonElement).disabled)
+      .catch(() => true);
+    if (!stillDisabled) return;
 
-  // Retry: limpia + inserta via CDP. `keyboard.insertText` emite un
-  // solo input event sin keys intermediates — no duplica chars y
-  // acepta no-ASCII (ñ, á).
-  try {
-    await input.click({ clickCount: 3, force: true });
-    await page.keyboard.press('Backspace');
-    await page.keyboard.insertText(value);
-    // Reafirma el value tras el retry (defensivo).
-    await expect(input).toHaveValue(value);
-  } catch {
-    // Best-effort: si el retry falla, el caller verá el toBeEnabled
-    // timeout y reportará el spec con el contexto correcto.
+    try {
+      await input.click({ clickCount: 3, force: true });
+      await page.keyboard.press('Backspace');
+      await page.keyboard.insertText(value);
+      await expect(input).toHaveValue(value);
+    } catch {
+      // Best-effort: si el retry falla, el siguiente intento lo reintenta.
+      continue;
+    }
   }
 }
 
