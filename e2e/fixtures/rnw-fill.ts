@@ -273,22 +273,16 @@ export async function fillRnw(
     await page.keyboard.press('Backspace');
   }
 
-  // v14.1 — Secuencia canónica keyboard + dispatchEvent + native setter
-  // safety-net (cumple AC §1 — keydown/keypress/keyup + input dispatch):
+  // v14 — Secuencia canónica keyboard + dispatchEvent (cumple AC §1):
   //   1. focus (input ya está focused vía focusInput).
   //   2. page.keyboard.insertText(value) emite keydown/keypress/keyup
-  //      reales por char. Si focus está activo, esto triggerea el ciclo
-  //      completo de eventos de RNW handleChange.
-  //   3. v14.1 — Safety-net native setter: si por algún race focus se
-  //      perdió entre focusInput e insertText (escenario común en el
-  //      flow completeIdentity: pos-ST click entre input-lastname y
-  //      input-nationality-search puede dejar focus en el dropdown),
-  //      el native setter garantiza que el DOM value quede seteado.
-  //      Sin esto, expect(input).toHaveValue(value) FALLA con value=""
-  //      — run 34209439408 falló 7/31 specs por este regresión.
-  //   4. input.dispatchEvent('input', { bubbles: true }) garantiza que
-  //      el `input` event llega al root container de React 18.
-  //   5. expect(input).toHaveValue(value) verifica DOM→React agreement.
+  //      reales por char (sin duplicación: insertText NO wrappea cada
+  //      char con down+press+up manualmente — el problema de v2).
+  //   3. input.dispatchEvent('input', { bubbles: true }) garantiza que
+  //      el `input` event llega al root container de React 18 incluso
+  //      si el delegated listener se attached DESPUÉS de insertText
+  //      (race de hidratación async en runner self-hosted).
+  //   4. expect(input).toHaveValue(value) verifica DOM→React agreement.
   // Esto cubre AMBOS paths de entrega: el delegated listener de React 18
   // (cuando está listo) Y la cadena directa nativeEvent → onChangeText
   // vía RNW handleChange (cuando el listener delegado aún no llega).
@@ -296,24 +290,6 @@ export async function fillRnw(
   if (value.length > 0) {
     await page.keyboard.insertText(value);
   }
-  // Safety-net: si keyboard.insertText no seteo el value (focus perdido),
-  // usar native setter directamente. Es la única forma de garantizar
-  // que expect.toHaveValue(value) pase para los 7 specs edge-case.
-  await input.evaluate(
-    (el: HTMLInputElement, val: string): void => {
-      if (el.value === val) return;
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        'value',
-      )?.set;
-      if (setter) {
-        setter.call(el, val);
-      } else {
-        el.value = val;
-      }
-    },
-    value,
-  );
   await input.dispatchEvent('input', { bubbles: true, cancelable: true });
 
   // Web-first assertion: reintenta hasta 5s default hasta que el DOM
