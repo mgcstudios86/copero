@@ -105,18 +105,11 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
     await fillRnw(page.getByTestId('input-lastname'), 'TEST');
 
-    // 2b. Número = 10. El estado inicial arranca en 9 (ver engine.ts:36),
-    //     por lo que una pulsación sobre "Sumar número" deja 10.
-    await page.getByTestId('btn-number-plus').click();
-    // MGC-405: el display del número en identity.tsx no expone aria-label
-    // accesible para query directo (`getByLabel('Número 10')` falla). El Text
-    // interno renderiza `{profile.number}` literal — verificamos que el texto
-    // "10" sea visible (puede aparecer más de una vez en el form por las
-    // pistas del picker de dorsal — `.first()` picks el primero que es el
-    // display numérico del jugador).
-    await expect(
-      page.getByTestId('identity-screen').getByText('10', { exact: true }).first(),
-    ).toBeVisible({ timeout: 5_000 });
+    // 2b. Número (dorsal) — MGC-1647 / WF1 removió el stepper +/- del form
+    // (btn-number-plus/minus) y lo reemplazó por input-age. El dorsal
+    // mantiene su default en store (engine.ts:110 → number=9) pero ya NO es
+    // gate del alta ni hay control UI para modificarlo. El jersey-preview
+    // SVG muestra el número actual (default 9) sin afectar canContinue.
 
     // 2c. Posición = ST (attack group) — tap en el field map
     await page.getByTestId('pos-ST').click();
@@ -259,11 +252,9 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await fillRnw(page.getByTestId('input-name'), 'Regresion');
     // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
     await fillRnw(page.getByTestId('input-lastname'), 'QA');
-    // MGC-2451 v7: rehidratar visibilidad de btn-number-plus despues del fill
-    // del segundo input — el flicker post-hidratacion dejaba el locator
-    // colgado 10s sobre runner self-hosted copero-ci-runner-02.
-    await expect(page.getByTestId('btn-number-plus')).toBeVisible({ timeout: 10_000 });
-    await page.getByTestId('btn-number-plus').click(); // 9 → 10
+    // MGC-1647 / WF1: stepper +/- eliminado del form. El dorsal (number)
+    // mantiene su default en store y no tiene UI de modificación; el
+    // canContinue gate sólo exige name/lastName/age/nationality.
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
@@ -303,10 +294,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await fillRnw(page.getByTestId('input-name'), 'CALVO');
     // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
     await fillRnw(page.getByTestId('input-lastname'), 'TEST');
-    // MGC-2451 v7: rehidratar visibilidad de btn-number-plus despues del fill
-    // del segundo input (ver nota en test axe ST/CAM/CB/GK mas arriba).
-    await expect(page.getByTestId('btn-number-plus')).toBeVisible({ timeout: 10_000 });
-    await page.getByTestId('btn-number-plus').click();
+    // MGC-1647 / WF1: stepper +/- eliminado. Dorsal no tiene UI en /identity
+    // (mantiene default store); canContinue gate es name/lastName/age/nat.
     await page.getByTestId('pos-ST').click();
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
