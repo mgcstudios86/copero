@@ -9,31 +9,32 @@ import { expect } from '@playwright/test';
  * paint post-hidratacion, dejando `canContinue()` en false y el botón
  * `btn-identity-continue` con `disabled=true`.
  *
- * Solución (MGC-2451 v4) — combinación de tres mecanismos:
+ * Solución (MGC-2451 v5) — esperar hidratación + patrón canónico RTL:
  *   1. focus (con fallback programático si el click forzado queda bloqueado
  *      por un overlay de capture pointer-events, ej. dropdown de país).
- *   2. keyboard.insertText(value) — dispara un único `input` event con la
- *      string entera (RNW acepta chars no-ASCII como ñ, á, emoji).
- *   3. Post-loop, fuerza reconciliación React con el patrón canónico
+ *   2. waitForHydration: bloquea hasta que React 18 haya terminado de
+ *      hidratar el elemento (chequea __reactProps$xxx / __reactFiber$xxx
+ *      en el DOM node). Sin este wait, dispatchEvent se pierde porque
+ *      el listener delegado de React aún no está attached en el root.
+ *   3. keyboard.insertText(value) — dispara un único `input` event con la
+ *      string entera (acepta ñ/á/emoji sin pasar por key mapping).
+ *   4. Post-loop, fuerza reconciliación React con el patrón canónico
  *      React Testing Library: setter nativo de HTMLInputElement.value
- *      (bypaseando cualquier override de React) + dispatch de ambos
- *      eventos `input` y `change` (bubbles: true). Esto cubre tanto
- *      React 17 (que mapea `onChange` -> native `change`) como RNW
- *      (que mapea `onChangeText` -> native `input`).
- *   4. expect(input).toHaveValue(value) — web-first assertion con retry
+ *      (bypaseando cualquier override de React en la instancia) +
+ *      dispatch de ambos eventos `input` y `change` (bubbles: true).
+ *   5. expect(input).toHaveValue(value) — web-first assertion con retry
  *      5s default; bloquea hasta que el `value` del DOM refleje exactamente
  *      lo tipeado.
  *
  * Historial de iteraciones sobre PR #544:
- *   v2 (eb718d5): wrap down + press + up por char -> duplica caracteres
- *                 (recibido "CCAALLVVOO" para "CALVO") porque cada keydown
- *                 adicional inserta otro char.
- *   v3 (d72da6d): solo keyboard.press por char -> arregla duplicación pero
- *                 8/23 specs aún fallan: btn-number-plus no aparece
- *                 porque React state quedó vacío (input event no se
- *                 propagó a useState post-hidratación).
- *   v4 (esta):    insertText + setter nativo + dispatch `input` y `change`
- *                 -> cubre los 3 mecanismos que RNW usa para `onChangeText`.
+ *   v2 (eb718d5): wrap down + press + up por char -> duplica chars
+ *                 ("CALVO" -> "CCAALLVVOO").
+ *   v3 (d72da6d): solo keyboard.press por char -> arregla duplicación
+ *                 pero 8/23 specs aún fallan (events perdidos pre-hidratación).
+ *   v4 (680761f): insertText + setter nativo + change event -> mismo
+ *                 síntoma, race con hidratación.
+ *   v5 (esta):    + waitForHydration antes de tipear. Garantiza que el
+ *                 listener delegado de React esté attached.
  *
  * Refs: MGC-2254 v3, MGC-2356, MGC-2403, MGC-2451.
  */
@@ -49,6 +50,33 @@ async function focusInput(input: Locator): Promise<void> {
       el.focus({ preventScroll: true });
     });
   }
+}
+
+async function waitForHydration(page: Page, input: Locator): Promise<void> {
+  // Espera activa hasta que React 18 haya terminado de hidratar el elemento.
+  // La señal canónica es que el DOM node tenga __reactProps$xxx (React 18)
+  // o __reactInternalInstance$xxx (React 16/17) attached. Sin este wait,
+  // dispatchEvent('input') se pierde porque el listener delegado de React
+  // aún no está attached en el root.
+  const testId: string | null = await input.evaluate((el: Element): string | null => {
+    return el.getAttribute('data-testid');
+  });
+  await page.waitForFunction(
+    (tid: string | null): boolean => {
+      if (!tid) return true; // Si no hay testID, no podemos verificar
+      const el = document.querySelector(`[data-testid="${tid}"]`);
+      if (!el) return false;
+      const keys = Object.keys(el);
+      return keys.some(
+        (k) =>
+          k.startsWith('__reactProps$') ||
+          k.startsWith('__reactFiber$') ||
+          k.startsWith('__reactInternalInstance$'),
+      );
+    },
+    testId,
+    { timeout: 10_000 },
+  );
 }
 
 async function forceReactReconcile(input: Locator, value: string): Promise<void> {
@@ -89,6 +117,13 @@ export async function fillRnw(
   await focusInput(input);
 
   const page: Page = input.page();
+
+  // Esperar a que React termine de hidratar el elemento. Sin esto, el
+  // listener delegado de React 18 en el root aún no está attached y los
+  // `input` events se pierden (race condition del runner self-hosted
+  // copero-ci-runner-02 con la hidratación tardía de RNW).
+  await waitForHydration(page, input);
+
   // Si el input ya tiene value previo (ej. tests que reutilizan state),
   // limpiamos primero para que insertText no concatene caracteres.
   const current = await input.inputValue().catch(() => '');
@@ -103,11 +138,10 @@ export async function fillRnw(
     await page.keyboard.insertText(value);
   }
 
-  // Forzar reconciliación React. insertText ya dispara `input`, pero en el
-  // runner self-hosted copero-ci-runner-02 (Chromium headless Mac ARM64)
-  // ese evento a veces se pierde en la carrera con la hidratación tardía
-  // de RNW. El setter nativo + dispatch explícito es el último recurso
-  // que garantiza que `useState` reciba el value final.
+  // Forzar reconciliación React. insertText ya dispara `input`, pero por
+  // seguridad también aplicamos el patrón canónico RTL: setter nativo +
+  // dispatch explícito de `input` y `change` para garantizar que `useState`
+  // reciba el value final.
   await forceReactReconcile(input, value);
 
   // expect() de @playwright/test es una web-first assertion: reintenta hasta
