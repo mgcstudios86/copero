@@ -1,0 +1,96 @@
+{
+  "seo": {
+    "title": "Copero: crea tu propia carrera de fútbol online",
+    "description": "Crea tu propia carrera de fútbol en Copero. Diseña un jugador, elige ocho atributos de leyendas, selecciona un club y guía su carrera gratis online."
+  },
+  "hero": {
+    "eyebrow": "SIMULADOR DE CARRERA DE JUGADOR · GRATIS EN TU NAVEGADOR",
+    "title": "Copero: crea tu propia carrera de fútbol",
+    "lead": "Crea un futbolista, define sus atributos y acompaña su carrera desde la primera oferta de academia hasta el retiro. Tus decisiones forman temporadas, traspasos, trofeos, convocatorias internacionales y un resultado final que puedes compartir.",
+    "primary": "Crear mi jugador",
+    "secondary": "Ver cómo funciona la carrera",
+    "facts": ["Sin cuenta", "Sin descargas", "Guardado en tu navegador"]
+  },
+  "routePreview": {
+    "label": "TU RUTA PROFESIONAL",
+    "player": "NOVATO · #10 · DC",
+    "stages": [
+      { "number": "01", "title": "CREAR", "detail": "Identidad y posición" },
+      { "number": "02", "title": "DRAFT", "detail": "8 atributos de leyendas" },
+      { "number": "03", "title": "ASCENDER", "detail": "Clubes y decisiones" },
+      { "number": "04", "title": "LEGADO", "detail": "Estadísticas y trofeos" }
+    ],
+    "footer": "UN JUGADOR · UNA PARTIDA CONTINUA"
+  },
+  "intro": {
+    "eyebrow": "LO QUE VAS A CREAR",
+    "title": "Un jugador. Toda una vida futbolística.",
+    "paragraphs": [
+      "Crear tu propia carrera en Copero significa tomar el control: eliges el nombre, la posición y las decisiones que convierten a tu jugador en promesa, ídolo de club o estrella mundial. Por eso esta página empieza con el creador jugable: la carrera se construye jugando, no solo leyendo.",
+      "Copero es un simulador de carrera basado en decisiones, no un juego de partidos en tiempo real. Defines al jugador, construyes su perfil mediante el draft de leyendas, eliges el primer club y respondes a los momentos clave hasta el retiro."
+    ]
+  },
+  "stages": {
+    "eyebrow": "DE NOVATO A RETIRADO",
+    "title": "Cómo crear tu carrera de fútbol en Copero",
+    "body": "Cada partida sigue cuatro etapas conectadas. Las elecciones del inicio influyen en las oportunidades que aparecerán más adelante.",
+    "items": [
+      { "number": "01", "title": "Crea al futbolista", "body": "Elige apellido, dorsal, pie preferido, nacionalidad y posición. También puedes añadir una nacionalidad familiar. La posición influye en cómo se valora tu perfil y en qué significa una buena temporada." },
+      { "number": "02", "title": "Construye el ADN del jugador", "body": "Durante ocho rondas aparecen leyendas del fútbol. Elige un atributo todavía libre de cada una: ritmo, tiro, pase, regate, defensa, físico, filigranas o pierna mala." },
+      { "number": "03", "title": "Elige el primer club", "body": "Con la carta completa, compara los clubes disponibles. La reputación abre grandes escenarios, pero el rol y los minutos pueden ser más importantes para el desarrollo." },
+      { "number": "04", "title": "Vive la carrera", "body": "Avanza por temporadas, objetivos, contratos, cesiones, traspasos y posibles convocatorias. Al retirarte, Copero reúne clubes, partidos, goles, asistencias, trofeos y valoración máxima en un resumen final." }
+    ]
+  },
+  "draft": {
+    "eyebrow": "LO QUE HACE DIFERENTE A COPERO",
+    "title": "Ocho leyendas. Ocho atributos.",
+    "body": "No repartes puntos sobre una plantilla vacía. Construyes al jugador con una decisión irreversible por ronda. Elegir un gran tiro ahora puede significar renunciar a un mejor regate después.",
+    "attributes": ["RIT", "TIR", "PAS", "REG", "DEF", "FÍS", "FIL", "PM"],
+    "modes": [
+      { "name": "CLÁSICO", "tag": "VALORES VISIBLES", "body": "Mira las cifras y usa repeticiones mientras aprendes qué atributos encajan mejor con tu posición." },
+      { "name": "PURISTA", "tag": "SOLO CONOCIMIENTO", "body": "Haz el draft sin valoraciones visibles ni repeticiones y confía en lo que sabes de las leyendas." }
+    ]
+  },
+  "decisions": {
+    "eyebrow": "NO HAY UN GUIÓN PERFECTO",
+    "title": "La carrera cambia cuando cambian tus decisiones",
+    "items": [
+      { "marker": "POSICIÓN", "title": "Construye para tu rol", "body": "Un delantero puede priorizar definición; un creador necesita pase y regate. Empieza por la carrera que realmente quieres construir." },
+      { "marker": "OPORTUNIDAD", "title": "Lee la situación del club", "body": "Un club famoso atrae, pero el rol en la plantilla y los minutos también determinan el desarrollo. No uses la reputación como única señal." },
+      { "marker": "RIESGO", "title": "Decide en los momentos clave", "body": "Traspasos, cesiones y objetivos crean ventajas y costes. Quedarte da continuidad; moverte puede subir el nivel. No existe una ruta ganadora garantizada." }
+    ]
+  },
+  "result": {
+    "eyebrow": "EL PITIDO FINAL",
+    "title": "Toda tu carrera se convierte en un resultado",
+    "body": "El retiro no borra el camino. Copero conserva el historial de temporadas y crea un resumen final. Cambia la posición, el draft o tus decisiones y descubre una carrera totalmente distinta.",
+    "cardLabel": "EJEMPLO DE RESULTADO",
+    "name": "TU JUGADOR",
+    "role": "DC · #10 · DIESTRO",
+    "rating": "92",
+    "ratingLabel": "OVR MÁX.",
+    "stats": [
+      { "value": "418", "label": "GOLES" },
+      { "value": "11", "label": "TROFEOS" },
+      { "value": "6", "label": "CLUBES" }
+    ],
+    "note": "Carta ilustrativa · tu resultado depende de tu carrera"
+  },
+  "faq": {
+    "eyebrow": "RESPUESTAS RÁPIDAS",
+    "title": "Preguntas frecuentes sobre la carrera de fútbol en Copero",
+    "items": [
+      { "question": "¿Puedo crear mi propia carrera de fútbol en Copero?", "answer": "Sí. Crea al jugador, completa el draft de ocho atributos, elige un club inicial y guía la carrera hasta el retiro." },
+      { "question": "¿El juego de carrera de Copero es gratis?", "answer": "Sí. Funciona en un navegador moderno sin cuenta ni descarga. La publicidad ayuda a mantener el sitio, pero el creador no requiere pago." },
+      { "question": "¿Controlo los partidos en tiempo real?", "answer": "No. Copero se centra en construir al jugador y tomar decisiones. El simulador resuelve temporadas y estadísticas mientras tú eliges identidad, atributos, clubes y respuestas." },
+      { "question": "¿Se guarda mi carrera?", "answer": "La carrera activa se guarda localmente en el navegador para que puedas continuar en el mismo dispositivo y navegador. No es un perfil permanente en la nube." },
+      { "question": "¿copero.top es un producto oficial de Copero?", "answer": "No. copero.top es un simulador independiente y no está afiliado con Copero, clubes, competiciones ni jugadores." }
+    ]
+  },
+  "finalCta": {
+    "eyebrow": "LA ACADEMIA TE ESPERA",
+    "title": "Crea al jugador. Toma las decisiones. Conserva la historia.",
+    "body": "Tu primera decisión tarda segundos. La carrera que crea puede llegar mucho más lejos.",
+    "button": "Empezar mi carrera en Copero"
+  }
+}

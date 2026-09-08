@@ -1,0 +1,144 @@
+{
+  "about": {
+    "seo": {
+      "title": "Sobre o Copero | Simulador de carreira no futebol",
+      "description": "Conheça o Copero, um jogo independente de carreira no futebol que você pode jogar grátis diretamente no navegador."
+    },
+    "eyebrow": "Sobre o projeto",
+    "title": "Sobre o Copero",
+    "intro": "Copero é um jogo de futebol no navegador e um simulador de carreira baseado em uma ideia simples: crie um jogador e veja até onde a carreira pode chegar. O projeto combina draft de atributos, decisões, clubes, contratos, transferências, seleção e títulos em um único save contínuo armazenado localmente no navegador.",
+    "sections": {
+      "project": {
+        "title": "O que é este projeto",
+        "body": "copero.top é um projeto web independente criado para tornar o modo carreira rápido de começar e fácil de acessar. Você não precisa de conta nem de um cliente separado. Crie seu jogador na primeira tela, complete o draft e avance temporada por temporada até a aposentadoria."
+      },
+      "gameplay": {
+        "title": "Como o jogo é estruturado",
+        "body": "A carreira usa regras e estado persistentes entre identidade, draft, clube inicial, temporadas, contratos, eventos e resultado final. Decisões e contexto do jogador influenciam a trajetória, enquanto um único save conecta toda a experiência."
+      },
+      "languages": {
+        "title": "Idiomas e acesso",
+        "body": "Copero está disponível atualmente em espanhol, inglês, chinês simplificado, alemão, italiano e português do Brasil. Cada idioma tem sua própria URL, mas compartilha a mesma lógica de jogo e o mesmo save local, então trocar de idioma não cria uma carreira separada."
+      },
+      "independence": {
+        "title": "Projeto independente",
+        "body": "copero.top não é um produto oficial do Copero e não é afiliado, patrocinado ou endossado por jogadores, clubes, ligas, federações ou outras organizações mencionadas na experiência. Nomes e marcas de terceiros pertencem aos respectivos proprietários."
+      }
+    }
+  },
+  "contact": {
+    "seo": {
+      "title": "Contato | Copero",
+      "description": "Entre em contato com o projeto Copero para relatar bugs, sugerir melhorias ou tirar dúvidas sobre privacidade, conteúdo e funcionamento do site."
+    },
+    "eyebrow": "Contato",
+    "title": "Entre em contato com o Copero",
+    "intro": "Se você encontrou um bug, tem uma sugestão ou precisa relatar um problema relacionado ao copero.top, envie um e-mail para support@copero.top. Esse é o principal canal para suporte, privacidade, conteúdo e dúvidas sobre o funcionamento do site.",
+    "channelLabel": "E-mail",
+    "channelTitle": "Fale com o suporte do Copero",
+    "channelBody": "Use o e-mail de suporte para bugs, problemas de layout, traduções, comportamento do jogo, sugestões de melhoria ou dúvidas relacionadas ao site.",
+    "channelCta": "support@copero.top",
+    "sections": {
+      "include": {
+        "title": "Quais informações ajudam",
+        "body": "Ao relatar um problema, informe a URL e o idioma usados, seu dispositivo ou navegador, o que você esperava que acontecesse e o que aconteceu de fato. Para problemas no jogo, também ajuda mencionar a fase da carreira em que o erro apareceu."
+      },
+      "privacy": {
+        "title": "Não envie dados sensíveis desnecessários",
+        "body": "Não envie senhas, documentos de identidade, informações financeiras ou outros dados pessoais sensíveis que não sejam necessários para explicar o problema. Em questões de privacidade, inclua apenas as informações necessárias para a análise."
+      },
+      "legal": {
+        "title": "Privacidade, direitos e conteúdo",
+        "body": "Você também pode escrever para support@copero.top sobre privacidade, atribuição, propriedade intelectual ou questões de conteúdo. Identifique claramente o recurso afetado e a URL correspondente para que o problema possa ser analisado."
+      },
+      "response": {
+        "title": "Prazo de resposta",
+        "body": "copero.top é um projeto independente e não oferece prazo garantido de resposta do suporte. As mensagens são analisadas conforme disponibilidade e prioridade, principalmente quando afetam funcionalidade, privacidade ou segurança."
+      }
+    }
+  },
+  "privacy": {
+    "seo": {
+      "title": "Política de Privacidade | Copero",
+      "description": "Saiba como o copero.top lida com saves locais, dados técnicos, analytics, publicidade de terceiros e suas opções de privacidade."
+    },
+    "eyebrow": "Privacidade",
+    "title": "Política de Privacidade",
+    "intro": "Esta Política de Privacidade explica de forma geral como o copero.top lida com informações quando você usa o site e o jogo. O projeto foi criado para funcionar principalmente de forma local: sua carreira fica salva no navegador e você não precisa de conta para jogar.",
+    "updated": "Última atualização: 10 de agosto de 2026",
+    "sections": {
+      "local": {
+        "title": "1. Armazenamento local do jogo",
+        "body": "Copero usa armazenamento do navegador, como LocalStorage, para manter o estado da carreira, preferências do site e dados necessários para continuar uma partida. Essas informações permanecem no navegador que você está usando e podem ser removidas ao limpar os dados do site nas configurações do navegador."
+      },
+      "account": {
+        "title": "2. Contas e informações inseridas por você",
+        "body": "O jogo atual não exige cadastro nem conta. Informações inseridas ao criar um jogador, como sobrenome exibido, número da camisa, nacionalidade ou posição, passam a fazer parte do estado do jogo e são armazenadas localmente. Evite usar dados pessoais reais ou sensíveis se não quiser que eles fiquem salvos no dispositivo."
+      },
+      "analytics": {
+        "title": "3. Analytics e medição",
+        "body": "O código do site oferece suporte opcional a serviços de medição como Google Analytics 4 e Microsoft Clarity por meio da configuração de produção. Quando ativados, esses serviços podem receber informações técnicas e de uso, como páginas visitadas, interações, tipo de dispositivo, navegador e dados de rede, e podem usar cookies ou tecnologias semelhantes conforme suas próprias políticas. Copero não depende desses serviços para o jogo funcionar."
+      },
+      "technical": {
+        "title": "4. Dados técnicos e hospedagem",
+        "body": "Como em qualquer site, a infraestrutura de hospedagem e rede pode processar informações técnicas necessárias para entregar o serviço, como endereço IP, requisições HTTP, data e hora, user agent e logs de segurança. Esse processamento também depende dos provedores de infraestrutura usados para publicar o copero.top."
+      },
+      "thirdParty": {
+        "title": "5. Publicidade e serviços de terceiros",
+        "body": "O copero.top usa a Adsterra para exibir publicidade em suas páginas. Quando um anúncio é carregado ou você interage com ele, a Adsterra e seus parceiros podem receber dados técnicos e de uso, como endereço IP, URL da página, impressões e cliques em anúncios, informações do navegador e do dispositivo, fuso horário e localização aproximada. Eles podem usar cookies, pixels ou tecnologias semelhantes para veicular anúncios, limitar a frequência, medir o desempenho, prevenir fraudes e, quando aplicável, personalizar a publicidade. Esse tratamento segue a Política de Privacidade da Adsterra (https://adsterra.com/privacy-policy-managed/) e a Política de Cookies (https://adsterra.com/cookies/). Você pode limitar ou excluir cookies pelas configurações do navegador, mas os anúncios podem não ser exibidos corretamente."
+      },
+      "retention": {
+        "title": "6. Retenção e controle",
+        "body": "Os dados de carreira salvos localmente permanecem até que o navegador, o usuário ou o aplicativo os remova ou substitua. Você pode reduzir ou excluir o armazenamento local usando os controles de privacidade do navegador. Dados processados por serviços externos, quando ativados, seguem os períodos de retenção configurados e as políticas desses provedores."
+      },
+      "changes": {
+        "title": "7. Alterações e contato",
+        "body": "Esta política pode ser atualizada quando recursos, provedores ou práticas de medição do site mudarem. A data da atualização aparecerá nesta página. Para fazer uma pergunta ou relatar uma questão de privacidade, use a página de Contato ou envie um e-mail para support@copero.top."
+      }
+    }
+  },
+  "terms": {
+    "seo": {
+      "title": "Termos de Uso | Copero",
+      "description": "Leia os termos aplicáveis ao copero.top, ao simulador de carreira no futebol, ao conteúdo, a nomes de terceiros, disponibilidade e limitações."
+    },
+    "eyebrow": "Termos",
+    "title": "Termos de Uso",
+    "intro": "Estes Termos de Uso regem o acesso e o uso do copero.top. Ao usar o site, você concorda em utilizá-lo de forma responsável e de acordo com a legislação aplicável. Se não concordar com estes termos, você pode deixar de usar o serviço.",
+    "updated": "Última atualização: 9 de agosto de 2026",
+    "sections": {
+      "service": {
+        "title": "1. Natureza do serviço",
+        "body": "Copero é uma experiência de entretenimento e uma simulação de carreira no futebol disponível no navegador. Estatísticas, eventos, decisões, contratos, resultados e trajetórias gerados pelo jogo fazem parte de uma simulação e não representam fatos, previsões ou aconselhamento profissional."
+      },
+      "license": {
+        "title": "2. Uso permitido",
+        "body": "Você pode usar o site para fins pessoais e legais. Não deve tentar interromper o serviço, contornar controles técnicos, introduzir código malicioso, automatizar requisições de forma abusiva, explorar vulnerabilidades ou usar o site de forma que prejudique outros usuários ou a infraestrutura."
+      },
+      "saves": {
+        "title": "3. Saves e disponibilidade dos dados",
+        "body": "As carreiras são armazenadas principalmente no armazenamento local do navegador. Não há garantia de que um save continue recuperável depois de limpar dados do navegador, trocar de dispositivo ou perfil, usar ferramentas de limpeza ou quando uma atualização técnica exigir alterações no formato de armazenamento."
+      },
+      "thirdParty": {
+        "title": "4. Nomes, marcas e conteúdo de terceiros",
+        "body": "Nomes de jogadores, clubes, competições, países, marcas e outros terceiros pertencem aos respectivos proprietários quando aplicável. A presença desses nomes é descritiva ou faz parte da simulação e não implica afiliação, patrocínio, aprovação ou relação oficial com o copero.top."
+      },
+      "ownership": {
+        "title": "5. Conteúdo e software do projeto",
+        "body": "Exceto por materiais e componentes de terceiros regidos por suas próprias licenças, o design, o código e o conteúdo originais do projeto são protegidos pelas regras aplicáveis e pelas licenças válidas para o repositório ou para recursos individuais."
+      },
+      "availability": {
+        "title": "6. Disponibilidade e alterações",
+        "body": "O site é fornecido conforme disponibilidade. Recursos, regras, dados, idiomas, rotas ou mecânicas podem mudar, ser suspensos ou removidos. O serviço não tem garantia de funcionamento ininterrupto, livre de erros ou de manutenção permanente de qualquer recurso específico."
+      },
+      "liability": {
+        "title": "7. Limitações e ausência de garantias",
+        "body": "Na medida permitida por lei, o copero.top é fornecido no estado em que se encontra, sem garantias expressas sobre disponibilidade, precisão, adequação a uma finalidade específica ou preservação dos saves. Você é responsável pelo seu dispositivo, navegador e uso do serviço. Nada nestes termos exclui direitos que não possam ser legalmente limitados."
+      },
+      "changes": {
+        "title": "8. Alterações e contato",
+        "body": "Estes termos podem ser atualizados para refletir mudanças no serviço, na legislação ou nas práticas do projeto. A versão atual e a data serão publicadas nesta página. Para relatar questões relacionadas aos termos ou ao conteúdo do site, use a página de Contato."
+      }
+    }
+  }
+}

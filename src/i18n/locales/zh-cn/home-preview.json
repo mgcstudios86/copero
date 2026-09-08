@@ -1,0 +1,14 @@
+{
+  "resultCard": {
+    "eyebrow": "生涯结果示例",
+    "number": "10",
+    "overallLabel": "巅峰 OVR",
+    "name": "你的职业生涯总结",
+    "description": "退役后，Copero 会把整段经历整理成可分享的结果卡，展示巅峰 OVR、最终评级、效力俱乐部和奖杯。",
+    "stats": {
+      "rating": "最终评级",
+      "clubs": "俱乐部",
+      "trophies": "奖杯"
+    }
+  }
+}

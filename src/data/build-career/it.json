@@ -1,0 +1,96 @@
+{
+  "seo": {
+    "title": "Copero: crea la tua carriera da calciatore online",
+    "description": "Crea la tua carriera da calciatore in Copero. Costruisci un giocatore, scegli otto attributi delle leggende, seleziona un club e vivi la carriera gratis online."
+  },
+  "hero": {
+    "eyebrow": "SIMULATORE DI CARRIERA · GRATIS NEL BROWSER",
+    "title": "Copero: crea la tua carriera da calciatore",
+    "lead": "Crea un calciatore, definisci i suoi attributi e segui la carriera dalla prima offerta dell'accademia fino al ritiro. Le tue scelte determinano stagioni, trasferimenti, trofei, convocazioni e il risultato finale.",
+    "primary": "Crea il mio giocatore",
+    "secondary": "Scopri come funziona la carriera",
+    "facts": ["Nessun account", "Nessun download", "Salvataggio nel browser"]
+  },
+  "routePreview": {
+    "label": "IL TUO PERCORSO",
+    "player": "ROOKIE · #10 · ATT",
+    "stages": [
+      { "number": "01", "title": "CREA", "detail": "Identità e ruolo" },
+      { "number": "02", "title": "DRAFT", "detail": "8 attributi delle leggende" },
+      { "number": "03", "title": "CRESCI", "detail": "Club e decisioni" },
+      { "number": "04", "title": "EREDITÀ", "detail": "Statistiche e trofei" }
+    ],
+    "footer": "UN GIOCATORE · UN SALVATAGGIO CONTINUO"
+  },
+  "intro": {
+    "eyebrow": "COSA STAI CREANDO",
+    "title": "Un giocatore. Un'intera vita calcistica.",
+    "paragraphs": [
+      "Creare la tua carriera in Copero significa avere il controllo: scegli chi è il giocatore, il suo ruolo e le decisioni che possono trasformarlo in promessa, bandiera del club o campione mondiale.",
+      "Copero è un simulatore di carriera basato sulle decisioni, non un gioco di partite in tempo reale. Crei il giocatore, costruisci il profilo con il draft delle leggende, scegli il primo club e affronti i momenti chiave fino al ritiro."
+    ]
+  },
+  "stages": {
+    "eyebrow": "DA ROOKIE AL RITIRO",
+    "title": "Come creare la tua carriera calcistica in Copero",
+    "body": "Ogni partita segue quattro fasi collegate. Le scelte iniziali influenzano le opportunità che compariranno più avanti.",
+    "items": [
+      { "number": "01", "title": "Crea il calciatore", "body": "Scegli cognome, numero, piede preferito, nazionalità e ruolo. La posizione influisce su come viene valutato il profilo e sugli obiettivi stagionali." },
+      { "number": "02", "title": "Costruisci il DNA del giocatore", "body": "In otto turni compaiono leggende del calcio. Scegli ogni volta un attributo ancora libero: velocità, tiro, passaggio, dribbling, difesa, fisico, abilità o piede debole." },
+      { "number": "03", "title": "Scegli il primo club", "body": "Dopo il draft confronta i club disponibili. La reputazione conta, ma ruolo in rosa e minuti possono essere ancora più importanti per la crescita." },
+      { "number": "04", "title": "Vivi la carriera", "body": "Avanza tra stagioni, obiettivi, contratti, prestiti, trasferimenti e convocazioni. Al ritiro Copero riassume club, presenze, gol, assist, trofei e valutazione massima." }
+    ]
+  },
+  "draft": {
+    "eyebrow": "LA DIFFERENZA DI COPERO",
+    "title": "Otto leggende. Otto attributi.",
+    "body": "Non distribuisci punti su un modello vuoto. Costruisci il giocatore una scelta definitiva alla volta. Prendere un tiro eccezionale adesso può significare rinunciare a un dribbling migliore più avanti.",
+    "attributes": ["VEL", "TIR", "PAS", "DRI", "DIF", "FIS", "SKL", "PD"],
+    "modes": [
+      { "name": "CLASSICA", "tag": "VALORI VISIBILI", "body": "Guarda i valori e usa i reroll mentre impari quali attributi funzionano meglio per il tuo ruolo." },
+      { "name": "PURISTA", "tag": "SOLO CONOSCENZA", "body": "Fai il draft senza valutazioni visibili né reroll e affidati a ciò che sai sulle leggende." }
+    ]
+  },
+  "decisions": {
+    "eyebrow": "NESSUN COPIONE PERFETTO",
+    "title": "La carriera cambia quando cambiano le tue decisioni",
+    "items": [
+      { "marker": "RUOLO", "title": "Costruisci per la posizione", "body": "Un attaccante ha priorità diverse da un regista o un difensore. Parti dalla carriera che vuoi davvero vivere." },
+      { "marker": "OPPORTUNITÀ", "title": "Valuta la situazione del club", "body": "Un grande nome attira, ma ruolo in rosa e minuti influenzano lo sviluppo. La reputazione non è l'unico fattore." },
+      { "marker": "RISCHIO", "title": "Decidi nei momenti chiave", "body": "Trasferimenti, prestiti e obiettivi creano compromessi. Restare dà continuità; cambiare può alzare il livello. Non esiste una strada vincente garantita." }
+    ]
+  },
+  "result": {
+    "eyebrow": "IL FISCHIO FINALE",
+    "title": "Tutta la tua carriera diventa un unico risultato",
+    "body": "Il ritiro non cancella il percorso. Copero conserva la cronologia delle stagioni e crea un riepilogo finale. Cambia ruolo, draft o decisioni per ottenere una storia completamente diversa.",
+    "cardLabel": "ESEMPIO DI RISULTATO",
+    "name": "IL TUO GIOCATORE",
+    "role": "ATT · #10 · DESTRO",
+    "rating": "92",
+    "ratingLabel": "OVR MAX",
+    "stats": [
+      { "value": "418", "label": "GOL" },
+      { "value": "11", "label": "TROFEI" },
+      { "value": "6", "label": "CLUB" }
+    ],
+    "note": "Scheda illustrativa · il risultato dipende dalla tua carriera"
+  },
+  "faq": {
+    "eyebrow": "RISPOSTE RAPIDE",
+    "title": "FAQ sulla carriera calcistica in Copero",
+    "items": [
+      { "question": "Posso creare la mia carriera calcistica in Copero?", "answer": "Sì. Crea il giocatore, completa il draft degli otto attributi, scegli il club iniziale e guida la carriera fino al ritiro." },
+      { "question": "Il gioco carriera di Copero è gratuito?", "answer": "Sì. Funziona in un browser moderno senza account o download. La pubblicità sostiene il sito, ma il career builder è gratuito." },
+      { "question": "Controllo le partite in tempo reale?", "answer": "No. Copero si concentra sulla costruzione del giocatore e sulle decisioni di carriera. Il simulatore risolve stagioni e statistiche." },
+      { "question": "La mia carriera viene salvata?", "answer": "La carriera attiva viene salvata localmente nel browser, quindi puoi continuare dallo stesso browser. Non è un salvataggio cloud permanente." },
+      { "question": "copero.top è un prodotto ufficiale Copero?", "answer": "No. copero.top è un simulatore indipendente e non è affiliato a Copero, club, competizioni o giocatori." }
+    ]
+  },
+  "finalCta": {
+    "eyebrow": "L'ACCADEMIA TI ASPETTA",
+    "title": "Crea il giocatore. Prendi le decisioni. Conserva la storia.",
+    "body": "La prima scelta richiede pochi secondi. La carriera che crea può andare molto più lontano.",
+    "button": "Inizia la mia carriera Copero"
+  }
+}

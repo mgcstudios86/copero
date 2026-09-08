@@ -1,0 +1,14 @@
+{
+  "resultCard": {
+    "eyebrow": "커리어 결과 예시",
+    "number": "10",
+    "overallLabel": "피크 OVR",
+    "name": "나의 커리어 요약",
+    "description": "은퇴하면 Copero가 최고 OVR, 최종 등급, 소속 클럽과 트로피를 담은 공유용 카드로 여정을 정리해 줍니다.",
+    "stats": {
+      "rating": "최종 성적",
+      "clubs": "클럽",
+      "trophies": "트로피"
+    }
+  }
+}

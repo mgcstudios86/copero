@@ -1,0 +1,30 @@
+{
+  "es": {
+    "save": "Sí. La partida se guarda localmente en el navegador. Puedes cambiar entre español, inglés, chino simplificado, alemán, italiano, portugués de Brasil y coreano sin crear una carrera distinta.",
+    "about": "Copero está disponible actualmente en español, inglés, chino simplificado, alemán, italiano, portugués de Brasil y coreano. Cada idioma tiene su propia URL y comparte la misma lógica de juego y el mismo guardado local, por lo que cambiar de idioma no crea una carrera separada."
+  },
+  "en": {
+    "save": "Yes. The career is stored locally in the browser. You can switch between Spanish, English, Simplified Chinese, German, Italian, Brazilian Portuguese and Korean without creating a separate career.",
+    "about": "Copero is currently available in Spanish, English, Simplified Chinese, German, Italian, Brazilian Portuguese and Korean. Each language has its own URL while sharing the same game logic and local save, so switching languages does not create a separate career."
+  },
+  "zh-cn": {
+    "save": "会。游戏状态保存在当前浏览器本地。你可以在西班牙语、英语、简体中文、德语、意大利语、巴西葡萄牙语和韩语界面之间切换，而不会因此创建新的职业生涯。",
+    "about": "Copero 当前提供西班牙语、英语、简体中文、德语、意大利语、巴西葡萄牙语和韩语。每种语言拥有独立 URL，但共享相同的游戏逻辑和本地存档，因此切换语言不会创建另一份职业生涯。"
+  },
+  "de": {
+    "save": "Ja. Die Karriere wird lokal im Browser gespeichert. Du kannst zwischen Spanisch, Englisch, vereinfachtem Chinesisch, Deutsch, Italienisch, brasilianischem Portugiesisch und Koreanisch wechseln, ohne eine neue Karriere anzulegen.",
+    "about": "Copero ist derzeit auf Spanisch, Englisch, vereinfachtem Chinesisch, Deutsch, Italienisch, brasilianischem Portugiesisch und Koreanisch verfügbar. Jede Sprache hat eine eigene URL, verwendet aber dieselbe Spiellogik und denselben lokalen Spielstand. Ein Sprachwechsel erstellt daher keine neue Karriere."
+  },
+  "it": {
+    "save": "Sì. La carriera viene salvata localmente nel browser. Puoi passare tra spagnolo, inglese, cinese semplificato, tedesco, italiano, portoghese brasiliano e coreano senza creare una nuova carriera.",
+    "about": "Copero è attualmente disponibile in spagnolo, inglese, cinese semplificato, tedesco, italiano, portoghese brasiliano e coreano. Ogni lingua ha un URL dedicato ma condivide la stessa logica di gioco e lo stesso salvataggio locale, quindi cambiare lingua non crea una carriera separata."
+  },
+  "pt-br": {
+    "save": "Sim. A carreira é armazenada localmente no navegador. Você pode alternar entre espanhol, inglês, chinês simplificado, alemão, italiano, português do Brasil e coreano sem criar uma carreira separada.",
+    "about": "Copero está disponível atualmente em espanhol, inglês, chinês simplificado, alemão, italiano, português do Brasil e coreano. Cada idioma tem sua própria URL, mas compartilha a mesma lógica de jogo e o mesmo save local, então trocar de idioma não cria uma carreira separada."
+  },
+  "ko": {
+    "save": "네. 커리어는 브라우저에 로컬로 저장됩니다. 별도의 커리어를 만들지 않고 스페인어, 영어, 중국어 간체, 독일어, 이탈리아어, 브라질 포르투갈어와 한국어 사이를 전환할 수 있습니다.",
+    "about": "Copero는 현재 스페인어, 영어, 중국어 간체, 독일어, 이탈리아어, 브라질 포르투갈어와 한국어를 지원합니다. 언어마다 고유한 URL을 사용하지만 게임 로직과 로컬 저장 데이터는 공유하므로, 언어를 바꿔도 별도의 커리어가 생성되지 않습니다."
+  }
+}

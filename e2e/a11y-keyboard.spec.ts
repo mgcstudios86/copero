@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { passSeasonHub, passTeamSelect } from './fixtures/rnw-fill';
 
 /**
  * MGC-339 — a11y cross-platform: keyboard-only happy path en web.
@@ -52,7 +53,16 @@ test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
     const btnContinue = page.locator('[data-testid="btn-identity-continue"]');
     await btnContinue.focus();
     await page.keyboard.press('Enter');
-    await page.waitForURL('**/simulador-carrera/dashboard', { timeout: 15_000 });
+    // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+    // MGC-2505: WF3 (MGC-1649) interpone season-hub tras team-select. Esta
+    // suite es keyboard-only hasta `btn-identity-continue`; las dos pantallas
+    // nuevas (team-select y season-hub) no son el foco de a11y-keyboard, así
+    // que las atravesamos con los helpers (que internamente usan pressRnw).
+    // El test sigue validando la navegación por teclado de identity → flow
+    // post-identidad y el foco del CTA academy en /dashboard.
+    await passTeamSelect(page);
+    await passSeasonHub(page);
+    await page.goto('/simulador-carrera/dashboard');
     await page.waitForSelector('[data-testid="dashboard-screen"]', { timeout: 10_000 });
     await page.screenshot({ path: testInfo.outputPath('kbd-3-dashboard.png'), fullPage: true });
 

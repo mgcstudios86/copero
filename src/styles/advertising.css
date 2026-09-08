@@ -1,0 +1,40 @@
+.adsterra-ad {
+  position: relative;
+  z-index: 1;
+  width: min(100%, calc(var(--copero-container) + var(--copero-gutter) * 2));
+  margin-inline: auto;
+  padding: clamp(32px, 6vw, 64px) var(--copero-gutter);
+}
+
+.adsterra-ad__label {
+  display: block;
+  margin-bottom: 8px;
+  color: color-mix(in oklch, var(--copero-muted) 72%, transparent);
+  font-family: var(--copero-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.adsterra-ad__slot,
+.adsterra-ad__container {
+  display: block;
+  width: 100%;
+  min-height: 280px;
+  background: transparent;
+  color-scheme: normal;
+}
+
+@media (max-width: 720px) {
+  .adsterra-ad {
+    padding-block: 28px;
+  }
+
+  .adsterra-ad__slot,
+  .adsterra-ad__container {
+    min-height: 320px;
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "seo": {
+    "title": "Football Career Simulator Online | Copero",
+    "description": "Play a football career simulator online. Create your player, build attributes, handle transfers and decisions, and simulate a complete football career from prospect to retirement."
+  },
+  "hero": {
+    "eyebrow": "FOOTBALL CAREER SIMULATOR",
+    "title": "Football career simulator: create a player and build your story",
+    "lead": "Copero is an online football career simulator where you start as a young prospect, shape your attributes, choose a club and make decisions that affect the rest of your playing career. Every run can produce different seasons, transfers, opportunities and turning points.",
+    "primary": "Start my career",
+    "secondary": "See how it works",
+    "factsLabel": "Simulator features",
+    "facts": ["Free to play online", "Different career paths", "Seasons, transfers and decisions"]
+  },
+  "route": {
+    "label": "YOUR CAREER",
+    "live": "LIVE",
+    "player": "YOUNG PROSPECT",
+    "age": "AGE 16 → RETIREMENT",
+    "stages": [
+      {"title": "Create a player", "detail": "Position, foot, number and nationality"},
+      {"title": "Build attributes", "detail": "Shape your football profile"},
+      {"title": "Choose a club", "detail": "Begin your professional journey"},
+      {"title": "Live the career", "detail": "Seasons, decisions and transfers"}
+    ],
+    "footer": "A complete football career, one decision at a time."
+  },
+  "intro": {
+    "eyebrow": "ONLINE CAREER GAME",
+    "title": "What is a football career simulator?",
+    "paragraphs": [
+      "A football career simulator is a game built around the life of one player rather than managing an entire club. In Copero, you create a footballer and follow that player from the beginning of a professional career through seasons, transfers, development and retirement. The purpose is not simply to generate a final rating. The fun comes from creating a believable path and seeing how choices change it. You can build a forward who chases goals, a midfielder who develops over many seasons, a defender who becomes a reliable starter or a goalkeeper whose career takes a completely different route. This makes the football career simulator part sports game, part narrative game and part career generator, with each run producing a history you can compare with the next one.",
+      "Unlike a traditional football manager, Copero keeps your individual player at the center of the experience. You do not need to control every match, set full-team tactics or manage a club budget. Instead, the football player career simulator focuses on identity, attributes, seasonal performance, offers and decisions. A transfer can improve your level while creating more pressure. Staying at a club can provide stability while another opportunity disappears. Development choices can make your player specialized or balanced. Because those decisions build on one another, a career can change direction after a single important moment. If you want an online football career game that lets you create a player and watch a full story develop from youth to retirement, Copero is designed around exactly that loop."
+    ]
+  },
+  "sections": [
+    {
+      "eyebrow": "CREATE YOUR PLAYER",
+      "title": "Start the football career simulator with your own player",
+      "paragraphs": [
+        "Every career begins by defining who your player is. You choose details such as surname, preferred shirt number, dominant foot, playing position and nationality. These choices are more than decoration because they create the base profile used throughout the career. Position matters most. A striker values a different group of strengths than a center back, goalkeeper or creative midfielder, so the football career simulator treats the identity step as the first meaningful decision. You are not dropping a random name into a fixed script. You are building a footballer whose profile will influence how later development, performance and opportunities feel during the simulation.",
+        "The player creator also gives you an easy way to produce very different runs. One football career can begin with a quick winger, while the next can focus on a physical defender or technical playmaker. Change the preferred foot, nationality or position and the same simulator immediately feels different because your expectations for the player change. You can role-play a realistic prospect, create an exaggerated specialist or simply choose options at random and see what happens. There is no need to understand complicated tactical systems before you begin. The football player career simulator introduces the information you need at each stage, so you can move from creation into development without spending time learning an entire management interface."
+      ]
+    },
+    {
+      "eyebrow": "ATTRIBUTES AND POTENTIAL",
+      "title": "Build a different football profile in every simulation",
+      "paragraphs": [
+        "After creating your identity, the career moves into player development. Copero uses attributes to give each footballer clear strengths and weaknesses instead of starting every run from the same template. Depending on your position, you may care more about pace, technique, finishing, passing, physical ability or other qualities. The football career simulator encourages you to think about the kind of player you want to become rather than only chasing the highest possible number. A fast attacker with limited physical strength will create different choices from a balanced forward, just as a technical midfielder can develop along a different route from a defensive one.",
+        "Weaknesses are useful because they make the career more interesting. A player who is already perfect in every area would leave very little room for progression. In a football player career simulator, the early profile creates a problem to solve over multiple seasons. You may choose to strengthen an existing advantage, correct an obvious weakness or build a more rounded player. Progress then has context: a rating increase represents the career you have actually played rather than a disconnected number. By the time your footballer reaches the later stages, the final profile reflects the development choices, seasonal performances and events that happened along the way. That continuity is what turns a collection of ratings into a recognizable player story."
+      ]
+    },
+    {
+      "eyebrow": "FIRST CLUB",
+      "title": "Choose where your football career begins",
+      "paragraphs": [
+        "Selecting the first club marks the point where your created player becomes an active professional. The choice represents the environment in which the prospect will try to earn minutes, improve and attract attention. Starting in a lower-pressure situation can create a gradual development story, while a more demanding path can make early seasons feel riskier. Copero uses the first club as the starting point for the timeline that follows, so the football career simulator can begin recording seasons, appearances, goals, assists, ratings and major events from the moment your professional journey starts.",
+        "Each season acts like a chapter instead of a long list of matches you must play manually. The simulator summarizes performance and then presents the moments that matter for the next step. That approach keeps the football career game moving quickly while still giving the years a clear order. You can see a prospect become a regular starter, experience a difficult year, recover after a setback or attract interest following a breakout season. Because the game is focused on the player's life rather than full match control, it is possible to simulate a long football career without turning every year into hours of repetitive fixtures. The result is a faster career simulator that still preserves progression and consequences."
+      ]
+    },
+    {
+      "eyebrow": "TRANSFERS AND OFFERS",
+      "title": "Accept, reject and negotiate moves during your career",
+      "paragraphs": [
+        "Transfers are some of the biggest turning points in a football career simulator because one move can change the level, role and direction of a player. When another club becomes interested, the best choice is not always the largest name. The expected role, your age, recent performance and development needs all matter. Moving too early can create pressure before your player is ready, while staying too long can mean missing a chance to progress. Copero turns offers into career decisions rather than automatic upgrades, so you have to judge the opportunity in the context of the story you are building.",
+        "Negotiations add another layer of uncertainty. Instead of every offer ending with a simple yes or no, the football player career simulator can ask whether you want to push for better terms or accept the situation in front of you. Taking a risk may produce a better outcome, but it can also close a door. This makes transfers memorable because they are connected to choices rather than being passive events. A successful career may rise through several clubs and competitions, while another run can include a poor move followed by a recovery. Both stories can be interesting. The simulator is not only about creating a perfect path; it is about seeing what happens when ambition, timing and uncertainty collide over many seasons."
+      ]
+    },
+    {
+      "eyebrow": "CAREER DECISIONS",
+      "title": "Make choices that change the direction of your player story",
+      "paragraphs": [
+        "Statistics alone are not enough to make a career memorable. Copero therefore includes events and choices that represent the moments where a footballer's path can change away from the scoreline. You may face decisions involving an agent, playing time, a loan, a national-team opportunity, personal development or another situation that affects progression. Some options offer an immediate benefit, while others make more sense if you are thinking about the next season rather than the current one. There is no single answer that works for every football career because the best choice depends on the player you have created and the situation that has developed.",
+        "This is where the football career simulator becomes a narrative game. Two players with similar ratings can end up with completely different histories because one accepts an early transfer, another stays to fight for a place and a third prioritizes development. Choices accumulate. When you look back at the completed timeline, the interesting part is not only the final overall rating but the sequence of clubs, seasons, risks and turning points that produced it. Copero is designed so that the journey itself becomes the reward. Reaching the highest possible level is one goal, but creating a career with a clear identity, unexpected setbacks and memorable decisions can be just as satisfying."
+      ]
+    },
+    {
+      "eyebrow": "SEASONS AND STATS",
+      "title": "Track your footballer's progress year by year",
+      "paragraphs": [
+        "Season summaries show whether the decisions you made are actually working. After each campaign you can review the player's age, club, rating and key statistics. Those numbers become the memory of the career and help explain why new opportunities appear. A striker's excellent year might be reflected in goals and transfer interest, while a young player can make important progress through regular appearances even without spectacular totals. The football career simulator keeps these records concise so the game remains fast while still giving you enough information to understand how the player has changed over time.",
+        "The meaning of a good decision also changes as the player gets older. At the beginning of a football career, minutes and development can matter more than joining a famous club. During the prime years, trophies, international opportunities or an ambitious move may become more important. Later, consistency and the way you finish the career can become part of the challenge. This age-based progression helps the football player career simulator feel like a complete arc instead of a repeated annual loop. You move from prospect to established professional and eventually to retirement, with every stage judged against a different set of expectations."
+      ]
+    },
+    {
+      "eyebrow": "REPLAY VALUE",
+      "title": "Create a different football career every time you play",
+      "paragraphs": [
+        "A major reason to replay a football career simulator is the question of what might have happened if you had chosen differently. Change the starting position, accept an offer you rejected before or build a different attribute profile and the rest of the run can move in another direction. Copero is designed for careers that can be completed and restarted rather than one fixed story. You can set personal challenges, such as staying with as few clubs as possible, moving frequently, building an extreme specialist, chasing a long career or testing a position you normally ignore.",
+        "Variation also comes from timing. Not every opportunity needs to appear at the same point in every simulation, so one player can break through quickly while another must spend several seasons developing. The online football career simulator combines your decisions with events and outcomes that keep the path uncertain even after you understand the core rules. A second run should not simply be the first run performed more efficiently. It should give you another route to explore. If you enjoy comparing career histories, ratings and final outcomes, creating several players is the easiest way to see how much one decision can change the seasons that follow."
+      ]
+    },
+    {
+      "eyebrow": "HOW TO PLAY",
+      "title": "How to get the most from Copero's football career simulator",
+      "paragraphs": [
+        "You can start directly from the player creator on this page. Choose your career setup, define your footballer, complete the opening attribute decisions and select a first club. From there, advance season by season and read each offer or event before making a choice. The football career simulator is designed around context, so the option that looks biggest is not automatically the option that fits your player best. A smaller role can sometimes support development, while an ambitious move can be worth the risk at the right moment. You do not need an external guide because the game presents the relevant choices as the career develops.",
+        "For a more interesting run, give your player a goal before starting. Try to create a high-scoring forward, a long-serving midfielder, an elite defender or simply a career where you accept whatever the story produces. When the player retires, review the final summary and compare clubs, seasons, statistics and rating with previous careers. Then change one major variable and play again. That loop of creation, simulation, decision-making and comparison is the core of Copero. If you were looking for a free football career simulator online that works in the browser and lets you experience a full player journey without controlling every match, you can begin the first season from the generator above."
+      ]
+    }
+  ],
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Football career simulator questions",
+    "items": [
+      {"question": "Is Copero a free football career simulator?", "answer": "Yes. You can start a football career in your browser and play through the main stages without installing a separate game."},
+      {"question": "Can I create my own football player?", "answer": "Yes. Each career begins with a player creator where you choose details such as position, preferred foot, shirt number and nationality before shaping the player's attributes."},
+      {"question": "Does the simulator include transfers?", "answer": "Yes. Offers, negotiations and club changes can appear during the career, so the same starting player can follow very different routes."},
+      {"question": "Is every career different?", "answer": "Your starting profile, decisions and career events can create different paths. Changing one important choice can affect several later seasons."},
+      {"question": "Do I have to play matches manually?", "answer": "No. Copero focuses on simulating seasons, player development and career decisions, allowing you to move through many years without controlling each individual match."}
+    ]
+  },
+  "finalCta": {
+    "eyebrow": "YOUR STORY STARTS HERE",
+    "title": "Create a player and begin a new football career",
+    "body": "Choose the footballer you want to become, build your attributes and discover how far your player can go in this online football career simulator.",
+    "button": "Play the simulator"
+  }
+}

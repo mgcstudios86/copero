@@ -1,0 +1,14 @@
+{
+  "resultCard": {
+    "eyebrow": "Beispiel für ein Karriereergebnis",
+    "number": "10",
+    "overallLabel": "Höchster OVR",
+    "name": "Deine Karriere auf einen Blick",
+    "description": "Beim Karriereende fasst Copero deinen Weg in einer teilbaren Karte mit höchstem OVR, Endnote, Vereinen und Titeln zusammen.",
+    "stats": {
+      "rating": "Endnote",
+      "clubs": "Vereine",
+      "trophies": "Titel"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "resultCard": {
+    "eyebrow": "Ejemplo de resultado",
+    "number": "10",
+    "overallLabel": "OVR pico",
+    "name": "Tu carrera, resumida",
+    "description": "Al retirarte, Copero convierte tu trayectoria en una tarjeta compartible con tu mejor OVR, nota final, clubes y trofeos.",
+    "stats": {
+      "rating": "Nota final",
+      "clubs": "Clubes",
+      "trophies": "Trofeos"
+    }
+  }
+}

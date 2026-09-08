@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { fillRnw } from './fixtures/rnw-fill';
+import { fillRnw, passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * Copero — Evidencia E2E simulador-carrera (MGC-444).
@@ -57,7 +57,15 @@ async function completeIdentity(page: any, name: string) {
   // Espera explicita a que el boton se habilite (canContinue = true).
   await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
   await page.getByTestId('btn-identity-continue').click();
-  await page.waitForURL(/\/simulador-carrera\/dashboard/, { timeout: 10_000 });
+  // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+  // MGC-2505: WF3 (MGC-1649) interpone season-hub tras team-select. La identidad
+  // + club llevan al hub de temporada (no al dashboard legacy). Los callers de
+  // completeIdentity asumen que el dashboard queda renderizado (asserts sobre
+  // `dashboard-screen`, OVR, jersey-preview, headings), por lo que navegamos
+  // explícitamente a `/dashboard` tras pasar las dos pantallas nuevas.
+  await passTeamSelect(page);
+  await passSeasonHub(page);
+  await page.goto('/simulador-carrera/dashboard');
   await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 10_000 });
 }
 
@@ -97,8 +105,10 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
 
   test('3) dashboard → academy → clubStart → dashboard', async ({ page }, testInfo) => {
     await completeIdentity(page, 'Mateo Romero');
-    await page.getByTestId('btn-dashboard-academy').click();
-    await page.waitForURL(/\/simulador-carrera\/academy/, { timeout: 10_000 });
+    // MGC-2505 / MGC-1649 (WF3): tras completeIdentity el club ya quedó seteado
+    // (passTeamSelect→passSeasonHub). btn-dashboard-academy navega a /match
+    // en lugar de /academy. Forzamos la ruta /academy directo.
+    await page.goto('/simulador-carrera/academy');
     await expect(page.getByTestId('academy-screen')).toBeVisible();
     await page.screenshot({
       path: testInfo.outputPath('mgc444-03-academy.png'),
