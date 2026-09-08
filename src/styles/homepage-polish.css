@@ -1,0 +1,73 @@
+.play-first-hero {
+  grid-template-columns: minmax(330px, 0.84fr) minmax(560px, 1.16fr);
+  gap: clamp(32px, 4.5vw, 58px);
+  align-items: center;
+}
+
+.play-first-hero .hero-copy {
+  max-width: 560px;
+  padding-block: 0;
+}
+
+.play-first-hero .hero-copy h1 {
+  max-width: 13.5ch;
+  font-size: clamp(44px, 5vw, 70px);
+  line-height: 0.94;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: pretty;
+}
+
+.play-first-hero .hero-copy .lead {
+  max-width: 46ch;
+  font-size: clamp(16px, 1.35vw, 18px);
+  line-height: 1.58;
+}
+
+.career-result-card__name h2 {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: balance;
+}
+
+.career-result-card__name p,
+.career-result-card__stats span {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1180px) and (min-width: 1081px) {
+  .play-first-hero {
+    grid-template-columns: minmax(300px, 0.78fr) minmax(540px, 1.22fr);
+    gap: 30px;
+  }
+
+  .play-first-hero .hero-copy h1 {
+    max-width: 14ch;
+    font-size: clamp(42px, 4.7vw, 60px);
+  }
+}
+
+@media (max-width: 1080px) {
+  .play-first-hero .hero-copy {
+    max-width: 720px;
+  }
+
+  .play-first-hero .hero-copy h1 {
+    max-width: 15ch;
+    font-size: clamp(44px, 7vw, 66px);
+  }
+
+  .play-first-hero .hero-copy .lead {
+    max-width: 58ch;
+  }
+}
+
+@media (max-width: 560px) {
+  .play-first-hero .hero-copy h1 {
+    max-width: none;
+    font-size: clamp(38px, 12vw, 52px);
+    line-height: 0.96;
+  }
+}

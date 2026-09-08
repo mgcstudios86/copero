@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
-import { fillRnw } from './fixtures/rnw-fill';
+import { fillRnw, passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-396 — capturas visuales post-fix `palette.copero.primary` → verde.
@@ -50,7 +50,11 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     // MGC-405: MGC-375 hace que btn-identity-continue enrute a /dashboard
     // (no /draft). Navegamos directo a /draft para mantener el intent del
     // spec MGC-396 (capturas visuales del flow draft → tu-jugador → club).
-    await page.waitForURL('**/simulador-carrera/dashboard', { timeout: 15_000 });
+    // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+    // MGC-2505: WF3 (MGC-1649) interpone season-hub tras team-select.
+    await passTeamSelect(page);
+    await passSeasonHub(page);
+    await expect(page.getByTestId('season-hub-screen')).toBeVisible({ timeout: 15_000 });
     await page.goto('/simulador-carrera/draft');
     await page.waitForSelector('[data-testid="draft-screen"]', { timeout: 10_000 });
     await page.waitForTimeout(500);

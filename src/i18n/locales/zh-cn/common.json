@@ -1,0 +1,39 @@
+{
+  "brand": "Copero",
+  "nav": {
+    "primary": "主导航",
+    "home": "首页",
+    "howToPlay": "怎么玩",
+    "mechanics": "核心机制",
+    "faq": "常见问题",
+    "play": "开始游戏"
+  },
+  "language": {
+    "label": "语言"
+  },
+  "actions": {
+    "playNow": "立即开始",
+    "continueCareer": "继续生涯",
+    "backHome": "返回首页"
+  },
+  "status": {
+    "loading": "加载中",
+    "empty": "暂无数据",
+    "error": "发生错误"
+  },
+  "notFound": {
+    "title": "页面不存在",
+    "body": "这个 Copero 页面不存在。返回首页即可开始新生涯或继续已有存档。",
+    "back": "返回 Copero",
+    "support": "联系支持"
+  },
+  "footer": {
+    "independent": "独立制作的足球生涯模拟游戏。",
+    "disclaimer": "并非 Copero 官方产品，也不隶属于任何俱乐部或球员。",
+    "navigation": "网站链接",
+    "about": "关于",
+    "contact": "联系",
+    "privacy": "隐私",
+    "terms": "条款"
+  }
+}

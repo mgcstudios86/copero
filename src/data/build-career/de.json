@@ -1,0 +1,96 @@
+{
+  "seo": {
+    "title": "Copero: Erstelle deine eigene Fußballkarriere online",
+    "description": "Erstelle deine eigene Fußballkarriere in Copero. Baue einen Spieler, wähle acht Legenden-Attribute, entscheide dich für einen Verein und spiele die Karriere kostenlos online."
+  },
+  "hero": {
+    "eyebrow": "SPIELERKARRIERE-SIMULATOR · KOSTENLOS IM BROWSER",
+    "title": "Copero: Erstelle deine eigene Fußballkarriere",
+    "lead": "Erstelle einen Fußballer, forme seine Attribute und begleite ihn vom ersten Akademieangebot bis zum Karriereende. Deine Entscheidungen bestimmen Saisons, Transfers, Titel, Nationalmannschaft und das finale Karriereergebnis.",
+    "primary": "Meinen Spieler erstellen",
+    "secondary": "So funktioniert die Karriere",
+    "facts": ["Kein Konto", "Kein Download", "Im Browser gespeichert"]
+  },
+  "routePreview": {
+    "label": "DEIN KARRIEREWEG",
+    "player": "ROOKIE · #10 · ST",
+    "stages": [
+      { "number": "01", "title": "ERSTELLEN", "detail": "Identität & Position" },
+      { "number": "02", "title": "DRAFT", "detail": "8 Legenden-Attribute" },
+      { "number": "03", "title": "AUFSTIEG", "detail": "Vereine & Entscheidungen" },
+      { "number": "04", "title": "VERMÄCHTNIS", "detail": "Statistiken & Titel" }
+    ],
+    "footer": "EIN SPIELER · EIN DURCHGEHENDER SPIELSTAND"
+  },
+  "intro": {
+    "eyebrow": "WAS DU ERSTELLST",
+    "title": "Ein Spieler. Ein ganzes Fußballleben.",
+    "paragraphs": [
+      "Eine eigene Karriere in Copero bedeutet Kontrolle: Du bestimmst den Spieler, seine Position und die Entscheidungen, die aus einem Talent einen Vereinshelden oder Weltstar machen können.",
+      "Copero ist ein entscheidungsbasierter Fußballkarriere-Simulator und kein Echtzeit-Matchspiel. Du erstellst den Spieler, baust sein Profil im Legenden-Draft auf, wählst den Startverein und reagierst auf wichtige Wendepunkte bis zum Karriereende."
+    ]
+  },
+  "stages": {
+    "eyebrow": "VOM ROOKIE BIS ZUM KARRIEREENDE",
+    "title": "So erstellst du deine Fußballkarriere in Copero",
+    "body": "Jeder Lauf folgt vier verbundenen Phasen. Entscheidungen am Anfang beeinflussen die Chancen, die später auftauchen.",
+    "items": [
+      { "number": "01", "title": "Erstelle den Fußballer", "body": "Wähle Nachnamen, Rückennummer, starken Fuß, Nationalität und Position. Die Position beeinflusst die Bewertung deines Profils und die Saisonziele." },
+      { "number": "02", "title": "Baue die Spieler-DNA", "body": "In acht Runden erscheinen Fußballlegenden. Wähle jeweils ein noch freies Attribut: Tempo, Schuss, Pass, Dribbling, Defensive, Physis, Skills oder schwacher Fuß." },
+      { "number": "03", "title": "Wähle den ersten Verein", "body": "Vergleiche nach dem Draft die verfügbaren Vereine. Reputation zählt, aber Rolle und Spielzeit können für die Entwicklung wichtiger sein." },
+      { "number": "04", "title": "Erlebe die Karriere", "body": "Spiele durch Saisons, Ziele, Verträge, Leihen, Transfers und mögliche Nationalmannschaftsberufungen. Am Ende fasst Copero deine gesamte Laufbahn zusammen." }
+    ]
+  },
+  "draft": {
+    "eyebrow": "DER COPERO-UNTERSCHIED",
+    "title": "Acht Legenden. Acht Attribute.",
+    "body": "Du verteilst keine Punkte auf eine leere Vorlage. Runde für Runde triffst du eine endgültige Wahl. Ein starker Schuss heute kann bedeuten, später auf besseres Dribbling zu verzichten.",
+    "attributes": ["TEM", "SCH", "PAS", "DRI", "DEF", "PHY", "SKL", "WF"],
+    "modes": [
+      { "name": "KLASSISCH", "tag": "WERTE SICHTBAR", "body": "Sieh die Werte und nutze Rerolls, während du lernst, welche Attribute zu deiner Position passen." },
+      { "name": "PURIST", "tag": "NUR WISSEN", "body": "Drafte ohne sichtbare Ratings und ohne Rerolls und verlasse dich auf dein Wissen über die Legenden." }
+    ]
+  },
+  "decisions": {
+    "eyebrow": "KEIN PERFEKTES DREHBUCH",
+    "title": "Die Karriere verändert sich mit deinen Entscheidungen",
+    "items": [
+      { "marker": "POSITION", "title": "Baue für deine Rolle", "body": "Ein Stürmer braucht andere Stärken als ein Spielmacher oder Verteidiger. Beginne mit der Karriere, die du wirklich spielen willst." },
+      { "marker": "CHANCE", "title": "Beurteile die Vereinssituation", "body": "Ein großer Name ist verlockend, aber Kaderrolle und Spielzeit beeinflussen die Entwicklung. Reputation ist nicht das einzige Signal." },
+      { "marker": "RISIKO", "title": "Triff die wichtigen Entscheidungen", "body": "Transfers, Leihen und Ziele bringen Abwägungen. Bleiben schafft Kontinuität, ein Wechsel kann das Niveau erhöhen. Einen garantierten Siegerweg gibt es nicht." }
+    ]
+  },
+  "result": {
+    "eyebrow": "DER SCHLUSSPFIFF",
+    "title": "Deine ganze Karriere wird zu einem Ergebnis",
+    "body": "Das Karriereende löscht den Weg nicht. Copero behält deine Saisons und erstellt eine Zusammenfassung. Ändere Position, Draft oder Entscheidungen und erlebe eine völlig andere Laufbahn.",
+    "cardLabel": "BEISPIEL-KARRIEREERGEBNIS",
+    "name": "DEIN SPIELER",
+    "role": "ST · #10 · RECHTSFUSS",
+    "rating": "92",
+    "ratingLabel": "MAX. OVR",
+    "stats": [
+      { "value": "418", "label": "TORE" },
+      { "value": "11", "label": "TITEL" },
+      { "value": "6", "label": "VEREINE" }
+    ],
+    "note": "Beispielkarte · dein Ergebnis entsteht aus deiner Karriere"
+  },
+  "faq": {
+    "eyebrow": "KURZE ANTWORTEN",
+    "title": "Copero Fußballkarriere FAQ",
+    "items": [
+      { "question": "Kann ich in Copero meine eigene Fußballkarriere erstellen?", "answer": "Ja. Erstelle deinen Spieler, schließe den Acht-Attribute-Draft ab, wähle einen Startverein und führe die Karriere bis zum Ende." },
+      { "question": "Ist das Copero-Karrierespiel kostenlos?", "answer": "Ja. Es läuft ohne Konto oder Download in einem modernen Browser. Werbung unterstützt die Seite, der Karriere-Builder selbst ist kostenlos." },
+      { "question": "Steuere ich Spiele in Echtzeit?", "answer": "Nein. Copero konzentriert sich auf Spieleraufbau und Karriereentscheidungen. Der Simulator berechnet Saisons und Statistiken." },
+      { "question": "Wird meine Karriere gespeichert?", "answer": "Die aktive Karriere wird lokal im Browser gespeichert, sodass du im selben Browser weiterspielen kannst. Es handelt sich nicht um einen Cloud-Spielstand." },
+      { "question": "Ist copero.top ein offizielles Copero-Produkt?", "answer": "Nein. copero.top ist ein unabhängiger Fußballkarriere-Simulator und nicht mit Copero, Vereinen, Wettbewerben oder Spielern verbunden." }
+    ]
+  },
+  "finalCta": {
+    "eyebrow": "DIE AKADEMIE WARTET",
+    "title": "Erstelle den Spieler. Triff die Entscheidungen. Behalte die Geschichte.",
+    "body": "Die erste Entscheidung dauert nur Sekunden. Die Karriere dahinter kann viel weiter führen.",
+    "button": "Meine Copero-Karriere starten"
+  }
+}

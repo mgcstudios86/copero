@@ -1,0 +1,14 @@
+{
+  "resultCard": {
+    "eyebrow": "Exemplo de resultado da carreira",
+    "number": "10",
+    "overallLabel": "OVR máximo",
+    "name": "Sua carreira, resumida",
+    "description": "Na aposentadoria, o Copero transforma sua trajetória em um card compartilhável com OVR máximo, nota final, clubes e títulos.",
+    "stats": {
+      "rating": "Nota final",
+      "clubs": "Clubes",
+      "trophies": "Títulos"
+    }
+  }
+}

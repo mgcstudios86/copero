@@ -1,0 +1,119 @@
+{
+  "seo": {
+    "title": "Simulador de Carreira de Futebol Online | Copero",
+    "description": "Jogue um simulador de carreira de futebol online: crie seu jogador, desenvolva atributos, tome decisões, negocie transferências e simule uma carreira completa até a aposentadoria."
+  },
+  "hero": {
+    "eyebrow": "SIMULADOR DE CARREIRA DE FUTEBOL",
+    "title": "Simulador de carreira de futebol: crie seu jogador e sua história",
+    "lead": "Copero é um simulador de carreira de futebol online em que você começa como uma jovem promessa, monta seu perfil e toma decisões que podem mudar toda a trajetória. Cada partida pode gerar temporadas, transferências, oportunidades e momentos decisivos diferentes.",
+    "primary": "Começar minha carreira",
+    "secondary": "Ver como funciona",
+    "factsLabel": "Recursos do simulador",
+    "facts": ["Grátis e online", "Carreiras diferentes a cada partida", "Temporadas, transferências e decisões"]
+  },
+  "route": {
+    "label": "SUA CARREIRA",
+    "live": "AO VIVO",
+    "player": "JOVEM PROMESSA",
+    "age": "16 ANOS → APOSENTADORIA",
+    "stages": [
+      {"title": "Criar jogador", "detail": "Posição, pé, número e nacionalidade"},
+      {"title": "Desenvolver atributos", "detail": "Defina seu perfil de futebol"},
+      {"title": "Escolher clube", "detail": "Comece a carreira profissional"},
+      {"title": "Viver a carreira", "detail": "Temporadas, decisões e transferências"}
+    ],
+    "footer": "Uma carreira completa, decisão por decisão."
+  },
+  "intro": {
+    "eyebrow": "JOGO DE CARREIRA DE FUTEBOL",
+    "title": "O que é um simulador de carreira de futebol?",
+    "paragraphs": [
+      "Um simulador de carreira de futebol é um jogo focado na trajetória de um único jogador, e não no gerenciamento completo de um clube. No Copero, você cria seu próprio atleta e acompanha a evolução desde os primeiros passos no futebol profissional até a aposentadoria. O objetivo não é apenas chegar ao fim com o maior overall possível. A parte mais importante é construir uma história com começo, crescimento, escolhas, clubes, transferências, bons momentos e dificuldades. Você pode criar um atacante que busca gols, um meia que evolui por várias temporadas, um defensor que tenta se firmar como titular ou um goleiro com um caminho completamente diferente. Assim, o simulador de carreira de futebol mistura jogo esportivo, narrativa e geração de trajetórias que podem ser comparadas entre partidas.",
+      "Diferentemente de um manager tradicional, você não precisa controlar todo o elenco, ajustar cada tática ou disputar manualmente todas as partidas. Seu jogador fica no centro da experiência. O simulador carreira jogador de futebol concentra a atenção na identidade, nos atributos, no desempenho por temporada, nas ofertas e nas decisões que afetam o futuro. Uma transferência pode aumentar o nível competitivo, mas também a pressão por desempenho. Ficar no clube atual pode dar continuidade, mas fazer uma oportunidade desaparecer. Uma escolha de desenvolvimento pode transformar seu atleta em especialista ou em um jogador mais equilibrado. Se você procura um jogo de carreira de futebol online para criar um atleta e acompanhar toda a trajetória até a aposentadoria, Copero foi construído exatamente para esse tipo de experiência."
+    ]
+  },
+  "sections": [
+    {
+      "eyebrow": "CRIE SEU JOGADOR",
+      "title": "Comece o simulador de carreira criando seu próprio atleta",
+      "paragraphs": [
+        "Toda carreira começa pela identidade. Você escolhe sobrenome, número preferido, pé dominante, posição e nacionalidade. Esses dados não servem apenas para personalização visual, porque formam a base do perfil usado durante a simulação. A posição tem um peso especialmente importante: um centroavante valoriza características diferentes de um zagueiro, goleiro ou meia criativo. O simulador de carreira de futebol usa essas escolhas para dar coerência às próximas etapas, evitando que todas as partidas pareçam a mesma história com nomes diferentes. Você começa a montar um tipo de jogador com forças, limitações e objetivos próprios.",
+        "A criação inicial também é uma forma simples de experimentar trajetórias bem diferentes. Em uma partida, você pode montar um ponta veloz; na seguinte, um zagueiro físico ou um meia técnico. Alterar posição, pé preferido ou nacionalidade muda a expectativa sobre a carreira e faz o simulador carreira jogador de futebol funcionar bem em várias tentativas. Não é necessário entender sistemas táticos complexos para começar. As escolhas são apresentadas de maneira direta para que você saiba o que está definindo. Depois da identidade, a carreira passa para o desenvolvimento dos atributos, momento em que a jovem promessa ganha um perfil esportivo cada vez mais claro."
+      ]
+    },
+    {
+      "eyebrow": "ATRIBUTOS E POTENCIAL",
+      "title": "Desenvolva um perfil diferente em cada carreira",
+      "paragraphs": [
+        "Depois de criar o jogador, Copero permite definir as qualidades iniciais por meio dos atributos. Em vez de entregar sempre o mesmo atleta, o jogo cria escolhas que ajudam a construir pontos fortes e fracos. Dependendo da posição, velocidade, técnica, finalização, passe, físico e outras características podem ter importâncias diferentes. No simulador de carreira de futebol, o objetivo não precisa ser simplesmente buscar o maior número em tudo. É mais interessante definir que tipo de atleta você quer acompanhar. Um atacante rápido, mas pouco físico, cria decisões diferentes de um jogador equilibrado, assim como um meia ofensivo terá uma trajetória distinta de um volante defensivo.",
+        "As fraquezas fazem parte da experiência porque criam espaço para evolução. Um atleta perfeito desde o início deixaria poucas decisões relevantes para as temporadas seguintes. No simulador carreira jogador de futebol, uma deficiência pode virar um objetivo de longo prazo. Você pode reforçar uma qualidade já forte, corrigir um problema evidente ou montar um jogador mais completo. Dessa maneira, a evolução do overall ganha contexto e representa o que aconteceu na carreira, em vez de ser apenas um número isolado. Quando o atleta chegar aos melhores anos, o perfil final ainda deve refletir as escolhas feitas no começo e o caminho construído ao longo das temporadas."
+      ]
+    },
+    {
+      "eyebrow": "PRIMEIRO CLUBE",
+      "title": "Escolha onde sua carreira de futebol vai começar",
+      "paragraphs": [
+        "A escolha do primeiro clube marca o início real da trajetória profissional. O time representa o ambiente em que sua promessa vai buscar minutos, melhorar e chamar a atenção. Começar em uma situação com menos pressão pode criar uma evolução gradual, enquanto um caminho mais ambicioso pode tornar as primeiras temporadas mais difíceis. O simulador de carreira de futebol usa esse momento como ponto inicial da linha do tempo, registrando a partir daí temporadas, jogos, gols, assistências, avaliações e acontecimentos importantes do jogador.",
+        "Cada temporada funciona como um capítulo. Em vez de exigir que você controle manualmente todas as partidas, Copero resume o desempenho e leva a experiência para os momentos que afetam a próxima fase. Isso mantém o jogo de carreira de futebol rápido mesmo quando a simulação cobre muitos anos. Você pode ver um jovem se transformar em titular, atravessar uma temporada ruim, se recuperar ou receber novas ofertas depois de um grande ano. Como o foco está na trajetória e não no controle de cada jogo, é possível experimentar uma carreira longa sem transformar cada temporada em horas de partidas repetitivas."
+      ]
+    },
+    {
+      "eyebrow": "TRANSFERÊNCIAS E PROPOSTAS",
+      "title": "Aceite, recuse ou negocie mudanças de clube",
+      "paragraphs": [
+        "Transferências são alguns dos maiores pontos de virada em um simulador de carreira de futebol porque uma única mudança pode alterar nível, função e futuro do atleta. Quando outro clube demonstra interesse, o nome mais famoso nem sempre é a melhor escolha. É preciso considerar idade, momento da carreira, desempenho recente, função esperada e espaço para crescimento. Trocar cedo demais pode aumentar a concorrência antes de o jogador estar pronto; ficar por tempo demais pode significar perder uma oportunidade importante. Copero transforma propostas em decisões de carreira, não em melhorias automáticas.",
+        "As negociações adicionam incerteza ao processo. O simulador carreira jogador de futebol pode colocar você diante da escolha entre aceitar uma proposta ou tentar condições melhores. Pedir mais pode trazer uma recompensa, mas também pode fechar a porta. Isso faz com que uma transferência seja lembrada como consequência de uma escolha. Uma carreira pode crescer passando por diversos clubes e campeonatos, enquanto outra pode incluir uma mudança ruim seguida de recuperação. Os dois caminhos podem ser interessantes. A ideia não é gerar apenas trajetórias perfeitas, mas mostrar como ambição, timing e risco se combinam ao longo de muitos anos."
+      ]
+    },
+    {
+      "eyebrow": "DECISÕES DE CARREIRA",
+      "title": "Suas escolhas mudam a direção da história",
+      "paragraphs": [
+        "Uma carreira de futebol memorável precisa de mais do que estatísticas. Por isso, Copero inclui eventos e decisões que representam momentos capazes de mudar o rumo fora do resultado de uma partida. Podem aparecer situações relacionadas a agente, tempo de jogo, empréstimo, seleção nacional, objetivos pessoais ou desenvolvimento. Algumas opções oferecem vantagem imediata; outras fazem mais sentido pensando na temporada seguinte. Não existe uma resposta correta para todas as partidas porque a melhor decisão depende do perfil, da idade e do contexto do atleta naquele momento.",
+        "É nessa parte que o simulador de carreira de futebol se aproxima de um jogo narrativo. Dois jogadores com atributos parecidos podem terminar com histórias completamente diferentes porque um aceita uma transferência cedo, outro fica para disputar posição e um terceiro prioriza evolução. As decisões se acumulam ao longo dos anos. No resumo final, você não vê apenas o overall, mas uma sequência de clubes, temporadas, riscos e mudanças. A própria jornada vira parte da recompensa. Chegar ao nível mais alto é um objetivo possível, mas superar uma fase ruim, permanecer muito tempo em um clube ou construir um caminho inesperado também pode tornar a carreira marcante."
+      ]
+    },
+    {
+      "eyebrow": "TEMPORADAS E ESTATÍSTICAS",
+      "title": "Acompanhe a evolução do jogador ano após ano",
+      "paragraphs": [
+        "Os resumos de temporada mostram se as decisões anteriores estão funcionando. Depois de cada campanha, você pode conferir idade, clube, overall e estatísticas principais. Esses números formam a memória da trajetória e ajudam a explicar por que novas oportunidades aparecem. Uma ótima temporada de um atacante pode ser refletida em gols e interesse de outros times, enquanto um jogador jovem pode evoluir com minutos regulares mesmo sem números espetaculares. O simulador de carreira de futebol mantém essas informações compactas para que a experiência continue rápida sem perder a sensação de progresso no longo prazo.",
+        "O significado de uma boa decisão também muda conforme o jogador envelhece. No início, minutos e desenvolvimento podem ser mais importantes do que o prestígio do clube. No auge, títulos, seleção ou uma transferência ambiciosa podem se tornar prioridades. Nos últimos anos, manter o nível e decidir como encerrar a trajetória passa a fazer parte do desafio. O simulador carreira jogador de futebol usa essas fases para evitar que cada temporada pareça uma repetição da anterior. Você acompanha um arco completo de promessa a profissional consolidado e, por fim, até a aposentadoria."
+      ]
+    },
+    {
+      "eyebrow": "REJOGABILIDADE",
+      "title": "Crie uma carreira diferente sempre que jogar novamente",
+      "paragraphs": [
+        "Um dos motivos para repetir um simulador de carreira de futebol é descobrir o que teria acontecido com outra escolha. Mude a posição inicial, aceite uma proposta que antes recusou ou monte atributos diferentes e as temporadas seguintes podem tomar outro rumo. Copero foi pensado para carreiras que podem ser concluídas e reiniciadas, não para uma única história fixa. Você pode criar desafios pessoais, como passar por poucos clubes, trocar de time muitas vezes, construir um especialista extremo, buscar uma trajetória muito longa ou testar uma posição que normalmente não escolheria.",
+        "A variação também aparece no momento em que oportunidades e eventos surgem. Uma carreira pode decolar cedo, enquanto outra exige várias temporadas de crescimento. O simulador carreira jogador de futebol combina suas decisões com resultados que mantêm a incerteza mesmo depois que você entende as regras principais. A segunda partida não deve ser apenas a primeira feita com mais eficiência, mas uma rota alternativa. Se você gosta de comparar clubes, estatísticas, overall e resumos finais, criar vários jogadores permite enxergar como uma única decisão pode alterar os anos seguintes."
+      ]
+    },
+    {
+      "eyebrow": "COMO JOGAR",
+      "title": "Como aproveitar o simulador de carreira de futebol do Copero",
+      "paragraphs": [
+        "Você pode começar diretamente pelo criador nesta página. Defina a configuração da carreira, monte seu jogador, complete as decisões iniciais de atributos e escolha o primeiro clube. Depois avance temporada por temporada, lendo propostas e eventos antes de escolher. O simulador de carreira de futebol foi construído para que o contexto importe. A opção aparentemente maior ou mais famosa nem sempre é a melhor para o momento do atleta. Um passo menor pode ajudar o desenvolvimento, enquanto uma mudança ambiciosa pode ser o risco certo na hora certa. Não é necessário consultar um guia externo porque o próprio fluxo apresenta as informações relevantes.",
+        "Para deixar a experiência mais interessante, defina um objetivo antes de começar. Tente criar um grande artilheiro, um meia de carreira longa, um defensor de elite ou simplesmente deixe a história seguir sem um plano rígido. Na aposentadoria, revise o resumo final e compare clubes, temporadas, estatísticas e overall com outras carreiras. Depois altere uma variável importante e jogue novamente. Essa combinação de criação, simulação, decisões e comparação é a base do Copero. Se você procurava um simulador de carreira de futebol online grátis, que funcione no navegador e permita viver uma trajetória completa sem controlar manualmente cada partida, pode iniciar sua primeira temporada no gerador acima."
+      ]
+    }
+  ],
+  "faq": {
+    "eyebrow": "PERGUNTAS FREQUENTES",
+    "title": "Perguntas sobre o simulador de carreira de futebol",
+    "items": [
+      {"question": "Copero é um simulador de carreira de futebol grátis?", "answer": "Sim. Você pode iniciar uma carreira diretamente no navegador e passar pelas principais etapas sem instalar um jogo separado."},
+      {"question": "Posso criar meu próprio jogador?", "answer": "Sim. A carreira começa com a criação do atleta, incluindo posição, pé preferido, número e nacionalidade antes da definição dos atributos."},
+      {"question": "Existem transferências e mudanças de clube?", "answer": "Sim. Durante a trajetória podem aparecer propostas, negociações e transferências, permitindo que o mesmo perfil inicial siga caminhos diferentes."},
+      {"question": "Cada carreira é diferente?", "answer": "Perfil inicial, decisões e eventos podem gerar rotas diferentes. Uma escolha importante pode afetar várias temporadas seguintes."},
+      {"question": "Preciso jogar todas as partidas manualmente?", "answer": "Não. Copero é focado em simular temporadas, desenvolvimento e decisões de carreira, permitindo avançar por muitos anos sem controlar cada jogo."}
+    ]
+  },
+  "finalCta": {
+    "eyebrow": "SUA HISTÓRIA COMEÇA AGORA",
+    "title": "Crie seu jogador e comece uma nova carreira",
+    "body": "Escolha quem você quer ser, desenvolva seus atributos e descubra até onde seu jogador pode chegar neste simulador de carreira de futebol online.",
+    "button": "Jogar o simulador"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "seo": {
+    "title": "Simulatore Carriera Calciatore Online | Copero",
+    "description": "Gioca a un simulatore carriera calciatore online: crea il tuo giocatore, sviluppa gli attributi, gestisci trasferimenti e decisioni e simula una carriera completa fino al ritiro."
+  },
+  "hero": {
+    "eyebrow": "SIMULATORE CARRIERA CALCIATORE",
+    "title": "Simulatore carriera calciatore: crea il tuo giocatore e la tua storia",
+    "lead": "Copero è un simulatore carriera calciatore online in cui inizi come giovane promessa, costruisci il tuo profilo e prendi decisioni che possono cambiare tutta la carriera. Ogni partita può generare stagioni, trasferimenti, opportunità e svolte differenti.",
+    "primary": "Inizia la carriera",
+    "secondary": "Scopri come funziona",
+    "factsLabel": "Caratteristiche del simulatore",
+    "facts": ["Gratis online", "Percorsi di carriera diversi", "Stagioni, trasferimenti e decisioni"]
+  },
+  "route": {
+    "label": "LA TUA CARRIERA",
+    "live": "LIVE",
+    "player": "GIOVANE PROMESSA",
+    "age": "16 ANNI → RITIRO",
+    "stages": [
+      {"title": "Crea il calciatore", "detail": "Ruolo, piede, numero e nazionalità"},
+      {"title": "Sviluppa gli attributi", "detail": "Definisci il tuo profilo"},
+      {"title": "Scegli il club", "detail": "Inizia il percorso professionistico"},
+      {"title": "Vivi la carriera", "detail": "Stagioni, decisioni e trasferimenti"}
+    ],
+    "footer": "Una carriera completa, una decisione alla volta."
+  },
+  "intro": {
+    "eyebrow": "CARRIERA CALCISTICA ONLINE",
+    "title": "Che cos'è un simulatore carriera calciatore?",
+    "paragraphs": [
+      "Un simulatore carriera calciatore è un gioco concentrato sulla vita sportiva di un singolo giocatore invece che sulla gestione completa di una squadra. In Copero crei il tuo calciatore e segui la sua evoluzione dai primi passi tra i professionisti fino al ritiro. L'obiettivo non è soltanto arrivare a una valutazione finale alta, ma costruire una storia credibile fatta di crescita, stagioni, club, trasferimenti e scelte. Puoi creare un attaccante che punta ai gol, un centrocampista che migliora anno dopo anno, un difensore destinato a diventare titolare oppure un portiere con un percorso completamente diverso. Per questo il simulatore carriera calciatore unisce elementi di gioco sportivo, simulazione narrativa e generatore di carriere, permettendo di confrontare ogni nuova esperienza con quelle precedenti.",
+      "A differenza di un classico manager calcistico, non devi controllare l'intera rosa, impostare ogni tattica o giocare manualmente tutte le partite. Il centro dell'esperienza è il tuo calciatore. Il simulatore di carriera calcistica dà importanza alla sua identità, agli attributi, alle prestazioni stagionali, alle offerte e alle decisioni che possono cambiare il futuro. Un trasferimento può aumentare il livello competitivo ma anche la pressione. Restare nello stesso club può offrire continuità ma far perdere un'occasione. Una scelta di sviluppo può rendere il giocatore specializzato oppure più completo. Se cerchi un gioco carriera calciatore online che permetta di creare un giocatore e seguirlo dall'esordio al ritiro, Copero è costruito proprio attorno a questo tipo di esperienza."
+    ]
+  },
+  "sections": [
+    {
+      "eyebrow": "CREA IL TUO GIOCATORE",
+      "title": "Inizia il simulatore carriera creando il tuo calciatore",
+      "paragraphs": [
+        "Ogni carriera parte dall'identità del giocatore. Puoi scegliere cognome, numero di maglia preferito, piede dominante, ruolo e nazionalità. Questi elementi non sono semplici dettagli estetici, perché definiscono il profilo da cui inizierà tutta la simulazione. Il ruolo è particolarmente importante: un centravanti ha esigenze diverse rispetto a un difensore centrale, a un portiere o a un regista. Il simulatore carriera calciatore usa queste scelte per dare coerenza alla crescita successiva e per evitare che ogni partita sembri la stessa storia con un nome differente. Stai creando un tipo di calciatore che avrà punti di forza, limiti e obiettivi specifici.",
+        "La creazione iniziale rende semplice sperimentare carriere molto diverse. In una partita puoi costruire un esterno veloce, nella successiva un difensore fisico o un centrocampista tecnico. Cambiare ruolo, piede preferito o nazionalità modifica anche le aspettative con cui segui la carriera. Il simulatore di carriera calcistica è quindi pensato per essere rigiocato più volte senza obbligarti a imparare sistemi tattici complessi. Le decisioni vengono presentate in modo diretto e puoi capire subito quale effetto possono avere sul profilo del tuo giocatore. Una volta definita l'identità, inizia la parte dedicata agli attributi, dove la giovane promessa assume caratteristiche tecniche sempre più riconoscibili."
+      ]
+    },
+    {
+      "eyebrow": "ATTRIBUTI E POTENZIALE",
+      "title": "Costruisci un profilo diverso in ogni carriera calcistica",
+      "paragraphs": [
+        "Dopo aver creato il calciatore, Copero ti permette di definirne le qualità iniziali attraverso gli attributi. Il sistema evita di consegnarti sempre lo stesso giocatore standard e ti invita a scegliere quali caratteristiche rendere più importanti. In base al ruolo, velocità, tecnica, finalizzazione, passaggio, fisico e altre qualità possono avere un peso differente. Nel simulatore carriera calciatore non conta solo inseguire il numero più alto: conta creare un profilo con una logica. Un attaccante rapidissimo ma poco fisico genererà problemi e opportunità differenti rispetto a una punta più equilibrata, così come un centrocampista creativo avrà un percorso diverso da uno più difensivo.",
+        "Anche i punti deboli hanno una funzione precisa. Un giocatore perfetto fin dall'inizio lascerebbe poco spazio alla crescita. In un simulatore di carriera calcistica, invece, una debolezza crea un obiettivo che può accompagnarti per più stagioni. Puoi rafforzare ciò che già funziona, correggere un limite evidente oppure cercare un profilo più completo. In questo modo ogni miglioramento successivo ha un contesto e la valutazione generale diventa la conseguenza della carriera realmente giocata. Quando il calciatore raggiunge gli anni migliori, il suo stile dovrebbe essere ancora riconoscibile e collegato alle decisioni prese nelle prime fasi della simulazione."
+      ]
+    },
+    {
+      "eyebrow": "PRIMO CLUB",
+      "title": "Scegli dove iniziare la tua carriera da calciatore",
+      "paragraphs": [
+        "La scelta del primo club segna l'inizio vero e proprio del percorso professionistico. Non si tratta soltanto di selezionare uno stemma: il club rappresenta l'ambiente in cui la tua giovane promessa dovrà guadagnare minuti, migliorare e attirare l'attenzione. Un contesto con meno pressione può favorire una crescita graduale, mentre una strada più ambiziosa può rendere le prime stagioni più rischiose. Il simulatore carriera calciatore usa questa scelta come punto di partenza della cronologia, registrando da quel momento stagioni, presenze, gol, assist, valutazioni e altri eventi importanti.",
+        "Ogni stagione funziona come un capitolo della storia. Invece di obbligarti a giocare manualmente tutte le partite, Copero riassume il rendimento e porta l'attenzione sui momenti che possono cambiare la fase successiva. Questo rende il gioco carriera calciatore veloce da seguire anche quando la simulazione copre molti anni. Puoi vedere una promessa diventare titolare, attraversare una stagione difficile, recuperare oppure ricevere interesse dopo un'annata eccezionale. Il ritmo resta rapido, ma la continuità non viene persa: quello che succede in una stagione diventa il contesto per le decisioni e le opportunità che arrivano dopo."
+      ]
+    },
+    {
+      "eyebrow": "TRASFERIMENTI E OFFERTE",
+      "title": "Accetta, rifiuta o negozia i trasferimenti durante la carriera",
+      "paragraphs": [
+        "I trasferimenti sono tra i momenti più importanti di un simulatore carriera calciatore perché una singola scelta può cambiare livello, ruolo e direzione del giocatore. Quando arriva l'interesse di un altro club, il nome più famoso non è necessariamente l'opzione migliore. Bisogna considerare l'età, il rendimento recente, il ruolo previsto e le possibilità di crescita. Cambiare troppo presto può aumentare la concorrenza prima che il giocatore sia pronto, mentre aspettare troppo a lungo può significare perdere un'occasione. Copero trasforma quindi le offerte in vere decisioni di carriera e non in miglioramenti automatici.",
+        "Le negoziazioni aggiungono un ulteriore elemento di rischio. Nel simulatore di carriera calcistica puoi trovarti davanti alla scelta tra accettare una proposta oppure chiedere qualcosa di più. Una richiesta ambiziosa può portare un vantaggio, ma può anche chiudere una porta. Questo rende i trasferimenti memorabili perché il risultato è legato alla tua scelta. Una carriera può crescere passando attraverso vari club e competizioni, mentre un'altra può includere una decisione sbagliata seguita da una lunga fase di recupero. Entrambe possono creare una storia interessante. Il punto non è produrre soltanto carriere perfette, ma simulare il modo in cui tempismo, ambizione e incertezza influenzano il percorso di un calciatore."
+      ]
+    },
+    {
+      "eyebrow": "DECISIONI DI CARRIERA",
+      "title": "Le tue scelte modificano la storia del giocatore",
+      "paragraphs": [
+        "Una carriera calcistica memorabile non può essere composta soltanto da statistiche. Copero include quindi eventi e decisioni che rappresentano i momenti in cui il percorso cambia fuori dal risultato di una singola partita. Possono comparire situazioni legate all'agente, al minutaggio, a un prestito, alla nazionale, agli obiettivi personali o allo sviluppo. Alcune opzioni offrono un vantaggio immediato, altre hanno senso soltanto pensando alla stagione successiva. Non esiste una risposta sempre corretta perché la scelta migliore dipende dal profilo e dal momento della carriera.",
+        "È qui che il simulatore carriera calciatore diventa anche un gioco narrativo. Due giocatori con caratteristiche iniziali simili possono finire con storie molto diverse se uno accetta un trasferimento precoce, uno resta a lottare per il posto e un altro dà priorità allo sviluppo. Le decisioni si accumulano anno dopo anno. Quando arrivi al riepilogo finale non guardi soltanto la valutazione, ma una sequenza di club, stagioni, rischi e svolte. Il viaggio diventa quindi parte del risultato. Raggiungere il livello massimo è un obiettivo possibile, ma anche costruire una carriera coerente, superare un periodo difficile o restare a lungo in un club può rendere una simulazione memorabile."
+      ]
+    },
+    {
+      "eyebrow": "STAGIONI E STATISTICHE",
+      "title": "Segui l'evoluzione del tuo calciatore anno dopo anno",
+      "paragraphs": [
+        "I riepiloghi stagionali permettono di capire se le decisioni prese stanno funzionando. Dopo ogni annata puoi controllare età, club, valutazione e statistiche principali. Questi dati diventano la memoria della carriera e aiutano a spiegare perché compaiono determinate opportunità. Una stagione eccellente di un attaccante può essere visibile nei gol e nell'interesse di altri club, mentre una giovane promessa può crescere grazie alla continuità anche senza numeri spettacolari. Il simulatore carriera calciatore mantiene queste informazioni compatte per non rallentare la partita, ma sufficientemente chiare per mostrare come il profilo cambia nel tempo.",
+        "Con l'età cambia anche il valore delle scelte. Nelle prime stagioni, minutaggio e crescita possono essere più importanti del prestigio del club. Nel pieno della carriera potresti cercare trofei, una nuova competizione o un trasferimento più ambizioso. Negli ultimi anni diventa interessante capire quanto a lungo riesci a mantenere il livello e come vuoi chiudere il percorso. Il simulatore di carriera calcistica usa queste fasi per evitare che ogni stagione sembri identica. Segui un arco completo dalla giovane promessa al professionista affermato fino al momento del ritiro, e la stessa decisione può assumere un significato differente a seconda dell'età del giocatore."
+      ]
+    },
+    {
+      "eyebrow": "RIGIOCABILITÀ",
+      "title": "Simula una carriera diversa ogni volta che ricominci",
+      "paragraphs": [
+        "Uno dei motivi per rigiocare un simulatore carriera calciatore è scoprire cosa sarebbe successo prendendo un'altra decisione. Cambia il ruolo iniziale, accetta l'offerta che avevi rifiutato oppure costruisci un set di attributi diverso e le stagioni successive possono seguire un'altra direzione. Copero è pensato per carriere che possono essere completate e ricominciate, non per una sola trama fissa. Puoi creare sfide personali: restare in pochi club, cambiare spesso squadra, costruire uno specialista estremo, provare una carriera molto lunga o scegliere un ruolo che normalmente ignori.",
+        "Anche il momento in cui arrivano opportunità ed eventi contribuisce alla varietà. Un giocatore può emergere subito, mentre un altro può aver bisogno di diverse stagioni prima di compiere il salto decisivo. Il simulatore di carriera calcistica combina le tue scelte con risultati che mantengono una parte di incertezza, anche quando conosci già le regole principali. La seconda partita non dovrebbe essere soltanto la prima giocata in modo più efficiente, ma un percorso alternativo. Se ti piace confrontare club, statistiche, valutazioni e riepiloghi finali, creare più calciatori ti permette di vedere quanto una singola scelta possa influenzare gli anni successivi."
+      ]
+    },
+    {
+      "eyebrow": "COME GIOCARE",
+      "title": "Come usare il simulatore carriera calciatore di Copero",
+      "paragraphs": [
+        "Puoi iniziare direttamente dal creatore presente in questa pagina. Scegli la configurazione della carriera, crea il calciatore, completa le decisioni iniziali sugli attributi e seleziona il primo club. Da quel momento avanza stagione dopo stagione e leggi offerte ed eventi prima di scegliere. Il simulatore carriera calciatore è costruito in modo che il contesto abbia importanza. L'opzione più grande o prestigiosa non è sempre quella più adatta. Un passo più piccolo può favorire la crescita, mentre una scelta ambiziosa può essere il rischio giusto nel momento ideale. Non serve una guida esterna perché il flusso del gioco presenta le informazioni necessarie quando diventano rilevanti.",
+        "Per rendere la partita più interessante, puoi stabilire un obiettivo prima di cominciare. Prova a creare un bomber, un centrocampista dalla carriera lunghissima, un difensore d'élite oppure lascia che la storia si sviluppi senza un piano preciso. Al ritiro controlla il riepilogo finale e confronta club, stagioni, statistiche e valutazione con le carriere precedenti. Poi modifica una variabile importante e ricomincia. Questa combinazione di creazione, simulazione, decisioni e confronto è il cuore di Copero. Se cercavi un simulatore carriera calciatore online gratis che funzioni nel browser e permetta di vivere un'intera carriera senza giocare manualmente ogni partita, puoi iniziare subito dal generatore qui sopra."
+      ]
+    }
+  ],
+  "faq": {
+    "eyebrow": "DOMANDE FREQUENTI",
+    "title": "Domande sul simulatore carriera calciatore",
+    "items": [
+      {"question": "Copero è un simulatore carriera calciatore gratis?", "answer": "Sì. Puoi iniziare una carriera direttamente nel browser e attraversarne le fasi principali senza installare un gioco separato."},
+      {"question": "Posso creare il mio calciatore?", "answer": "Sì. All'inizio scegli elementi come ruolo, piede preferito, numero di maglia e nazionalità, quindi costruisci il profilo degli attributi."},
+      {"question": "Ci sono trasferimenti e cambi di squadra?", "answer": "Sì. Durante la carriera possono comparire offerte, negoziazioni e trasferimenti, così lo stesso giocatore iniziale può seguire percorsi molto diversi."},
+      {"question": "Ogni carriera è diversa?", "answer": "Profilo iniziale, decisioni ed eventi possono cambiare il percorso. Una sola scelta importante può influenzare diverse stagioni successive."},
+      {"question": "Devo giocare manualmente tutte le partite?", "answer": "No. Copero si concentra sulla simulazione delle stagioni, sulla crescita del giocatore e sulle decisioni di carriera, permettendo di avanzare per molti anni senza controllare ogni gara."}
+    ]
+  },
+  "finalCta": {
+    "eyebrow": "LA TUA STORIA INIZIA ORA",
+    "title": "Crea il tuo calciatore e comincia una nuova carriera",
+    "body": "Scegli che giocatore vuoi diventare, sviluppa gli attributi e scopri fin dove può arrivare la tua carriera in questo simulatore online.",
+    "button": "Gioca al simulatore"
+  }
+}

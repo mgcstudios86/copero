@@ -1,0 +1,163 @@
+{
+  "seo": {
+    "title": "Copero gioco online | Simulatore di carriera calcistica gratis",
+    "description": "Gioca a Copero gratis nel browser. Crea un calciatore, completa il draft di 8 attributi e vivi una carriera con club, trasferimenti, trofei e nazionale.",
+    "ogTitle": "Copero gioco online · Simulatore di carriera calcistica",
+    "ogDescription": "Crea il tuo calciatore, completa il draft e gioca una carriera calcistica completa in Copero."
+  },
+  "hero": {
+    "mobileTitle": "Crea la tua carriera nel calcio",
+    "mobileBody": "Crea il tuo calciatore, completa il draft di 8 attributi e costruisci una carriera tra club, trasferimenti, trofei e nazionale.",
+    "eyebrow": "Gioco di calcio · Simulatore di carriera",
+    "title": "Copero gioco: crea la tua carriera nel calcio",
+    "body": "Gioca a Copero gratis direttamente nel browser. Crea un calciatore, scegli nazionalità, ruolo, numero di maglia e piede preferito, affronta il draft di otto attributi e inizia una modalità carriera in cui stagioni, contratti, trasferimenti e decisioni possono cambiare il tuo percorso fino al ritiro.",
+    "primary": "Inizia una carriera",
+    "secondary": "Scopri come si gioca",
+    "tags": {
+      "browser": "Gioco online",
+      "draft": "Draft di 8 attributi",
+      "career": "Modalità carriera",
+      "save": "Salvataggio locale"
+    }
+  },
+  "starter": {
+    "eyebrow": "Gioca dalla prima schermata",
+    "title": "Crea il tuo calciatore",
+    "body": "Imposta i dati essenziali e passa subito al draft. Non servono account o introduzioni aggiuntive prima di iniziare la tua carriera in Copero.",
+    "lastName": "Cognome",
+    "lastNamePlaceholder": "Il tuo cognome",
+    "number": "Numero",
+    "foot": "Piede preferito",
+    "left": "Sinistro",
+    "right": "Destro",
+    "nationality": "Nazionalità",
+    "position": "Ruolo",
+    "draftMode": "Modalità draft",
+    "classicHint": "Attributi visibili + 5 cambi",
+    "puristHint": "Valori nascosti + nessun cambio",
+    "start": "Inizia carriera",
+    "continue": "Continua carriera salvata",
+    "activeSave": "In questo browser è già presente una carriera salvata.",
+    "microcopy": "Gratis · Nessun account · Salvataggio locale nel browser",
+    "preview": "Il tuo giocatore",
+    "previewFallback": "ROOKIE",
+    "previewHint": "Poi arriva il draft di otto attributi con le leggende del calcio."
+  },
+  "about": {
+    "eyebrow": "Cos'è Copero",
+    "title": "Cos'è Copero?",
+    "paragraphs": {
+      "one": "Copero è un gioco di calcio online costruito attorno alla creazione e alla gestione dell'intera carriera di un singolo giocatore. Invece di controllare le partite in tempo reale, scegli identità, attributi, club iniziale e decisioni che compaiono nel corso delle stagioni. Per questo Copero funziona come un simulatore di carriera rapido: puoi iniziare dalla prima schermata e vedere come contratti, trasferimenti, eventi e prestazioni cambiano il percorso fino al ritiro.",
+      "two": "Una carriera in Copero comincia con un draft dedicato a PAC, SHO, PAS, DRI, DEF, PHY, SKL e WF. Il ruolo modifica il peso di questi attributi e contribuisce a definire il potenziale del giocatore. Dopo il draft scegli il club di partenza e avanzi stagione dopo stagione tra obiettivi, minuti, offerte e calcio internazionale. Non esiste un unico finale corretto: il simulatore registra club, statistiche, trofei, patrimonio e un voto finale che riassume il percorso creato."
+    }
+  },
+  "howTo": {
+    "eyebrow": "Come giocare a Copero",
+    "title": "Come giocare a Copero: dalla creazione del giocatore al ritiro",
+    "body": "Il gioco è diviso in fasi chiare per permetterti di iniziare subito. Tu prendi le decisioni e il simulatore le trasforma in una carriera calcistica completa.",
+    "steps": {
+      "identity": {
+        "title": "1. Crea il tuo giocatore",
+        "body": "Inizia dalla homepage scegliendo cognome, numero di maglia, piede preferito, nazionalità e ruolo. Puoi anche aggiungere una nazionalità familiare facoltativa. Il ruolo conta perché modifica il peso degli attributi quando il gioco calcola il profilo e lo sviluppo futuro."
+      },
+      "draft": {
+        "title": "2. Completa il draft di 8 attributi",
+        "body": "A ogni turno compare una leggenda del calcio e aggiungi un attributo ancora mancante. Classic mostra i valori e permette di cambiare leggenda; Purist nasconde i numeri. Quando PAC, SHO, PAS, DRI, DEF, PHY, SKL e WF sono completi, il gioco ha il profilo con cui inizierai la carriera."
+      },
+      "origin": {
+        "title": "3. Scegli dove iniziare la carriera",
+        "body": "Copero propone diverse opzioni per il club di partenza. Reputazione, difficoltà, spazio in squadra e margine di crescita non sono uguali. Un club più esigente può offrire maggiore visibilità, mentre un'altra scelta può darti più possibilità di giocare e crescere nelle prime stagioni."
+      },
+      "career": {
+        "title": "4. Vivi stagioni, trasferimenti e decisioni",
+        "body": "La modalità carriera avanza una stagione alla volta e può aprire rinnovi, trasferimenti, prestiti, eventi, tratti e convocazioni in nazionale. Decidi quando restare, cambiare club o correre un rischio. La partita continua fino al ritiro, quando Copero riassume tutta la carriera e assegna un voto finale."
+      }
+    }
+  },
+  "modes": {
+    "eyebrow": "Modalità carriera Copero",
+    "title": "Scegli come vuoi giocare la modalità carriera",
+    "body": "Classic e Purist utilizzano lo stesso simulatore di carriera. Cambia soltanto la quantità di informazioni e di correzioni disponibili durante il draft iniziale.",
+    "classic": {
+      "title": "Classic: più informazioni per costruire il giocatore",
+      "body": "Classic mostra i valori degli attributi di ogni leggenda e offre fino a cinque cambi prima della conferma. È il modo più semplice per imparare Copero perché puoi vedere come nasce il profilo e cercare attributi adatti al tuo ruolo."
+    },
+    "purist": {
+      "title": "Purist: scegli senza vedere i valori",
+      "body": "Purist nasconde i numeri e non permette cambi. Scegli in base alla tua conoscenza del calcio e accetti un profilo iniziale meno prevedibile. Dopo il draft, club, contratti, eventi e progressione funzionano come in Classic."
+    }
+  },
+  "mechanics": {
+    "eyebrow": "Simulatore di carriera",
+    "title": "Come funziona il simulatore di carriera di Copero?",
+    "body": "Copero mantiene uno stato di carriera continuo. Attributi, potenziale, ruolo in rosa, reputazione del club, obiettivi ed eventi determinano quali opportunità compaiono mentre il simulatore avanza.",
+    "items": {
+      "growth": {
+        "title": "Attributi, ruolo e potenziale",
+        "body": "Gli otto attributi non hanno lo stesso peso per ogni ruolo. Lo stesso draft può produrre risultati diversi per un attaccante, un centrocampista o un difensore. Il potenziale definisce il limite di sviluppo e l'OVR cambia con stagioni, minuti giocati e contesto."
+      },
+      "clubs": {
+        "title": "Club, ruoli, contratti e trasferimenti",
+        "body": "Essere riserva, giocatore di rotazione, titolare o titolare indiscusso cambia le possibilità di giocare e può influire su stipendio e crescita. I contratti hanno una durata e nel corso della carriera possono arrivare rinnovi, prestiti o offerte da altri club."
+      },
+      "events": {
+        "title": "Eventi, tratti e decisioni",
+        "body": "La carriera introduce anche eventi che richiedono una scelta. Alcuni tratti modificano la probabilità di certe situazioni. Una decisione può aprire un'opportunità, migliorare lo sviluppo o complicare il percorso, quindi giocatori simili possono concludere carriere molto diverse."
+      },
+      "national": {
+        "title": "Nazionale, competizioni e trofei",
+        "body": "Anche la nazionalità fa parte del simulatore. Buone prestazioni possono portare a convocazioni tramite la nazionalità principale o familiare. Il calcio internazionale mantiene statistiche proprie e può aggiungere trofei, quindi il risultato finale non dipende soltanto da un OVR elevato."
+      }
+    }
+  },
+  "career": {
+    "eyebrow": "Carriera Copero",
+    "title": "La tua carriera calcistica, dal debutto al ritiro",
+    "body": "Al ritiro ricevi una Career Result Card con OVR massimo, potenziale, club, stagioni, statistiche, patrimonio, obiettivi, trofei e presenza in nazionale, oltre a un voto finale da D a S. Rigioca Copero con un altro ruolo, un'altra nazionalità, una diversa modalità draft o nuove decisioni e confronta come lo stesso simulatore possa creare un giocatore completamente diverso. La scheda può essere copiata, condivisa o scaricata come immagine.",
+    "cta": "Crea un'altra carriera"
+  },
+  "faq": {
+    "eyebrow": "FAQ Copero",
+    "title": "Domande frequenti su Copero e sulla modalità carriera",
+    "items": {
+      "what": {
+        "question": "Cos'è Copero?",
+        "answer": "Copero è un gioco di calcio online e un simulatore di carriera. Crei un calciatore, completi otto attributi e attraversi club, stagioni, contratti, eventi, nazionale e trofei fino al ritiro."
+      },
+      "play": {
+        "question": "Come si gioca a Copero?",
+        "answer": "Crea il giocatore nella prima schermata, completa il draft, scegli un club iniziale e rispondi alle decisioni che compaiono durante la carriera. Ogni fase fa parte dello stesso salvataggio continuo."
+      },
+      "career": {
+        "question": "Cos'è la modalità carriera di Copero?",
+        "answer": "È la fase in cui il tuo calciatore avanza stagione dopo stagione tra ruoli in rosa, contratti, obiettivi, trasferimenti, prestiti, eventi e possibili convocazioni in nazionale."
+      },
+      "football": {
+        "question": "Copero è un gioco di calcio tradizionale?",
+        "answer": "È un gioco basato su decisioni e simulazione invece che sui comandi in tempo reale. Il centro dell'esperienza è costruire il giocatore e gestire una carriera professionistica."
+      },
+      "free": {
+        "question": "Posso giocare a Copero gratis nel browser?",
+        "answer": "Sì. copero.top funziona direttamente come gioco web e non richiede installazione o account prima di iniziare una carriera."
+      },
+      "save": {
+        "question": "La mia carriera in Copero viene salvata?",
+        "answer": "Sì. La carriera viene salvata localmente nel browser. Puoi passare tra spagnolo, inglese, cinese semplificato, tedesco, italiano e portoghese brasiliano senza creare una nuova carriera."
+      },
+      "classic": {
+        "question": "Qual è la differenza tra Classic e Purist?",
+        "answer": "Classic mostra gli attributi e permette fino a cinque cambi di leggenda durante il draft. Purist nasconde i valori e non consente cambi. La modalità carriera successiva utilizza lo stesso sistema."
+      },
+      "official": {
+        "question": "copero.top è il sito ufficiale di Copero?",
+        "answer": "No. copero.top è un progetto indipendente e non dichiara alcuna affiliazione ufficiale con Copero, club, competizioni o calciatori reali."
+      }
+    }
+  },
+  "finalCta": {
+    "eyebrow": "La tua prossima carriera",
+    "title": "Inizia una nuova partita a Copero e scopri fin dove puoi arrivare.",
+    "body": "Cambia ruolo, prova un altro draft o prendi decisioni diverse. Il sistema resta lo stesso, ma la carriera non deve finire nello stesso modo.",
+    "button": "Gioca a Copero"
+  }
+}

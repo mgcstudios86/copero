@@ -1,0 +1,144 @@
+{
+  "about": {
+    "seo": {
+      "title": "About Copero | Football Career Simulator",
+      "description": "Learn about Copero, an independent football career game and simulator you can play free in your browser."
+    },
+    "eyebrow": "About the project",
+    "title": "About Copero",
+    "intro": "Copero is a browser-based football game and career simulator built around one simple idea: create a footballer and see how far the career can go. The project combines an attribute draft, career decisions, clubs, contracts, transfers, international football and trophies in one continuous save stored locally in your browser.",
+    "sections": {
+      "project": {
+        "title": "What this project is",
+        "body": "copero.top is an independent web project designed to make career mode quick to start and easy to access. You do not need an account or a separate client. Create your player on the first screen, complete the draft, then progress season by season until retirement."
+      },
+      "gameplay": {
+        "title": "How the game is structured",
+        "body": "The career uses persistent rules and state across identity, draft, starting club, seasons, contracts, events and the final result. Decisions and player context influence the path while one continuous save connects the whole experience."
+      },
+      "languages": {
+        "title": "Languages and access",
+        "body": "Copero is currently available in Spanish, English and Simplified Chinese. Each language has its own URL while sharing the same game logic and local save, so switching languages does not create a separate career."
+      },
+      "independence": {
+        "title": "Independent project",
+        "body": "copero.top is not an official Copero product and is not affiliated with, sponsored by or endorsed by players, clubs, leagues, federations or other organizations referenced in the experience. Third-party names and marks belong to their respective owners."
+      }
+    }
+  },
+  "contact": {
+    "seo": {
+      "title": "Contact | Copero",
+      "description": "Contact the Copero project to report bugs, suggest improvements or raise questions about privacy, content or site behavior."
+    },
+    "eyebrow": "Contact",
+    "title": "Contact Copero",
+    "intro": "If you found a bug, have a suggestion or need to report an issue related to copero.top, email support@copero.top. This is the primary contact channel for support, privacy, content and site-behavior questions.",
+    "channelLabel": "Email",
+    "channelTitle": "Email Copero support",
+    "channelBody": "Use the support email for bugs, layout problems, translations, game behavior, improvement suggestions or questions related to the site.",
+    "channelCta": "support@copero.top",
+    "sections": {
+      "include": {
+        "title": "What information helps",
+        "body": "When reporting a problem, include the URL and language you were using, your device or browser, what you expected to happen and what happened instead. For game issues, it also helps to mention the career phase where the problem appeared."
+      },
+      "privacy": {
+        "title": "Do not send unnecessary sensitive information",
+        "body": "Do not send passwords, identity documents, financial information or other sensitive personal data that is not needed to explain the problem. For privacy questions, include only the information necessary to review the issue."
+      },
+      "legal": {
+        "title": "Privacy, rights and content",
+        "body": "You can also email support@copero.top about privacy, attribution, intellectual-property or content concerns. Clearly identify the affected resource and relevant URL so the issue can be reviewed."
+      },
+      "response": {
+        "title": "Response times",
+        "body": "copero.top is an independent project and does not provide guaranteed support response times. Messages are reviewed according to availability and priority, especially when they affect functionality, privacy or security."
+      }
+    }
+  },
+  "privacy": {
+    "seo": {
+      "title": "Privacy Policy | Copero",
+      "description": "Learn how copero.top handles local game saves, technical data, analytics, third-party advertising and your privacy choices."
+    },
+    "eyebrow": "Privacy",
+    "title": "Privacy Policy",
+    "intro": "This Privacy Policy explains in general terms how copero.top handles information when you use the website and game. The project is designed to be primarily local: your career is stored in the browser and you do not need an account to play.",
+    "updated": "Last updated: August 10, 2026",
+    "sections": {
+      "local": {
+        "title": "1. Local game storage",
+        "body": "Copero uses browser storage such as LocalStorage to keep your career state, site-related preferences and data required to continue a game. That information remains in the browser you are using and can be removed by clearing site data through your browser settings."
+      },
+      "account": {
+        "title": "2. Accounts and information you enter",
+        "body": "The current game does not require registration or an account. Information you enter to create a footballer, such as a display surname, shirt number, nationality or position, becomes part of the game state and is stored locally. Avoid using real or sensitive personal information if you do not want it stored on your device."
+      },
+      "analytics": {
+        "title": "3. Analytics and measurement",
+        "body": "The site code supports optional measurement services such as Google Analytics 4 and Microsoft Clarity through production configuration. When enabled, these services may receive technical and usage information such as visited pages, interaction events, device type, browser and network data, and may use cookies or similar technologies under their own policies. Copero does not require these services for the career game to function."
+      },
+      "technical": {
+        "title": "4. Technical data and hosting",
+        "body": "As with any website, hosting and network infrastructure may process technical information needed to deliver the service, such as IP address, HTTP requests, date and time, user agent and security logs. That processing also depends on the infrastructure providers used to publish copero.top."
+      },
+      "thirdParty": {
+        "title": "5. Third-party advertising and services",
+        "body": "copero.top uses Adsterra to display advertising on its pages. When an ad loads or you interact with it, Adsterra and its partners may receive technical and usage information such as your IP address, page URL, ad impressions and clicks, browser and device details, time zone and approximate location. They may use cookies, pixels or similar technologies to deliver ads, limit frequency, measure performance, prevent fraud and, where applicable, personalize advertising. This processing is governed by the Adsterra Privacy Policy (https://adsterra.com/privacy-policy-managed/) and Cookies Policy (https://adsterra.com/cookies/). You can restrict or delete cookies through your browser settings, but ads may then fail to display correctly."
+      },
+      "retention": {
+        "title": "6. Retention and control",
+        "body": "Locally stored career data remains until the browser, the user or the application removes or replaces it. You can reduce or delete local storage using browser privacy controls. Data processed by external services, when enabled, is subject to configured retention periods and those providers' policies."
+      },
+      "changes": {
+        "title": "7. Changes and contact",
+        "body": "This policy may be updated when site features, providers or measurement practices change. The update date will appear on this page. To ask a question or report a privacy concern, use the Contact page or email support@copero.top."
+      }
+    }
+  },
+  "terms": {
+    "seo": {
+      "title": "Terms of Use | Copero",
+      "description": "Read the terms that apply to copero.top, its football career simulator, content, third-party names, availability and limitations."
+    },
+    "eyebrow": "Terms",
+    "title": "Terms of Use",
+    "intro": "These Terms of Use govern access to and use of copero.top. By using the site, you agree to use it responsibly and in accordance with applicable law. If you do not agree with these terms, you may stop using the service.",
+    "updated": "Last updated: August 7, 2026",
+    "sections": {
+      "service": {
+        "title": "1. Nature of the service",
+        "body": "Copero is an entertainment experience and football career simulation available in the browser. Statistics, events, decisions, contracts, results and career paths generated by the game are part of a simulation and do not represent facts, predictions or professional advice."
+      },
+      "license": {
+        "title": "2. Permitted use",
+        "body": "You may use the site for personal and lawful purposes. You must not attempt to disrupt the service, bypass technical controls, introduce malicious code, automate requests abusively, exploit vulnerabilities or use the site in a way that harms other users or infrastructure."
+      },
+      "saves": {
+        "title": "3. Saves and data availability",
+        "body": "Careers are stored primarily in local browser storage. A save is not guaranteed to remain recoverable after clearing browser data, changing devices, using another browser profile, running cleanup tools or when a technical update requires the storage format to change."
+      },
+      "thirdParty": {
+        "title": "4. Third-party names, marks and content",
+        "body": "Player, club, competition, country, brand and other third-party names belong to their respective owners where applicable. Their appearance is descriptive or part of the simulation and does not imply affiliation, sponsorship, approval or an official relationship with copero.top."
+      },
+      "ownership": {
+        "title": "5. Project content and software",
+        "body": "Except for third-party materials and components governed by their own licenses, original project design, code and content are protected by applicable rules and by the licenses that apply to the repository or individual resources."
+      },
+      "availability": {
+        "title": "6. Availability and changes",
+        "body": "The site is provided subject to availability. Features, rules, data, languages, routes or mechanics may change, be suspended or be removed. The service is not guaranteed to be uninterrupted, error-free or to retain any particular feature permanently."
+      },
+      "liability": {
+        "title": "7. Limitations and no warranties",
+        "body": "To the extent permitted by law, copero.top is provided as is without express warranties regarding availability, accuracy, fitness for a particular purpose or preservation of saves. You are responsible for your device, browser and use of the service. Nothing in these terms excludes rights that cannot legally be limited."
+      },
+      "changes": {
+        "title": "8. Changes and contact",
+        "body": "These terms may be updated to reflect changes in the service, law or project practices. The current version and date will be published on this page. To report concerns related to these terms or site content, use the Contact page."
+      }
+    }
+  }
+}

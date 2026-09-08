@@ -1,0 +1,14 @@
+{
+  "resultCard": {
+    "eyebrow": "Esempio di risultato carriera",
+    "number": "10",
+    "overallLabel": "OVR massimo",
+    "name": "La tua carriera, in sintesi",
+    "description": "Al ritiro, Copero trasforma il tuo percorso in una scheda condivisibile con OVR massimo, voto finale, club e trofei.",
+    "stats": {
+      "rating": "Voto finale",
+      "clubs": "Club",
+      "trophies": "Trofei"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "brand": "Copero",
+  "nav": {
+    "primary": "Navegação principal",
+    "home": "Início",
+    "howToPlay": "Como jogar",
+    "mechanics": "Mecânicas",
+    "faq": "FAQ",
+    "play": "Jogar"
+  },
+  "language": {
+    "label": "Idioma"
+  },
+  "actions": {
+    "playNow": "Jogar agora",
+    "continueCareer": "Continuar carreira",
+    "backHome": "Voltar ao início"
+  },
+  "status": {
+    "loading": "Carregando",
+    "empty": "Sem dados",
+    "error": "Algo deu errado"
+  },
+  "notFound": {
+    "title": "Página não encontrada",
+    "body": "Esta página do Copero não existe. Volte ao início para começar ou continuar uma carreira.",
+    "back": "Voltar ao Copero",
+    "support": "Entrar em contato com o suporte"
+  },
+  "footer": {
+    "independent": "Um simulador independente de carreira no futebol.",
+    "disclaimer": "Não é um produto oficial do Copero e não tem afiliação com clubes ou jogadores.",
+    "navigation": "Links do site",
+    "about": "Sobre",
+    "contact": "Contato",
+    "privacy": "Privacidade",
+    "terms": "Termos"
+  }
+}

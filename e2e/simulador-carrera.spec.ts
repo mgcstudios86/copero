@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { fillRnw } from './fixtures/rnw-fill';
+import { fillRnw, passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-431 — E2E + axe + Lighthouse integral para simulador-carrera (MGC-427).
@@ -150,6 +150,17 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
     await page.getByTestId('btn-identity-continue').click();
     await expect(page.getByTestId('identity-screen')).toBeHidden({ timeout: 15_000 });
+    // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+    // MGC-2505: WF3 (MGC-1649) interpone season-hub tras team-select. Navegamos
+    // explícito a /dashboard porque las asserts debajo asumen ese screen
+    // (jersey, OVR, "Free agent" badge).
+    //
+    // NOTA: este test verifica el badge "Free agent" en dashboard — saltamos
+    // passTeamSelect a propósito para NO asignar club. Si passTeamSelect
+    // corre, profile.club queda seteado y el badge desaparece, rompiendo el
+    // AC. passSeasonHub sigue siendo no-op si la app omite la pantalla.
+    await passSeasonHub(page);
+    await page.goto('/simulador-carrera/dashboard');
     await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
 
     // ── 4. DASHBOARD: aserciones del AC (OVR/Age/Name/Pos/Nat) ────────
@@ -189,7 +200,11 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     });
 
     // ── 5. IR A LA ACADEMIA ───────────────────────────────────────────
-    await page.getByTestId('btn-dashboard-academy').click();
+    // MGC-2505 / MGC-1649 (WF3): tras seleccionar club en team-select,
+    // profile.club !== null → btn-dashboard-academy navega a /match
+    // (no a /academy). Navegamos directo a /academy para preservar el AC
+    // del test.
+    await page.goto('/simulador-carrera/academy');
     await expect(page.getByTestId('academy-screen')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('club-velez')).toBeVisible();
     await expect(page.getByTestId('club-temperley')).toBeVisible();
@@ -302,6 +317,12 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // MGC-2254 v3: espera explicita a que el boton este enabled.
     await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
     await page.getByTestId('btn-identity-continue').click();
+    // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+    // MGC-2505: WF3 (MGC-1649) interpone season-hub tras team-select. Las axe
+    // scans + screenshot debajo asumen el dashboard renderizado.
+    await passTeamSelect(page);
+    await passSeasonHub(page);
+    await page.goto('/simulador-carrera/dashboard');
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 15_000 });
 
     await expectZeroSeriousAxe(page, 'dashboard-standalone');
@@ -310,7 +331,10 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
       fullPage: true,
     });
 
-    await page.getByTestId('btn-dashboard-academy').click();
+    // MGC-2505 / MGC-1649 (WF3): tras passTeamSelect+passSeasonHub el club
+    // ya quedó seteado. btn-dashboard-academy navega a /match (no /academy).
+    // Navegamos directo para preservar el aserto sobre academy-screen.
+    await page.goto('/simulador-carrera/academy');
     await expect(page.getByTestId('academy-screen')).toBeVisible({ timeout: 15_000 });
     await expectZeroSeriousAxe(page, 'academy-standalone');
     await page.screenshot({

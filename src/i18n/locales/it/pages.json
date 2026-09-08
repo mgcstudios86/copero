@@ -1,0 +1,144 @@
+{
+  "about": {
+    "seo": {
+      "title": "Chi è Copero | Simulatore di carriera calcistica",
+      "description": "Scopri Copero, un gioco indipendente di carriera calcistica che puoi giocare gratis direttamente nel browser."
+    },
+    "eyebrow": "Il progetto",
+    "title": "Chi è Copero",
+    "intro": "Copero è un gioco di calcio nel browser e un simulatore di carriera basato su un'idea semplice: crea un calciatore e scopri fin dove può arrivare. Il progetto combina draft degli attributi, decisioni di carriera, club, contratti, trasferimenti, nazionale e trofei in un unico salvataggio continuo conservato localmente nel browser.",
+    "sections": {
+      "project": {
+        "title": "Cos'è questo progetto",
+        "body": "copero.top è un progetto web indipendente pensato per rendere la modalità carriera veloce da iniziare e facile da raggiungere. Non servono account o client separati. Crea il giocatore nella prima schermata, completa il draft e poi avanza stagione dopo stagione fino al ritiro."
+      },
+      "gameplay": {
+        "title": "Come è strutturato il gioco",
+        "body": "La carriera utilizza regole e stato persistenti tra identità, draft, club iniziale, stagioni, contratti, eventi e risultato finale. Le decisioni e il contesto del giocatore influenzano il percorso mentre un unico salvataggio collega tutta l'esperienza."
+      },
+      "languages": {
+        "title": "Lingue e accesso",
+        "body": "Copero è attualmente disponibile in spagnolo, inglese, cinese semplificato, tedesco, italiano e portoghese brasiliano. Ogni lingua ha un URL dedicato ma condivide la stessa logica di gioco e lo stesso salvataggio locale, quindi cambiare lingua non crea una carriera separata."
+      },
+      "independence": {
+        "title": "Progetto indipendente",
+        "body": "copero.top non è un prodotto ufficiale Copero e non è affiliato, sponsorizzato o approvato da giocatori, club, leghe, federazioni o altre organizzazioni citate nell'esperienza. Nomi e marchi di terzi appartengono ai rispettivi proprietari."
+      }
+    }
+  },
+  "contact": {
+    "seo": {
+      "title": "Contatti | Copero",
+      "description": "Contatta il progetto Copero per segnalare bug, proporre miglioramenti o fare domande su privacy, contenuti e comportamento del sito."
+    },
+    "eyebrow": "Contatti",
+    "title": "Contatta Copero",
+    "intro": "Se hai trovato un bug, hai un suggerimento o devi segnalare un problema relativo a copero.top, scrivi a support@copero.top. È il canale principale per supporto, privacy, contenuti e domande sul comportamento del sito.",
+    "channelLabel": "Email",
+    "channelTitle": "Scrivi al supporto Copero",
+    "channelBody": "Usa l'indirizzo di supporto per bug, problemi di layout, traduzioni, comportamento del gioco, suggerimenti o domande relative al sito.",
+    "channelCta": "support@copero.top",
+    "sections": {
+      "include": {
+        "title": "Quali informazioni sono utili",
+        "body": "Quando segnali un problema, indica l'URL e la lingua utilizzati, il dispositivo o browser, cosa ti aspettavi e cosa è successo realmente. Per problemi di gioco è utile anche specificare la fase della carriera in cui si è verificato il problema."
+      },
+      "privacy": {
+        "title": "Non inviare dati sensibili non necessari",
+        "body": "Non inviare password, documenti di identità, informazioni finanziarie o altri dati personali sensibili non necessari per spiegare il problema. Per domande sulla privacy, includi solo le informazioni necessarie alla verifica."
+      },
+      "legal": {
+        "title": "Privacy, diritti e contenuti",
+        "body": "Puoi scrivere a support@copero.top anche per questioni relative a privacy, attribuzione, proprietà intellettuale o contenuti. Indica con chiarezza la risorsa interessata e l'URL pertinente per facilitare la verifica."
+      },
+      "response": {
+        "title": "Tempi di risposta",
+        "body": "copero.top è un progetto indipendente e non garantisce tempi di risposta del supporto. I messaggi vengono esaminati in base alla disponibilità e alla priorità, soprattutto quando riguardano funzionalità, privacy o sicurezza."
+      }
+    }
+  },
+  "privacy": {
+    "seo": {
+      "title": "Informativa sulla privacy | Copero",
+      "description": "Scopri come copero.top gestisce salvataggi locali, dati tecnici, analytics, pubblicità di terze parti e le tue scelte sulla privacy."
+    },
+    "eyebrow": "Privacy",
+    "title": "Informativa sulla privacy",
+    "intro": "Questa Informativa sulla privacy descrive in termini generali come copero.top gestisce le informazioni quando utilizzi il sito e il gioco. Il progetto è pensato per funzionare principalmente in locale: la carriera viene salvata nel browser e non serve un account per giocare.",
+    "updated": "Ultimo aggiornamento: 10 agosto 2026",
+    "sections": {
+      "local": {
+        "title": "1. Salvataggio locale del gioco",
+        "body": "Copero utilizza l'archiviazione del browser, come LocalStorage, per conservare lo stato della carriera, le preferenze del sito e i dati necessari a continuare una partita. Queste informazioni restano nel browser utilizzato e possono essere rimosse cancellando i dati del sito dalle impostazioni del browser."
+      },
+      "account": {
+        "title": "2. Account e informazioni inserite",
+        "body": "Il gioco attuale non richiede registrazione o account. Le informazioni inserite per creare un calciatore, come cognome visualizzato, numero di maglia, nazionalità o ruolo, diventano parte dello stato di gioco e vengono salvate localmente. Evita di usare dati personali reali o sensibili se non vuoi conservarli sul dispositivo."
+      },
+      "analytics": {
+        "title": "3. Analytics e misurazione",
+        "body": "Il codice del sito supporta servizi opzionali di misurazione come Google Analytics 4 e Microsoft Clarity tramite la configurazione di produzione. Quando attivi, questi servizi possono ricevere informazioni tecniche e di utilizzo come pagine visitate, interazioni, tipo di dispositivo, browser e dati di rete e possono utilizzare cookie o tecnologie simili secondo le proprie policy. Copero non richiede questi servizi per il funzionamento del gioco."
+      },
+      "technical": {
+        "title": "4. Dati tecnici e hosting",
+        "body": "Come per qualsiasi sito web, l'infrastruttura di hosting e rete può elaborare informazioni tecniche necessarie a fornire il servizio, come indirizzo IP, richieste HTTP, data e ora, user agent e log di sicurezza. Tale trattamento dipende anche dai fornitori di infrastruttura usati per pubblicare copero.top."
+      },
+      "thirdParty": {
+        "title": "5. Pubblicità e servizi di terze parti",
+        "body": "copero.top utilizza Adsterra per mostrare pubblicità nelle proprie pagine. Quando un annuncio viene caricato o interagisci con esso, Adsterra e i suoi partner possono ricevere dati tecnici e di utilizzo, come indirizzo IP, URL della pagina, impression e clic sugli annunci, dati del browser e del dispositivo, fuso orario e posizione approssimativa. Possono usare cookie, pixel o tecnologie simili per distribuire gli annunci, limitarne la frequenza, misurarne le prestazioni, prevenire le frodi e, quando applicabile, personalizzare la pubblicità. Questo trattamento è disciplinato dall'Informativa sulla privacy di Adsterra (https://adsterra.com/privacy-policy-managed/) e dalla relativa Policy sui cookie (https://adsterra.com/cookies/). Puoi limitare o eliminare i cookie dalle impostazioni del browser, ma gli annunci potrebbero non essere visualizzati correttamente."
+      },
+      "retention": {
+        "title": "6. Conservazione e controllo",
+        "body": "I dati della carriera salvati localmente restano finché il browser, l'utente o l'applicazione non li rimuovono o sostituiscono. Puoi ridurre o eliminare l'archiviazione locale tramite i controlli privacy del browser. I dati elaborati da servizi esterni, quando attivi, seguono i periodi di conservazione configurati e le policy dei rispettivi fornitori."
+      },
+      "changes": {
+        "title": "7. Modifiche e contatti",
+        "body": "Questa informativa può essere aggiornata quando cambiano funzionalità, fornitori o pratiche di misurazione. La data di aggiornamento verrà mostrata su questa pagina. Per domande o segnalazioni sulla privacy usa la pagina Contatti o scrivi a support@copero.top."
+      }
+    }
+  },
+  "terms": {
+    "seo": {
+      "title": "Termini di utilizzo | Copero",
+      "description": "Leggi i termini applicabili a copero.top, al simulatore di carriera calcistica, ai contenuti, ai nomi di terze parti, alla disponibilità e alle limitazioni."
+    },
+    "eyebrow": "Termini",
+    "title": "Termini di utilizzo",
+    "intro": "Questi Termini di utilizzo regolano l'accesso e l'uso di copero.top. Utilizzando il sito accetti di farlo in modo responsabile e nel rispetto della legge applicabile. Se non accetti i termini, puoi interrompere l'uso del servizio.",
+    "updated": "Ultimo aggiornamento: 9 agosto 2026",
+    "sections": {
+      "service": {
+        "title": "1. Natura del servizio",
+        "body": "Copero è un'esperienza di intrattenimento e una simulazione di carriera calcistica disponibile nel browser. Statistiche, eventi, decisioni, contratti, risultati e percorsi generati dal gioco fanno parte di una simulazione e non rappresentano fatti, previsioni o consulenza professionale."
+      },
+      "license": {
+        "title": "2. Uso consentito",
+        "body": "Puoi utilizzare il sito per finalità personali e lecite. Non devi tentare di interrompere il servizio, aggirare controlli tecnici, introdurre codice malevolo, automatizzare richieste in modo abusivo, sfruttare vulnerabilità o utilizzare il sito in modo dannoso per altri utenti o per l'infrastruttura."
+      },
+      "saves": {
+        "title": "3. Salvataggi e disponibilità dei dati",
+        "body": "Le carriere vengono salvate principalmente nell'archiviazione locale del browser. Non è garantito che un salvataggio resti recuperabile dopo la cancellazione dei dati del browser, il cambio di dispositivo o profilo, l'uso di strumenti di pulizia o un aggiornamento tecnico che richieda modifiche al formato di archiviazione."
+      },
+      "thirdParty": {
+        "title": "4. Nomi, marchi e contenuti di terze parti",
+        "body": "Nomi di giocatori, club, competizioni, paesi, marchi e altri soggetti appartengono ai rispettivi proprietari ove applicabile. La loro presenza è descrittiva o parte della simulazione e non implica affiliazione, sponsorizzazione, approvazione o un rapporto ufficiale con copero.top."
+      },
+      "ownership": {
+        "title": "5. Contenuti e software del progetto",
+        "body": "Ad eccezione di materiali e componenti di terze parti disciplinati dalle rispettive licenze, il design, il codice e i contenuti originali del progetto sono protetti dalle regole applicabili e dalle licenze valide per il repository o per le singole risorse."
+      },
+      "availability": {
+        "title": "6. Disponibilità e modifiche",
+        "body": "Il sito viene fornito in base alla disponibilità. Funzionalità, regole, dati, lingue, percorsi o meccaniche possono cambiare, essere sospesi o rimossi. Non è garantito che il servizio sia sempre disponibile, privo di errori o mantenga una determinata funzione in modo permanente."
+      },
+      "liability": {
+        "title": "7. Limitazioni e assenza di garanzie",
+        "body": "Nei limiti consentiti dalla legge, copero.top viene fornito così com'è, senza garanzie espresse relative a disponibilità, accuratezza, idoneità a uno scopo specifico o conservazione dei salvataggi. Sei responsabile del tuo dispositivo, del browser e dell'uso del servizio. Restano salvi i diritti che non possono essere legalmente limitati."
+      },
+      "changes": {
+        "title": "8. Modifiche e contatti",
+        "body": "Questi termini possono essere aggiornati per riflettere cambiamenti del servizio, della legge o delle pratiche del progetto. La versione corrente e la data saranno pubblicate su questa pagina. Per segnalare dubbi relativi ai termini o ai contenuti del sito usa la pagina Contatti."
+      }
+    }
+  }
+}

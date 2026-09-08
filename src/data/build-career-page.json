@@ -1,0 +1,147 @@
+{
+  "seo": {
+    "title": "Copero: Build Your Own Football Career Online",
+    "description": "Build your own football career in Copero. Create a player, draft eight legend attributes, choose a club, make transfer decisions and play free online."
+  },
+  "hero": {
+    "eyebrow": "PLAYER CAREER SIMULATOR · FREE IN YOUR BROWSER",
+    "title": "Copero: Build Your Own Football Career",
+    "lead": "Create one footballer, shape a unique set of attributes and follow the career from the first academy offer to the final whistle. Copero turns your choices into seasons, transfers, trophies, international call-ups and a career result you can share.",
+    "primary": "Build my player",
+    "secondary": "See how the career works",
+    "facts": ["No account", "No download", "Saved in your browser"]
+  },
+  "routePreview": {
+    "label": "YOUR CAREER ROUTE",
+    "player": "ROOKIE · #10 · ST",
+    "stages": [
+      { "number": "01", "title": "CREATE", "detail": "Identity & position" },
+      { "number": "02", "title": "DRAFT", "detail": "8 legend attributes" },
+      { "number": "03", "title": "CLIMB", "detail": "Clubs & decisions" },
+      { "number": "04", "title": "LEGACY", "detail": "Stats & trophies" }
+    ],
+    "footer": "ONE PLAYER · ONE CONTINUOUS SAVE"
+  },
+  "intro": {
+    "eyebrow": "WHAT YOU ARE BUILDING",
+    "title": "One player. An entire football life.",
+    "paragraphs": [
+      "The search for “Copero build your own football career” is really a search for agency: you want to name the player, choose the role and see whether your decisions create a prospect, a loyal club hero or a world-class career. This page starts with the playable builder because the important part is not reading about a career. It is making one.",
+      "Copero is a decision-based football career simulator, not a real-time match game. You do not control every pass. You define the player, build an attribute profile through the legend draft, choose a starting club and respond when the career reaches a turning point. The simulator records what follows and keeps the full run together until retirement."
+    ]
+  },
+  "stages": {
+    "eyebrow": "FROM ROOKIE TO RETIREMENT",
+    "title": "How to build your football career in Copero",
+    "body": "Every run follows four clear stages. Your choices stay connected, so the player you build at the start affects the opportunities that appear later.",
+    "items": [
+      {
+        "number": "01",
+        "title": "Create the footballer",
+        "body": "Choose a surname, shirt number, preferred foot, nationality and position. You can also add a family nationality. Position is more than a label: it changes how the game values your final attribute mix and what a successful season looks like."
+      },
+      {
+        "number": "02",
+        "title": "Draft the player DNA",
+        "body": "Eight football legends appear across eight rounds. Take one still-empty attribute from each: pace, shooting, passing, dribbling, defending, physicality, skill moves or weak foot. Every accepted choice locks that slot, making the order of your decisions matter."
+      },
+      {
+        "number": "03",
+        "title": "Choose the first club",
+        "body": "After the card is complete, compare the available starting clubs. Reputation can open a bigger stage, while a different offer may provide a clearer route to minutes and development. There is no automatic best badge for every player."
+      },
+      {
+        "number": "04",
+        "title": "Live the career",
+        "body": "Advance through seasons, objectives, contracts, loans, transfers, events and possible national-team calls. When the run reaches retirement, Copero gathers the clubs, appearances, goals, assists, trophies, wealth and peak rating into a final career card."
+      }
+    ]
+  },
+  "draft": {
+    "eyebrow": "THE COPERO DIFFERENCE",
+    "title": "Eight legends. Eight attributes.",
+    "body": "You are not spending points on a blank template. You are assembling a footballer from one irreversible choice at a time. Taking elite shooting now can mean leaving a better dribbling option behind. Filling a low-priority slot too early can force a difficult pick later. The player is yours because the trade-offs are yours.",
+    "attributes": ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY", "SKL", "WF"],
+    "modes": [
+      {
+        "name": "CLASSIC",
+        "tag": "VALUES VISIBLE",
+        "body": "See the numbers and use rerolls while learning how each attribute fits your position."
+      },
+      {
+        "name": "PURIST",
+        "tag": "KNOWLEDGE ONLY",
+        "body": "Draft without visible ratings or rerolls and trust what you know about the legends."
+      }
+    ]
+  },
+  "decisions": {
+    "eyebrow": "NO PERFECT SCRIPT",
+    "title": "The career changes when your choices do",
+    "items": [
+      {
+        "marker": "POSITION",
+        "title": "Build for the role",
+        "body": "A striker can chase finishing and movement, while a creator needs passing and dribbling. Defenders and goalkeepers are not judged by striker numbers, so start with the career you actually want to see."
+      },
+      {
+        "marker": "OPPORTUNITY",
+        "title": "Read the club situation",
+        "body": "A famous destination is tempting, but squad role and playing time matter to development. Compare the opportunity in front of your player instead of treating reputation as the only signal."
+      },
+      {
+        "marker": "RISK",
+        "title": "Own the turning points",
+        "body": "Transfers, loans, objectives and career events create trade-offs. Staying can build continuity; moving can raise the level. The simulator is designed to produce a story, not reveal one guaranteed winning route."
+      }
+    ]
+  },
+  "result": {
+    "eyebrow": "THE FINAL WHISTLE",
+    "title": "Your whole career becomes one result",
+    "body": "Retirement does not erase the path. Copero keeps the season history and turns the run into a career summary with a final grade. Download or share the result card, then change the position, draft or decisions and see how different the next football life becomes.",
+    "cardLabel": "EXAMPLE CAREER RESULT",
+    "name": "YOUR PLAYER",
+    "role": "ST · #10 · RIGHT FOOT",
+    "rating": "92",
+    "ratingLabel": "PEAK OVR",
+    "stats": [
+      { "value": "418", "label": "GOALS" },
+      { "value": "11", "label": "TROPHIES" },
+      { "value": "6", "label": "CLUBS" }
+    ],
+    "note": "Illustrative card · your result is generated by your career"
+  },
+  "faq": {
+    "eyebrow": "QUICK ANSWERS",
+    "title": "Copero football career FAQ",
+    "items": [
+      {
+        "question": "Can I build my own football career in Copero?",
+        "answer": "Yes. Create the player, complete the eight-attribute legend draft, select a starting club and guide the career through seasons and decisions until retirement."
+      },
+      {
+        "question": "Is this Copero football career game free?",
+        "answer": "Yes. The game runs in a modern browser without an account or client download. Advertising supports the site, but the career builder itself does not require payment."
+      },
+      {
+        "question": "Do I control football matches in real time?",
+        "answer": "No. Copero focuses on player building and career decisions. The simulator resolves seasons and statistics while you choose the identity, attributes, clubs and responses at important moments."
+      },
+      {
+        "question": "Will my football career be saved?",
+        "answer": "The active career is stored locally in the browser, so you can return on the same browser and continue. It is not an online account or a permanent cloud profile."
+      },
+      {
+        "question": "Is copero.top an official Copero product?",
+        "answer": "No. copero.top is an independent football career simulator and is not affiliated with Copero, football clubs, competitions or players."
+      }
+    ]
+  },
+  "finalCta": {
+    "eyebrow": "THE ACADEMY IS WAITING",
+    "title": "Build the player. Make the calls. Keep the story.",
+    "body": "Your first decision takes seconds. The career it creates can travel much further.",
+    "button": "Start my Copero career"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "resultCard": {
+    "eyebrow": "Example career result",
+    "number": "10",
+    "overallLabel": "Peak OVR",
+    "name": "Your career, summarized",
+    "description": "At retirement, Copero turns your journey into a shareable card with your peak OVR, final grade, clubs and trophies.",
+    "stats": {
+      "rating": "Final grade",
+      "clubs": "Clubs",
+      "trophies": "Trophies"
+    }
+  }
+}

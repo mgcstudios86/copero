@@ -138,6 +138,32 @@ export default function IdentityScreen() {
   // "stuck" tapando chips (pos-CAM) que Maestro no logra visibilizar.
   const nameInputRef = useRef<TextInput>(null);
   const lastNameInputRef = useRef<TextInput>(null);
+  // MGC-2304 — IME bridge rebind. Walk MGC-2296 sobre APK vc=227 (PR #491
+  // SHA 535301b) reveló que inputMethodManager.mServedView queda stale en
+  // input-name tras el primer tap; el segundo tap a un EditText hermano
+  // (input-lastname / input-age) genera focused=true pero mServedView=null,
+  // por lo que `adb shell input text` después concatena en input-name en
+  // lugar de ir al campo tapado. RN-Android sólo dispara
+  // InputMethodManager.restartInput() cuando hay un ciclo blur→focus real;
+  // un focus() sobre un input que ya estaba servido es idempotente. La
+  // solución: Pressable.onPress hace blur() de los OTROS EditText primero
+  // y defer del focus() al próximo frame con requestAnimationFrame para
+  // que el blur nativo procese antes del nuevo focus.
+  const rebindFocus = (
+    target: React.RefObject<TextInput | null>,
+    others: React.RefObject<TextInput | null>[],
+  ): void => {
+    others.forEach((r) => r.current?.blur());
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => {
+        target.current?.focus();
+      });
+    } else {
+      setTimeout(() => {
+        target.current?.focus();
+      }, 16);
+    }
+  };
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);

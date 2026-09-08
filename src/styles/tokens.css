@@ -1,0 +1,37 @@
+:root {
+  --copero-bg: oklch(14% 0.03 252);
+  --copero-surface: oklch(19% 0.026 248);
+  --copero-surface-strong: oklch(16% 0.026 248);
+  --copero-fg: oklch(96% 0.01 110);
+  --copero-muted: oklch(74% 0.018 240);
+  --copero-border: oklch(30% 0.024 246);
+  --copero-accent: oklch(80% 0.22 145);
+  --copero-gold: oklch(82% 0.17 92);
+  --copero-danger: oklch(70% 0.19 28);
+  --copero-focus: color-mix(in oklch, var(--copero-accent) 88%, white);
+  --copero-shadow: 0 22px 60px color-mix(in oklch, var(--copero-bg) 72%, black);
+  --copero-shadow-hover: 0 22px 42px color-mix(in oklch, var(--copero-bg) 62%, black);
+
+  --copero-font-display: 'Arial Black', 'Segoe UI', 'Helvetica Neue', system-ui, sans-serif;
+  --copero-font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --copero-font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --copero-h1: clamp(42px, 7vw, 88px);
+  --copero-h2: clamp(30px, 4vw, 52px);
+  --copero-h3: 22px;
+  --copero-lead: clamp(17px, 1.8vw, 19px);
+  --copero-body: 16px;
+  --copero-meta: 13px;
+
+  --copero-gap-xs: 8px;
+  --copero-gap-sm: 12px;
+  --copero-gap-md: 20px;
+  --copero-gap-lg: 32px;
+  --copero-gap-xl: 56px;
+  --copero-gap-2xl: 96px;
+  --copero-container: 1180px;
+  --copero-gutter: clamp(18px, 4vw, 28px);
+  --copero-radius: 14px;
+  --copero-radius-lg: 24px;
+  --copero-radius-pill: 999px;
+}
