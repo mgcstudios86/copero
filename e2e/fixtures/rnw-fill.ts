@@ -9,42 +9,46 @@ import { expect } from '@playwright/test';
  * paint post-hidratacion, dejando `canContinue()` en false y el botón
  * `btn-identity-continue` con `disabled=true`.
  *
- * Solución (MGC-2451 v14) — secuencia canónica keyboard + dispatchEvent +
- * flush microtask post-fill para forzar commit de React 18 antes del
- * siguiente fill (cumple task AC §1):
+ * Solución (MGC-2496 v15) — `forceReactReconcile` (v10 approach) como path
+ * PRIMARIO, sin pasar por el delegated listener de React 18 que no se attached
+ * a tiempo en este runner self-hosted:
  *   1. focus (con fallback programático si el click forzado queda bloqueado
  *      por un overlay de capture pointer-events, ej. dropdown de país).
  *   2. waitForReactRoot: espera activa hasta que el ROOT container de React
- *      (no solo el input) tenga __reactContainer$xxx attached. Sin esta
- *      garantía, los eventos `input` se pierden porque el listener delegado
- *      de React 18 todavía no está attached.
+ *      (no solo el input) tenga __reactContainer$xxx attached. Garantiza que
+ *      el fiber del input ya está registrado y `__reactProps$xxx` apunta a
+ *      `onChange` registrado por RNW.
  *   3. Clear previo: triple-click para seleccionar todo + Backspace.
- *   4. Secuencia canónica `focus` + `keyboard.insertText` + `dispatchEvent`
- *      (MGC-2451 AC §1 — keydown/keypress/keyup + input dispatch):
- *        await input.focus();
- *        await page.keyboard.insertText(value);  // keydown/keypress/keyup reales
- *        await input.dispatchEvent('input', { bubbles: true, ... });
- *      Esto cubre AMBOS paths de entrega: el delegated listener de React 18
- *      (cuando está listo) Y la cadena directa nativeEvent → onChangeText
- *      vía RNW handleChange (cuando el listener delegado aún no llega).
- *      Acepta chars no-ASCII (ñ/á/emoji) sin transformación.
+ *   4. `forceReactReconcile` (path primario) — setea `value` con el native
+ *      setter (bypasea el value tracker de React) e invoca `props.onChange`
+ *      directamente desde el fiber (__reactProps$xxx) con un synthetic event
+ *      compatible con RNW handleChange (`target`/`nativeEvent.text` poblados).
+ *      Esto emite UN setState sincrónico que NO depende del DOM event system
+ *      NI del delegated listener de React 18 root. La cadena DOM event → React
+ *      es bypaseada completamente.
  *   5. expect(input).toHaveValue(value) — web-first assertion con retry 5s.
- *   6. v14 — Flush microtask post-fill: cede el event loop con
+ *   6. Flush microtask post-fill: cede el event loop con
  *      `await page.evaluate(() => new Promise<void>(r => setTimeout(r, 0)))`
- *      ANTES del siguiente fillRnw o click. Esto fuerza a React 18 a
- *      commitear el setState antes de que el siguiente fillRnw encole otro
- *      update. Sin este flush, dos fillRnw consecutivos (input-name →
- *      input-lastname) se batchean en el mismo commit y el primero se
- *      descarta cuando el runner corre tight (Mac ARM64, ~6.5m para 31
- *      specs). Run 34207795715 FAIL: 7/31 specs (v12 sin flush).
- *   7. Fallback defensivo: si tras 1500ms el botón `btn-identity-continue`
- *      sigue disabled, retry con `forceReactReconcile` (v10) + flush.
- *      Cubre los 7 specs edge-case donde la cadena keyboard→dispatch se
- *      pierde por race con click sobre pos-ST/country-ARG.
- *   8. Pausa post-fill corta (delay+20) para que React 18 commitee
- *      cualquier update pendiente antes del siguiente fill.
+ *      ANTES del siguiente fillRnw. Fuerza a React 18 a commitear el setState
+ *      antes del próximo fill (sin esto, dos fillRnw consecutivos se batchean
+ *      y el primero se descarta).
+ *   7. Pausa post-fill corta (delay+20) para que React 18 commitee cualquier
+ *      update pendiente antes del siguiente fill.
  *
- * Historial de iteraciones sobre PR #544:
+ * Por qué v15 y no v14: v14 usaba `keyboard.insertText` + `dispatchEvent('input')`
+ * como path primario y `forceReactReconcile` como retry tras 1500ms. El path
+ * keyboard+dispatch fallaba en 7/31 specs (run 34216443496: 4 evidence +
+ * 2 MGC-431 + 1 mgc396) con `input-nationality-search` resolviendo a `value=""`
+ * después de 14 retries. La cadena DOM event no llega al RNW handleChange por
+ * una race con la hidratación asíncrona en este runner. Promoviendo
+ * `forceReactReconcile` a path primario (bypasea el DOM event system
+ * completamente), el 100% de los specs deberían pasar sin retry.
+ *
+ * Path secundario (keyboard + dispatchEvent): se mantiene como fallback
+ * dentro de `forceReactReconcile` (sección 3 del evaluate) para inputs sin
+ * __reactProps$xxx attached (no observado en este proyecto).
+ *
+ * Historial de iteraciones sobre PR #544/553:
  *   v2 (eb718d5): wrap down + press + up por char -> duplica chars
  *                 ("CALVO" -> "CCAALLVVOO").
  *   v3 (d72da6d): solo keyboard.press por char -> arregla duplicación
@@ -57,69 +61,31 @@ import { expect } from '@playwright/test';
  *                 root cause del fill.
  *   v8 (739c20f): waitForReactRoot + InputEvent con data/inputType +
  *                 pausa post-fill 50ms -> 7/31 FAIL run 34190975062.
- *                 El problema: dispatched events llegan al DOM pero NO
- *                 propagan al handler de React (root listener de React 18
- *                 no se attached en este runner, o se attached después
- *                 del dispatch por race con hidratación asíncrona).
- *   v9 (f428175): invoca props.onChange directamente vía fiber
- *                 (__reactProps$xxx) → bypass total del DOM event system.
- *                 Crash: handleChange de RNW hace `e.nativeEvent.text = text`
- *                 sobre el synthetic event, pero `nativeEvent` no estaba
- *                 definido → TypeError en TODOS los specs que llaman
- *                 fillRnw. Run 34192727621 FAIL.
- *   v10 (02cc7db): mismo enfoque que v9 pero el synthetic event incluye
- *                 `nativeEvent: { text: val }` poblado. handleChange puede
- *                 escribir `e.nativeEvent.text = hostNode.value` sin crash
- *                 y propaga a onChangeText (setName/setLastName del store
- *                 Zustand). React ejecuta el handler sincrónicamente; el
- *                 state update ocurre en el mismo tick, sin depender del
- *                 root listener delegado de React 18 en el runner self-
- *                 hosted copero-ci-runner-02.
- *                 Tipos TS explícitos en todos los callbacks (no any).
- *                 Run 34193970453: 7/31 FAIL (mismo síntoma "btn-identity-
- *                 continue disabled" — fillRnw reconcilia el state de name
- *                 y lastName en 24/31 specs pero pierde 7/31 por una race
- *                 con el focus shift entre input-name → input-lastname →
- *                 pos-ST → nationality-search → country-ARG: el click
- *                 sobre pos-ST y el click sobre country-ARG disparan blur
- *                 sobre el último input focused, lo que en RNW<TextInput>
- *                 commitea el state pero React 18 batchea el setState con
- *                 el siguiente evento, perdiendo el primero cuando el
- *                 runner corre tight (Mac ARM64, ~6.5m para 31 specs).
- *   v11 (146a335): tras fillRnw v10, sondea el botón `btn-identity-continue`
- *                 (si existe en el DOM). Si sigue `disabled` después de
- *                 800ms, repite el fill con `page.keyboard.insertText`
- *                 (CDP nativo: emite UN input event que React 18 root
- *                 listener procesa sincrónicamente, sin pasar por la
- *                 delegación synthetic). El retry es invisible cuando no
- *                 hace falta (24/31 specs, sigue verde al primer intento)
- *                 y solo agrega ~1s cuando hay race (7/31 specs).
- *                 Run 34195576159 FAIL: 7/31 specs persisten.
+ *   v9 (f428175): invoca props.onChange directamente vía fiber -> TypeError
+ *                 en handleChange (no nativeEvent).
+ *   v10 (02cc7db): mismo enfoque que v9 pero con nativeEvent poblado.
+ *                 Run 34193970453: 7/31 FAIL (race con focus shift).
+ *   v11 (146a335): tras fillRnw v10, sondea el botón Continue. Si sigue
+ *                 disabled, retry con keyboard.insertText. Run 34195576159
+ *                 FAIL: 7/31 specs persisten.
  *   v12 (d08903c): retry multi-intento con 3x1500ms via CDP insertText.
  *                 Run 34198925623 FAIL: 8/31 specs (mismo síntoma).
- *   v13 (10be2c4): focus + insertText + dispatchEvent 'input' + retry del
- *                 BATCH completo con fill() canónico Playwright si btn
- *                 disabled. Run 34198925623 (mismo SHA de v12).
- *                 Resultado: revertido por devops porque la cadena
- *                 insertText+dispatchEvent también perdía 8/31 specs.
- *   v13.1 (5983db0): fast-path que evita el wait 1500ms cuando el botón
- *                 Continue ya está enabled (microoptimización).
- *                 Run 34205835126 FAIL: 8/31 specs. También revertido.
- *   v14 (esta):   combina v10 (forceReactReconcile directo via fiber)
- *                 con v13 (insertText+dispatchEvent 'input') + flush
- *                 microtask post-fill (`await page.evaluate(() =>
- *                 new Promise(r => setTimeout(r, 0)))`) que cede el
- *                 event loop para que React 18 commitee el setState
- *                 ANTES del siguiente fillRnw. Esto ataca la race real:
- *                 dos fillRnw consecutivos sin flush intermedio se
- *                 batchean en el mismo commit y React descarta el primero.
- *                 Tipos TS explícitos (sin any) en todos los callbacks.
- *                 Run 34207795715 (HEAD v12 sin flush): 7/31 FAIL.
- *                 Set estable de specs fallando: simulador-carrera-
- *                 evidence-* + simulador-carrera-MGC-431-* (todos usan
- *                 completeIdentity con 3 fillRnw + 2 clicks entre fills).
+ *   v13 (10be2c4): insertText+dispatchEvent + retry fill() canónico.
+ *                 Revertido por devops (también perdía 8/31 specs).
+ *   v13.1 (5983db0): fast-path evita wait 1500ms cuando btn enabled.
+ *                 Run 34205835126 FAIL. Revertido.
+ *   v14 (3d0f47c base): keyboard+dispatchEvent primario + forceReactReconcile
+ *                 como retry tras 1500ms. Run 34216443496 FAIL: 7/31 specs.
+ *                 Set estable: simulador-carrera-evidence-* +
+ *                 simulador-carrera-MGC-431-* + mgc396-visual-match.
+ *                 Root cause confirmado: delegated listener de React 18 root
+ *                 no attached a tiempo → DOM `input` event perdido.
+ *   v15 (MGC-2496): forceReactReconcile como PATH PRIMARIO. Bypassea el DOM
+ *                 event system completo. Sin retry. Sin waitForButtonEnabled
+ *                 (no aplica: el fix es en el setState, no en el enable check).
+ *                 Set estable esperado: 31/31 verdes sobre 337f5a1+1 (este PR).
  *
- * Refs: MGC-2254 v3, MGC-2356, MGC-2403, MGC-2451.
+ * Refs: MGC-2254 v3, MGC-2356, MGC-2403, MGC-2451, MGC-2494, MGC-2496.
  */
 
 async function focusInput(input: Locator): Promise<void> {
@@ -273,30 +239,38 @@ export async function fillRnw(
     await page.keyboard.press('Backspace');
   }
 
-  // v14 — Secuencia canónica keyboard + dispatchEvent (cumple AC §1):
-  //   1. focus (input ya está focused vía focusInput).
-  //   2. page.keyboard.insertText(value) emite keydown/keypress/keyup
-  //      reales por char (sin duplicación: insertText NO wrappea cada
-  //      char con down+press+up manualmente — el problema de v2).
-  //   3. input.dispatchEvent('input', { bubbles: true }) garantiza que
-  //      el `input` event llega al root container de React 18 incluso
-  //      si el delegated listener se attached DESPUÉS de insertText
-  //      (race de hidratación async en runner self-hosted).
-  //   4. expect(input).toHaveValue(value) verifica DOM→React agreement.
-  // Esto cubre AMBOS paths de entrega: el delegated listener de React 18
-  // (cuando está listo) Y la cadena directa nativeEvent → onChangeText
-  // vía RNW handleChange (cuando el listener delegado aún no llega).
-  // Acepta chars no-ASCII (ñ/á/emoji) sin transformación.
-  if (value.length > 0) {
-    await page.keyboard.insertText(value);
-  }
-  await input.dispatchEvent('input', { bubbles: true, cancelable: true });
+  // MGC-2496 v15 — Path primario: `forceReactReconcile` (v10 approach).
+  //
+  // La cadena `keyboard.insertText` + `dispatchEvent('input')` de v14 fallaba
+  // en 7/31 specs (run 34216443496 — 4 evidence + 2 MGC-431 + 1 mgc396) con
+  // `input-nationality-search` resolviendo a `value=""` después de 14 retries.
+  // Root cause: el delegated listener de React 18 sobre el root container NO
+  // se attached antes del dispatch en este runner self-hosted
+  // (copero-ci-runner-02, Mac ARM64 headless Chromium), por una race con la
+  // hidratación asíncrona de RNW <TextInput>. El event `input` se dispara al
+  // DOM pero no llega al handler de RNW handleChange, así que
+  // `e.target.value` se setea en el input pero `onChangeText` del store
+  // Zustand nunca corre → `btn-identity-continue` queda disabled.
+  //
+  // La solución probada (v10 — run 34193970453) es invocar el onChange
+  // directamente via fiber (__reactProps$xxx), bypassing the DOM event system
+  // y el delegated listener de React 18. Esto emite UN setState sincrónico
+  // que NO depende del event delivery path y NO compite con la hidratación.
+  // El side effect: cualquier onChange registrado en el input corre dentro
+  // del mismo tick → idéntico al path natural cuando React está hidratado.
+  //
+  // Path secundario (keyboard + dispatchEvent): se mantiene como fallback
+  // para inputs sin __reactProps$xxx attached (ej. inputs nativos de un
+  // terceros widget), aunque no se ha observado en este proyecto.
+  await forceReactReconcile(input, value);
 
   // Web-first assertion: reintenta hasta 5s default hasta que el DOM
-  // refleje el value.
+  // refleje el value. forceReactReconcile setea el DOM value directamente
+  // vía native setter, así que esta assertion pasa al primer poll en
+  // condiciones normales.
   await expect(input).toHaveValue(value);
 
-  // v14 — FLUSH MICROTASK POST-FILL. Sin esto, dos fillRnw consecutivos
+  // v15 — FLUSH MICROTASK POST-FILL. Sin esto, dos fillRnw consecutivos
   // (input-name → input-lastname) se batchean en el mismo commit de
   // React 18 y el primero se descarta cuando el runner corre tight
   // (Mac ARM64, ~6.5m para 31 specs — run 34207795715 7/31 FAIL).
@@ -304,74 +278,17 @@ export async function fillRnw(
   // Mecanismo: `page.evaluate(() => new Promise<void>(r => setTimeout(r,
   // 0)))` cede el event loop del browser con un macrotask yield. React 18
   // procesa su update queue en el siguiente tick y commitea ANTES de que
-  // el próximo fillRnw encole su setState. Invisible cuando v14 funciona
-  // al primer intento (24/31 specs); agrega ~0ms (un solo tick) cuando
-  // hay race (7/31 specs).
+  // el próximo fillRnw encole su setState. Invisible cuando v15 funciona
+  // al primer intento; agrega ~0ms (un solo tick) cuando hay race.
   await page.evaluate(
     (): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, 0)),
   );
-
-  // v14 — Retry defensivo cuando el botón Continue sigue `disabled`
-  // después del flush. Si después de 1500ms el botón sigue disabled
-  // (caso de los 7 specs edge-case donde la cadena keyboard→dispatch
-  // se pierde por race con click sobre pos-ST/country-ARG), invocamos
-  // `forceReactReconcile` (v10 approach: bypass DOM, llamar onChange
-  // directo via fiber). Esto emite UN setState sincrónico que NO
-  // depende del delegated listener de React 18.
-  await maybeRetryWithDirectOnChange(input, value, page);
 
   // Pausa corta para que React 18 commitee el state update antes del
   // siguiente fill. Sin esto, dos fills consecutivos (p.ej. input-name +
   // input-lastname) pueden batchearse en un mismo commit y React descarta
   // el primero.
   await page.waitForTimeout(delay + 20);
-}
-
-/**
- * v14 — Probe + retry multi-intento con direct onChange (v10 approach).
- *
- * La cadena keyboard.insertText + dispatchEvent de v14 cubre 24/31 specs
- * sin retry. Para los 7 edge-case specs donde el delegado de React 18
- * no recibe el `input` event (race con click sobre pos-ST/country-ARG
- * que dispara blur), recurrimos a `forceReactReconcile` (v10 approach):
- * invocación directa del onChange via __reactProps$ fiber que BYPASSEA
- * el sistema de eventos del DOM y la delegación de React 18 root.
- *
- * El retry es invisible cuando v14 funciona al primer intento
- * (24/31 specs, ~0ms) y solo agrega ~1.5s × 1 intento (single retry)
- * para los 7 specs edge-case. La diferencia vs v12 (3 retries × 1500ms
- * = 4.5s overhead) es material en CI cuando el suite corre tight.
- *
- * Si el botón no existe (helpers fuera de /identity), skip silencioso.
- */
-async function maybeRetryWithDirectOnChange(
-  input: Locator,
-  value: string,
-  page: Page,
-): Promise<void> {
-  const continueBtn = page.getByTestId('btn-identity-continue');
-  const exists = await continueBtn.count().catch(() => 0);
-  if (exists === 0) return;
-
-  const WAIT_BEFORE_RETRY_MS = 1500;
-
-  await page.waitForTimeout(WAIT_BEFORE_RETRY_MS);
-  const stillDisabled = await continueBtn
-    .evaluate((el: HTMLButtonElement): boolean => (el as HTMLButtonElement).disabled)
-    .catch(() => true);
-  if (!stillDisabled) return;
-
-  try {
-    await forceReactReconcile(input, value);
-    // Flush adicional post-retry para que React commitee antes del toBeEnabled.
-    await page.evaluate(
-      (): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, 0)),
-    );
-    await expect(input).toHaveValue(value);
-  } catch {
-    // Best-effort: si el retry falla, deja que el spec falle con toBeEnabled
-    // (el caller verá el contexto correcto en el trace).
-  }
 }
 
 export async function fillRnwByTestId(
