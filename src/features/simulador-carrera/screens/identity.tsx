@@ -204,6 +204,17 @@ export default function IdentityScreen() {
   const { t } = useLocale();
 
   const [nationalityQuery, setNationalityQuery] = useState('');
+  // MGC-2494 — este input ES el que falla en los 7 specs de PR #544
+  // (`expect(input-nationality-search).toHaveValue('arg')` resolvía a
+  // value=""). Diferencia con input-name/lastname/age: aquellos escriben al
+  // store zustand (notificación sincrónica), mientras `nationalityQuery` es
+  // useState local → sujeto al automatic batching de React. Cuando el batch
+  // descarta el update, el controlled TextInput vuelve a renderizar con el
+  // value viejo ('') y el texto tipeado se pierde. `flushSync` fuerza el
+  // commit sincrónico.
+  const setNationalityQuerySync = useCallback((value: string) => {
+    flushSync(() => setNationalityQuery(value));
+  }, []);
   // MGC-1503 — UX-005 P0 del audit MGC-1500. Por defecto la pantalla cape el
   // listado a las 5 primeras (MGC-1448) para no romper el budget vertical del
   // scroll (33 inline ≈6000px bajo el fold). El usuario puede tap "Ver todas
@@ -559,7 +570,7 @@ export default function IdentityScreen() {
         <Field label={t('identity.fieldNationality')}>
           <TextInput
             value={nationalityQuery}
-            onChangeText={setNationalityQuery}
+            onChangeText={setNationalityQuerySync}
             placeholder={t('identity.nationalityPlaceholder')}
             placeholderTextColor={colors.textMuted}
             autoCorrect={false}
