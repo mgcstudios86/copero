@@ -1,0 +1,94 @@
+#cloud-config
+# MGC-2466 — cloud-init para runner-03 (mgcstudios-02, Hetzner CX22, Ubuntu 24.04 x86_64).
+#
+# Provisiona el 3er runner self-hosted de la cola `copero-ci`. NO instala
+# toolchain de QA (Playwright) ni de builds pesados (Android SDK / EAS):
+# runner-03 sirve exclusivamente el gate de merge `ci.yml`. Ver ADR-0026.
+#
+# El registro contra GitHub NO ocurre acá: cloud-init deja el host listo y
+# `scripts/provision-runner-03.sh` inyecta el registration-token (efímero,
+# 1 h de validez) por SSH. Nunca hardcodear el token en user-data: queda en
+# claro en la metadata del servidor.
+
+hostname: mgcstudios-02
+fqdn: mgcstudios-02.mgcstudios.internal
+prefer_fqdn_over_hostname: false
+
+package_update: true
+package_upgrade: true
+
+packages:
+  # Runtime del agente de GitHub Actions.
+  - curl
+  - ca-certificates
+  - gnupg
+  - jq
+  - git
+  - build-essential
+  # `svc.sh install` necesita systemd (viene en la imagen) + acl para el _work dir.
+  - acl
+  # Sin `python3-*` extra: la imagen base de Ubuntu 24.04 ya trae python3.12.
+
+users:
+  - name: runner
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
+    ssh_authorized_keys:
+      # Reemplazar por la pubkey del operador antes de aplicar. El script de
+      # provisioning valida que no quede el placeholder.
+      - REPLACE_WITH_OPERATOR_SSH_PUBKEY
+
+write_files:
+  # Node 22 LTS via NodeSource: `ci.yml` corre `actions/setup-node@v4` pero el
+  # fallback local evita que un cache miss deje el job sin node.
+  - path: /etc/apt/keyrings/nodesource.asc.placeholder
+    content: |
+      # Placeholder: la key real la baja runcmd (no se versiona en el repo).
+    permissions: '0644'
+
+  # Límites de memoria: CX22 tiene 4 GB. `npm ci` de RN+Expo pico ~2.5 GB.
+  # Swap de 4 GB evita el OOM-kill que sufrió runner-01 (1 GB) en MGC-1853.
+  - path: /etc/sysctl.d/99-runner-swap.conf
+    content: |
+      vm.swappiness=10
+      vm.vfs_cache_pressure=50
+    permissions: '0644'
+
+  # MGC-2091: sin KillMode=control-group el stop del servicio deja el worker
+  # huérfano y el runner queda zombie (status=online, busy=false, sin pickup).
+  - path: /etc/systemd/system/actions.runner.service.d/override.conf
+    content: |
+      [Service]
+      KillMode=control-group
+      TimeoutStopSec=120
+      Restart=always
+      RestartSec=10
+    permissions: '0644'
+
+runcmd:
+  # --- swap 4 GB ---
+  - [ fallocate, -l, 4G, /swapfile ]
+  - [ chmod, '0600', /swapfile ]
+  - [ mkswap, /swapfile ]
+  - [ swapon, /swapfile ]
+  - [ sh, -c, "echo '/swapfile none swap sw 0 0' >> /etc/fstab" ]
+  - [ sysctl, --system ]
+
+  # --- Node 22 LTS ---
+  - [ sh, -c, "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -" ]
+  - [ apt-get, install, -y, nodejs ]
+
+  # --- directorio del runner (el binario lo baja el script de provisioning) ---
+  - [ install, -d, -o, runner, -g, runner, -m, '0755', /home/runner/actions-runner-copero-03 ]
+
+  # --- firewall: solo SSH entrante; el runner es long-poll saliente ---
+  - [ ufw, default, deny, incoming ]
+  - [ ufw, default, allow, outgoing ]
+  - [ ufw, allow, '22/tcp' ]
+  - [ ufw, --force, enable ]
+
+  # --- unattended-upgrades solo para security, sin reboot automático ---
+  - [ sh, -c, "echo 'Unattended-Upgrade::Automatic-Reboot \"false\";' > /etc/apt/apt.conf.d/52unattended-upgrades-norreboot" ]
+
+final_message: "mgcstudios-02 listo para registro de runner-03 (uptime ${UPTIME}s)"
