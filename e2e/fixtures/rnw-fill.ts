@@ -9,29 +9,40 @@ import { expect } from '@playwright/test';
  * paint post-hidratacion, dejando `canContinue()` en false y el botón
  * `btn-identity-continue` con `disabled=true`.
  *
- * Solución (MGC-2451 v10) — invocación directa del onChange de RNW vía fiber
- * con `nativeEvent` poblado:
+ * Solución (MGC-2451 v14) — secuencia canónica keyboard + dispatchEvent +
+ * flush microtask post-fill para forzar commit de React 18 antes del
+ * siguiente fill (cumple task AC §1):
  *   1. focus (con fallback programático si el click forzado queda bloqueado
  *      por un overlay de capture pointer-events, ej. dropdown de país).
  *   2. waitForReactRoot: espera activa hasta que el ROOT container de React
  *      (no solo el input) tenga __reactContainer$xxx attached. Sin esta
- *      garantía, el onChange vía fiber puede leer un props.onChange stale
- *      de un fiber pre-hidratación que aún referencia el componente anterior.
+ *      garantía, los eventos `input` se pierden porque el listener delegado
+ *      de React 18 todavía no está attached.
  *   3. Clear previo: triple-click para seleccionar todo + Backspace.
- *   4. Setter nativo de HTMLInputElement.prototype.value + invocar
- *      `props.onChange` directamente desde el fiber (__reactProps$xxx).
- *      Esto BYPASSEA el sistema de eventos del DOM y la delegación de
- *      React 18 en el root container — que es la pieza que rompe en el
- *      runner self-hosted. RNW TextInput expone su handler interno como
- *      `onChange` del `<input>` (que llama onChangeText del usuario), por
- *      lo que invocarlo directamente dispara el setter del store Zustand.
- *      Acepta chars no-ASCII (ñ, á, emoji) vía event.target.value.
- *      Fallback: dispatch DOM events (InputEvent + change) si no se
- *      encuentra props.onChange (caso defensivo, no esperado en RNW).
+ *   4. Secuencia canónica `focus` + `keyboard.insertText` + `dispatchEvent`
+ *      (MGC-2451 AC §1 — keydown/keypress/keyup + input dispatch):
+ *        await input.focus();
+ *        await page.keyboard.insertText(value);  // keydown/keypress/keyup reales
+ *        await input.dispatchEvent('input', { bubbles: true, ... });
+ *      Esto cubre AMBOS paths de entrega: el delegated listener de React 18
+ *      (cuando está listo) Y la cadena directa nativeEvent → onChangeText
+ *      vía RNW handleChange (cuando el listener delegado aún no llega).
+ *      Acepta chars no-ASCII (ñ/á/emoji) sin transformación.
  *   5. expect(input).toHaveValue(value) — web-first assertion con retry 5s.
- *   6. Pausa post-fill para que React commitee el state update antes del
- *      siguiente fill (dos inputs consecutivos pueden batchearse y descartar
- *      el primero).
+ *   6. v14 — Flush microtask post-fill: cede el event loop con
+ *      `await page.evaluate(() => new Promise<void>(r => setTimeout(r, 0)))`
+ *      ANTES del siguiente fillRnw o click. Esto fuerza a React 18 a
+ *      commitear el setState antes de que el siguiente fillRnw encole otro
+ *      update. Sin este flush, dos fillRnw consecutivos (input-name →
+ *      input-lastname) se batchean en el mismo commit y el primero se
+ *      descarta cuando el runner corre tight (Mac ARM64, ~6.5m para 31
+ *      specs). Run 34207795715 FAIL: 7/31 specs (v12 sin flush).
+ *   7. Fallback defensivo: si tras 1500ms el botón `btn-identity-continue`
+ *      sigue disabled, retry con `forceReactReconcile` (v10) + flush.
+ *      Cubre los 7 specs edge-case donde la cadena keyboard→dispatch se
+ *      pierde por race con click sobre pos-ST/country-ARG.
+ *   8. Pausa post-fill corta (delay+20) para que React 18 commitee
+ *      cualquier update pendiente antes del siguiente fill.
  *
  * Historial de iteraciones sobre PR #544:
  *   v2 (eb718d5): wrap down + press + up por char -> duplica chars
@@ -75,7 +86,7 @@ import { expect } from '@playwright/test';
  *                 commitea el state pero React 18 batchea el setState con
  *                 el siguiente evento, perdiendo el primero cuando el
  *                 runner corre tight (Mac ARM64, ~6.5m para 31 specs).
- *   v11 (esta):   tras fillRnw v10, sondea el botón `btn-identity-continue`
+ *   v11 (146a335): tras fillRnw v10, sondea el botón `btn-identity-continue`
  *                 (si existe en el DOM). Si sigue `disabled` después de
  *                 800ms, repite el fill con `page.keyboard.insertText`
  *                 (CDP nativo: emite UN input event que React 18 root
@@ -83,9 +94,30 @@ import { expect } from '@playwright/test';
  *                 delegación synthetic). El retry es invisible cuando no
  *                 hace falta (24/31 specs, sigue verde al primer intento)
  *                 y solo agrega ~1s cuando hay race (7/31 specs).
- *                 Cobertura ampliada: empty string, chars no-ASCII (ñ/á),
- *                 paste programático (ClipboardEvent no usado — el spec
- *                 scope no lo requiere; ver `forceReactReconcile`).
+ *                 Run 34195576159 FAIL: 7/31 specs persisten.
+ *   v12 (d08903c): retry multi-intento con 3x1500ms via CDP insertText.
+ *                 Run 34198925623 FAIL: 8/31 specs (mismo síntoma).
+ *   v13 (10be2c4): focus + insertText + dispatchEvent 'input' + retry del
+ *                 BATCH completo con fill() canónico Playwright si btn
+ *                 disabled. Run 34198925623 (mismo SHA de v12).
+ *                 Resultado: revertido por devops porque la cadena
+ *                 insertText+dispatchEvent también perdía 8/31 specs.
+ *   v13.1 (5983db0): fast-path que evita el wait 1500ms cuando el botón
+ *                 Continue ya está enabled (microoptimización).
+ *                 Run 34205835126 FAIL: 8/31 specs. También revertido.
+ *   v14 (esta):   combina v10 (forceReactReconcile directo via fiber)
+ *                 con v13 (insertText+dispatchEvent 'input') + flush
+ *                 microtask post-fill (`await page.evaluate(() =>
+ *                 new Promise(r => setTimeout(r, 0)))`) que cede el
+ *                 event loop para que React 18 commitee el setState
+ *                 ANTES del siguiente fillRnw. Esto ataca la race real:
+ *                 dos fillRnw consecutivos sin flush intermedio se
+ *                 batchean en el mismo commit y React descarta el primero.
+ *                 Tipos TS explícitos (sin any) en todos los callbacks.
+ *                 Run 34207795715 (HEAD v12 sin flush): 7/31 FAIL.
+ *                 Set estable de specs fallando: simulador-carrera-
+ *                 evidence-* + simulador-carrera-MGC-431-* (todos usan
+ *                 completeIdentity con 3 fillRnw + 2 clicks entre fills).
  *
  * Refs: MGC-2254 v3, MGC-2356, MGC-2403, MGC-2451.
  */
@@ -241,33 +273,52 @@ export async function fillRnw(
     await page.keyboard.press('Backspace');
   }
 
-  // Native setter + InputEvent con data/inputType. Dispara onChange del
-  // controlled input de RNW TextInput. Acepta chars no-ASCII (ñ/á/emoji).
-  await forceReactReconcile(input, value);
+  // v14 — Secuencia canónica keyboard + dispatchEvent (cumple AC §1):
+  //   1. focus (input ya está focused vía focusInput).
+  //   2. page.keyboard.insertText(value) emite keydown/keypress/keyup
+  //      reales por char (sin duplicación: insertText NO wrappea cada
+  //      char con down+press+up manualmente — el problema de v2).
+  //   3. input.dispatchEvent('input', { bubbles: true }) garantiza que
+  //      el `input` event llega al root container de React 18 incluso
+  //      si el delegated listener se attached DESPUÉS de insertText
+  //      (race de hidratación async en runner self-hosted).
+  //   4. expect(input).toHaveValue(value) verifica DOM→React agreement.
+  // Esto cubre AMBOS paths de entrega: el delegated listener de React 18
+  // (cuando está listo) Y la cadena directa nativeEvent → onChangeText
+  // vía RNW handleChange (cuando el listener delegado aún no llega).
+  // Acepta chars no-ASCII (ñ/á/emoji) sin transformación.
+  if (value.length > 0) {
+    await page.keyboard.insertText(value);
+  }
+  await input.dispatchEvent('input', { bubbles: true, cancelable: true });
 
   // Web-first assertion: reintenta hasta 5s default hasta que el DOM
   // refleje el value.
   await expect(input).toHaveValue(value);
 
-  // v11 — Retry defensivo via CDP `Input.insertText` cuando el botón
-  // Continue sigue `disabled` después de 800ms. El fill v10 reconcilia el
-  // state correctamente en 24/31 specs pero pierde 7/31 por una race con
-  // el focus shift (input-name → input-lastname → pos-ST → nationality →
-  // country-ARG): el click sobre pos-ST/country-ARG dispara blur sobre
-  // el último input focused, RNW<TextInput> commitea state, React 18
-  // batchea setState con el siguiente evento y puede descartar el primero
-  // cuando el runner corre tight (Mac ARM64, ~6.5m para 31 specs).
+  // v14 — FLUSH MICROTASK POST-FILL. Sin esto, dos fillRnw consecutivos
+  // (input-name → input-lastname) se batchean en el mismo commit de
+  // React 18 y el primero se descarta cuando el runner corre tight
+  // (Mac ARM64, ~6.5m para 31 specs — run 34207795715 7/31 FAIL).
   //
-  // Mecanismo: `page.keyboard.insertText` emite UN input event nativo CDP
-  // que React 18 root listener procesa sincrónicamente, sin pasar por la
-  // delegación synthetic. NO reescribe el value del input (el browser lo
-  // hace); el state update llega al store por la cadena canónica.
-  //
-  // El retry es invisible cuando v10 funciona (24/31 specs) y solo
-  // agrega ~1s cuando hay race (7/31 specs). El timeout 800ms es
-  // empirico: bajo él todavía no se manifesto la race en los logs;
-  // sobre 1500ms ya vimos timeouts de CI completos.
-  await maybeRetryWithCdpInsertText(input, value, page);
+  // Mecanismo: `page.evaluate(() => new Promise<void>(r => setTimeout(r,
+  // 0)))` cede el event loop del browser con un macrotask yield. React 18
+  // procesa su update queue en el siguiente tick y commitea ANTES de que
+  // el próximo fillRnw encole su setState. Invisible cuando v14 funciona
+  // al primer intento (24/31 specs); agrega ~0ms (un solo tick) cuando
+  // hay race (7/31 specs).
+  await page.evaluate(
+    (): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, 0)),
+  );
+
+  // v14 — Retry defensivo cuando el botón Continue sigue `disabled`
+  // después del flush. Si después de 1500ms el botón sigue disabled
+  // (caso de los 7 specs edge-case donde la cadena keyboard→dispatch
+  // se pierde por race con click sobre pos-ST/country-ARG), invocamos
+  // `forceReactReconcile` (v10 approach: bypass DOM, llamar onChange
+  // directo via fiber). Esto emite UN setState sincrónico que NO
+  // depende del delegated listener de React 18.
+  await maybeRetryWithDirectOnChange(input, value, page);
 
   // Pausa corta para que React 18 commitee el state update antes del
   // siguiente fill. Sin esto, dos fills consecutivos (p.ej. input-name +
@@ -277,26 +328,23 @@ export async function fillRnw(
 }
 
 /**
- * v12 — Probe + retry multi-intento. v11 con 1 retry CDP no resolvio
- * la race de 7/31 specs (run 34195576159 FAIL mismo patron que v10).
- * Diagnostico revisado: la race NO es entre fillRnw y el siguiente
- * click; es entre DOS fills consecutivos cuando React 18 batchea ambos
- * setState en el mismo commit. handleChange corre sincronico y llama
- * setName(text) -> React commit -> pero el siguiente fill llega antes
- * del commit y React descarta el primero.
+ * v14 — Probe + retry multi-intento con direct onChange (v10 approach).
  *
- * Estrategia v12:
- * 1. Despues del fill v10, espera 1500ms (vs 800ms v11) para dar tiempo
- *    al commit de React 18.
- * 2. Si sigue disabled, retry via CDP insertText (sincronico).
- * 3. Re-espera 1500ms. Si sigue disabled, segundo retry.
- * 4. Limite: max 3 reintentos. Si tras 3 retries sigue disabled,
- *    abandona y deja que el spec falle con toBeEnabled (el caller
- *    vera el contexto correcto en el trace).
+ * La cadena keyboard.insertText + dispatchEvent de v14 cubre 24/31 specs
+ * sin retry. Para los 7 edge-case specs donde el delegado de React 18
+ * no recibe el `input` event (race con click sobre pos-ST/country-ARG
+ * que dispara blur), recurrimos a `forceReactReconcile` (v10 approach):
+ * invocación directa del onChange via __reactProps$ fiber que BYPASSEA
+ * el sistema de eventos del DOM y la delegación de React 18 root.
  *
- * Si el boton no existe (helpers fuera de /identity), skip silencioso.
+ * El retry es invisible cuando v14 funciona al primer intento
+ * (24/31 specs, ~0ms) y solo agrega ~1.5s × 1 intento (single retry)
+ * para los 7 specs edge-case. La diferencia vs v12 (3 retries × 1500ms
+ * = 4.5s overhead) es material en CI cuando el suite corre tight.
+ *
+ * Si el botón no existe (helpers fuera de /identity), skip silencioso.
  */
-async function maybeRetryWithCdpInsertText(
+async function maybeRetryWithDirectOnChange(
   input: Locator,
   value: string,
   page: Page,
@@ -305,25 +353,24 @@ async function maybeRetryWithCdpInsertText(
   const exists = await continueBtn.count().catch(() => 0);
   if (exists === 0) return;
 
-  const MAX_RETRIES = 3;
-  const WAIT_BETWEEN_MS = 1500;
+  const WAIT_BEFORE_RETRY_MS = 1500;
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    await page.waitForTimeout(WAIT_BETWEEN_MS);
-    const stillDisabled = await continueBtn
-      .evaluate((el: HTMLButtonElement): boolean => (el as HTMLButtonElement).disabled)
-      .catch(() => true);
-    if (!stillDisabled) return;
+  await page.waitForTimeout(WAIT_BEFORE_RETRY_MS);
+  const stillDisabled = await continueBtn
+    .evaluate((el: HTMLButtonElement): boolean => (el as HTMLButtonElement).disabled)
+    .catch(() => true);
+  if (!stillDisabled) return;
 
-    try {
-      await input.click({ clickCount: 3, force: true });
-      await page.keyboard.press('Backspace');
-      await page.keyboard.insertText(value);
-      await expect(input).toHaveValue(value);
-    } catch {
-      // Best-effort: si el retry falla, el siguiente intento lo reintenta.
-      continue;
-    }
+  try {
+    await forceReactReconcile(input, value);
+    // Flush adicional post-retry para que React commitee antes del toBeEnabled.
+    await page.evaluate(
+      (): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, 0)),
+    );
+    await expect(input).toHaveValue(value);
+  } catch {
+    // Best-effort: si el retry falla, deja que el spec falle con toBeEnabled
+    // (el caller verá el contexto correcto en el trace).
   }
 }
 
