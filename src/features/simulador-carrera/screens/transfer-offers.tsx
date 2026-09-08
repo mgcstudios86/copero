@@ -300,7 +300,7 @@ export default function TransferOffersScreen({ injectedState }: Props) {
               disabled={resolving}
               accessibilityHint={t('transfers.declineHint')}
               testID="btn-transfer-offers-decline-all"
-              hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+              hitSlop={{ top: 44, left: 44, right: 44, bottom: 44 }}
             />
           </>
         ) : (
@@ -313,7 +313,7 @@ export default function TransferOffersScreen({ injectedState }: Props) {
             disabled={resolving}
             accessibilityHint={t('retire.backSeasonA11y')}
             testID="btn-transfer-offers-back"
-            hitSlop={{ top: 8, left: 8, right: 8, bottom: 8 }}
+            hitSlop={{ top: 44, left: 44, right: 44, bottom: 44 }}
           />
         )}
       </View>
