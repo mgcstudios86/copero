@@ -115,7 +115,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await page.getByTestId('pos-ST').click();
 
     // 2d. Pie hábil = Derecho
-    await page.getByRole('button', { name: 'Derecho', exact: true }).click();
+    await page.getByRole('button', { name: 'Derecha', exact: true }).click();
 
     // 2e. Nacionalidad = Argentina (filtra por "arg" para robustez i18n).
     // MGC-1348 v3 — `force: true` bypassa el actionability check de Playwright.
@@ -255,7 +255,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // MGC-1647 / WF1: stepper +/- eliminado del form. El dorsal (number)
     // mantiene su default en store y no tiene UI de modificación; el
     // canContinue gate sólo exige name/lastName/age/nationality.
-    await page.getByRole('button', { name: 'Derecho', exact: true }).click();
+    await page.getByRole('button', { name: 'Derecha', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
     await page.getByTestId('country-ARG').click({ force: true });
@@ -297,7 +297,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // MGC-1647 / WF1: stepper +/- eliminado. Dorsal no tiene UI en /identity
     // (mantiene default store); canContinue gate es name/lastName/age/nat.
     await page.getByTestId('pos-ST').click();
-    await page.getByRole('button', { name: 'Derecho', exact: true }).click();
+    await page.getByRole('button', { name: 'Derecha', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
     await page.getByTestId('country-ARG').click({ force: true });
