@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getCountry, getTeam } from '../../data/catalog'
 import { flagUrl } from '../../data/flags'
 import { stageLabel } from '../../engine/careerPath'
@@ -399,10 +399,9 @@ function NegotiationPanel({
   const otherOffers = pendingOffers.filter((candidate) => candidate.id !== offer.id)
   const pressure = pressureId ? otherOffers.find((candidate) => candidate.id === pressureId) : null
 
-  const effectiveWage = useMemo(
-    () => (pressure ? Math.max(wage, Math.round(pressure.annualWage * 1.05)) : wage),
-    [pressure, wage],
-  )
+  const effectiveWage = pressure
+    ? Math.max(wage, Math.round(pressure.annualWage * 1.05))
+    : wage
 
   const applyPreset = (kind: 'p10' | 'p20' | 'starter' | 'y1') => {
     if (kind === 'p10') setWage(Math.round(offer.annualWage * 1.1))

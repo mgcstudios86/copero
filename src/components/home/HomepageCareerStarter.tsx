@@ -60,6 +60,7 @@ import {
 } from '@/features/career/nationalities-fifa';
 import { useCareerStore } from '@/shared/store/careerStore';
 import type { Foot, Position } from '@/types/career';
+import type { GameMode } from '@/engine/types';
 
 const NAME_MAX_LENGTH = 24;
 const NUMBER_MIN = 1;
@@ -72,7 +73,30 @@ const FOOT_OPTIONS: readonly { value: Exclude<Foot, 'both'>; label: string }[] =
   { value: 'right', label: 'Diestro' },
 ];
 
-export function HomepageCareerStarter(): React.ReactElement {
+export interface HomepageCareerStarterProps {
+  /**
+   * Identificador de la página que monta el starter (analytics + debug).
+   * Opcional; cuando se omite, no se emite contexto de origen.
+   * Ejemplos usados por las páginas SEO: 'build_career_page',
+   * 'simulador_carrera_futbol', 'full_career_page', 'quick_career_page'.
+   */
+  entry?: string;
+  /**
+   * Modo de juego seleccionado en la página de carrera. Aceptado por API
+   * para que las páginas `CareerModePage` puedan propagar la elección
+   * sin acoplar el componente a la página. Hoy no se consume en runtime
+   * — queda como contrato hacia un futuro deep-link / analytics.
+   */
+  gameMode?: GameMode;
+}
+
+export function HomepageCareerStarter(_props: HomepageCareerStarterProps = {}): React.ReactElement {
+  // MGC-2512 — las páginas SEO (BuildCareerPage, CareerModePage,
+  // SimuladorCarreraFutbolPage) pasan `entry` y/o `gameMode` para
+  // distinguir el contexto de origen. Aceptamos las props pero hoy
+  // no las consumimos — el formulario es el mismo en todas las
+  // entradas y `gameMode` se deriva del flujo del usuario al confirmar.
+  void _props;
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
   const { width } = useWindowDimensions();
