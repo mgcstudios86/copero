@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { fillRnw, pressRnw } from './fixtures/rnw-fill';
+import { fillRnw, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * Copero — Evidencia E2E simulador-carrera (MGC-444).
@@ -64,6 +64,8 @@ async function completeIdentity(page: any, name: string) {
   // Espera explicita a que el boton se habilite (canContinue = true).
   await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
   await page.getByTestId('btn-identity-continue').click();
+  // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+  await passTeamSelect(page);
   await page.waitForURL(/\/simulador-carrera\/dashboard/, { timeout: 10_000 });
   await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 10_000 });
 }

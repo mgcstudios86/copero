@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { fillRnw, pressRnw } from './fixtures/rnw-fill';
+import { fillRnw, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-431 — E2E + axe + Lighthouse integral para simulador-carrera (MGC-427).
@@ -148,6 +148,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
     await page.getByTestId('btn-identity-continue').click();
     await expect(page.getByTestId('identity-screen')).toBeHidden({ timeout: 15_000 });
+    // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+    await passTeamSelect(page);
     await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
 
     // ── 4. DASHBOARD: aserciones del AC (OVR/Age/Name/Pos/Nat) ────────
@@ -313,6 +315,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // MGC-2254 v3: espera explicita a que el boton este enabled.
     await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
     await page.getByTestId('btn-identity-continue').click();
+    // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+    await passTeamSelect(page);
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 15_000 });
 
     await expectZeroSeriousAxe(page, 'dashboard-standalone');

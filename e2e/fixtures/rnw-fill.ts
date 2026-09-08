@@ -388,3 +388,30 @@ export async function pressRnw(target: Locator): Promise<void> {
 export async function pressRnwByTestId(page: Page, testId: string): Promise<void> {
   return pressRnw(page.getByTestId(testId));
 }
+
+/**
+ * MGC-2494 — atraviesa `/simulador-carrera/team-select` si la app lo interpone.
+ *
+ * WF2 (MGC-1648) hizo obligatorio el paso de elección de club: identity ya no
+ * navega a `/dashboard` sino a `/team-select`. Los specs escritos antes de WF2
+ * seguían esperando `**\/dashboard` justo después de `btn-identity-continue`,
+ * así que su `waitForURL` expiraba con la app parada (correctamente) en
+ * team-select — el fallo que quedaba en los 7 specs de PR #544 una vez
+ * resuelto el gate de identity.
+ *
+ * Es un no-op cuando la app no interpone la pantalla, así que los specs quedan
+ * válidos para ambos flujos.
+ */
+export async function passTeamSelect(page: Page): Promise<void> {
+  try {
+    await page.getByTestId('team-select-screen').waitFor({ state: 'visible', timeout: 8000 });
+  } catch {
+    return; // La app fue directo al dashboard: nada que atravesar.
+  }
+  const firstCard = page.locator('[data-testid^="team-select-card-"]').first();
+  await firstCard.waitFor({ state: 'visible', timeout: 8000 });
+  await pressRnw(firstCard);
+  const continueBtn = page.getByTestId('btn-team-select-continue');
+  await expect(continueBtn).toBeEnabled({ timeout: 10_000 });
+  await pressRnw(continueBtn);
+}
