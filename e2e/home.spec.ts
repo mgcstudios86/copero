@@ -3,22 +3,22 @@ import { test, expect } from '@playwright/test';
 /**
  * Copero — E2E web (Playwright headless contra bundle Expo web).
  *
- * MGC-1188: el home deja de ser una pantalla visible (splash + CTA Jugar)
- * y queda como un dispatcher puro. `/` ejecuta un `<Redirect>` al simulador
- * de carrera en función del `stage` persistido:
- *   - sin carrera persistida → /simulador-carrera/identity
- *     (anchor: `[data-testid="identity-screen"]`)
- *   - con carrera persistida → /simulador-carrera/dashboard (o sub-ruta
- *     del stage) según `resumeRouteForStage()` en `app/index.tsx`.
+ * MGC-2254 / MGC-1397: el home dejo de ser dispatcher invisible (MGC-1188)
+ * y volvio a ser una pantalla visible con CTA "Jugar" (AC7.1). Este spec
+ * valida el flow real del usuario web:
  *
- * Por eso este spec ya NO afirma los testIDs del splash viejo (esos
- * nodos se eliminaron junto con la pantalla inicial en MGC-1188).
- * En su lugar, valida:
- *   1. el cold-start del dispatcher termina en `/simulador-carrera/identity`
- *      cuando no hay perfil;
- *   2. el dispatcher dirige al dashboard cuando hay carrera persistida;
- *   3. el header global + banner persisten al navegar vía el redirect;
- *   4. no queda overlay de error de Expo en el render post-redirect.
+ *   1. cold-start sin carrera persistida → home muestra solo "Jugar"
+ *      → click → /simulador-carrera/identity.
+ *   2. cold-start con carrera persistida → home muestra "Continuar carrera"
+ *      + "Jugar" → click "Jugar" → /simulador-carrera/identity (start fresh).
+ *   3. El banner global del layout (ad-banner-web) persiste al navegar.
+ *   4. No queda overlay de error de Expo en el render del home.
+ *
+ * Antes (MGC-1188): el home era un `<Redirect>` invisible y los specs
+ * esperaban `page.goto('/')` → auto-redirect a /simulador-carrera/identity.
+ * Ese contrato se rompio cuando baf1937 (MGC-1397 / PR #340) restauro el
+ * home sin reescribir los specs — 22 fallas consecutivas en main hasta
+ * que MGC-2254 alinea los specs con el flow real.
  */
 
 // Bloquea requests a proveedores de ads externos. Determinismo en CI.
@@ -39,10 +39,9 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-// MGC-1188: el shape del profile persistido es el mismo que el seed
-// histórico (MGC-523). Sólo necesitamos `stage` + `profile.name` para que
-// `hasCareer` en `app/index.tsx` evalúe true y el dispatcher resuelva a
-// `/simulador-carrera/dashboard`.
+// MGC-1188 (legacy) + MGC-1397: el shape del profile persistido es el mismo
+// que el seed historico (MGC-523). Solo necesitamos `stage` + `profile.name`
+// para que `hasCareer` en `app/index.tsx` evalue true.
 const SEEDED_PROFILE = {
   state: {
     stage: 'dashboard',
@@ -88,47 +87,70 @@ const SEEDED_PROFILE = {
   version: 0,
 };
 
-test.describe('Copero — dispatcher `/` (web) — MGC-1188', () => {
-  test('cold-start sin carrera aterriza en /simulador-carrera/identity', async ({
+test.describe('Copero — home + CTA flow (web) — MGC-1397 / MGC-2254', () => {
+  test('cold-start sin carrera: home muestra solo "Jugar" → click → /simulador-carrera/identity', async ({
     page,
   }, testInfo) => {
-    // Estado limpio: storage sin perfil, así que `hasCareer === false` y el
-    // dispatcher resuelve a `/simulador-carrera/identity`.
+    // Estado limpio: storage sin perfil, asi `hasCareer === false` y el
+    // home renderiza solo el CTA "Jugar".
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 15_000 });
-    await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
-    // Banner global del layout debe persistir al navegar.
+    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
+    // Solo el CTA primario, no debe haber "Continuar carrera".
+    await expect(page.getByTestId('btn-career')).toBeVisible();
+    await expect(page.getByTestId('btn-home-resume-career')).toHaveCount(0);
+    // Banner global del layout debe estar presente en el home.
     await expect(page.getByTestId('ad-banner-web')).toBeVisible();
     await page.screenshot({
-      path: testInfo.outputPath('home-dispatcher-identity.png'),
+      path: testInfo.outputPath('home-cta-jugar.png'),
+      fullPage: true,
+    });
+
+    // Click "Jugar" navega a /simulador-carrera/identity (AC7.1).
+    await page.getByTestId('btn-career').click();
+    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 15_000 });
+    await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
+    // Banner global del layout persiste al navegar.
+    await expect(page.getByTestId('ad-banner-web')).toBeVisible();
+    await page.screenshot({
+      path: testInfo.outputPath('home-cta-identity.png'),
       fullPage: true,
     });
   });
 
-  test('cold-start con carrera persistida aterriza en /simulador-carrera/dashboard', async ({
+  test('cold-start con carrera persistida: home muestra "Continuar" + "Jugar"', async ({
     page,
   }, testInfo) => {
-    // MGC-1188: con `stage=dashboard` + `profile.name` seteado, `hasCareer`
-    // es true y el dispatcher resuelve a la ruta del stage. El seed vive en
+    // MGC-2254: con `stage=dashboard` + `profile.name` seteado, `hasCareer`
+    // es true y el home renderiza ambos CTAs. El seed vive en
     // localStorage para que el primer render del `useCareerStore` ya lo
     // encuentre (sin esperar a un click previo del usuario).
     await page.addInitScript((seedJson: string) => {
       window.localStorage.setItem('copero-career', seedJson);
     }, JSON.stringify(SEEDED_PROFILE));
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
+    // Ambos CTAs visibles.
+    await expect(page.getByTestId('btn-career')).toBeVisible();
+    await expect(page.getByTestId('btn-home-resume-career')).toBeVisible();
+    await page.screenshot({
+      path: testInfo.outputPath('home-cta-resume-and-jugar.png'),
+      fullPage: true,
+    });
+
+    // Click "Continuar carrera" navega a la ruta del stage (dashboard).
+    await page.getByTestId('btn-home-resume-career').click();
     await page.waitForURL(/\/simulador-carrera\/dashboard$/, { timeout: 15_000 });
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 15_000 });
-    // Banner global del layout persiste al navegar.
     await expect(page.getByTestId('ad-banner-web')).toBeVisible();
     await page.screenshot({
-      path: testInfo.outputPath('home-dispatcher-dashboard.png'),
+      path: testInfo.outputPath('home-resume-dashboard.png'),
       fullPage: true,
     });
   });
 
-  test('expo error overlay no apareció en el redirect del dispatcher', async ({ page }) => {
+  test('expo error overlay no aparece en el render del home', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle', timeout: 60_000 });
-    await page.waitForURL(/\/simulador-carrera\//, { timeout: 15_000 });
+    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('#expo-error-screen')).toHaveCount(0);
   });
 
@@ -141,7 +163,7 @@ test.describe('Copero — dispatcher `/` (web) — MGC-1188', () => {
       }
     });
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    await page.waitForURL(/\/simulador-carrera\//);
+    await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('ad-banner-web')).toBeVisible();
     expect(blockedRequests.length).toBeGreaterThanOrEqual(0);
   });

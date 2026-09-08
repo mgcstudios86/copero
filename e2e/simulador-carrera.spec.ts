@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { fillRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-431 — E2E + axe + Lighthouse integral para simulador-carrera (MGC-427).
@@ -89,26 +90,22 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
    *     en src/features/career/engine.test.ts.)
    */
   test('CALVO/10/Derecho/AR/ST → dashboard → academy → Vélez', async ({ page }, testInfo) => {
-    // ── 1. DISPATCHER: cold-start → /simulador-carrera/identity ────────
-    // MGC-1188: el home es un dispatcher puro (`<Redirect>` desde `/`).
-    // Sin carrera persistida, aterriza directo en /simulador-carrera/identity.
-    // El goto intermedio al dispatcher garantiza que el dev server terminó
-    // de hidratar el chunk lazy del simulador antes de navegar a /identity.
-    // MGC-405: navegamos directo a /identity vía SPA (serve-spa.py hace
-    // fallback a index.html) para evitar el fallback del SiteHeader a
-    // /simulador-carrera (sin subpath) que expo-router resolvía a
+    // ── 1. LANDING: goto directo a /simulador-carrera/identity ────────
+    // MGC-2254: el home dejo de ser dispatcher (MGC-1397 / PR #340).
+    // MGC-405: goto directo via SPA (serve-spa.py hace fallback a
+    // index.html) para evitar el fallback del SiteHeader a
+    // /simulador-carrera (sin subpath) que expo-router resolvia a
     // /simulador-carrera/club en lugar de /identity.
-    await page.goto(`${BASE}/`);
-    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 15_000 });
+    await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
 
     // ── 2. IDENTITY: completar los 5 campos del AC ────────────────────
     // 2a. Nombre = CALVO
-    await page.getByTestId('input-name').fill('CALVO');
+    await fillRnw(page.getByTestId('input-name'), 'CALVO');
 
     // 2b. Número = 10. El estado inicial arranca en 9 (ver engine.ts:36),
     //     por lo que una pulsación sobre "Sumar número" deja 10.
-    await page.getByRole('button', { name: 'Sumar número' }).click();
+    await page.getByTestId('btn-number-plus').click();
     // MGC-405: el display del número en identity.tsx no expone aria-label
     // accesible para query directo (`getByLabel('Número 10')` falla). El Text
     // interno renderiza `{profile.number}` literal — verificamos que el texto
@@ -137,7 +134,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // cambia la semántica del touch target en Android nativo (no-op en RNW).
     // Patrón adopted: `force:true` es el workaround estándar de Playwright
     // para RNW hit-test flake; el componente sigue funcionando en Maestro.
-    await page.getByTestId('input-nationality-search').fill('arg');
+    await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
     await page.getByTestId('country-ARG').click({ force: true });
 
     // axe gate 1: identity
@@ -148,6 +145,9 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     });
 
     // ── 3. CONTINUAR → DASHBOARD ──────────────────────────────────────
+    // MGC-2254 v3: espera explicita a que el boton este enabled
+    // (canContinue = name.length>=2 && number in [1,99]).
+    await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
     await page.getByTestId('btn-identity-continue').click();
     await expect(page.getByTestId('identity-screen')).toBeHidden({ timeout: 15_000 });
     await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
@@ -254,11 +254,11 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
 
     // Defaults mínimos para que el journey completo no bloquee otros
     // navigations.
-    await page.getByTestId('input-name').fill('Regresion');
-    await page.getByRole('button', { name: 'Sumar número' }).click(); // 9 → 10
+    await fillRnw(page.getByTestId('input-name'), 'Regresion');
+    await page.getByTestId('btn-number-plus').click(); // 9 → 10
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
-    await page.getByTestId('input-nationality-search').fill('arg');
+    await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
     await page.getByTestId('country-ARG').click({ force: true });
 
     // Ciclar las 4 posiciones de grupos distintos y axeear cada estado.
@@ -292,13 +292,15 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // continuamos, y luego salimos a academy vía el botón.
     await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
-    await page.getByTestId('input-name').fill('CALVO');
-    await page.getByRole('button', { name: 'Sumar número' }).click();
+    await fillRnw(page.getByTestId('input-name'), 'CALVO');
+    await page.getByTestId('btn-number-plus').click();
     await page.getByTestId('pos-ST').click();
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
-    await page.getByTestId('input-nationality-search').fill('arg');
+    await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
     await page.getByTestId('country-ARG').click({ force: true });
+    // MGC-2254 v3: espera explicita a que el boton este enabled.
+    await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
     await page.getByTestId('btn-identity-continue').click();
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 15_000 });
 

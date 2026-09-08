@@ -50,10 +50,9 @@ test.describe('Copero — axe-core scan (web)', () => {
     page,
   }, testInfo) => {
     test.setTimeout(90_000);
-    // MGC-1188: el dispatcher de `/` redirige a /simulador-carrera/identity
-    // porque no hay perfil persistido. axe scan corre sobre el landing.
-    await page.goto('/', { waitUntil: 'load' });
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    // MGC-2254: navegacion directa al landing (home dejo de ser dispatcher
+    // tras MGC-1397 / PR #340 — ahora es splash + CTA Jugar visible).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });
     const { total, blockers } = await scanRoute(page, 'identity-screen');
     await page.screenshot({ path: testInfo.outputPath('axe-identity.png'), fullPage: true });
     expect(blockers.length, 'critical/serious en identity').toBe(0);
@@ -65,8 +64,8 @@ test.describe('Copero — axe-core scan (web)', () => {
     page,
   }, testInfo) => {
     test.setTimeout(90_000);
-    await page.goto('/', { waitUntil: 'load' });
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 10_000 });
+    // MGC-2254: goto directo (home ya no es dispatcher).
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });
     const { total, blockers } = await scanRoute(page, 'identity-screen');
     await page.screenshot({ path: testInfo.outputPath('axe-identity-direct.png'), fullPage: true });
     expect(blockers.length, 'critical/serious en identity').toBe(0);

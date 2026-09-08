@@ -45,10 +45,10 @@ test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
     });
     await page.reload({ waitUntil: 'domcontentloaded' });
 
-    // 1) MGC-1188: el dispatcher de `/` redirige a /simulador-carrera/identity
-    // porque no hay perfil persistido. Capturamos el landing para mantener
+    // 1) MGC-2254: goto directo a identity (home ya no es dispatcher
+    // tras MGC-1397 / PR #340). Capturamos el landing para mantener
     // el artefacto histórico del spec.
-    await page.waitForURL('**/simulador-carrera/identity', { timeout: 15_000 });
+    await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 15_000 });
     await page.screenshot({ path: path.join(OUT_DIR, '01-identity-mgc505.png'), fullPage: true });
 
