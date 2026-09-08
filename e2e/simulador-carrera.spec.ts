@@ -259,6 +259,10 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await fillRnw(page.getByTestId('input-name'), 'Regresion');
     // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
     await fillRnw(page.getByTestId('input-lastname'), 'QA');
+    // MGC-2451 v7: rehidratar visibilidad de btn-number-plus despues del fill
+    // del segundo input — el flicker post-hidratacion dejaba el locator
+    // colgado 10s sobre runner self-hosted copero-ci-runner-02.
+    await expect(page.getByTestId('btn-number-plus')).toBeVisible({ timeout: 10_000 });
     await page.getByTestId('btn-number-plus').click(); // 9 → 10
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
@@ -299,6 +303,9 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await fillRnw(page.getByTestId('input-name'), 'CALVO');
     // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
     await fillRnw(page.getByTestId('input-lastname'), 'TEST');
+    // MGC-2451 v7: rehidratar visibilidad de btn-number-plus despues del fill
+    // del segundo input (ver nota en test axe ST/CAM/CB/GK mas arriba).
+    await expect(page.getByTestId('btn-number-plus')).toBeVisible({ timeout: 10_000 });
     await page.getByTestId('btn-number-plus').click();
     await page.getByTestId('pos-ST').click();
     await page.getByRole('button', { name: 'Derecho', exact: true }).click();
