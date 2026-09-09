@@ -832,11 +832,16 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       return true;
     },
     // reset: estado inicial sin motor. Borra el save persistido.
+    // MGC-2606 — el `void clearCareerSave()` fire-and-forget generaba una
+    // carrera con el `saveCareerSave` del test siguiente (el `removeItem`
+    // del clear corría en el microtask queue después del `setItem` del
+    // save, borrando el snapshot recién escrito). El comentario anterior
+    // decía "si falla el clear, el próximo save sobrescribe" — la misma
+    // lógica aplica acá: el próximo save del usuario sobrescribe el slot
+    // sí o sí, así que el clear es redundante para la persistencia.
+    // Para CTA destructivo que SÍ necesita clear + await ver `resetAll`.
     reset: () => {
       setSnapshot(() => initialSnapshot());
-      void clearCareerSave().catch(() => {
-        // best-effort: si falla el clear, el próximo save sobrescribe.
-      });
     },
     // MGC-1736 (WF6) — variant awaitable de reset. Ordena:
     //   1) flushPendingSave: drena la save en vuelo al disco para
