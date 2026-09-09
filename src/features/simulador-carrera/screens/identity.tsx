@@ -978,7 +978,7 @@ export default function IdentityScreen() {
                 conmutar focus entre inputs (workaround a focus leak post-
                 inputText reportado en MGC-1980 / MGC-2061). */}
             <Pressable
-              onPress={() => nameInputRef.current?.focus()}
+              onPress={() => rebindFocus(nameInputRef, [lastNameInputRef, ageInputRef])}
               hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-name-tap-target"
@@ -1047,7 +1047,7 @@ export default function IdentityScreen() {
                 testID para que QA pueda enfocar/desenfocar de forma estable
                 sin que uiautomator dump pierda los chips posteriores. */}
             <Pressable
-              onPress={() => lastNameInputRef.current?.focus()}
+              onPress={() => rebindFocus(lastNameInputRef, [nameInputRef, ageInputRef])}
               hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-lastname-tap-target"
@@ -1110,7 +1110,7 @@ export default function IdentityScreen() {
                 focus (MGC-1760 QA walk PR #427 f08d22e). El Pressable hijo
                 captura el tap perimetral y llama ageInputRef.current?.focus() */}
             <Pressable
-              onPress={() => ageInputRef.current?.focus()}
+              onPress={() => rebindFocus(ageInputRef, [nameInputRef, lastNameInputRef])}
               hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-age-tap-target"
