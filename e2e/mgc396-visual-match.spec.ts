@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
-import { fillRnw, passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
+import { fillIdentityLastName, fillIdentityName } from './career-test-helpers';
+import { passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-396 — capturas visuales post-fix `palette.copero.primary` → verde.
@@ -34,27 +35,24 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });
     await page.waitForSelector('[data-testid="identity-screen"]', { timeout: 10_000 });
 
-    // 2) Llenar el form mínimo (testIDs canónicos de e2e/simulador-carrera.spec.ts).
-    // MGC-2254 v3 / MGC-2356: fillRnw = fill + dispatchEvent('input') para
-    // forzar que RNW dispare onChangeText en el runner self-hosted.
-    await fillRnw(page.locator('[data-testid="input-name"]'), 'Calvo');
+    // 2) Llenar el form mínimo (testIDs canónicos de e2e/simulador-carrera.spec.ts)
+    await fillIdentityName(page, 'Calvo');
+    await fillIdentityLastName(page, 'Prueba');
     await page.locator('[data-testid="pos-ST"]').click();
-    await fillRnw(page.locator('[data-testid="input-nationality-search"]'), 'arg');
-    await page.waitForTimeout(400);
-    // MGC-1348 v3 — `force:true` por hit-test RNW (country-ARG).
-    await page.getByTestId('country-ARG').click({ force: true });
-    await expect(page.locator('[data-testid="btn-identity-continue"]')).toBeEnabled({ timeout: 15_000 });
+    await page.locator('[data-testid="input-nationality-search"]').fill('arg');
+    await pressRnw(page.locator('[data-testid="country-ARG"]'));
     await page.locator('[data-testid="btn-identity-continue"]').click();
+
+    // Identity llega a team-select y season-hub antes del dashboard.
+    await passTeamSelect(page);
+    await passSeasonHub(page);
+    await expect(page.getByTestId('season-hub-screen')).toBeVisible({ timeout: 15_000 });
 
     // 3) Draft ronda 1
     // MGC-405: MGC-375 hace que btn-identity-continue enrute a /dashboard
     // (no /draft). Navegamos directo a /draft para mantener el intent del
     // spec MGC-396 (capturas visuales del flow draft → tu-jugador → club).
-    // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
-    // MGC-2505: WF3 (MGC-1649) interpone season-hub tras team-select.
-    await passTeamSelect(page);
-    await passSeasonHub(page);
-    await expect(page.getByTestId('season-hub-screen')).toBeVisible({ timeout: 15_000 });
+
     await page.goto('/simulador-carrera/draft');
     await page.waitForSelector('[data-testid="draft-screen"]', { timeout: 10_000 });
     await page.waitForTimeout(500);
