@@ -102,8 +102,6 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // ── 2. IDENTITY: completar los 5 campos del AC ────────────────────
     // 2a. Nombre = CALVO
     await fillRnw(page.getByTestId('input-name'), 'CALVO');
-    // MGC-2616 F7a: canContinue requiere input-lastname poblado.
-    await fillRnw(page.getByTestId('input-lastname'), 'CALVO');
 
     // 2b. Número = 10. El estado inicial arranca en 9 (ver engine.ts:36),
     //     por lo que una pulsación sobre "Sumar número" deja 10.
@@ -121,8 +119,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // 2c. Posición = ST (attack group) — tap en el field map
     await page.getByTestId('pos-ST').click();
 
-    // 2d. Pie hábil = Diestro (identity.footRight en es)
-    await page.getByRole('button', { name: 'Diestro', exact: true }).click();
+    // 2d. Pie hábil = Derecho
+    await page.getByRole('button', { name: 'Derecho', exact: true }).click();
 
     // 2e. Nacionalidad = Argentina (filtra por "arg" para robustez i18n).
     // MGC-1348 v3 — `force: true` bypassa el actionability check de Playwright.
@@ -166,37 +164,30 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
 
     // ── 4. DASHBOARD: aserciones del AC (OVR/Age/Name/Pos/Nat) ────────
-    // MGC-2684: `.last()` para tomar el dashboard visible (lazy-unmount
-    // deja varios `dashboard-screen` en DOM durante transiciones; el
-    // primero suele ser el viejo hidden). Patrón consistente con el
-    // usado en simulador-carrera-evidence-mgc444.spec.ts:117.
     await expect(
-      page.getByTestId('dashboard-screen').last().getByRole('heading', { name: 'CALVO' }),
+      page.getByTestId('dashboard-screen').getByRole('heading', { name: 'CALVO' }),
     ).toBeVisible();
     await expect(page.getByLabel('Overall rating 50')).toBeVisible();
 
     // Subtitle jugador: "ST · 🇦🇷 Argentina"
     const playerCard = page
       .getByTestId('dashboard-screen')
-      .last()
       .locator('text=/ST\\s*·/');
     await expect(playerCard).toBeVisible();
     await expect(
       page
         .getByTestId('dashboard-screen')
-        .last()
         .getByText('Argentina', { exact: false })
         .first(),
     ).toBeVisible();
 
     // Badge: "16 años · Free agent" (placeholder hasta fichar)
     await expect(
-      page.getByTestId('dashboard-screen').last().getByText(/16\s*a[ñn]os/i).first(),
+      page.getByTestId('dashboard-screen').getByText(/16\s*a[ñn]os/i).first(),
     ).toBeVisible();
     await expect(
       page
         .getByTestId('dashboard-screen')
-        .last()
         .getByText('Free agent', { exact: false })
         .first(),
     ).toBeVisible();
@@ -279,11 +270,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // Defaults mínimos para que el journey completo no bloquee otros
     // navigations.
     await fillRnw(page.getByTestId('input-name'), 'Regresion');
-    // MGC-2616 F7a: canContinue requiere input-lastname poblado.
-    await fillRnw(page.getByTestId('input-lastname'), 'Regresion');
     await page.getByTestId('btn-number-plus').click(); // 9 → 10
-    // MGC-2616 F7b: identity.footRight = "Diestro" en es, "Right" en en.
-    await page.getByRole('button', { name: 'Diestro', exact: true }).click();
+    await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
     await page.getByTestId('country-ARG').click({ force: true });
@@ -320,12 +308,9 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
     await fillRnw(page.getByTestId('input-name'), 'CALVO');
-    // MGC-2616 F7a: canContinue requiere input-lastname poblado.
-    await fillRnw(page.getByTestId('input-lastname'), 'CALVO');
     await page.getByTestId('btn-number-plus').click();
     await page.getByTestId('pos-ST').click();
-    // MGC-2616 F7b: identity.footRight = "Diestro" en es, "Right" en en.
-    await page.getByRole('button', { name: 'Diestro', exact: true }).click();
+    await page.getByRole('button', { name: 'Derecho', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
     await page.getByTestId('country-ARG').click({ force: true });

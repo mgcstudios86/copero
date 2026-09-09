@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -10,7 +10,6 @@ import {
   View,
   Pressable,
   InteractionManager,
-  type TextInputFocusEventData,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
@@ -28,7 +27,7 @@ import { NATIONALITIES } from '@/features/career/nationalities';
 // liga ocurre exclusivamente en /academy paso 3 (cada club expone su league).
 // El campo leagueCode del store queda como default '' y se mantiene el setter
 // `setLeague` por compat con storage migrado (MGC-1501 internal track).
-import { isIdentityComplete, shouldCommitNativeText } from '@/features/career/identity-state';
+import { isIdentityComplete } from '@/features/career/identity-state';
 import type { Foot, PositionGroup } from '@/types/career';
 
 // MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje (PR-379 / MGC-1502).
@@ -127,119 +126,6 @@ export default function IdentityScreen() {
   // incrementando `profile.age` cada temporada (season.ts:122) — este
   // setter sólo opera durante el alta.
   const setAge = useCareerStore((s) => s.setAge);
-  // MGC-2673 — flushSync removido. Wrapper con `flushSync` (react-dom) sobre
-  // setters de Zustand: en React Native el renderer es `react-native-renderer`
-  // y `flushSync` de `react-dom` no encuentra `Internals.d` activo, lanzando
-  // TypeError en el bloque `finally`. En la cadena `onChangeText → setName`,
-  // ese throw evita que Zustand aplique el nuevo value en algunos flows de
-  // adb input text / Maestro `inputText` sobre release-4 (vc=286 8d3cedd),
-  // donde el `value` controlado del TextInput no llega a commitear antes del
-  // próximo render — perfil queda con `name=''` y `btn-identity-continue`
-  // disabled pese a que el EditText nativo muestra el texto.
-  //
-  // Zustand ya propaga los cambios a `useCareerStore` subscribers de forma
-  // síncrona vía `useSyncExternalStore`; el wrapper `flushSync` era un
-  // workaround para PR #544 (e2e Playwright `fillRnw` tight batching), pero
-  // `fillRnw` v15 (PR #577 MGC-2496) ya bypasea el DOM event system
-  // invocando `onChange` directo vía fiber — el batching ya no aplica. En
-  // nativo, llamar al setter sin wrapper restaura el flujo limpio.
-  // MGC-2759 — guardia anti-wipe en el path `onChangeText`. Walk MGC-2735
-  // sobre vc=304: tapear `country-ARG` tras tipear NOMBRE + APELLIDO
-  // wipeaba AMBOS campos. Causa: al mover el foco al Pressable del chip,
-  // el IME bridge de RN-Android pierde `mServedView` y dispatcha un
-  // `onChangeText('')` sobre cada EditText enfocado ANTES del `onBlur`.
-  // `setName('')` borraba el state aunque el EditText nativo aún tuviera
-  // texto. `shouldCommitNativeText` descarta el payload vacío cuando el
-  // state canónico tiene contenido; si el state ya está vacío, propaga
-  // (no rompe "el usuario borra todo y empieza de nuevo").
-  const setNameSync = useCallback(
-    (value: string) => {
-      const current = useCareerStore.getState().profile.name;
-      if (!shouldCommitNativeText(value, current)) return;
-      setName(value);
-    },
-    [setName],
-  );
-  const setLastNameSync = useCallback(
-    (value: string) => {
-      const current = useCareerStore.getState().profile.lastName;
-      if (!shouldCommitNativeText(value, current)) return;
-      setLastName(value);
-    },
-    [setLastName],
-  );
-  const setAgeSync = useCallback(
-    (value: number | string) =>
-      setAge(typeof value === 'number' ? value : Number(value)),
-    [setAge],
-  );
-  // MGC-2673 — safety net sobre adb shell input text / Maestro inputText en
-  // builds release. En ZY22G728HN sobre release-4 (8d3cedd) el onChangeText
-  // NO dispara cuando adb o Maestro inyectan texto programáticamente sobre
-  // el EditText enfocado: uiautomator confirma text=Q pero `profile.name`
-  // queda vacío y `btn-identity-continue` permanece disabled. Root cause:
-  // en build release Android, NativeModules.TextInput.State mServedView
-  // queda stale post rebindFocus + el TextWatcher del ReactEditText no
-  // propaga el commitText vía InputConnection antes del siguiente tick.
-  //
-  // La cadena `focus → adb input text → onChangeText` puede romper por
-  // distintas razones en builds optimizados (Hermes bytecode + proguard
-  // minificado + RN production-mode bridge sin dev warnings). El patrón
-  // canónico para sincronizar state desde el EditText nativo cuando el
-  // onChangeText falla es hookear onBlur: el evento de blur del EditText
-  // siempre dispara (la pérdida de foco es síncrona con el sistema de
-  // input nativo) y `nativeEvent.text` trae el contenido actual del
-  // EditText. Comparamos contra el state actual y reconciliamos.
-  //
-  // Belt: usamos `useCareerStore.getState()` (no el `profile` del closure)
-  // para leer el valor canónico sin riesgo de closure stale entre el
-  // render y el blur (que puede llegar varios frames después).
-  // MGC-2759 — guardia anti-wipe en el path `onBlur`. La safety net de
-  // MGC-2673 leía `e.nativeEvent.text ?? ''`, que en builds release con
-  // `adb shell input text` / Maestro `inputText` llega `undefined`:
-  // `syncNameFromNative('')` hacía `text !== current` → `setName('')` →
-  // wipe (PR #594 vc=303 SHA1 cd0880a5, walk MGC-2732 F2b FAIL).
-  // `shouldCommitNativeText` vuelve la safety net no-op cuando el payload
-  // no es un string útil; cuando RN sí entrega texto válido, reconcilia
-  // como antes.
-  //
-  // Belt: usamos `useCareerStore.getState()` (no el `profile` del closure)
-  // para leer el valor canónico sin riesgo de closure stale entre el
-  // render y el blur (que puede llegar varios frames después).
-  const syncNameFromNative = useCallback(
-    (text: string) => {
-      const current = useCareerStore.getState().profile.name;
-      if (!shouldCommitNativeText(text, current)) return;
-      if (text !== current) {
-        setName(text);
-      }
-    },
-    [setName],
-  );
-  const syncLastNameFromNative = useCallback(
-    (text: string) => {
-      const current = useCareerStore.getState().profile.lastName ?? '';
-      if (!shouldCommitNativeText(text, current)) return;
-      if (text !== current) {
-        setLastName(text);
-      }
-    },
-    [setLastName],
-  );
-  const syncAgeFromNative = useCallback(
-    (text: string) => {
-      // MGC-2759 — idem: un blur sin `text` no debe resetear la edad a 16.
-      if (typeof text !== 'string' || text.length === 0) return;
-      const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2);
-      const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
-      if (!Number.isFinite(parsed)) return;
-      const current = useCareerStore.getState().profile.age;
-      if (parsed !== current) {
-        setAge(parsed);
-      }
-    },
-    [setAge],
-  );
   // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
   // WCAG 2.5.5) pueda disparar foco en tap perimetral. hitSlop en TextInput
   // nativo Android no extiende el hitbox de focus. Compatible con el
@@ -260,25 +146,11 @@ export default function IdentityScreen() {
   // lugar de ir al campo tapado. RN-Android sólo dispara
   // InputMethodManager.restartInput() cuando hay un ciclo blur→focus real;
   // un focus() sobre un input que ya estaba servido es idempotente. La
-  // solución: Pressable.onPress hace blur() de los OTROS EditText primero
-  // y defer del focus() al próximo frame con requestAnimationFrame para
-  // que el blur nativo procese antes del nuevo focus.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const rebindFocus = (
-    target: React.RefObject<TextInput | null>,
-    others: React.RefObject<TextInput | null>[],
-  ): void => {
-    others.forEach((r) => r.current?.blur());
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() => {
-        target.current?.focus();
-      });
-    } else {
-      setTimeout(() => {
-        target.current?.focus();
-      }, 16);
-    }
-  };
+  // solución aplicada: los Pressable wrappers de cada input llaman
+  // ref.current?.focus() directamente — el bridge de RN-Android dispara
+  // restartInput cuando la EditText destino cambia, y el patrón de
+  // conmutar focus por tap explícito (MGC-2061 / MGC-1760) basta para
+  // que Maestro o `adb shell input` enfoquen el input correcto.
   const setPosition = useCareerStore((s) => s.setPosition);
   const setNationality = useCareerStore((s) => s.setNationality);
   const setPreferredFoot = useCareerStore((s) => s.setPreferredFoot);
@@ -988,34 +860,28 @@ export default function IdentityScreen() {
         pointerEvents="box-none"
         style={{
           // MGC-1943 — fixed sibling del kavContent (sin ScrollView).
-          // MGC-1986 — bottom:240→120 (sticky-footer bajó 240→120dp tras dedup
-          // de identity-age-sticky, ver bloque arriba). Form top y=[965,1476]
-          // original overlappeaba country-ARG/BR/UY [926,1264]; con bottom:120
-          // form top queda y=[1265,1776] y NO toca country-UY bottom 1264.
           // MGC-2008 — top + height explícitos GARANTIZAN altura del form en
-          // RN-Yoga. Causa raíz: walk QA2 APK vc=174 (PR #474) mostró form
-          // bounds=[0,418][1080,610]=77dp; PR #474 añadió minHeight:280 pero
-          // Yoga colapsó los 3 inputs Field a h=0 y el form quedó con content
-          // = solo btn-foot-row (48dp). Sin top explícito, Yoga no respeta
-          // minHeight cuando content < minHeight en absolute child. Fix:
-          // top:72 + height:280 → altura garantizada 280dp independiente de
-          // content measure. Belt redundante contra Yoga collapse (PR #475
-          // walk QA2 vc=175 PASS con esta config, base MGC-1986 bottom:120).
-          // zIndex:15 sobre el field-map z=10. flexShrink:0 garantiza que el
+          // RN-Yoga. Sin top explícito, Yoga no respeta minHeight cuando
+          // content < minHeight en absolute child. Fix: top:72 + height:280
+          // → altura garantizada 280dp independiente de content measure.
+          // MGC-2473 — `bottom: 120` removido (introducido en MGC-1986 /
+          // PR #513). Causa raíz: cuando RN-Yoga recibe los 3 constraints
+          // simultáneos (top:72 + bottom:120 + height:280), el comportamiento
+          // del measure pass es indefinido y en ZY22G728HN density 400 el
+          // form termina renderizándose a y=[1076,1776]px (430-710dp) en
+          // vez de y=[180,880]px (72-352dp), solapando country-BR bottom
+          // (1038-1150px) y country-UY completo (1151-1264px). PR #513
+          // (MGC-1986) introdujo bottom:120 intentando anclar el form contra
+          // el sticky-footer top, pero el resultado fue el opuesto: el form
+          // cubrió los países centrales del fresh-mount. Walk QA2 MGC-2295
+          // midió bounds=[0,1076][1080,1776] con country-BR/UY inaccesibles.
+          // Fix: volver al patrón pre-PR-513 (top:72 + height:280 + zIndex:15,
+          // sin bottom) → form y=[180,880]px, country-ARG 982-1050px / BR
+          // 1038-1150px / UY 1151-1264px quedan debajo del form (sin
+          // overlap en y) → tappable. Mantener zIndex:15 sobre field-map
+          // z=10 para que form siga cubriendo chips pos-XX cuando el form
+          // es visible y field-map está debajo. flexShrink:0 garantiza que
           // kavContent no comprima el form en el measure pass.
-          //
-          // MGC-2473 — revertir interpretación MGC-2250. Walk MGC-2295
-          // sobre APK vc=174+ mostró que la regresión real venía de la
-          // combinación `top: 72` + `bottom: 120` + `height: 280` (3
-          // constraints simultáneos en absolute child): RN-Yoga colapsa
-          // el measure pass y el form termina en y=[1076,1776]px (430-
-          // 710dp) en ZY22G728HN density 400, cubriendo country-BR
-          // bottom y country-UY completo. La fix correcta es la original
-          // de MGC-2008: anclar SOLO con `top: 72` + `height: 280` +
-          // `zIndex: 15`, sin `bottom`. Form vuelve a y=[180,880]px
-          // (72-352dp), dejando country-ARG/BR/UY tappables en fresh-
-          // mount. Mantener `height: 280` belt anti-Yoga collapse,
-          // `zIndex: 15` sobre field-map z=10, `flexShrink: 0`.
           position: 'absolute',
           left: 0,
           right: 0,
@@ -1080,7 +946,7 @@ export default function IdentityScreen() {
                 conmutar focus entre inputs (workaround a focus leak post-
                 inputText reportado en MGC-1980 / MGC-2061). */}
             <Pressable
-              onPress={() => rebindFocus(nameInputRef, [lastNameInputRef, ageInputRef])}
+              onPress={() => nameInputRef.current?.focus()}
               hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-name-tap-target"
@@ -1088,33 +954,8 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={nameInputRef}
-                // MGC-2722 — defaultValue + key estable desacopla el EditText
-                // nativo de React state. Antes (value=), el reconcile de RN
-                // podía pisar el texto nativo en builds release cuando
-                // mServedView quedaba stale post-focus-shift; el EditText
-                // mostraba "Q" pero `profile.name` se vaciaba al próximo
-                // commit. Con defaultValue el EditText es uncontrolled:
-                // preserva lo que el usuario tipeó aunque React state esté
-                // desfasado. La reconciliación ocurre en onBlur (safety net)
-                // leyendo `nativeEvent.text` que el runtime Android siempre
-                // entrega al perder foco.
-                defaultValue={profile.name ?? ''}
-                key="input-name-mgc2722"
-                onChangeText={setNameSync}
-                onBlur={(e) => {
-                  // MGC-2673 safety net — sincroniza state desde EditText
-                  // nativo al perder foco. Si onChangeText disparó, este
-                  // branch es un no-op (text === profile.name). Si no
-                  // disparó (mServedView stale / release-build TextWatcher
-                  // skip), reconciliamos el state antes de que el form
-                  // muestre el botón disabled. `TextInputFocusEventData`
-                  // expone `text` en `nativeEvent`, pero `TextInput.onBlur`
-                  // está tipado como `BlurEvent` (TargetedEvent) en RN; el
-                  // cast es seguro porque el runtime Android del EditText
-                  // siempre entrega el contenido actual al perder foco.
-                  const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
-                  syncNameFromNative(text);
-                }}
+                value={profile.name}
+                onChangeText={setName}
                 placeholder={t('identity.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1174,7 +1015,7 @@ export default function IdentityScreen() {
                 testID para que QA pueda enfocar/desenfocar de forma estable
                 sin que uiautomator dump pierda los chips posteriores. */}
             <Pressable
-              onPress={() => rebindFocus(lastNameInputRef, [nameInputRef, ageInputRef])}
+              onPress={() => lastNameInputRef.current?.focus()}
               hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-lastname-tap-target"
@@ -1182,17 +1023,8 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={lastNameInputRef}
-                // MGC-2722 — defaultValue + key estable. Idem input-name:
-                // uncontrolled EditText preserva el texto nativo aunque
-                // React state se desfase por mServedView stale post-blur.
-                defaultValue={profile.lastName ?? ''}
-                key="input-lastname-mgc2722"
-                onChangeText={setLastNameSync}
-                onBlur={(e) => {
-                  // MGC-2673 safety net — idem input-name para apellido.
-                  const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
-                  syncLastNameFromNative(text);
-                }}
+                value={profile.lastName ?? ''}
+                onChangeText={setLastName}
                 placeholder={t('identity.lastNamePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1246,7 +1078,7 @@ export default function IdentityScreen() {
                 focus (MGC-1760 QA walk PR #427 f08d22e). El Pressable hijo
                 captura el tap perimetral y llama ageInputRef.current?.focus() */}
             <Pressable
-              onPress={() => rebindFocus(ageInputRef, [nameInputRef, lastNameInputRef])}
+              onPress={() => ageInputRef.current?.focus()}
               hitSlop={HIT_SLOP_44}
               collapsable={false}
               testID="input-age-tap-target"
@@ -1254,24 +1086,12 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={ageInputRef}
-                // MGC-2722 — defaultValue + key estable. Idem input-name:
-                // uncontrolled EditText preserva el contenido nativo aunque
-                // React state se desfase. La edad es preset (16) y rara vez
-                // se modifica; el defaultValue cubre el caso de un usuario
-                // que tipea "30", confirma y el próximo mount ve 30.
-                defaultValue={String(profile.age)}
-                key="input-age-mgc2722"
+                value={String(profile.age)}
                 onChangeText={(txt) => {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
                   const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
-                  setAgeSync(parsed);
-                }}
-                onBlur={(e) => {
-                  // MGC-2673 safety net — idem nombre/apellido para edad,
-                  // reaplicando el clamp numérico antes de reconciliar.
-                  const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
-                  syncAgeFromNative(text);
+                  setAge(parsed);
                 }}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}

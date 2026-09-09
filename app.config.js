@@ -94,7 +94,7 @@ module.exports = ({ config } = {}) => ({
     // `cli.appVersionSource: remote` en eas.json, el server EAS es la
     // fuente de verdad al build; mantener ambos sincronizados evita drift
     // entre `Constants.expoConfig` y `expo-application` en runtime.
-    versionCode: 16,
+    versionCode: 15,
     // MGC-839: NO declarar AD_ID. Per MGC-4919 rootcause, play-services-ads-*
     // AARs autolinkeados la inyectan transitivamente y declarar el permiso
     // no la remueve. Copero no usa ads → Play Console warning se resuelve
@@ -130,16 +130,22 @@ module.exports = ({ config } = {}) => ({
   // Los IDs concretos por unidad se leen directo desde process.env
   // en el provider nativo.
   extra: {
-    // MGC-2592 — fix router root. Sin override, expo-router escanea
-    // `src/app/` primero y trata `src/app/router.tsx` (que importa
-    // `react-router-dom`) como router root nativo. El bundle falla con
-    // "Unable to resolve module react-router-dom" y la pantalla abre
-    // en `expo-router-unmatched` ("Unmatched Route / Page could not
-    // be found" en router.js:121). Mismo incidente documentado en
-    // MGC-2536 / MGC-2541. `root: 'app'` fuerza a expo-router a
-    // montar el árbol desde `app/` (entry nativo real), preservando
-    // `src/app/router.tsx` solo para el bundle web.
-    router: { root: 'app' },
+    // MGC-2592 — fija el root del Expo Router al directorio `app/` de
+    // raíz del proyecto. Sin esto, expo-router detecta `src/app/` primero
+    // y trata `src/app/router.tsx` (que importa `react-router-dom`, sólo
+    // usado en web) como entry de la app → el bundle Android/iOS falla
+    // con "Unable to resolve module react-router-dom" y la pantalla
+    // abre en `expo-router-unmatched` ("Unmatched Route / Page could not
+    // be found"). La jerarquía `src/app` > `app` está hardcodeada en
+    // `getRouterDirectory()` de @expo/cli (build/src/start/server/metro/
+    // router.js:121). Mismo incidente documentado en MGC-2536 / MGC-2541
+    // (PR #568 r2, vc=278 PASS); el fix se había borrado en algún pase
+    // posterior. Restaurar acá para que el root de Expo Router sea el
+    // filesystem `app/` que contiene `_layout.native.tsx`, `index.tsx`,
+    // `simulador-carrera/`, etc.
+    router: {
+      root: 'app',
+    },
     // ProjectId de Expo (MGC-388). Requerido por `eas build --local`
     // para resolver el proyecto antes de invocar builders nativos.
     // Generado vía `eas init --account mgcstudios --non-interactive`

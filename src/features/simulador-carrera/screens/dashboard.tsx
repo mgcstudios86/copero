@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,8 @@ import { copy, copyHelpers } from '@/design/copy/es-AR/simulador-carrera';
 import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
 import { ResetCareerButton } from '@/features/simulador-carrera/components/ResetCareerButton';
+import { SaveSlotPicker } from '@/features/career/components/SaveSlotPicker';
+import { getActiveSlotId, listSlots } from '@/features/career/persistence';
 
 // Lazy-load del bloque "Estrategia recomendada" (MGC-482).
 // Separa `recommendStrategy` + `strategy` (~10 KB) del chunk inicial
@@ -41,6 +43,46 @@ export default function DashboardScreen() {
 
   const profile = useCareerStore((s) => s.profile);
   const stage = useCareerStore((s) => s.stage);
+  // MGC-2099-A — save-picker multi-slot. Hidrata el slot activo al
+  // montar el dashboard para mostrar el nombre de la partida y poder
+  // cambiarlo sin recargar la pantalla.
+  const [activeSlotId, setActiveSlotId] = useState<string>('default');
+  const [activeSlotName, setActiveSlotName] = useState<string | undefined>(
+    undefined,
+  );
+  const hydrateFromSave = useCareerStore((s) => s.hydrateFromSave);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const id = await getActiveSlotId();
+        const { slots } = await listSlots();
+        if (cancelled) return;
+        setActiveSlotId(id);
+        const meta = slots.find((s) => s.id === id);
+        setActiveSlotName(meta?.name);
+      } catch {
+        // best-effort: el picker muestra fallback "Partida guardada".
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const onSlotChanged = useCallback(
+    async (slotId: string) => {
+      setActiveSlotId(slotId);
+      try {
+        await hydrateFromSave();
+        const { slots } = await listSlots();
+        const meta = slots.find((s) => s.id === slotId);
+        setActiveSlotName(meta?.name);
+      } catch {
+        // best-effort
+      }
+    },
+    [hydrateFromSave],
+  );
   // MGC-1577 / MGC-1608 — split selector en dos llamadas. La primera
   // devuelve el snapshot real (o undefined); la segunda aplica el
   // fallback módulo-scope. Evita el crash que QA reprodujo en MGC-1576
@@ -128,6 +170,16 @@ export default function DashboardScreen() {
         contentContainerStyle={[styles.container, { gap: spacing[5], padding: spacing[4] }]}
         testID="dashboard-screen"
       >
+        {/* MGC-2099-A — save-picker multi-slot. Inline "Save actual: <name>
+            [Cambiar]" arriba del hero. Sin gate de stage: visible desde el
+            primer mount del dashboard para que el usuario pueda
+            saltar entre slots sin tener que volver a /identity. */}
+        <SaveSlotPicker
+          activeSlotId={activeSlotId}
+          activeSlotName={activeSlotName}
+          onSlotChanged={onSlotChanged}
+          testID="dashboard-save-picker"
+        />
         {/* Jersey hero (MGC-532): lazy-loaded para code-split fuera del chunk
             inicial de /dashboard. Mismo testid canónico que identity.tsx para
             que los specs e2e post-navigate home→dashboard encuentren el hero
