@@ -30,6 +30,11 @@ export default defineConfig({
     // que las pruebas del motor de simulación tengan DOM real (los demás
     // tests siguen pasando porque jsdom no rompe APIs de node).
     environment: 'jsdom',
+    // MGC-2548 — jsdom 25 no expone `window.localStorage` (opaque origin en
+    // Node 22+); el polyfill vive en tests/setup.ts y debe correr antes de
+    // los tests para que `beforeEach` no falle con `Cannot read properties
+    // of undefined (reading 'clear')`.
+    setupFiles: ['./tests/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}', '__tests__/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules/', 'dist/', '.expo/'],
     // CI usa reporter 'basic' (resumido). El reporter 'github' requiere
