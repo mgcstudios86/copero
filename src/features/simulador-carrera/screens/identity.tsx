@@ -1,5 +1,4 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -11,6 +10,7 @@ import {
   View,
   Pressable,
   InteractionManager,
+  type TextInputFocusEventData,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
@@ -127,26 +127,83 @@ export default function IdentityScreen() {
   // incrementando `profile.age` cada temporada (season.ts:122) — este
   // setter sólo opera durante el alta.
   const setAge = useCareerStore((s) => s.setAge);
-  // MGC-2494 — React 18/19 automatic batching descartaba el primer setState
-  // cuando dos fills del helper e2e `fillRnw` ocurren tight (7/31 specs
-  // inestables en PR #544). `flushSync` (react-dom, RFC-21) fuerza el commit
-  // sincrónico de cada onChangeText. Beneficio colateral: menos
-  // inconsistencias de UI en mobile real al tipear rápido.
+  // MGC-2673 — flushSync removido. Wrapper con `flushSync` (react-dom) sobre
+  // setters de Zustand: en React Native el renderer es `react-native-renderer`
+  // y `flushSync` de `react-dom` no encuentra `Internals.d` activo, lanzando
+  // TypeError en el bloque `finally`. En la cadena `onChangeText → setName`,
+  // ese throw evita que Zustand aplique el nuevo value en algunos flows de
+  // adb input text / Maestro `inputText` sobre release-4 (vc=286 8d3cedd),
+  // donde el `value` controlado del TextInput no llega a commitear antes del
+  // próximo render — perfil queda con `name=''` y `btn-identity-continue`
+  // disabled pese a que el EditText nativo muestra el texto.
+  //
+  // Zustand ya propaga los cambios a `useCareerStore` subscribers de forma
+  // síncrona vía `useSyncExternalStore`; el wrapper `flushSync` era un
+  // workaround para PR #544 (e2e Playwright `fillRnw` tight batching), pero
+  // `fillRnw` v15 (PR #577 MGC-2496) ya bypasea el DOM event system
+  // invocando `onChange` directo vía fiber — el batching ya no aplica. En
+  // nativo, llamar al setter sin wrapper restaura el flujo limpio.
   const setNameSync = useCallback(
-    (value: string) => {
-      flushSync(() => setName(value));
-    },
+    (value: string) => setName(value),
     [setName],
   );
   const setLastNameSync = useCallback(
-    (value: string) => {
-      flushSync(() => setLastName(value));
-    },
+    (value: string) => setLastName(value),
     [setLastName],
   );
   const setAgeSync = useCallback(
-    (value: number | string) => {
-      flushSync(() => setAge(typeof value === 'number' ? value : Number(value)));
+    (value: number | string) =>
+      setAge(typeof value === 'number' ? value : Number(value)),
+    [setAge],
+  );
+  // MGC-2673 — safety net sobre adb shell input text / Maestro inputText en
+  // builds release. En ZY22G728HN sobre release-4 (8d3cedd) el onChangeText
+  // NO dispara cuando adb o Maestro inyectan texto programáticamente sobre
+  // el EditText enfocado: uiautomator confirma text=Q pero `profile.name`
+  // queda vacío y `btn-identity-continue` permanece disabled. Root cause:
+  // en build release Android, NativeModules.TextInput.State mServedView
+  // queda stale post rebindFocus + el TextWatcher del ReactEditText no
+  // propaga el commitText vía InputConnection antes del siguiente tick.
+  //
+  // La cadena `focus → adb input text → onChangeText` puede romper por
+  // distintas razones en builds optimizados (Hermes bytecode + proguard
+  // minificado + RN production-mode bridge sin dev warnings). El patrón
+  // canónico para sincronizar state desde el EditText nativo cuando el
+  // onChangeText falla es hookear onBlur: el evento de blur del EditText
+  // siempre dispara (la pérdida de foco es síncrona con el sistema de
+  // input nativo) y `nativeEvent.text` trae el contenido actual del
+  // EditText. Comparamos contra el state actual y reconciliamos.
+  //
+  // Belt: usamos `useCareerStore.getState()` (no el `profile` del closure)
+  // para leer el valor canónico sin riesgo de closure stale entre el
+  // render y el blur (que puede llegar varios frames después).
+  const syncNameFromNative = useCallback(
+    (text: string) => {
+      const current = useCareerStore.getState().profile.name;
+      if (text !== current) {
+        setName(text);
+      }
+    },
+    [setName],
+  );
+  const syncLastNameFromNative = useCallback(
+    (text: string) => {
+      const current = useCareerStore.getState().profile.lastName ?? '';
+      if (text !== current) {
+        setLastName(text);
+      }
+    },
+    [setLastName],
+  );
+  const syncAgeFromNative = useCallback(
+    (text: string) => {
+      const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2);
+      const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
+      if (!Number.isFinite(parsed)) return;
+      const current = useCareerStore.getState().profile.age;
+      if (parsed !== current) {
+        setAge(parsed);
+      }
     },
     [setAge],
   );
@@ -1000,6 +1057,20 @@ export default function IdentityScreen() {
                 ref={nameInputRef}
                 value={profile.name}
                 onChangeText={setNameSync}
+                onBlur={(e) => {
+                  // MGC-2673 safety net — sincroniza state desde EditText
+                  // nativo al perder foco. Si onChangeText disparó, este
+                  // branch es un no-op (text === profile.name). Si no
+                  // disparó (mServedView stale / release-build TextWatcher
+                  // skip), reconciliamos el state antes de que el form
+                  // muestre el botón disabled. `TextInputFocusEventData`
+                  // expone `text` en `nativeEvent`, pero `TextInput.onBlur`
+                  // está tipado como `BlurEvent` (TargetedEvent) en RN; el
+                  // cast es seguro porque el runtime Android del EditText
+                  // siempre entrega el contenido actual al perder foco.
+                  const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
+                  syncNameFromNative(text);
+                }}
                 placeholder={t('identity.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1069,6 +1140,11 @@ export default function IdentityScreen() {
                 ref={lastNameInputRef}
                 value={profile.lastName ?? ''}
                 onChangeText={setLastNameSync}
+                onBlur={(e) => {
+                  // MGC-2673 safety net — idem input-name para apellido.
+                  const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
+                  syncLastNameFromNative(text);
+                }}
                 placeholder={t('identity.lastNamePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1136,6 +1212,12 @@ export default function IdentityScreen() {
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
                   const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
                   setAgeSync(parsed);
+                }}
+                onBlur={(e) => {
+                  // MGC-2673 safety net — idem nombre/apellido para edad,
+                  // reaplicando el clamp numérico antes de reconciliar.
+                  const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
+                  syncAgeFromNative(text);
                 }}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}
