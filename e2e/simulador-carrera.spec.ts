@@ -1,7 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { fillIdentityLastName, fillIdentityName } from './career-test-helpers';
-import { passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
+import { fillRnw, passTeamSelect, passTeamSelectAndGotoDashboard, pressRnw, expectDashboardOrSeasonHub } from './fixtures/rnw-fill';
 
 /**
  * MGC-431 — E2E + axe + Lighthouse integral para simulador-carrera (MGC-427).
@@ -102,23 +101,39 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
 
     // ── 2. IDENTITY: completar los 5 campos del AC ────────────────────
     // 2a. Nombre = CALVO
-    await fillIdentityName(page, 'CALVO');
-    await fillIdentityLastName(page, 'Prueba');
+    await fillRnw(page.getByTestId('input-name'), 'CALVO');
+    // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
+    await fillRnw(page.getByTestId('input-lastname'), 'TEST');
 
-    // 2b. El número inicial (9) ya cumple el rango válido del perfil.
-    // La UI actual reemplazó el stepper por el campo de edad; no hace falta
-    // mutar el dorsal para habilitar Continue.
+    // 2b. Número (dorsal) — MGC-1647 / WF1 removió el stepper +/- del form
+    // (btn-number-plus/minus) y lo reemplazó por input-age. El dorsal
+    // mantiene su default en store (engine.ts:110 → number=9) pero ya NO es
+    // gate del alta ni hay control UI para modificarlo. El jersey-preview
+    // SVG muestra el número actual (default 9) sin afectar canContinue.
 
     // 2c. Posición = ST (attack group) — tap en el field map
-    await pressRnw(page.getByTestId('pos-ST'));
+    await page.getByTestId('pos-ST').click();
 
     // 2d. Pie hábil = Derecho
-    await pressRnw(page.getByRole('button', { name: 'Derecha', exact: true }));
+    await page.getByRole('button', { name: 'Derecha', exact: true }).click();
 
     // 2e. Nacionalidad = Argentina (filtra por "arg" para robustez i18n).
-    await page.getByTestId('input-nationality-search').fill('arg');
+    // MGC-1348 v3 — `force: true` bypassa el actionability check de Playwright.
+    // El Pressable del dropdown renderiza en RNW como `<div>` wrapper
+    // (flex:1, flex-direction:row) envolviendo `<button data-testid="country-ARG">`.
+    // El hit-test del browser resuelve al `<div>` (display:flex cubre el área)
+    // y reporta "intercepts pointer events" sobre el `<button>`, aunque el
+    // click sí dispara el onPress del Pressable (event bubbling). Las 7
+    // specs que clickean `country-ARG` fallan idénticamente en CI run
+    // 33581781508 sobre 149ca57. Fix producto (box-only en el Pressable)
+    // cambia la semántica del touch target en Android nativo (no-op en RNW).
+    // Patrón adopted: `force:true` es el workaround estándar de Playwright
+    // para RNW hit-test flake; el componente sigue funcionando en Maestro.
+    await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
+    // MGC-2494: `force: true` salta el hit-test y el onPress del Pressable
+    // RNW nunca corría → nationalityCode quedaba null. `pressRnw` clickea de
+    // verdad (con fallbacks).
     await pressRnw(page.getByTestId('country-ARG'));
-    await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
 
     // axe gate 1: identity
     await expectZeroSeriousAxe(page, 'identity');
@@ -133,10 +148,12 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
     await page.getByTestId('btn-identity-continue').click();
     await expect(page.getByTestId('identity-screen')).toBeHidden({ timeout: 15_000 });
-    // El flujo vigente puede pasar por team-select y season-hub. Este caso
-    // conserva el assert de Free agent, por eso no selecciona un club.
-    await page.goto('/simulador-carrera/dashboard');
-    await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
+    // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+    // MGC-2498: post-WF3 (MGC-1737 / MGC-1649) el destino es season-hub. Este
+    // walk valida contenido específico del dashboard (OVR / age heading /
+    // Free agent badge / subtitle con ST · 🇦🇷 Argentina), así que vamos
+    // explícitamente al dashboard vía goto SPA fallback.
+    await passTeamSelectAndGotoDashboard(page, BASE);
 
     // ── 4. DASHBOARD: aserciones del AC (OVR/Age/Name/Pos/Nat) ────────
     await expect(
@@ -175,11 +192,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     });
 
     // ── 5. IR A LA ACADEMIA ───────────────────────────────────────────
-    // MGC-2505 / MGC-1649 (WF3): tras seleccionar club en team-select,
-    // profile.club !== null → btn-dashboard-academy navega a /match
-    // (no a /academy). Navegamos directo a /academy para preservar el AC
-    // del test.
-    await page.goto('/simulador-carrera/academy');
+    await page.getByTestId('btn-dashboard-academy').click();
     await expect(page.getByTestId('academy-screen')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId('club-velez')).toBeVisible();
     await expect(page.getByTestId('club-temperley')).toBeVisible();
@@ -203,7 +216,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
       await dialog.accept();
     });
     await page.getByTestId('club-velez').click();
-    await page.waitForURL(/\/simulador-carrera\/dashboard/, { timeout: 10_000 }).catch(() => undefined);
+    await page.waitForURL(/\/simulador-carrera\/(dashboard|season-hub)/, { timeout: 10_000 }).catch(() => undefined);
 
     // ── 7. NAVEGACIÓN post-fichaje ────────────────────────────────────
     // El router.replace debería llevarnos al dashboard (clubStart stage).
@@ -213,7 +226,8 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     if (!page.url().includes('/simulador-carrera/dashboard')) {
       await page.goto(`${BASE}/simulador-carrera/dashboard`);
     }
-    await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
+    // MGC-2498 — aceptar dashboard O season-hub tras fichaje.
+    await expectDashboardOrSeasonHub(page);
     // Tras aceptar club, el badge ya no dice "Free agent" — aparece "Vélez"
     // (renderiza `profile.club.name`).
     await expect(
@@ -244,11 +258,18 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
 
     // Defaults mínimos para que el journey completo no bloquee otros
     // navigations.
-    await fillIdentityName(page, 'Regresion');
-    await fillIdentityLastName(page, 'Axe');
-    // El número inicial (9) ya es válido; la UI actual no expone stepper.
-    await pressRnw(page.getByRole('button', { name: 'Derecha', exact: true }));
-    await page.getByTestId('input-nationality-search').fill('arg');
+    await fillRnw(page.getByTestId('input-name'), 'Regresion');
+    // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
+    await fillRnw(page.getByTestId('input-lastname'), 'QA');
+    // MGC-1647 / WF1: stepper +/- eliminado del form. El dorsal (number)
+    // mantiene su default en store y no tiene UI de modificación; el
+    // canContinue gate sólo exige name/lastName/age/nationality.
+    await page.getByRole('button', { name: 'Derecha', exact: true }).click();
+    // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
+    await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
+    // MGC-2494: `force: true` salta el hit-test y el onPress del Pressable
+    // RNW nunca corría → nationalityCode quedaba null. `pressRnw` clickea de
+    // verdad (con fallbacks).
     await pressRnw(page.getByTestId('country-ARG'));
 
     // Ciclar las 4 posiciones de grupos distintos y axeear cada estado.
@@ -282,19 +303,26 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // continuamos, y luego salimos a academy vía el botón.
     await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
-    await fillIdentityName(page, 'CALVO');
-    await fillIdentityLastName(page, 'Prueba');
-    // El número inicial (9) ya es válido; la UI actual no expone stepper.
-    await pressRnw(page.getByTestId('pos-ST'));
-    await pressRnw(page.getByRole('button', { name: 'Derecha', exact: true }));
-    await page.getByTestId('input-nationality-search').fill('arg');
+    await fillRnw(page.getByTestId('input-name'), 'CALVO');
+    // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
+    await fillRnw(page.getByTestId('input-lastname'), 'TEST');
+    // MGC-1647 / WF1: stepper +/- eliminado. Dorsal no tiene UI en /identity
+    // (mantiene default store); canContinue gate es name/lastName/age/nat.
+    await page.getByTestId('pos-ST').click();
+    await page.getByRole('button', { name: 'Derecha', exact: true }).click();
+    // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
+    await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
+    // MGC-2494: `force: true` salta el hit-test y el onPress del Pressable
+    // RNW nunca corría → nationalityCode quedaba null. `pressRnw` clickea de
+    // verdad (con fallbacks).
     await pressRnw(page.getByTestId('country-ARG'));
+    // MGC-2254 v3: espera explicita a que el boton este enabled.
     await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
     await page.getByTestId('btn-identity-continue').click();
-    await passTeamSelect(page);
-    await passSeasonHub(page);
-    await page.goto('/simulador-carrera/dashboard');
-    await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 15_000 });
+    // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+    // MGC-2498: post-WF3 el destino es season-hub; este test axe-ea dashboard
+    // STANDALONE (no season-hub), así que vamos explícito al dashboard.
+    await passTeamSelectAndGotoDashboard(page, BASE);
 
     await expectZeroSeriousAxe(page, 'dashboard-standalone');
     await page.screenshot({
@@ -302,9 +330,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
       fullPage: true,
     });
 
-    // Con club seleccionado el CTA dashboard lleva a match; la cobertura
-    // histórica de academy usa navegación directa.
-    await page.goto('/simulador-carrera/academy');
+    await page.getByTestId('btn-dashboard-academy').click();
     await expect(page.getByTestId('academy-screen')).toBeVisible({ timeout: 15_000 });
     await expectZeroSeriousAxe(page, 'academy-standalone');
     await page.screenshot({

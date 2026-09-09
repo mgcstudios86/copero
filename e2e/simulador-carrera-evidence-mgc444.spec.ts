@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { fillIdentityLastName, fillIdentityName } from './career-test-helpers';
-import { passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
+import { fillRnw, passTeamSelect, passTeamSelectAndGotoDashboard, pressRnw, expectDashboardOrSeasonHub } from './fixtures/rnw-fill';
 
 /**
  * Copero — Evidencia E2E simulador-carrera (MGC-444).
@@ -42,19 +41,35 @@ async function completeIdentity(page: any, name: string) {
   // SPA fallback a index.html para rutas como /simulador-carrera/identity.
   await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
-  await fillIdentityName(page, name);
-  await fillIdentityLastName(page, 'QA');
-  await pressRnw(page.locator('[data-testid^="pos-"]').first());
-  await page.getByTestId('input-nationality-search').fill('arg');
-  await pressRnw(page.getByTestId('country-ARG'));
+  // MGC-2254 v3 / MGC-2356: en el runner self-hosted (copero-heavy, Mac mini
+  // ARM64, Chromium headless) ni `fill` ni pressSequentially disparan
+  // `onChangeText` antes del primer paint post-hidratacion. `fillRnw`
+  // (fixtures/rnw-fill.ts) hace click + fill + dispatchEvent('input')
+  // con el setter nativo de HTMLInputElement.value, lo que fuerza a
+  // React a reconciliar el state y deja canContinue()=true.
+  await fillRnw(page.getByTestId('input-name'), name);
+  // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
+  // Derivamos del param `name` (siempre "First Last") para no romper callers.
+  const lastName = name.includes(' ') ? name.split(' ').slice(-1)[0] : 'Apellido';
+  await fillRnw(page.getByTestId('input-lastname'), lastName);
+  await page.locator('[data-testid^="pos-"]').first().click();
+  await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
+  await page.waitForTimeout(400);
+  // MGC-2254: click country-ARG tras el fill. MGC-1348 v3 — `force:true`
+  // por hit-test RNW.
+  // MGC-2494: `force: true` salta el hit-test y el onPress del Pressable
+    // RNW nunca corría → nationalityCode quedaba null. `pressRnw` clickea de
+    // verdad (con fallbacks).
+    await pressRnw(page.getByTestId('country-ARG'));
+  // Espera explicita a que el boton se habilite (canContinue = true).
   await expect(page.getByTestId('btn-identity-continue')).toBeEnabled({ timeout: 15_000 });
   await page.getByTestId('btn-identity-continue').click();
-
-  // WF2/WF3 agregan team-select y season-hub antes del dashboard legacy.
+  // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
   await passTeamSelect(page);
-  await passSeasonHub(page);
-  await page.goto('/simulador-carrera/dashboard');
-  await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 10_000 });
+  await page.waitForURL(/\/simulador-carrera\/(dashboard|season-hub)/, { timeout: 10_000 });
+  // MGC-2498 — WF3 (MGC-1737 / MGC-1649): post-identity navega a season-hub,
+  // no dashboard. Aceptamos ambos.
+  await expectDashboardOrSeasonHub(page);
 }
 
 async function scanRoute(page: any, testId: string, label: string) {
@@ -92,10 +107,16 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
   });
 
   test('3) dashboard → academy → clubStart → dashboard', async ({ page }, testInfo) => {
+    // MGC-2498: post-WF3 (MGC-1737) el destino post-identity es season-hub.
+    // Este test ejercita `btn-dashboard-academy` del dashboard, así que vamos
+    // explícito al dashboard después de completeIdentity.
     await completeIdentity(page, 'Mateo Romero');
-    // MGC-2505: con el club elegido el CTA dashboard abre /match; esta
-    // prueba mantiene su cobertura histórica navegando a academy directo.
-    await page.goto('/simulador-carrera/academy');
+    if (!page.url().includes('/simulador-carrera/dashboard')) {
+      await page.goto('/simulador-carrera/dashboard', { waitUntil: 'domcontentloaded' });
+    }
+    await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
+    await page.getByTestId('btn-dashboard-academy').click();
+    await page.waitForURL(/\/simulador-carrera\/academy/, { timeout: 10_000 });
     await expect(page.getByTestId('academy-screen')).toBeVisible();
     await page.screenshot({
       path: testInfo.outputPath('mgc444-03-academy.png'),
@@ -111,7 +132,7 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
     });
     await firstClub.click();
     // router.replace('/simulador-carrera/dashboard') triggereado tras aceptar Alert
-    await page.waitForURL(/\/simulador-carrera\/dashboard/, { timeout: 15_000 });
+    await page.waitForURL(/\/simulador-carrera\/(dashboard|season-hub)/, { timeout: 15_000 });
     // MGC-405: durante la animación academy → dashboard quedan 2 elementos
     // con testid `dashboard-screen` en DOM (el viejo academy-screen fade
     // out y el nuevo dashboard fade in coexisten). `.first()` picks DOM-order
@@ -140,8 +161,14 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
       fullPage: true,
     });
 
-    // dashboard (con perfil completo)
+    // dashboard (con perfil completo) — MGC-2498: este test axe-ea dashboard
+    // STANDALONE, no season-hub. Después de completeIdentity (que termina en
+    // season-hub por WF3) hacemos goto explícito al dashboard.
     await completeIdentity(page, 'Mateo Romero QA');
+    if (!page.url().includes('/simulador-carrera/dashboard')) {
+      await page.goto('/simulador-carrera/dashboard', { waitUntil: 'domcontentloaded' });
+    }
+    await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
     const axeDashboard = await scanRoute(page, 'dashboard-screen', 'dashboard');
     await page.screenshot({
       path: testInfo.outputPath('mgc444-07-axe-dashboard.png'),
@@ -155,6 +182,12 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
   test('5) persistencia: reload conserva profile (zustand persist)', async ({ page }, testInfo) => {
     test.setTimeout(60_000);
     await completeIdentity(page, 'Mateo Romero Persistente');
+    // MGC-2498: post-WF3 el destino es season-hub. El player card y el heading
+    // del nombre viven en `/dashboard` (no en season-hub). Goto explícito.
+    if (!page.url().includes('/simulador-carrera/dashboard')) {
+      await page.goto('/simulador-carrera/dashboard', { waitUntil: 'domcontentloaded' });
+    }
+    await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
     // MGC-532: el nombre aparece en 4 lugares (home-jersey kept-alive + jersey
     // preview dashboard + h1 player card + aria-label dorsal). Usar el heading
     // del player card como anchor estable para evitar strict-mode violation.
