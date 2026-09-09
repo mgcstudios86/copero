@@ -24,12 +24,7 @@ export default defineConfig({
   },
   test: {
     globals: false,
-    // MGC-2512 — tests/engine-decisions.test.ts usa `window.localStorage`,
-    // setDebugMode y otras APIs del DOM. Con `environment: 'node'` falla
-    // con `ReferenceError: window is not defined`. Cambiar a `jsdom` para
-    // que las pruebas del motor de simulación tengan DOM real (los demás
-    // tests siguen pasando porque jsdom no rompe APIs de node).
-    environment: 'jsdom',
+    environment: 'node',
     include: ['src/**/*.{test,spec}.{ts,tsx}', '__tests__/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules/', 'dist/', '.expo/'],
     // CI usa reporter 'basic' (resumido). El reporter 'github' requiere

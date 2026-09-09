@@ -198,6 +198,22 @@ config.resolver.resolveRequest = function customFontBlockResolver(
     context &&
     typeof context.originModulePath === 'string' &&
     ttfInGoogleFonts.test(context.originModulePath);
+  // MGC-2512 — bloquear react-router(/-dom) en platform!=web.
+  // react-router v7.x genera `import(/* @vite-ignore */)` y
+  // `require(/* @vite-ignore */ /* webpackIgnore: true */ ...)` que
+  // Hermes 0.86 parsea como "Invalid expression encountered" en
+  // android/app/build/generated/assets/react/release/index.android.bundle.
+  // Bloqueamos en native devolviendo un módulo vacío: en native la
+  // navegación la provee Expo Router + react-native-screens, no RR.
+  const isReactRouter =
+    typeof moduleName === 'string' &&
+    (moduleName === 'react-router' ||
+      moduleName === 'react-router-dom' ||
+      moduleName.startsWith('react-router/') ||
+      moduleName.startsWith('react-router-dom/'));
+  if (platform !== 'web' && isReactRouter) {
+    return { type: 'empty' };
+  }
   if (platform === 'web' && isFontRequire && isFromGoogleFonts) {
     return { type: 'empty' };
   }

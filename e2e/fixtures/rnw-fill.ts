@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 /**
  * Helper para llenar inputs de React Native Web que no propagan onChangeText
@@ -61,9 +61,9 @@ export async function fillRnwByTestId(
  *   nat after plain click:      AR     ← btn-identity-continue enabled
  *
  * Estrategia: click normal (Playwright espera actionability y acierta el
- * hit-target). Si un overlay impide el hit-test, usamos el click DOM del
- * elemento para invocar el handler RNW directamente; `force:true` queda como
- * último recurso para componentes que no expongan un handler DOM directo.
+ * hit-target). Solo si eso falla realmente caemos al click forzado, y como
+ * último recurso al `click()` del DOM, que dispara el handler sin depender del
+ * hit-test.
  */
 export async function pressRnw(target: Locator): Promise<void> {
   await target.scrollIntoViewIfNeeded();
@@ -74,12 +74,12 @@ export async function pressRnw(target: Locator): Promise<void> {
     // Overlay real que captura pointer events: seguimos con los fallbacks.
   }
   try {
+    await target.click({ force: true, timeout: 5000 });
+    return;
+  } catch {
     await target.evaluate((el: HTMLElement): void => {
       el.click();
     });
-    return;
-  } catch {
-    await target.click({ force: true, timeout: 5000 });
   }
 }
 
@@ -139,3 +139,4 @@ export async function passSeasonHub(page: Page): Promise<void> {
     // nada que atravesar.
   }
 }
+

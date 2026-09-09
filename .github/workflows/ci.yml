@@ -12,13 +12,11 @@
 # la PR trae sus propios checks y no hace falta dispatch manual.
 # Artefacto: `web-build` (Expo web export).
 #
-# MGC-1880 + MGC-2107: pool CI dedicado `[self-hosted, copero-ci]` (runner-01
-# Linux VPS, runner-03 Linux provision) — ADR-0026 reservó este label al gate
-# de merge. Las suites largas se separaron en clases propias para que una
-# corrida de 60min de Playwright o un build APK de 40min no acaparen el runner
-# del gate: qa.yml usa `[self-hosted, copero-qa]` (runner-01, Playwright
-# headless) y eas.yml usa `[self-hosted, copero-heavy]` (runner-02 Mac mini,
-# builds EAS). Mapping label→runner→workflow en AGENTS.md §Runners.
+# MGC-1880: CI comparte el pool `copero-ci` (runner-01 Linux + runner-02 macOS)
+# para no bloquearse cuando uno de los dos está ocupado con QA. La separación
+# efectiva está en qa.yml: Playwright corre solo en `[self-hosted, copero-qa,
+# Linux]` (runner-01). Quedarse solo en macOS convertía CI en single-point-of-failure
+# porque el único runner macOS queda libre solo cuando no hay iOS release ni QA largo.
 
 name: ci (copero)
 

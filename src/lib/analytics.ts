@@ -45,8 +45,8 @@ function initGoogleAnalytics(): void {
   window.dataLayer = window.dataLayer ?? []
   window.gtag =
     window.gtag ??
-    function gtag(...args: unknown[]): void {
-      window.dataLayer?.push(args)
+    function gtag(..._args: unknown[]): void {
+      window.dataLayer?.push(_args)
     }
 
   window.gtag('js', new Date())

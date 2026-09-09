@@ -5,11 +5,11 @@ type RawCatalog = {
   countries: Country[]
   competitions: Competition[]
   teams: (Omit<Team, 'competition_id' | 'country_fifa_code' | 'confederation'> & {
-    competition_id?: string
-    country_fifa_code?: string
-    confederation?: string
-    domestic_reputation?: number
-  })[]
+      competition_id?: string
+      country_fifa_code?: string
+      confederation?: string
+      domestic_reputation?: number
+    })[]
 }
 
 const data = raw as RawCatalog
