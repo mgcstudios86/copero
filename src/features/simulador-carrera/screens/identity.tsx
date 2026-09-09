@@ -180,7 +180,7 @@ export default function IdentityScreen() {
     (text: string) => {
       const current = useCareerStore.getState().profile.name;
       if (text !== current) {
-        flushSync(() => setName(text));
+        setName(text);
       }
     },
     [setName],
@@ -189,7 +189,7 @@ export default function IdentityScreen() {
     (text: string) => {
       const current = useCareerStore.getState().profile.lastName ?? '';
       if (text !== current) {
-        flushSync(() => setLastName(text));
+        setLastName(text);
       }
     },
     [setLastName],
@@ -201,7 +201,7 @@ export default function IdentityScreen() {
       if (!Number.isFinite(parsed)) return;
       const current = useCareerStore.getState().profile.age;
       if (parsed !== current) {
-        flushSync(() => setAge(parsed));
+        setAge(parsed);
       }
     },
     [setAge],
