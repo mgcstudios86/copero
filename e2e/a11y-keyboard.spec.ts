@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { passSeasonHub, passTeamSelect } from './fixtures/rnw-fill';
+import { expectDashboardOrSeasonHub, passTeamSelect } from './fixtures/rnw-fill';
 
 /**
  * MGC-339 — a11y cross-platform: keyboard-only happy path en web.
@@ -61,7 +61,11 @@ test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
     // El test sigue validando la navegación por teclado de identity → flow
     // post-identidad y el foco del CTA academy en /dashboard.
     await passTeamSelect(page);
-    await passSeasonHub(page);
+    // MGC-2684: v15 del fixture removió `passSeasonHub`. Tras `passTeamSelect`
+    // la app queda en season-hub (WF3); navegamos directo al dashboard con
+    // goto. `expectDashboardOrSeasonHub` confirma que la app pasó el flow de
+    // identidad antes del goto forzado.
+    await expectDashboardOrSeasonHub(page);
     await page.goto('/simulador-carrera/dashboard');
     await page.waitForSelector('[data-testid="dashboard-screen"]', { timeout: 10_000 });
     await page.screenshot({ path: testInfo.outputPath('kbd-3-dashboard.png'), fullPage: true });

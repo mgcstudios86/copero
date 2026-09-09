@@ -57,7 +57,8 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     // spec MGC-396 (capturas visuales del flow draft → tu-jugador → club).
     // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
     await passTeamSelect(page);
-    await page.waitForURL('**/simulador-carrera/(dashboard|season-hub)', { timeout: 15_000 });
+    // MGC-2684: globs de Playwright soportan `{a,b}` (no `(a|b)`). Usar regex.
+    await page.waitForURL(/\/simulador-carrera\/(dashboard|season-hub)/, { timeout: 15_000 });
     await page.goto('/simulador-carrera/draft');
     await page.waitForSelector('[data-testid="draft-screen"]', { timeout: 10_000 });
     await page.waitForTimeout(500);
