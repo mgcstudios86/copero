@@ -10,6 +10,7 @@ import {
   View,
   Pressable,
   InteractionManager,
+  type NativeSyntheticEvent,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
@@ -29,6 +30,17 @@ import { NATIONALITIES } from '@/features/career/nationalities';
 // `setLeague` por compat con storage migrado (MGC-1501 internal track).
 import { isIdentityComplete } from '@/features/career/identity-state';
 import type { Foot, PositionGroup } from '@/types/career';
+
+// MGC-2673 — el type público de TextInput.onBlur en RN 0.86 es
+// `(e: BlurEvent) => void` (TargetedEvent sin `text`), pero en runtime
+// el evento trae `e.nativeEvent.text` consistente con TextInputChangeEventData.
+// Helper tipado para extraer el texto del native event sin que TS se queje.
+const nativeBlurText = (
+  e: NativeSyntheticEvent<unknown>,
+): string => {
+  const native = e.nativeEvent as unknown as { text?: string };
+  return typeof native.text === 'string' ? native.text : '';
+};
 
 // MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje (PR-379 / MGC-1502).
 const HIT_SLOP_44 = { top: 22, left: 22, right: 22, bottom: 22 } as const;
@@ -1063,7 +1075,7 @@ export default function IdentityScreen() {
                   // disparó (mServedView stale / release-build TextWatcher
                   // skip), reconciliamos el state antes de que el form
                   // muestre el botón disabled.
-                  syncNameFromNative(e.nativeEvent.text ?? '');
+                  syncNameFromNative(nativeBlurText(e));
                 }}
                 placeholder={t('identity.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
@@ -1136,7 +1148,7 @@ export default function IdentityScreen() {
                 onChangeText={setLastNameSync}
                 onBlur={(e) => {
                   // MGC-2673 safety net — idem input-name para apellido.
-                  syncLastNameFromNative(e.nativeEvent.text ?? '');
+                  syncLastNameFromNative(nativeBlurText(e));
                 }}
                 placeholder={t('identity.lastNamePlaceholder')}
                 placeholderTextColor={colors.textMuted}
@@ -1209,7 +1221,7 @@ export default function IdentityScreen() {
                 onBlur={(e) => {
                   // MGC-2673 safety net — idem nombre/apellido para edad,
                   // reaplicando el clamp numérico antes de reconciliar.
-                  syncAgeFromNative(e.nativeEvent.text ?? '');
+                  syncAgeFromNative(nativeBlurText(e));
                 }}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}
