@@ -150,6 +150,57 @@ export default function IdentityScreen() {
     },
     [setAge],
   );
+  // MGC-2673 — safety net sobre adb shell input text / Maestro inputText en
+  // builds release. En ZY22G728HN sobre release-4 (8d3cedd) el onChangeText
+  // NO dispara cuando adb o Maestro inyectan texto programáticamente sobre
+  // el EditText enfocado: uiautomator confirma text=Q pero `profile.name`
+  // queda vacío y `btn-identity-continue` permanece disabled. Root cause:
+  // en build release Android, NativeModules.TextInput.State mServedView
+  // queda stale post rebindFocus + el TextWatcher del ReactEditText no
+  // propaga el commitText vía InputConnection antes del siguiente tick.
+  //
+  // La cadena `focus → adb input text → onChangeText` puede romper por
+  // distintas razones en builds optimizados (Hermes bytecode + proguard
+  // minificado + RN production-mode bridge sin dev warnings). El patrón
+  // canónico para sincronizar state desde el EditText nativo cuando el
+  // onChangeText falla es hookear onBlur: el evento de blur del EditText
+  // siempre dispara (la pérdida de foco es síncrona con el sistema de
+  // input nativo) y `nativeEvent.text` trae el contenido actual del
+  // EditText. Comparamos contra el state actual y reconciliamos.
+  //
+  // Belt: usamos `useCareerStore.getState()` (no el `profile` del closure)
+  // para leer el valor canónico sin riesgo de closure stale entre el
+  // render y el blur (que puede llegar varios frames después).
+  const syncNameFromNative = useCallback(
+    (text: string) => {
+      const current = useCareerStore.getState().profile.name;
+      if (text !== current) {
+        flushSync(() => setName(text));
+      }
+    },
+    [setName],
+  );
+  const syncLastNameFromNative = useCallback(
+    (text: string) => {
+      const current = useCareerStore.getState().profile.lastName ?? '';
+      if (text !== current) {
+        flushSync(() => setLastName(text));
+      }
+    },
+    [setLastName],
+  );
+  const syncAgeFromNative = useCallback(
+    (text: string) => {
+      const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2);
+      const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
+      if (!Number.isFinite(parsed)) return;
+      const current = useCareerStore.getState().profile.age;
+      if (parsed !== current) {
+        flushSync(() => setAge(parsed));
+      }
+    },
+    [setAge],
+  );
   // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
   // WCAG 2.5.5) pueda disparar foco en tap perimetral. hitSlop en TextInput
   // nativo Android no extiende el hitbox de focus. Compatible con el
@@ -1000,6 +1051,15 @@ export default function IdentityScreen() {
                 ref={nameInputRef}
                 value={profile.name}
                 onChangeText={setNameSync}
+                onBlur={(e) => {
+                  // MGC-2673 safety net — sincroniza state desde EditText
+                  // nativo al perder foco. Si onChangeText disparó, este
+                  // branch es un no-op (text === profile.name). Si no
+                  // disparó (mServedView stale / release-build TextWatcher
+                  // skip), reconciliamos el state antes de que el form
+                  // muestre el botón disabled.
+                  syncNameFromNative(e.nativeEvent.text ?? '');
+                }}
                 placeholder={t('identity.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1069,6 +1129,10 @@ export default function IdentityScreen() {
                 ref={lastNameInputRef}
                 value={profile.lastName ?? ''}
                 onChangeText={setLastNameSync}
+                onBlur={(e) => {
+                  // MGC-2673 safety net — idem input-name para apellido.
+                  syncLastNameFromNative(e.nativeEvent.text ?? '');
+                }}
                 placeholder={t('identity.lastNamePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1136,6 +1200,11 @@ export default function IdentityScreen() {
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
                   const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
                   setAgeSync(parsed);
+                }}
+                onBlur={(e) => {
+                  // MGC-2673 safety net — idem nombre/apellido para edad,
+                  // reaplicando el clamp numérico antes de reconciliar.
+                  syncAgeFromNative(e.nativeEvent.text ?? '');
                 }}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}
