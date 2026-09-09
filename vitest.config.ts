@@ -30,6 +30,12 @@ export default defineConfig({
     // que las pruebas del motor de simulación tengan DOM real (los demás
     // tests siguen pasando porque jsdom no rompe APIs de node).
     environment: 'jsdom',
+    // MGC-2548 — jsdom 25 no expone window.localStorage por defecto;
+    // tests/engine-decisions.test.ts hace `window.localStorage.clear()` en
+    // beforeEach. setup.ts polyfillea localStorage + matchMedia para
+    // que la suite completa pase en jsdom. Sin esto, 16 tests de
+    // engine-decisions fallan con `Cannot read properties of undefined`.
+    setupFiles: ['./tests/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}', '__tests__/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules/', 'dist/', '.expo/'],
     // CI usa reporter 'basic' (resumido). El reporter 'github' requiere
