@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { AdsterraAd } from '../ads/AdsterraAd'
 import {
@@ -23,8 +23,10 @@ function ensureMeta(name: string, content: string) {
 export function NotFoundPage() {
   const location = useLocation()
   const locale: Locale = localeFromPathname(location.pathname) ?? DEFAULT_LOCALE
-  const t = useCallback((key: string) => translate(locale, 'common', key), [locale])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const t = (key: string) => translate(locale, 'common', key)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     document.documentElement.lang = LOCALE_META[locale].htmlLang
     document.title = `${t('notFound.title')} · Copero`

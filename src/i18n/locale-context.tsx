@@ -1,25 +1,16 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { COPY, Locale, SUPPORTED_LOCALES } from './copy';
 
-/**
- * LocaleProvider — MGC-653.
- *
- * Estado mínimo del locale activo (default `es`). Sin persistencia (se
- * decide en ADR-0014 si se commitea a `AsyncStorage`); sin detección
- * automática del sistema (fuera de alcance del header). El `setLocale`
- * es libre; cualquier consumidor que dependa del locale debe re-renderizar.
- *
- * API:
- * - `locale`: locale activo
- * - `setLocale(next)`: cambia el locale
- * - `t(path, values?)`: lookup con fallback a `es`. Si se pasa `values`,
- *   interpola los placeholders `{key}` del string localizado (MGC-1534).
- *
- * MGC-2168 — i18n regression guard: si el lookup falla en ambos el locale
- * activo y `es`, logueamos warning en dev para detectar claves faltantes
- * antes de QA. Nunca devolvemos `path` literal (Field lo aplica
- * `.toUpperCase()` → "IDENTITY.FIELDLASTNAME" en pantalla, ver ticket).
- */
+// LocaleProvider — MGC-653. Estado minimo del locale activo (default `es`).
+// Sin persistencia (ADR-0014); sin deteccion automatica. Cualquier consumidor
+// que dependa del locale debe re-renderizar al cambiarlo (suscribirse via
+// useLocale). MGC-1534 extiende t() con segundo arg opcional para interpolar
+// placeholders {key} en strings parametrizadas.
+//
+// MGC-2168 — i18n regression guard: si el lookup falla en ambos el locale
+// activo y `es`, logueamos warning en dev para detectar claves faltantes
+// antes de QA. Nunca devolvemos `path` literal (Field lo aplica
+// `.toUpperCase()` → "IDENTITY.FIELDLASTNAME" en pantalla, ver ticket).
 
 type TValues = Record<string, string | number>;
 
