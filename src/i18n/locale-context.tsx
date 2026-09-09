@@ -68,21 +68,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
   const t = useCallback(
     (path: string, values?: TValues) => {
-      // MGC-2168 — i18n regression guard. Si el lookup falla en ambos el
-      // locale activo y `es`, logueamos un warning en dev para que el equipo
-      // detecte claves faltantes antes de que lleguen a QA. Nunca devolvemos
-      // el `path` literal porque `Field` lo aplica `.toUpperCase()` y termina
-      // como "IDENTITY.FIELDLASTNAME" en pantalla (ver ticket).
-      const fromActive = lookup(COPY[locale], path);
-      const fromEs = fromActive ?? lookup(COPY.es, path);
-      if (fromEs === undefined) {
-        if (__DEV__) {
-          // eslint-disable-next-line no-console
-          console.warn(`[i18n] missing key: ${path} (locale=${locale})`);
-        }
-        return path;
-      }
-      const raw = fromActive ?? fromEs;
+      const raw = lookup(COPY[locale], path) ?? lookup(COPY.es, path) ?? path;
       return values ? interpolate(raw, values) : raw;
     },
     [locale],

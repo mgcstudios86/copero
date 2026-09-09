@@ -1,5 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -127,29 +126,6 @@ export default function IdentityScreen() {
   // incrementando `profile.age` cada temporada (season.ts:122) — este
   // setter sólo opera durante el alta.
   const setAge = useCareerStore((s) => s.setAge);
-  // MGC-2494 — React 18/19 automatic batching descartaba el primer setState
-  // cuando dos fills del helper e2e `fillRnw` ocurren tight (7/31 specs
-  // inestables en PR #544). `flushSync` (react-dom, RFC-21) fuerza el commit
-  // sincrónico de cada onChangeText. Beneficio colateral: menos
-  // inconsistencias de UI en mobile real al tipear rápido.
-  const setNameSync = useCallback(
-    (value: string) => {
-      flushSync(() => setName(value));
-    },
-    [setName],
-  );
-  const setLastNameSync = useCallback(
-    (value: string) => {
-      flushSync(() => setLastName(value));
-    },
-    [setLastName],
-  );
-  const setAgeSync = useCallback(
-    (value: number | string) => {
-      flushSync(() => setAge(typeof value === 'number' ? value : Number(value)));
-    },
-    [setAge],
-  );
   // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
   // WCAG 2.5.5) pueda disparar foco en tap perimetral. hitSlop en TextInput
   // nativo Android no extiende el hitbox de focus. Compatible con el
@@ -898,20 +874,27 @@ export default function IdentityScreen() {
         pointerEvents="box-none"
         style={{
           // MGC-1943 — fixed sibling del kavContent (sin ScrollView).
-          // MGC-1986 — bottom:240→120 (sticky-footer bajó 240→120dp tras dedup
-          // de identity-age-sticky, ver bloque arriba). Form top y=[965,1476]
-          // original overlappeaba country-ARG/BR/UY [926,1264]; con bottom:120
-          // form top queda y=[1265,1776] y NO toca country-UY bottom 1264.
           // MGC-2008 — top + height explícitos GARANTIZAN altura del form en
-          // RN-Yoga. Causa raíz: walk QA2 APK vc=174 (PR #474) mostró form
-          // bounds=[0,418][1080,610]=77dp; PR #474 añadió minHeight:280 pero
-          // Yoga colapsó los 3 inputs Field a h=0 y el form quedó con content
-          // = solo btn-foot-row (48dp). Sin top explícito, Yoga no respeta
-          // minHeight cuando content < minHeight en absolute child. Fix:
-          // top:72 + height:280 → altura garantizada 280dp independiente de
-          // content measure. Belt redundante contra Yoga collapse (PR #475
-          // walk QA2 vc=175 PASS con esta config, base MGC-1986 bottom:120).
-          // zIndex:15 sobre el field-map z=10. flexShrink:0 garantiza que el
+          // RN-Yoga. Sin top explícito, Yoga no respeta minHeight cuando
+          // content < minHeight en absolute child. Fix: top:72 + height:280
+          // → altura garantizada 280dp independiente de content measure.
+          // MGC-2473 — `bottom: 120` removido (introducido en MGC-1986 /
+          // PR #513). Causa raíz: cuando RN-Yoga recibe los 3 constraints
+          // simultáneos (top:72 + bottom:120 + height:280), el comportamiento
+          // del measure pass es indefinido y en ZY22G728HN density 400 el
+          // form termina renderizándose a y=[1076,1776]px (430-710dp) en
+          // vez de y=[180,880]px (72-352dp), solapando country-BR bottom
+          // (1038-1150px) y country-UY completo (1151-1264px). PR #513
+          // (MGC-1986) introdujo bottom:120 intentando anclar el form contra
+          // el sticky-footer top, pero el resultado fue el opuesto: el form
+          // cubrió los países centrales del fresh-mount. Walk QA2 MGC-2295
+          // midió bounds=[0,1076][1080,1776] con country-BR/UY inaccesibles.
+          // Fix: volver al patrón pre-PR-513 (top:72 + height:280 + zIndex:15,
+          // sin bottom) → form y=[180,880]px, country-ARG 982-1050px / BR
+          // 1038-1150px / UY 1151-1264px quedan debajo del form (sin
+          // overlap en y) → tappable. Mantener zIndex:15 sobre field-map
+          // z=10 para que form siga cubriendo chips pos-XX cuando el form
+          // es visible y field-map está debajo. flexShrink:0 garantiza que
           // kavContent no comprima el form en el measure pass.
           //
           // MGC-2473 — revertir interpretación MGC-2250. Walk MGC-2295
@@ -999,7 +982,7 @@ export default function IdentityScreen() {
               <TextInput
                 ref={nameInputRef}
                 value={profile.name}
-                onChangeText={setNameSync}
+                onChangeText={setName}
                 placeholder={t('identity.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1068,7 +1051,7 @@ export default function IdentityScreen() {
               <TextInput
                 ref={lastNameInputRef}
                 value={profile.lastName ?? ''}
-                onChangeText={setLastNameSync}
+                onChangeText={setLastName}
                 placeholder={t('identity.lastNamePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1135,7 +1118,7 @@ export default function IdentityScreen() {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
                   const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
-                  setAgeSync(parsed);
+                  setAge(parsed);
                 }}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}
