@@ -19,7 +19,30 @@
  * reviewer no veía nada en logcat de preview/profile. Silenciados en
  * vitest (NODE_ENV=test) para no contaminar la salida de los tests.
  *
- * La forma del payload está versionada (`v: 1`) para futuras migraciones.
+ * MGC-2099-A: persistencia multi-slot. La API pública sigue aceptando
+ * un único argumento para no romper callers existentes (careerStore,
+ * fin-carrera), pero suma un segundo argumento opcional `slotId`:
+ *   - `saveCareerSave(state)` → guarda en el slot activo.
+ *   - `loadCareerSave()` → carga el slot activo.
+ *   - `clearCareerSave()` → borra el slot activo.
+ *   - `listSlots()` → lista todos los slots + el activo.
+ *   - `setActiveSlot(id)` / `getActiveSlotId()` → controlan el cursor.
+ *   - `createSlot(name)` → crea un slot nuevo (slug del nombre).
+ *
+ * Keying v2:
+ *   - `copero:career:save:v2:${slotId}` (CareerSaveState v:2)
+ *   - `copero:career:slots:v1` (índice `{ version:1, slots:[{id,name,savedAt}] }`)
+ *   - `copero:career:slot:active:v1` (string con slotId activo)
+ *
+ * Migración silenciosa:
+ *   - Si `copero:career:save:v1` existe y no hay índice v2 ni slot v2,
+ *     en el primer `loadCareerSave` / `listSlots` se copia al slot
+ *     `default` con `name: 'Partida guardada'` (read-only legacy).
+ *     La key vieja NO se borra para preservar continuidad de save en
+ *     QA device (ZY22G728HN tiene una save legacy que sobrevive el
+ *     upgrade — DoR subtarea).
+ *
+ * La forma del payload está versionada (`v: 2`) para futuras migraciones.
  */
 
 import type { CareerSaveState, SeasonLog } from '@/types/career';
@@ -28,23 +51,32 @@ import { initialProfile } from './identity-state';
 import { STAT_INIT } from './position-stats';
 import { NO_MODIFIERS } from './events';
 
-const STORAGE_KEY = 'copero:career:save:v1';
-// MGC-1657 (F2.3) — la persistencia ahora escribe v:2. Mantenemos la
-// key estable; el discriminador es el campo `v` del payload (v:1 legacy
-// sigue funcionando gracias al back-compat `migrateV1ToV2` que se
-// ejecuta en cada load). El cambio de key implicaría invalidar todas
-// las partidas guardadas en device — no lo hacemos porque QA valida
-// continuidad de save entre runs (AC4).
-// MGC-227 migró la key `copero-career` (zustand persist middleware, formato
-// `{ state, version }`) a `copero:career:save:v1` (formato versionado manual).
-// Tests Playwright existentes (MGC-523/523/444) siguen sembrando
-// `copero-career` desde addInitScript. Sin back-compat, esos seeds quedan
-// huérfanos y el store arranca en initialSnapshot() con `stage: 'identity'`,
-// rompiendo `home.spec.ts:92` (espera stage='dashboard' → /dashboard) y
-// `simulador-carrera-evidence-mgc444.spec.ts:154` (lee `copero-career`
-// directo). MGC-385: loadCareerSave intenta primero la key nueva, y si
-// está vacía, lee la legacy + convierte al shape v1 + migra silenciosamente.
-const LEGACY_STORAGE_KEYS = ['copero-career'] as const;
+// MGC-1657 (F2.3) — `v:2` discriminador del payload. MGC-2099-A mantiene
+// la key estable por slot; el discriminador es `v` + el id de slot.
+const SLOT_KEY_PREFIX = 'copero:career:save:v2:';
+const INDEX_KEY = 'copero:career:slots:v1';
+const ACTIVE_KEY = 'copero:career:slot:active:v1';
+// MGC-385 / MGC-227 — keys legacy pre-multi-slot. Se preservan tal cual
+// en disco; la migración silenciosa las lee y las duplica al slot
+// `default` sin borrarlas (read-only legacy).
+const LEGACY_V1_KEY = 'copero:career:save:v1';
+const LEGACY_ZUSTAND_KEYS = ['copero-career'] as const;
+
+const SLOT_ID_MAX = 32;
+const DEFAULT_SLOT_ID = 'default';
+const DEFAULT_SLOT_NAME = 'Partida guardada';
+
+/** Metadato de un slot en el índice v1. */
+export type SlotMeta = {
+  id: string;
+  name: string;
+  savedAt: number;
+};
+
+export type SlotsIndex = {
+  version: 1;
+  slots: SlotMeta[];
+};
 
 type StorageLike = {
   getItem(key: string): Promise<string | null>;
@@ -127,6 +159,18 @@ export function __resetStorageForTests(): void {
 }
 
 /**
+ * MGC-2099-A — hook de test: siembra el backend en memoria con
+ * `entries` arbitrarios. Usado para reproducir saves legacy
+ * (`copero:career:save:v1`, `copero-career`) sin pasar por la API
+ * pública, que sólo escribe keys v2 por slot.
+ */
+export function __seedForTests(entries: Record<string, string>): void {
+  for (const [k, v] of Object.entries(entries)) {
+    memoryStore[k] = v;
+  }
+}
+
+/**
  * MGC-421 AC4 — log helpers para los markers `[persistence]`. AC4 requiere
  * distinguir save-no-invocado vs save-falló-en-nativa vs
  * hydrate-arrancó-pero-no-aplicó en logcat. Antes estos logs estaban
@@ -142,108 +186,285 @@ function logPersist(level: 'log' | 'error', msg: string, err?: unknown): void {
   else console.error(msg, err ?? '');
 }
 
-/** Devuelve la partida guardada o `null` si no hay nada. */
-export async function loadCareerSave(): Promise<CareerSaveState | null> {
+/** Slug de un nombre de slot: lowercase + alfanum + `-` + cap 32. */
+export function slugifySlotName(name: string): string {
+  const collapsed = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-')
+    .slice(0, SLOT_ID_MAX);
+  return collapsed || DEFAULT_SLOT_ID;
+}
+
+function slotKey(slotId: string): string {
+  return `${SLOT_KEY_PREFIX}${slotId}`;
+}
+
+/** Lee el índice de slots. Si no existe, devuelve un índice vacío. */
+async function readIndex(): Promise<SlotsIndex> {
+  const storage = pickStorage();
+  const raw = await storage.getItem(INDEX_KEY);
+  if (!raw) return { version: 1, slots: [] };
+  try {
+    const parsed = JSON.parse(raw) as Partial<SlotsIndex>;
+    if (parsed && parsed.version === 1 && Array.isArray(parsed.slots)) {
+      return {
+        version: 1,
+        slots: parsed.slots.filter(
+          (s): s is SlotMeta =>
+            !!s &&
+            typeof s.id === 'string' &&
+            typeof s.name === 'string' &&
+            typeof s.savedAt === 'number',
+        ),
+      };
+    }
+  } catch {
+    // índice corrupto: empezar de cero, sin tocar los payloads individuales.
+  }
+  return { version: 1, slots: [] };
+}
+
+async function writeIndex(index: SlotsIndex): Promise<void> {
+  const storage = pickStorage();
+  await storage.setItem(INDEX_KEY, JSON.stringify(index));
+}
+
+async function updateIndexEntry(slotId: string, mutator: (meta: SlotMeta) => SlotMeta): Promise<SlotsIndex> {
+  const index = await readIndex();
+  const idx = index.slots.findIndex((s) => s.id === slotId);
+  if (idx === -1) {
+    return index;
+  }
+  const updated = mutator(index.slots[idx]);
+  const next: SlotsIndex = {
+    ...index,
+    slots: index.slots.map((s, i) => (i === idx ? updated : s)),
+  };
+  await writeIndex(next);
+  return next;
+}
+
+async function appendIndexEntry(meta: SlotMeta): Promise<SlotsIndex> {
+  const index = await readIndex();
+  if (index.slots.some((s) => s.id === meta.id)) return index;
+  const next: SlotsIndex = {
+    ...index,
+    slots: [...index.slots, meta],
+  };
+  await writeIndex(next);
+  return next;
+}
+
+async function removeIndexEntry(slotId: string): Promise<SlotsIndex> {
+  const index = await readIndex();
+  const next: SlotsIndex = {
+    ...index,
+    slots: index.slots.filter((s) => s.id !== slotId),
+  };
+  await writeIndex(next);
+  return next;
+}
+
+/**
+ * MGC-2099-A — asegura que existe el slot `default` para preservar
+ * la save legacy de QA (ZY22G728HN). Se ejecuta la primera vez que se
+ * pide el slot activo o la lista de slots; idempotente.
+ *
+ * Si `copero:career:save:v1` existe y no hay slot v2 `default`:
+ *  1. Lee la key legacy, la convierte al shape v:2 + hydrateF3Fields.
+ *  2. La escribe como `copero:career:save:v2:default`.
+ *  3. La agrega al índice como `{id:'default', name:'Partida guardada',
+ *     savedAt}` sin borrar la legacy (read-only legacy, ver DoR).
+ *  4. Si `copero-career` (zustand) trae un save más viejo todavía,
+ *     lo mismo pero sólo si v:1 no existía (legacy zustand es pre-F2.3).
+ */
+async function ensureDefaultSlotMigrated(): Promise<void> {
+  const storage = pickStorage();
+  const index = await readIndex();
+  if (index.slots.some((s) => s.id === DEFAULT_SLOT_ID)) return;
+
+  let migrated: CareerSaveState | null = null;
+  // 1) v:1 con discriminador (post-F2.3).
+  try {
+    const rawV1 = await storage.getItem(LEGACY_V1_KEY);
+    if (rawV1) {
+      const parsed = JSON.parse(rawV1) as CareerSaveState;
+      if (parsed && (parsed.v === 1 || parsed.v === 2)) {
+        const upgraded = parsed.v === 1 ? migrateV1ToV2(parsed) : parsed;
+        migrated = hydrateF3Fields(upgraded);
+      }
+    }
+  } catch {
+    // continuar al siguiente candidato.
+  }
+
+  // 2) legacy zustand `{state, version}` pre-F2.3 (MGC-385).
+  if (!migrated) {
+    for (const legacyKey of LEGACY_ZUSTAND_KEYS) {
+      try {
+        const raw = await storage.getItem(legacyKey);
+        if (!raw) continue;
+        const legacy = JSON.parse(raw) as { state?: unknown; version?: number };
+        const inner = legacy?.state;
+        if (!inner || typeof inner !== 'object') continue;
+        const v1 = migrateLegacyToV1(inner as Record<string, unknown>);
+        if (!v1) continue;
+        migrated = hydrateF3Fields(migrateV1ToV2(v1));
+        break;
+      } catch {
+        // probar el próximo.
+      }
+    }
+  }
+
+  if (!migrated) return; // nada que migrar; el primer save creará el slot.
+
+  await storage.setItem(slotKey(DEFAULT_SLOT_ID), JSON.stringify(migrated));
+  await appendIndexEntry({
+    id: DEFAULT_SLOT_ID,
+    name: migrated.profile?.name || DEFAULT_SLOT_NAME,
+    savedAt: Date.now(),
+  });
+  logPersist(
+    'log',
+    `[persistence] migrate=legacy→v2:default stage=${migrated.stage} profile=${migrated.profile?.name}`,
+  );
+}
+
+/** Devuelve el slot activo. Crea `default` la primera vez. */
+export async function getActiveSlotId(): Promise<string> {
+  await ensureDefaultSlotMigrated();
+  const storage = pickStorage();
+  const raw = await storage.getItem(ACTIVE_KEY);
+  if (raw && typeof raw === 'string') return raw;
+  return DEFAULT_SLOT_ID;
+}
+
+/** Cambia el slot activo. No falla si el slot no existe (la próxima
+ *  lectura devolverá `null`). */
+export async function setActiveSlot(slotId: string): Promise<void> {
+  const storage = pickStorage();
+  await storage.setItem(ACTIVE_KEY, slotId);
+  logPersist('log', `[persistence] active-slot=${slotId}`);
+}
+
+/** Lista los slots guardados, ordenado por `savedAt` desc. */
+export async function listSlots(): Promise<{ slots: SlotMeta[]; activeSlotId: string }> {
+  await ensureDefaultSlotMigrated();
+  const index = await readIndex();
+  const activeSlotId = await getActiveSlotId();
+  return {
+    slots: [...index.slots].sort((a, b) => b.savedAt - a.savedAt),
+    activeSlotId,
+  };
+}
+
+/**
+ * Crea un slot nuevo con un nombre legible. El id se deriva del nombre
+ * vía `slugifySlotName`; si el slug choca con un slot existente, se
+ * anexa `-2`, `-3`, … Devuelve el meta del slot creado (id + name) o
+ * del slot existente si el nombre colisiona exactamente.
+ */
+export async function createSlot(name: string): Promise<{ id: string; name: string }> {
+  await ensureDefaultSlotMigrated();
+  const trimmed = name.trim() || DEFAULT_SLOT_NAME;
+  const baseSlug = slugifySlotName(trimmed);
+  const index = await readIndex();
+  const existing = index.slots.find((s) => s.name === trimmed);
+  if (existing) return { id: existing.id, name: existing.name };
+
+  let id = baseSlug;
+  let n = 2;
+  while (index.slots.some((s) => s.id === id)) {
+    const suffix = `-${n}`;
+    id = `${baseSlug.slice(0, SLOT_ID_MAX - suffix.length)}${suffix}`;
+    n += 1;
+  }
+  await appendIndexEntry({ id, name: trimmed, savedAt: Date.now() });
+  logPersist('log', `[persistence] create-slot id=${id} name=${trimmed}`);
+  return { id, name: trimmed };
+}
+
+/** Elimina un slot del índice y borra su payload. Idempotente. */
+export async function deleteSlot(slotId: string): Promise<void> {
+  const storage = pickStorage();
+  await storage.removeItem(slotKey(slotId));
+  await removeIndexEntry(slotId);
+  const active = await getActiveSlotId();
+  if (active === slotId) {
+    await setActiveSlot(DEFAULT_SLOT_ID);
+  }
+  logPersist('log', `[persistence] delete-slot id=${slotId}`);
+}
+
+/** Devuelve la partida guardada del slot o `null` si no hay nada. */
+export async function loadCareerSave(slotId?: string): Promise<CareerSaveState | null> {
+  await ensureDefaultSlotMigrated();
+  const targetId = slotId ?? (await getActiveSlotId());
   const storage = pickStorage();
   try {
-    const raw = await storage.getItem(STORAGE_KEY);
+    const raw = await storage.getItem(slotKey(targetId));
     if (raw) {
       try {
         const parsed = JSON.parse(raw) as CareerSaveState;
-        // MGC-1657 (F2.3) — aceptamos v:1 (legacy) y v:2. Si llega v:1
-        // aplicamos `migrateV1ToV2` antes de devolver; si llega v:2 lo
-        // entregamos tal cual. Otros versiones: log + null.
         if (parsed && parsed.v === 1) {
-          const migrated = migrateV1ToV2(parsed);
-          const hydrated = hydrateF3Fields(migrated);
+          const hydrated = hydrateF3Fields(migrateV1ToV2(parsed));
           logPersist(
             'log',
-            `[persistence] hydrate=ok stage=${hydrated.stage} profile=${hydrated.profile?.name} v=2 (migrated from v:1)`,
+            `[persistence] hydrate=ok slot=${targetId} stage=${hydrated.stage} profile=${hydrated.profile?.name} v=2 (migrated from v:1)`,
           );
-          // MGC-1678 (HIGH-3 PR #404) — antes se hacía `await
-          // storage.setItem(STORAGE_KEY, JSON.stringify(migrated))` acá,
-          // bloqueando el load con un write extra en cada cold start y
-          // dejando memory/disco inconsistente si el setItem fallaba
-          // (sesión en memoria v:2, disco v:1 → próxima launch repite
-          // migración). Ahora la migración es in-memory: devolvemos v:2
-          // ya migrado y disparamos el rewrite en background sin
-          // awaitear. Si el write falla, el `.catch` lo silencia (la
-          // memoria de la sesión sigue en v:2) y el próximo load reintenta
-          // la migración — nunca perdemos data, solo posponemos el
-          // fast-path un launch. Beneficio: load latency cae a la del
-          // solo `getItem` y no hay ventana de inconsistencia memory/disco.
+          // MGC-1678 (HIGH-3 PR #404) — migración in-memory + rewrite
+          // background (misma política que pre-multi-slot).
           storage
-            .setItem(STORAGE_KEY, JSON.stringify(hydrated))
+            .setItem(slotKey(targetId), JSON.stringify(hydrated))
             .catch((err) => {
               logPersist(
                 'error',
-                `[persistence] migrate-rewrite=fail reason=setItem-threw`,
+                `[persistence] migrate-rewrite=fail slot=${targetId} reason=setItem-threw`,
                 err,
               );
             });
+          await updateIndexEntry(targetId, (meta) => ({
+            ...meta,
+            savedAt: Date.now(),
+          }));
           return hydrated;
         }
         if (parsed && parsed.v === 2) {
-          // MGC-1730 (HIGH-2 review CTO sobre PR #425) — incluso en v:2
-          // podemos recibir un save pre-F3.2 sin los 3 campos nuevos;
-          // aplicamos los defaults in-memory sin reescribir a disco
-          // (la próxima save los materializará).
+          // MGC-1730 (HIGH-2 review CTO sobre PR #425) — defaults F3.2
+          // in-memory sin rewrite a disco.
           const hydrated = hydrateF3Fields(parsed);
           logPersist(
             'log',
-            `[persistence] hydrate=ok stage=${hydrated.stage} profile=${hydrated.profile?.name} v=2`,
+            `[persistence] hydrate=ok slot=${targetId} stage=${hydrated.stage} profile=${hydrated.profile?.name} v=2`,
           );
           return hydrated;
         }
         logPersist(
           'log',
-          `[persistence] hydrate=null reason=version-mismatch expected=v1|v2 got=${parsed?.v}`,
+          `[persistence] hydrate=null slot=${targetId} reason=version-mismatch expected=v1|v2 got=${parsed?.v}`,
         );
       } catch {
-        logPersist('log', `[persistence] hydrate=null reason=json-parse-failed`);
+        logPersist(
+          'log',
+          `[persistence] hydrate=null slot=${targetId} reason=json-parse-failed`,
+        );
       }
     } else {
-      logPersist('log', `[persistence] hydrate=null reason=no-snapshot-in-storage`);
+      logPersist(
+        'log',
+        `[persistence] hydrate=null slot=${targetId} reason=no-snapshot-in-storage`,
+      );
     }
   } catch (err) {
     logPersist(
       'error',
-      `[persistence] hydrate=fail reason=getItem-threw`,
+      `[persistence] hydrate=fail slot=${targetId} reason=getItem-threw`,
       err,
     );
-    // caemos a back-compat abajo — un getItem-threw no significa "no hay save",
-    // puede ser transitorio (cuota, lock del store). El retry a legacy puede
-    // funcionar si la legacy key está en una partición distinta.
-  }
-  // MGC-385 back-compat: si la key nueva está vacía o corrupta, intenta la
-  // legacy (`copero-career`, formato zustand persist `{ state, version }`).
-  // Si la legacy tiene el shape esperado, la convertimos a v1 + migramos
-  // silenciosamente a la key nueva para que el próximo load haga fast-path.
-  for (const legacyKey of LEGACY_STORAGE_KEYS) {
-    const legacyRaw = await storage.getItem(legacyKey);
-    if (!legacyRaw) continue;
-    try {
-      const legacy = JSON.parse(legacyRaw) as { state?: unknown; version?: number };
-      const inner = legacy?.state;
-      if (!inner || typeof inner !== 'object') continue;
-      const migrated = migrateLegacyToV1(inner as Record<string, unknown>);
-      if (!migrated) continue;
-      // MGC-1730 — legacy zustand persist es pre-F2.3 (no trae `v`); le
-      // aplicamos migrateV1ToV2 + hydrateF3Fields para que el caller
-      // reciba un save v:2 con los 3 campos F3.2 ya materializados.
-      const upgraded = hydrateF3Fields(migrateV1ToV2(migrated));
-      // Migración silenciosa: escribe nueva key, deja legacy por si otra
-      // surface (e.g. devtools) la inspecciona. clearCareerSave() borra ambas.
-      await storage.setItem(STORAGE_KEY, JSON.stringify(upgraded));
-      logPersist(
-        'log',
-        `[persistence] hydrate=migrated legacy-key=${legacyKey} stage=${upgraded.stage}`,
-      );
-      return upgraded;
-    } catch {
-      // legacy corrupto, seguir al próximo candidato.
-      continue;
-    }
   }
   return null;
 }
@@ -357,16 +578,38 @@ function normalizeLegacyLog(raw: unknown): SeasonLog {
   };
 }
 
-/** Guarda la partida. Idempotente. */
-export async function saveCareerSave(state: CareerSaveState): Promise<void> {
+/**
+ * Guarda la partida en el slot activo (o el `slotId` pasado). Actualiza
+ * el índice: si el slot no existe todavía, lo crea con `name` derivado
+ * del profile; si existe, sólo bumpea `savedAt`. Devuelve el id del slot
+ * usado para que el caller pueda sincronizar el cursor si quiere.
+ */
+export async function saveCareerSave(
+  state: CareerSaveState,
+  slotId?: string,
+): Promise<{ slotId: string }> {
   const storage = pickStorage();
+  const targetId = slotId ?? (await getActiveSlotId());
   const serialized = JSON.stringify(state);
   try {
-    await storage.setItem(STORAGE_KEY, serialized);
+    await storage.setItem(slotKey(targetId), serialized);
+    // Mantener el índice sincronizado con el último savedAt + nombre.
+    const index = await readIndex();
+    const known = index.slots.find((s) => s.id === targetId);
+    if (known) {
+      await updateIndexEntry(targetId, (meta) => ({ ...meta, savedAt: Date.now() }));
+    } else {
+      await appendIndexEntry({
+        id: targetId,
+        name: state.profile?.name || DEFAULT_SLOT_NAME,
+        savedAt: Date.now(),
+      });
+    }
     logPersist(
       'log',
-      `[persistence] save=ok key=${STORAGE_KEY} bytes=${serialized.length} stage=${state.stage} storage=${storage === resolved ? 'native' : 'memory'}`,
+      `[persistence] save=ok slot=${targetId} bytes=${serialized.length} stage=${state.stage} storage=${storage === resolved ? 'native' : 'memory'}`,
     );
+    return { slotId: targetId };
   } catch (err) {
     // MGC-262 — antes `.catch(() => {})` silenciaba cualquier error. Si
     // AsyncStorage nativo no linkea (build --local sin autolinking) o el
@@ -374,25 +617,29 @@ export async function saveCareerSave(state: CareerSaveState): Promise<void> {
     // "save no se invocó" de "save falló en la nativa" (AC4).
     logPersist(
       'error',
-      `[persistence] save=fail key=${STORAGE_KEY} stage=${state.stage} reason=setItem-threw`,
+      `[persistence] save=fail slot=${targetId} stage=${state.stage} reason=setItem-threw`,
       err,
     );
     throw err;
   }
 }
 
-/** Borra la partida guardada. */
-export async function clearCareerSave(): Promise<void> {
+/** Borra la partida guardada del slot activo (o `slotId` específico).
+ *  No toca las keys legacy ni el resto del índice. */
+export async function clearCareerSave(slotId?: string): Promise<void> {
+  await ensureDefaultSlotMigrated();
+  const targetId = slotId ?? (await getActiveSlotId());
   const storage = pickStorage();
-  await storage.removeItem(STORAGE_KEY);
-  // MGC-385: borra también las keys legacy para no dejar basura en storage.
-  for (const legacyKey of LEGACY_STORAGE_KEYS) {
-    await storage.removeItem(legacyKey);
+  await storage.removeItem(slotKey(targetId));
+  // Si el slot activo se borra, cursor vuelve al `default` (UX: nunca
+  // dejamos al usuario sin slot activo seleccionable).
+  const active = await getActiveSlotId();
+  if (active === targetId) {
+    await setActiveSlot(DEFAULT_SLOT_ID);
   }
-  memoryStore = {};
   logPersist(
     'log',
-    `[persistence] save=clear key=${STORAGE_KEY} storage=${storage === resolved ? 'native' : 'memory'}`,
+    `[persistence] save=clear slot=${targetId} storage=${storage === resolved ? 'native' : 'memory'}`,
   );
 }
 

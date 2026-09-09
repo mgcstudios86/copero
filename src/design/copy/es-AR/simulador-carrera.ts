@@ -98,6 +98,15 @@ const ENTRIES: Record<string, CopyEntry> = {
   dashboard_selection_empty: { raw: 'Todavía no debutaste.' },
   dashboard_cta_training: { raw: 'Ir a entrenar' },
   dashboard_cta_match: { raw: 'Jugar la próxima fecha' },
+  // ── MGC-2099-A — save-picker multi-slot ───────────────────────
+  save_slot_label: { raw: 'Save actual: {name}' },
+  save_slot_change_cta: { raw: 'Cambiar' },
+  save_slot_picker_h2: { raw: 'Tus partidas guardadas' },
+  save_slot_picker_empty: { raw: 'Aún no hay partidas guardadas.' },
+  save_slot_picker_new_ph: { raw: 'Nombre de la partida' },
+  save_slot_picker_create_cta: { raw: 'Nueva partida' },
+  save_slot_picker_active_badge: { raw: 'Activa' },
+  save_slot_picker_saved_at: { raw: 'Guardada {when}' },
   dashboard_cta_rest: { raw: 'Descansar esta semana' },
   dashboard_suggested_h2: { raw: 'Decisión sugerida' },
 
