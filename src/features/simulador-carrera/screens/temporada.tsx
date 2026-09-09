@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,8 @@ import { useCareerStore } from '@/shared/store/careerStore';
 import { useLocale } from '@/i18n/locale-context';
 import { RETIREMENT_AGE } from '@/features/career/season';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
+import { SaveSlotPicker } from '@/features/career/components/SaveSlotPicker';
+import { getActiveSlotId, listSlots } from '@/features/career/persistence';
 import {
   ESTILO_RASGOS,
   YEARLY_PLAN_MODIFIERS,
@@ -51,6 +53,47 @@ export default function TemporadaScreen() {
   const estilo: EstiloRasgo[] = useMemo(
     () => profile.career.estilo ?? [],
     [profile.career.estilo],
+  );
+
+  // MGC-2099-A — save-picker multi-slot. Mismo patrón que el dashboard:
+  // hidrata el slot activo al montar la pantalla y refresca el store
+  // cuando el usuario cambia de slot.
+  const hydrateFromSave = useCareerStore((s) => s.hydrateFromSave);
+  const [activeSlotId, setActiveSlotId] = useState<string>('default');
+  const [activeSlotName, setActiveSlotName] = useState<string | undefined>(
+    undefined,
+  );
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const id = await getActiveSlotId();
+        const { slots } = await listSlots();
+        if (cancelled) return;
+        setActiveSlotId(id);
+        const meta = slots.find((s) => s.id === id);
+        setActiveSlotName(meta?.name);
+      } catch {
+        // best-effort
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const onSlotChanged = useCallback(
+    async (slotId: string) => {
+      setActiveSlotId(slotId);
+      try {
+        await hydrateFromSave();
+        const { slots } = await listSlots();
+        const meta = slots.find((s) => s.id === slotId);
+        setActiveSlotName(meta?.name);
+      } catch {
+        // best-effort
+      }
+    },
+    [hydrateFromSave],
   );
 
   // MGC-1505 — toggle de rasgo. La lista ya viene toggled (on tap
@@ -170,6 +213,15 @@ export default function TemporadaScreen() {
         ]}
         testID="temporada-screen"
       >
+        {/* MGC-2099-A — save-picker multi-slot. Mismo bloque que en
+            dashboard; visible también en /temporada para que el
+            jugador pueda cambiar de slot antes de avanzar la semana. */}
+        <SaveSlotPicker
+          activeSlotId={activeSlotId}
+          activeSlotName={activeSlotName}
+          onSlotChanged={onSlotChanged}
+          testID="temporada-save-picker"
+        />
         {/* Hero block */}
         <View
           style={{

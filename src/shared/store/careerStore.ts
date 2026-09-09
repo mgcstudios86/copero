@@ -290,9 +290,9 @@ export function getSnapshot(): CareerSaveV2 {
  * snapshot podía no llegar a disco si el proceso moría antes de que
  * `AsyncStorage.setItem` resolviera (AC7).
  */
-let pendingSave: Promise<void> | null = null;
+let pendingSave: Promise<unknown> | null = null;
 
-export function getPendingSave(): Promise<void> | null {
+export function getPendingSave(): Promise<unknown> | null {
   return pendingSave;
 }
 
@@ -303,9 +303,9 @@ export function getPendingSave(): Promise<void> | null {
  * la promesa resuelta cuando AsyncStorage confirmó la escritura, así
  * el snapshot queda en disco antes de que el proceso muera.
  */
-export function flushPendingSave(): Promise<void> {
-  if (!pendingSave) return Promise.resolve();
-  return pendingSave;
+export async function flushPendingSave(): Promise<void> {
+  if (!pendingSave) return;
+  await pendingSave;
 }
 
 /**
@@ -977,12 +977,4 @@ if (isPersistentStorage && !isPersistentStorage()) {
   console.warn(
     '[copero:career] AsyncStorage no resolvió; persistencia en memoria (force-stop pierde la partida).',
   );
-}
-
-// MGC-2264: el runner copero-heavy no siempre entrega el `input` sintético de
-// Playwright al `onChangeText` de RNW. El hook permite que los specs E2E
-// sincronicen el estado sin alterar el comportamiento nativo.
-if (typeof window !== 'undefined') {
-  (window as unknown as { __careerStore?: typeof useCareerStore }).__careerStore =
-    useCareerStore;
 }

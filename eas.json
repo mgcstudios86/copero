@@ -24,12 +24,6 @@
         "buildType": "apk"
       }
     },
-    "preview-apk": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      }
-    },
     "preview-ios-sim": {
       "distribution": "internal",
       "channel": "preview",
@@ -63,4 +57,3 @@
     "appVersionSource": "remote"
   }
 }
-
