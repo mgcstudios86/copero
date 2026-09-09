@@ -1,5 +1,4 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -144,27 +143,42 @@ export default function IdentityScreen() {
   // incrementando `profile.age` cada temporada (season.ts:122) — este
   // setter sólo opera durante el alta.
   const setAge = useCareerStore((s) => s.setAge);
-  // MGC-2494 — React 18/19 automatic batching descartaba el primer setState
-  // cuando dos fills del helper e2e `fillRnw` ocurren tight (7/31 specs
-  // inestables en PR #544). `flushSync` (react-dom, RFC-21) fuerza el commit
-  // sincrónico de cada onChangeText. Beneficio colateral: menos
-  // inconsistencias de UI en mobile real al tipear rápido.
+  // MGC-2673 — flushSync removido. Wrapper con `flushSync` (react-dom) sobre
+  // setters de Zustand: en React Native el renderer es `react-native-renderer`
+  // y `flushSync` de `react-dom` no encuentra `Internals.d` activo, lanzando
+  // TypeError en el bloque `finally`. En la cadena `onChangeText → setName`,
+  // ese throw evita que Zustand aplique el nuevo value en algunos flows de
+  // adb input text / Maestro `inputText` sobre release-4 (vc=286 8d3cedd),
+  // donde el `value` controlado del TextInput no llega a commitear antes del
+  // próximo render — perfil queda con `name=''` y `btn-identity-continue`
+  // disabled pese a que el EditText nativo muestra el texto.
+  //
+  // MGC-2708 — ademas del bug de setter, el `import { flushSync } from
+  // 'react-dom'` provoca crash duro del JS thread durante la evaluacion
+  // inicial del bundle nativo: Hermes (RN 0.86 renderer) no expone
+  // `react-dom` y el modulo falla al evaluar al importarse desde
+  // identity.tsx (entry tree de expo-router via /identity). Resultado:
+  // splash blanco permanente >30s, logcat solo "Running main", sin
+  // render de RootLayout/router. QA ZY22G728HN APK PR #584 vc=290
+  // SHA1 12a6f74b67abeba034a62d78afee17a304c7e8ac reprodujo 100%.
+  //
+  // Zustand propaga cambios a `useCareerStore` subscribers via
+  // `useSyncExternalStore` (sync); el wrapper `flushSync` era workaround
+  // para PR #544 (e2e Playwright `fillRnw` tight batching), pero
+  // `fillRnw` v15 (PR #577 MGC-2496) ya bypasea el DOM event system
+  // invocando `onChange` directo via fiber — el batching ya no aplica.
+  // En nativo, llamar al setter sin wrapper restaura el flujo limpio.
   const setNameSync = useCallback(
-    (value: string) => {
-      flushSync(() => setName(value));
-    },
+    (value: string) => setName(value),
     [setName],
   );
   const setLastNameSync = useCallback(
-    (value: string) => {
-      flushSync(() => setLastName(value));
-    },
+    (value: string) => setLastName(value),
     [setLastName],
   );
   const setAgeSync = useCallback(
-    (value: number | string) => {
-      flushSync(() => setAge(typeof value === 'number' ? value : Number(value)));
-    },
+    (value: number | string) =>
+      setAge(typeof value === 'number' ? value : Number(value)),
     [setAge],
   );
   // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
