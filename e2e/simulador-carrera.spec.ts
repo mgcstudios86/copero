@@ -166,30 +166,37 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await expect(page.getByTestId('dashboard-screen').last()).toBeVisible({ timeout: 15_000 });
 
     // ── 4. DASHBOARD: aserciones del AC (OVR/Age/Name/Pos/Nat) ────────
+    // MGC-2684: `.last()` para tomar el dashboard visible (lazy-unmount
+    // deja varios `dashboard-screen` en DOM durante transiciones; el
+    // primero suele ser el viejo hidden). Patrón consistente con el
+    // usado en simulador-carrera-evidence-mgc444.spec.ts:117.
     await expect(
-      page.getByTestId('dashboard-screen').getByRole('heading', { name: 'CALVO' }),
+      page.getByTestId('dashboard-screen').last().getByRole('heading', { name: 'CALVO' }),
     ).toBeVisible();
     await expect(page.getByLabel('Overall rating 50')).toBeVisible();
 
     // Subtitle jugador: "ST · 🇦🇷 Argentina"
     const playerCard = page
       .getByTestId('dashboard-screen')
+      .last()
       .locator('text=/ST\\s*·/');
     await expect(playerCard).toBeVisible();
     await expect(
       page
         .getByTestId('dashboard-screen')
+        .last()
         .getByText('Argentina', { exact: false })
         .first(),
     ).toBeVisible();
 
     // Badge: "16 años · Free agent" (placeholder hasta fichar)
     await expect(
-      page.getByTestId('dashboard-screen').getByText(/16\s*a[ñn]os/i).first(),
+      page.getByTestId('dashboard-screen').last().getByText(/16\s*a[ñn]os/i).first(),
     ).toBeVisible();
     await expect(
       page
         .getByTestId('dashboard-screen')
+        .last()
         .getByText('Free agent', { exact: false })
         .first(),
     ).toBeVisible();

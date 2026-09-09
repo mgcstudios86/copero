@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { passSeasonHub, passTeamSelect } from './fixtures/rnw-fill';
+import { passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-339 — a11y cross-platform: keyboard-only happy path en web.
@@ -35,6 +35,10 @@ test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
     const inputName = page.locator('[data-testid="input-name"]');
     await inputName.focus();
     await page.keyboard.type('Mateo Romero');
+    // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
+    const inputLastname = page.locator('[data-testid="input-lastname"]');
+    await inputLastname.focus();
+    await page.keyboard.type('Test');
     // El estado canónico requiere nationality + position. Por teclado puro
     // completamos nationality primero (más predecible que el field map pos-{id}).
     const inputNat = page.locator('[data-testid="input-nationality-search"]');
@@ -45,6 +49,12 @@ test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
     await expect(argentinaButton).toBeVisible();
     await argentinaButton.focus();
     await page.keyboard.press('Enter');
+    // MGC-2684: el Pressable del country dropdown no reacciona a
+    // keyboard.press('Enter') en este runner self-hosted (la gesture
+    // system de RNW requiere pointer events). `pressRnw` (v15) bypasea
+    // el listener delegado root vía fiber-direct onPointerDown/Up.
+    // Lo llamamos después del keyboard Enter como fallback idempotente.
+    await pressRnw(page.getByTestId('country-ARG'));
     // Posición: el primer pos-{id} del field map (ST por orden).
     const firstPos = page.locator('[data-testid^="pos-"]').first();
     await firstPos.focus();

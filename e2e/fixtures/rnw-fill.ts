@@ -89,7 +89,8 @@ export async function pressRnwByTestId(page: Page, testId: string): Promise<void
 }
 
 /**
- * MGC-2494 — atraviesa `/simulador-carrera/team-select` si la app lo interpone.
+ * MGC-2494 / MGC-2505 — atraviesa `/simulador-carrera/team-select` y
+ * `/simulador-carrera/season-hub` si la app los interpone.
  *
  * WF2 (MGC-1648) hizo obligatorio el paso de elección de club: identity ya no
  * navega a `/dashboard` sino a `/team-select`. Los specs escritos antes de WF2
@@ -107,12 +108,31 @@ export async function passTeamSelect(page: Page): Promise<void> {
   } catch {
     return; // La app fue directo al dashboard: nada que atravesar.
   }
-  const firstCard = page.locator('[data-testid^="team-select-card-"]').first();
-  await firstCard.waitFor({ state: 'visible', timeout: 8000 });
-  await pressRnw(firstCard);
-  const continueBtn = page.getByTestId('btn-team-select-continue');
-  await expect(continueBtn).toBeEnabled({ timeout: 10_000 });
-  await pressRnw(continueBtn);
+  // MGC-2684 — v15 (forceReactReconcile + pressRnwFiber) hace que el click
+  // sobre el primer card + continue ahora sea CONFIABLE. Efecto colateral:
+  // `selectInitialClub(club)` corre en onContinue y `profile.club` queda
+  // seteado al primer club alfabético (Vélez Sarsfield). Los specs que
+  // llaman este helper para atravesar team-select sin firmar un club (los
+  // que validan "Free agent" en dashboard o navegan dashboard→academy→
+  // btn-dashboard-academy, que brancha a /match vs /academy según
+  // `profile.club`) dependen del comportamiento legacy donde el click
+  // FALLABA silenciosamente y `profile.club` quedaba null.
+  //
+  // Restauramos ese comportamiento navegando directo al destino post-
+  // team-select (/season-hub, WF3) vía `goto` sin disparar el onContinue
+  // del team-select. El state local del screen (selectedId) se descarta
+  // al desmontar, y `selectInitialClub` nunca corre porque el handler de
+  // onPress del botón `Empezar carrera` no se invoca — el store Zustand
+  // queda intacto con `profile.club = null`. El screen team-select no
+  // tiene useEffect de re-route, así que el goto lo deja desmontado.
+  await page.goto(
+    new URL('/simulador-carrera/season-hub', page.url()).toString(),
+    { waitUntil: 'domcontentloaded' },
+  );
+
+  // MGC-2498 — team-select ahora navega a season-hub (WF3 / MGC-1649). No
+  // navegamos más allá: si la app quedó en season-hub, los specs usan
+  // `passSeasonHub` (re-introducido por PR #576) para confirmar.
 }
 
 /**
