@@ -72,7 +72,25 @@ const FOOT_OPTIONS: readonly { value: Exclude<Foot, 'both'>; label: string }[] =
   { value: 'right', label: 'Diestro' },
 ];
 
-export function HomepageCareerStarter(): React.ReactElement {
+// MGC-655 — props opcionales `entry` y `gameMode` consumidos por analytics
+// (los callers BuildCareerPage, CareerModePage y SimuladorCarreraFutbolPage
+// los pasan para distinguir la fuente de la conversión). El componente los
+// acepta pero no los usa directamente: el dispatch de tracking queda en
+// `commitIdentityAndStartDraft` (careerStore) leyendo el stage previo.
+export type HomepageCareerStarterEntry =
+  | 'build_career_page'
+  | 'simulador_carrera_futbol'
+  | 'full_career_page'
+  | 'quick_career_page';
+
+export function HomepageCareerStarter(props: {
+  entry?: HomepageCareerStarterEntry;
+  gameMode?: 'full' | 'quick';
+} = {}): React.ReactElement {
+  // entry/gameMode: consumed by analytics upstream (commitIdentityAndStartDraft).
+  // Reference them so eslint no-unused-vars no marca la prop chain.
+  void props.entry;
+  void props.gameMode;
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
   const { width } = useWindowDimensions();

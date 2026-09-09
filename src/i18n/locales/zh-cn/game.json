@@ -539,5 +539,9 @@
   "identity.nationalityOptionA11y": "选择国家",
   "identity.nationalitySearchA11y": "按名称搜索国家",
   "identity.positionChipsA11y": "选择位置",
-  "identity.positionGroup": "位置组"
+  "identity.positionGroup": "位置组",
+  "identity.positionGroupGk": "守门员",
+  "identity.positionGroupDef": "后卫",
+  "identity.positionGroupMid": "中场",
+  "identity.positionGroupFwd": "前锋"
 }

@@ -539,5 +539,9 @@
   "identity.nationalityOptionA11y": "국가 선택",
   "identity.nationalitySearchA11y": "이름으로 국가 검색",
   "identity.positionChipsA11y": "포지션 선택",
-  "identity.positionGroup": "포지션 그룹"
+  "identity.positionGroup": "포지션 그룹",
+  "identity.positionGroupGk": "골키퍼",
+  "identity.positionGroupDef": "수비수",
+  "identity.positionGroupMid": "미드필더",
+  "identity.positionGroupFwd": "공격수"
 }

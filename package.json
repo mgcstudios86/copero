@@ -46,6 +46,7 @@
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.49.0",
     "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.2",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "babel-preset-expo": "^57.0.7",
@@ -53,6 +54,7 @@
     "eslint-config-expo": "~57.0.1",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import": "^2.32.0",
+    "jsdom": "^25.0.1",
     "typescript": "~5.9",
     "vitest": "^2.1.9"
   },

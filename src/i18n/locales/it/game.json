@@ -539,5 +539,9 @@
   "identity.nationalityOptionA11y": "Seleziona paese",
   "identity.nationalitySearchA11y": "Cerca paese per nome",
   "identity.positionChipsA11y": "Scegli ruolo",
-  "identity.positionGroup": "Gruppo ruolo"
+  "identity.positionGroup": "Gruppo ruolo",
+  "identity.positionGroupGk": "Portieri",
+  "identity.positionGroupDef": "Difensori",
+  "identity.positionGroupMid": "Centrocampisti",
+  "identity.positionGroupFwd": "Attaccanti"
 }

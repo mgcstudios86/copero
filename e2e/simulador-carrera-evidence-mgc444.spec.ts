@@ -48,6 +48,8 @@ async function completeIdentity(page: any, name: string) {
   // con el setter nativo de HTMLInputElement.value, lo que fuerza a
   // React a reconciliar el state y deja canContinue()=true.
   await fillRnw(page.getByTestId('input-name'), name);
+  // MGC-2616 F7a: canContinue requiere input-lastname poblado.
+  await fillRnw(page.getByTestId('input-lastname'), name);
   await page.locator('[data-testid^="pos-"]').first().click();
   await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
   await page.waitForTimeout(400);

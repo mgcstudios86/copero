@@ -539,5 +539,9 @@
   "identity.nationalityOptionA11y": "Land auswählen",
   "identity.nationalitySearchA11y": "Land nach Namen suchen",
   "identity.positionChipsA11y": "Position wählen",
-  "identity.positionGroup": "Positionsgruppe"
+  "identity.positionGroup": "Positionsgruppe",
+  "identity.positionGroupGk": "Torhüter",
+  "identity.positionGroupDef": "Verteidiger",
+  "identity.positionGroupMid": "Mittelfeldspieler",
+  "identity.positionGroupFwd": "Stürmer"
 }

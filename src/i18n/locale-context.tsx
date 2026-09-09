@@ -1,11 +1,16 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { COPY, Locale, SUPPORTED_LOCALES } from './copy';
 
-// LocaleProvider - MGC-653. Estado minimo del locale activo (default es).
+// LocaleProvider — MGC-653. Estado minimo del locale activo (default `es`).
 // Sin persistencia (ADR-0014); sin deteccion automatica. Cualquier consumidor
 // que dependa del locale debe re-renderizar al cambiarlo (suscribirse via
 // useLocale). MGC-1534 extiende t() con segundo arg opcional para interpolar
 // placeholders {key} en strings parametrizadas.
+//
+// MGC-2168 — i18n regression guard: si el lookup falla en ambos el locale
+// activo y `es`, logueamos warning en dev para detectar claves faltantes
+// antes de QA. Nunca devolvemos `path` literal (Field lo aplica
+// `.toUpperCase()` → "IDENTITY.FIELDLASTNAME" en pantalla, ver ticket).
 
 type TValues = Record<string, string | number>;
 
@@ -63,7 +68,21 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
   const t = useCallback(
     (path: string, values?: TValues) => {
-      const raw = lookup(COPY[locale], path) ?? lookup(COPY.es, path) ?? path;
+      // MGC-2168 — i18n regression guard. Si el lookup falla en ambos el
+      // locale activo y `es`, logueamos un warning en dev para que el equipo
+      // detecte claves faltantes antes de que lleguen a QA. Nunca devolvemos
+      // el `path` literal porque `Field` lo aplica `.toUpperCase()` y termina
+      // como "IDENTITY.FIELDLASTNAME" en pantalla (ver ticket).
+      const fromActive = lookup(COPY[locale], path);
+      const fromEs = fromActive ?? lookup(COPY.es, path);
+      if (fromEs === undefined) {
+        if (__DEV__) {
+          // eslint-disable-next-line no-console
+          console.warn(`[i18n] missing key: ${path} (locale=${locale})`);
+        }
+        return path;
+      }
+      const raw = fromActive ?? fromEs;
       return values ? interpolate(raw, values) : raw;
     },
     [locale],

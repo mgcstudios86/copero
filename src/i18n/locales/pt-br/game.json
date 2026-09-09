@@ -539,5 +539,9 @@
   "identity.nationalityOptionA11y": "Selecionar país",
   "identity.nationalitySearchA11y": "Buscar país pelo nome",
   "identity.positionChipsA11y": "Escolha posição",
-  "identity.positionGroup": "Grupo de posições"
+  "identity.positionGroup": "Grupo de posições",
+  "identity.positionGroupGk": "Goleiros",
+  "identity.positionGroupDef": "Defensores",
+  "identity.positionGroupMid": "Meio-campistas",
+  "identity.positionGroupFwd": "Atacantes"
 }

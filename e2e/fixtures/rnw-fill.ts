@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 /**
  * Helper para llenar inputs de React Native Web que no propagan onChangeText

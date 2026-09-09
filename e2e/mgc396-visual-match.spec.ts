@@ -38,6 +38,8 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     // MGC-2254 v3 / MGC-2356: fillRnw = fill + dispatchEvent('input') para
     // forzar que RNW dispare onChangeText en el runner self-hosted.
     await fillRnw(page.locator('[data-testid="input-name"]'), 'Calvo');
+    // MGC-2616 F7a: canContinue requiere input-lastname poblado.
+    await fillRnw(page.locator('[data-testid="input-lastname"]'), 'Regression');
     await page.locator('[data-testid="pos-ST"]').click();
     await fillRnw(page.locator('[data-testid="input-nationality-search"]'), 'arg');
     await page.waitForTimeout(400);
