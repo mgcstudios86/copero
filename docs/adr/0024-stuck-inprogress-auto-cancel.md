@@ -1,11 +1,11 @@
 # ADR-0024 — Auto-cancel stuck in_progress jobs + runner watch
 
 - **Status**: accepted
-- **Date**: 2026-09-06
+- **Date**: 2026-09-06 (updated 2026-09-10 con MGC-2790)
 - **Deciders**: devops (1626fb36)
-- **Context**: MGC-2159 — runner-01 zombie pattern (jobs detect-changed-paths no es el zombie real; los stuck son downstream: Playwright 65min, smoke-android 6min)
+- **Context**: MGC-2159 — runner-01 zombie pattern (jobs detect-changed-paths no es el zombie real; los stuck son downstream: Playwright 65min, smoke-android 6min). MGC-2790 — refinamiento: 30min era agresivo para Playwright legítimamente largo en runner-01 (1GB RAM); 88% de los canceles 7d fueron falsos positivos sobre qa.
 - **Supersedes**: ninguno
-- **Related**: MGC-2091 (runner-01 systemd killmode), MGC-2159 (wake ticket), ADR-0018 (release flow)
+- **Related**: MGC-2091 (runner-01 systemd killmode), MGC-2159 (wake ticket), ADR-0018 (release flow), MGC-2790 (relax + heuristic)
 
 ## Contexto
 
@@ -20,17 +20,18 @@ El 2026-09-06 entre 04:39 y 05:55 UTC, el runner-01 (id=25, Linux self-hosted en
 
 ## Decisión
 
-### §1 — Cancelar automáticamente `in_progress` jobs con > 30min sin progreso
+### §1 — Cancelar automáticamente `in_progress` jobs con > Nmin sin progreso
 
 Crear workflow `purge-stuck-inprogress.yml` que corre cada 15min en `runner-01`:
 
-1. Lista runs `in_progress` con `started_at` hace más de 30min.
-2. Para cada run, lista jobs; si **todos** los jobs están `queued` o `waiting` (ninguno corrió realmente), cancela el run entero.
-3. Si hay jobs en `in_progress` pero **no hay steps corriendo** (logs sin output > 5min), cancela esos jobs específicos.
-4. Loguea cada cancelación con SHA, duración acumulada, jobs afectados y motivo.
-5. Threshold configurable vía `vars.STUCK_THRESHOLD_MINUTES` (default 30).
+1. Lista runs `in_progress` con `started_at` hace más de `THRESHOLD_MIN` minutos.
+2. Threshold por nombre de workflow: `qa` (Playwright) usa `vars.STUCK_THRESHOLD_QA_MINUTES` (default 60min); el resto usa `vars.STUCK_THRESHOLD_MINUTES` (default 45min, antes era 30min — demasiado agresivo para runners de 1GB RAM).
+3. **Heurística §1.3**: para cada run pasado el threshold, lista sus jobs. Si **algún** job tiene `started_at` dentro de los últimos `vars.STUCK_STEP_GRACE_MINUTES` (default 5min), se considera que hay actividad reciente y se **no cancela**. Esto distingue jobs stalled (sin progreso real) de jobs legítimamente largos donde un step está corriendo ahora.
+4. Si no hay actividad reciente, cancela el run entero vía `gh api POST runs/:id/cancel`.
+5. Loguea cada clasificación: stuck vs skip_active vs skip_young. Exponer `GITHUB_STEP_SUMMARY` con métricas agregadas.
+6. **Métrica 7d (MGC-2790)**: cada ejecución loguea cuántos runs fueron auto-cancelados por threshold en los últimos 7d, agrupados por nombre de workflow. Esto visibiliza el ratio falsos positivos / verdaderos positivos.
 
-No cancela jobs `in_progress` con steps activos en los últimos 5min — evita cancelar builds en progreso legítimo.
+No cancela jobs `in_progress` con steps activos en los últimos 5min — evita cancelar builds en progreso legítimo (Playwright suites típicamente 20-30min, jobs stalled reales pueden pasar 60+min sin step activity).
 
 ### §2 — Alerta cuando runner-01 está `busy=false` con jobs queued > 5min
 

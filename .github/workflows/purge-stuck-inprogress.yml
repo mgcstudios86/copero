@@ -1,7 +1,17 @@
-# purge-stuck-inprogress.yml — Copero (ADR-0024, MGC-2159)
-# Auto-cancela jobs in_progress > STUCK_THRESHOLD_MINUTES sin progreso.
+# purge-stuck-inprogress.yml — Copero (ADR-0024, MGC-2159, MGC-2790)
+# Auto-cancela jobs in_progress sin progreso real.
 # Complementa purge-stale-runs.yml (que solo cubre queued).
 # Política §8.3: corre --local en el runner self-hosted copero-ci.
+#
+# MGC-2790 refinamientos sobre ADR-0024 §1:
+#   * Per-workflow threshold: qa (Playwright) tolera 60min; resto usa
+#     vars.STUCK_THRESHOLD_MINUTES (default 45min, antes 30).
+#   * Heurística §1.3: solo se cancela si NINGÚN job del run tiene
+#     started_at dentro de los últimos vars.STUCK_STEP_GRACE_MINUTES (default 5).
+#     Esto distingue jobs stalled (sin progreso real) de jobs legítimamente
+#     largos donde un step está corriendo ahora.
+#   * Métrica: loguea y exporta summary con conteo de runs auto-cancelados
+#     en los últimos 7d, agrupado por nombre de workflow.
 
 name: purge stuck inprogress (copero)
 
@@ -12,10 +22,20 @@ on:
   workflow_dispatch:
     inputs:
       threshold_minutes:
-        description: "Threshold en minutos (override; default = vars.STUCK_THRESHOLD_MINUTES o 30)"
+        description: "Threshold default en minutos (override; usa vars.STUCK_THRESHOLD_MINUTES si vacío)"
         required: false
         type: number
-        default: 30
+        default: 0
+      threshold_qa_minutes:
+        description: "Threshold para workflow 'qa' (override; usa vars.STUCK_THRESHOLD_QA_MINUTES si vacío)"
+        required: false
+        type: number
+        default: 0
+      step_grace_minutes:
+        description: "Grace de actividad reciente en minutos (override; usa vars.STUCK_STEP_GRACE_MINUTES si vacío)"
+        required: false
+        type: number
+        default: 0
 
 # MGC-351 H3: serializar invocaciones para evitar canceles concurrentes.
 concurrency:
@@ -30,54 +50,125 @@ jobs:
   purge:
     name: purge stuck in_progress runs
     runs-on: [self-hosted, copero-ci]
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
-      THRESHOLD_MIN: ${{ vars.STUCK_THRESHOLD_MINUTES || '30' }}
+      # Inputs de workflow_dispatch sobrescriben vars si son > 0; sino vars; sino default.
+      THRESHOLD_MIN_DEFAULT: ${{ inputs.threshold_minutes > 0 && inputs.threshold_minutes || vars.STUCK_THRESHOLD_MINUTES || '45' }}
+      THRESHOLD_MIN_QA: ${{ inputs.threshold_qa_minutes > 0 && inputs.threshold_qa_minutes || vars.STUCK_THRESHOLD_QA_MINUTES || '60' }}
+      STEP_GRACE_MIN: ${{ inputs.step_grace_minutes > 0 && inputs.step_grace_minutes || vars.STUCK_STEP_GRACE_MINUTES || '5' }}
+      REPO: mgcstudios/copero
     steps:
-      - name: Listar in_progress runs con started_at viejo
+      - name: Listar in_progress runs
         id: list
         run: |
           set -euo pipefail
-          NOW_EPOCH=$(date -u +%s)
-          THRESHOLD_EPOCH=$((NOW_EPOCH - THRESHOLD_MIN * 60))
-          echo "now=$NOW_EPOCH threshold_epoch=$THRESHOLD_EPOCH threshold_min=$THRESHOLD_MIN"
+          echo "now=$(date -u +%s) default_threshold_min=$THRESHOLD_MIN_DEFAULT qa_threshold_min=$THRESHOLD_MIN_QA step_grace_min=$STEP_GRACE_MIN"
 
-          # gh CLI devuelve startedAt en ISO8601; convertimos con python.
-          INPROG_JSON=$(gh api repos/mgcstudios/copero/actions/runs \
-              --paginate \
-              --jq '.workflow_runs[] | select(.status=="in_progress") | {id: .id, name: .name, started_at: .started_at, head_branch: .head_branch, run_number: .run_number}' \
-              | jq -s '.')
+          gh api "repos/$REPO/actions/runs?per_page=100" \
+              --jq '.workflow_runs[] | select(.status=="in_progress") | {id: .id, name: .name, started_at: .started_at, head_branch: .head_branch, run_number: .run_number, html_url: .html_url}' \
+              > inprog.jsonl
 
-          # Filtrar runs cuyo started_at < threshold.
-          STUCK_IDS=$(echo "$INPROG_JSON" | jq -r --arg ts "$(date -u -d "@$THRESHOLD_EPOCH" +%Y-%m-%dT%H:%M:%SZ)" \
-            '.[] | select(.started_at < $ts) | .id')
+          COUNT_INPROG=$(wc -l < inprog.jsonl | tr -d ' ')
+          echo "in_progress_count=$COUNT_INPROG"
 
-          echo "stuck_run_ids:"
-          printf '%s\n' "$STUCK_IDS" | head -50
+      - name: Clasificar stuck vs activos (heurística §1.3)
+        id: classify
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import json, os, subprocess, datetime as dt
+
+          now = dt.datetime.now(dt.timezone.utc)
+          thr_default_sec = int(os.environ["THRESHOLD_MIN_DEFAULT"]) * 60
+          thr_qa_sec = int(os.environ["THRESHOLD_MIN_QA"]) * 60
+          grace_sec = int(os.environ["STEP_GRACE_MIN"]) * 60
+          repo = os.environ["REPO"]
+
+          with open("inprog.jsonl") as f:
+              runs = [json.loads(line) for line in f if line.strip()]
+
+          stuck, skip_active, skip_young = [], [], []
+          for r in runs:
+              started = dt.datetime.fromisoformat(r["started_at"].replace("Z", "+00:00"))
+              age = (now - started).total_seconds()
+              thr = thr_qa_sec if r["name"] == "qa" else thr_default_sec
+              if age < thr:
+                  skip_young.append({"id": r["id"], "name": r["name"], "branch": r["head_branch"], "age_min": int(age // 60), "threshold_min": thr // 60})
+                  continue
+              # Heurística §1.3: revisar jobs.
+              j = subprocess.run(
+                  ["gh", "api", f"repos/{repo}/actions/runs/{r['id']}/jobs?per_page=20",
+                   "--jq", ".jobs[] | {started_at: .started_at, status: .status}"],
+                  check=True, capture_output=True, text=True, env=os.environ,
+              )
+              jobs = [json.loads(line) for line in j.stdout.strip().splitlines() if line.strip()]
+              cutoff = now - dt.timedelta(seconds=grace_sec)
+              recent = []
+              for jb in jobs:
+                  ja = jb.get("started_at")
+                  if not ja:
+                      continue
+                  jt = dt.datetime.fromisoformat(ja.replace("Z", "+00:00"))
+                  if jt >= cutoff:
+                      recent.append({"started_at": ja, "status": jb.get("status")})
+              if recent:
+                  skip_active.append({"id": r["id"], "name": r["name"], "branch": r["head_branch"], "recent_jobs": recent})
+                  continue
+              stuck.append({"id": r["id"], "name": r["name"], "branch": r["head_branch"], "age_min": int(age // 60), "threshold_min": thr // 60})
+
+          out = {
+              "stuck": stuck,
+              "skip_active": skip_active,
+              "skip_young": skip_young,
+              "evaluated": len(stuck) + len(skip_active),
+              "total_in_progress": len(runs),
+          }
+          with open("classify.json", "w") as f:
+              json.dump(out, f, indent=2)
+          print(f"in_progress_total={out['total_in_progress']} skip_young={len(skip_young)} evaluated={out['evaluated']} stuck={len(stuck)} skip_active={len(skip_active)}")
+          PYEOF
+
+          CLASSIFY_OUT=$(cat classify.json)
+          STUCK_IDS=$(echo "$CLASSIFY_OUT" | jq -r '.stuck[].id')
+          STUCK_COUNT=$(echo "$CLASSIFY_OUT" | jq '.stuck | length')
+          SKIP_ACTIVE=$(echo "$CLASSIFY_OUT" | jq '.skip_active | length')
+          SKIP_YOUNG=$(echo "$CLASSIFY_OUT" | jq '.skip_young | length')
+          EVALUATED=$(echo "$CLASSIFY_OUT" | jq '.evaluated')
+          TOTAL_INPROG=$(echo "$CLASSIFY_OUT" | jq '.total_in_progress')
+
+          echo "stuck_runs:"
+          echo "$CLASSIFY_OUT" | jq '.stuck'
+          echo "skip_active_runs:"
+          echo "$CLASSIFY_OUT" | jq '.skip_active'
+
           {
             echo "stuck_ids<<EOF"
             printf '%s\n' "$STUCK_IDS"
             echo "EOF"
+            echo "stuck_count=$STUCK_COUNT"
+            echo "skip_active=$SKIP_ACTIVE"
+            echo "skip_young=$SKIP_YOUNG"
+            echo "evaluated=$EVALUATED"
+            echo "in_progress_total=$TOTAL_INPROG"
           } >> "$GITHUB_OUTPUT"
 
       - name: Cancelar stuck runs
+        if: steps.classify.outputs.stuck_count > 0
         env:
           GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
         run: |
           set -euo pipefail
-          STUCK_IDS=$(echo "${{ steps.list.outputs.stuck_ids }}")
-          if [[ -z "$STUCK_IDS" ]]; then
-            echo "no_stuck_runs"
-            exit 0
-          fi
+          STUCK_IDS=$(echo "${{ steps.classify.outputs.stuck_ids }}")
 
           CANCELLED=0
           FAILED=0
           while IFS= read -r RUN_ID; do
             [[ -z "$RUN_ID" ]] && continue
             echo "cancelling run=$RUN_ID"
-            if gh api -X POST "repos/mgcstudios/copero/actions/runs/$RUN_ID/cancel" >/dev/null 2>&1; then
+            if gh api -X POST "repos/$REPO/actions/runs/$RUN_ID/cancel" >/dev/null 2>&1; then
               echo "cancelled run=$RUN_ID"
               CANCELLED=$((CANCELLED + 1))
             else
@@ -87,11 +178,60 @@ jobs:
           done <<< "$STUCK_IDS"
 
           echo "summary: cancelled=$CANCELLED failed=$FAILED"
-          # Resumen a Paperclip no es trivial desde aquí; el alert workflow (§2)
-          # es quien abre el ticket si el patrón persiste.
 
-      - name: Log resumen
+          {
+            echo "cancelled_ok=$CANCELLED"
+            echo "cancelled_failed=$FAILED"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Métrica 7d auto-cancelados (MGC-2790)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
+          SEVEN_DAYS_AGO=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+                          || date -u -v-7d +%Y-%m-%dT%H:%M:%SZ)
+          echo "metric_window_from=$SEVEN_DAYS_AGO"
+
+          BREAKDOWN=$(gh api "repos/$REPO/actions/runs?per_page=100&status=cancelled&created=>$SEVEN_DAYS_AGO" \
+            --jq '[.workflow_runs[] | .name] | group_by(.) | map({name: .[0], total: length}) | sort_by(.total) | reverse')
+
+          TOTAL_7D=$(gh api "repos/$REPO/actions/runs?per_page=100&status=cancelled&created=>$SEVEN_DAYS_AGO" \
+            --jq '.total_count')
+
+          echo "metric_7d_total_cancelled=$TOTAL_7D"
+          echo "metric_7d_breakdown=$BREAKDOWN"
+          {
+            echo "metric_7d_total=$TOTAL_7D"
+            echo "metric_7d_breakdown<<EOF"
+            echo "$BREAKDOWN"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Resumen final + $GITHUB_STEP_SUMMARY
         if: always()
         run: |
+          set -euo pipefail
+          cat <<EOF >> "$GITHUB_STEP_SUMMARY"
+          ## purge-stuck-inprogress — MGC-2790
+
+          - threshold_default_min: \`$THRESHOLD_MIN_DEFAULT\`
+          - threshold_qa_min: \`$THRESHOLD_MIN_QA\`
+          - step_grace_min: \`$STEP_GRACE_MIN\`
+          - in_progress_total: \`${{ steps.classify.outputs.in_progress_total || 0 }}\`
+          - skip_young (dentro del threshold): \`${{ steps.classify.outputs.skip_young || 0 }}\`
+          - evaluated (sobre threshold, sin grace filter): \`${{ steps.classify.outputs.evaluated || 0 }}\`
+          - stuck (auto-cancelados): \`${{ steps.classify.outputs.stuck_count || 0 }}\`
+          - skip_active (step reciente <grace): \`${{ steps.classify.outputs.skip_active || 0 }}\`
+          - cancelled_ok: \`${{ steps.cancelled_ok || 0 }}\`
+          - cancelled_failed: \`${{ steps.cancelled_failed || 0 }}\`
+
+          ### Runs cancelados últimos 7d (referencia métrica)
+          \`\`\`
+          ${{ steps.metric_7d_breakdown }}
+          \`\`\`
+
+          Total \`${{ steps.metric_7d_total }}\`.
+          EOF
           echo "purge-stuck-inprogress run completed at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          echo "threshold_min=$THRESHOLD_MIN"
