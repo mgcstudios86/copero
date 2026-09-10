@@ -1,6 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { fillRnw, passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
+import {
+  fillIdentityLastName,
+  fillIdentityName,
+} from './career-test-helpers';
 
 /**
  * MGC-431 — E2E + axe + Lighthouse integral para simulador-carrera (MGC-427).
@@ -100,10 +104,10 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
 
     // ── 2. IDENTITY: completar los 5 campos del AC ────────────────────
-    // 2a. Nombre = CALVO
-    await fillRnw(page.getByTestId('input-name'), 'CALVO');
+    // 2a. Nombre = CALVO (MGC-2264: bypass via window.__careerStore.setName).
+    await fillIdentityName(page, 'CALVO');
     // MGC-2616 F7a: canContinue requiere input-lastname poblado.
-    await fillRnw(page.getByTestId('input-lastname'), 'CALVO');
+    await fillIdentityLastName(page, 'CALVO');
 
     // 2b. Número = 10. El estado inicial arranca en 9 (ver engine.ts:36),
     //     por lo que una pulsación sobre "Sumar número" deja 10.
@@ -277,10 +281,10 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
 
     // Defaults mínimos para que el journey completo no bloquee otros
-    // navigations.
-    await fillRnw(page.getByTestId('input-name'), 'Regresion');
+    // navigations. (MGC-2264: bypass via window.__careerStore setters.)
+    await fillIdentityName(page, 'Regresion');
     // MGC-2616 F7a: canContinue requiere input-lastname poblado.
-    await fillRnw(page.getByTestId('input-lastname'), 'Regresion');
+    await fillIdentityLastName(page, 'Regresion');
     await page.getByTestId('btn-number-plus').click(); // 9 → 10
     // MGC-2616 F7b: identity.footRight = "Diestro" en es, "Right" en en.
     await page.getByRole('button', { name: 'Diestro', exact: true }).click();
@@ -319,9 +323,10 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // continuamos, y luego salimos a academy vía el botón.
     await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
-    await fillRnw(page.getByTestId('input-name'), 'CALVO');
+    // MGC-2264: bypass via window.__careerStore setters (flake RNW fill()).
+    await fillIdentityName(page, 'CALVO');
     // MGC-2616 F7a: canContinue requiere input-lastname poblado.
-    await fillRnw(page.getByTestId('input-lastname'), 'CALVO');
+    await fillIdentityLastName(page, 'CALVO');
     await page.getByTestId('btn-number-plus').click();
     await page.getByTestId('pos-ST').click();
     // MGC-2616 F7b: identity.footRight = "Diestro" en es, "Right" en en.

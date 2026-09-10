@@ -978,3 +978,25 @@ if (isPersistentStorage && !isPersistentStorage()) {
     '[copero:career] AsyncStorage no resolvió; persistencia en memoria (force-stop pierde la partida).',
   );
 }
+
+// MGC-2264 — exponer el store en window para Playwright web.
+// En el runner self-hosted `copero-heavy` (Chromium headless sobre ARM64),
+// RNW no propaga el evento `input` sintetico de `page.fill()` al handler
+// React `onChangeText` en algunos inputs controlados (input-name,
+// input-lastname, input-nationality-search, input-age). El state React queda
+// vacio y `btn-identity-continue` permanece `disabled`. Tests E2E pueden
+// bypasear el path de UI llamando setters directos via `page.evaluate`:
+//   window.__careerStore.getState().setName('CALVO')
+// Solo aplica en build web (typeof window !== 'undefined') y se gatea
+// detrás de NODE_ENV !== 'production' para no exponer la superficie del
+// store en builds de producción. Native (iOS/Android) sigue funcionando
+// igual; este bloque es no-op fuera de web y nunca se exporta al bundle
+// hermes.
+if (
+  typeof process !== 'undefined' &&
+  process.env.NODE_ENV !== 'production' &&
+  typeof window !== 'undefined'
+) {
+  (window as unknown as { __careerStore?: typeof useCareerStore }).__careerStore =
+    useCareerStore;
+}
