@@ -287,6 +287,28 @@ export default function IdentityScreen() {
   // router.push('/dashboard')` que existía antes de MGC-249/MGC-251.
   const commitIdentity = useCareerStore((s) => s.commitIdentity);
 
+  // MGC-2746 — selection state para preservar cursor del TextInput
+  // controlado. Al volver a `value={profile.name}` (vs `defaultValue`), RN
+  // resetea el cursor a end en cada re-render del input (a diferencia del
+  // uncontrolled que respeta el cursor nativo). Trackeamos `selection`
+  // localmente para que cada keystroke (onSelectionChange) actualice el
+  // cursor — así, cuando React reconcilia el TextInput, el cursor ya está
+  // en el position correcto y RN no lo salta. Si el `value` controlado
+  // cambia externamente (ej. setNativeProps wipe restore), forzamos el
+  // cursor a end-of-value para no dejarlo a mitad de un valor stale.
+  const [nameSelection, setNameSelection] = useState<{
+    start: number;
+    end: number;
+  }>({ start: 0, end: 0 });
+  const [lastNameSelection, setLastNameSelection] = useState<{
+    start: number;
+    end: number;
+  }>({ start: 0, end: 0 });
+  const [ageSelection, setAgeSelection] = useState<{
+    start: number;
+    end: number;
+  }>({ start: 0, end: 0 });
+
   // MGC-1534: subscribirse al contexto de locale para re-renderizar el form
   // completo al cambiar idioma. Antes las strings quedaban en espanol aunque
   // el LanguageSwitcher marcara EN/中文 seleccionado.
@@ -1086,20 +1108,30 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={nameInputRef}
-                // MGC-2733 — defaultValue + key estable desacopla el EditText
-                // nativo del React state. Antes (value=), el reconcile de RN
-                // podía pisar el texto nativo en builds release cuando
-                // mServedView quedaba stale post-focus-shift: el EditText
-                // mostraba "Q" pero `profile.name` se vaciaba al próximo
-                // commit (vc=303 SHA cd0880a5 walk MGC-2732 F2b FAIL). Con
-                // defaultValue el EditText es uncontrolled — preserva lo que
-                // el usuario tipeó aunque React state esté desfasado. La
-                // reconciliación ocurre en onBlur (safety net) leyendo
-                // `nativeEvent.text`. cherry-pick c608b85 (PR #590 r2, ya
-                // mergeado origin/release-4 vía PR #595 cb96d51).
-                defaultValue={profile.name ?? ''}
-                key="input-name-mgc2733"
+                // MGC-2746 — VOLVEMOS a `value` controlado (en lugar de
+                // `defaultValue`+key). Walk vc=313 sobre 7c0538f reveló que
+                // el approach uncontrolled preservaba el texto del EditText
+                // cuando React state se desfasaba, pero NO lo protegía del
+                // wipe nativo que dispara el IME bridge Android cuando el
+                // usuario transiciona input→input (tap input-lastname tras
+                // tipear "QR" en input-name → el EditText input-name queda
+                // EMPTY en la vista nativa aunque `profile.name="QR"` se
+                // preserva en store). El `value` controlado fuerza al
+                // EditText a reflejar `profile.name` en cada render — el wipe
+                // nativo se revierte automáticamente. Belt: setNameSync (MGC-
+                // 2751) y syncNameFromNative (MGC-2733) siguen guardando
+                // contra setName(''), así `profile.name` nunca se vacía por
+                // el wipe. Si el usuario tipea "Q" y el IME dispara
+                // onChangeText('') antes de commitear "Q", el guard detecta
+                // `profile.name=''` (initial) y deja pasar — pero el commit
+                // "Q" llega inmediatamente después en la misma ráfaga IME.
+                // cherry-pick c608b85 (PR #590 r2).
+                value={profile.name ?? ''}
+                selection={nameSelection}
                 onChangeText={setNameSync}
+                onSelectionChange={(e) =>
+                  setNameSelection(e.nativeEvent.selection)
+                }
                 onBlur={(e) => {
                   // MGC-2733 — safety net sobre PR #594 vc=303 wipe. En RN
                   // 0.86 Android, `TextInput.onBlur` está tipado como
@@ -1183,12 +1215,17 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={lastNameInputRef}
-                // MGC-2733 — defaultValue + key estable, idem input-name.
-                // EditText uncontrolled preserva el texto nativo aunque
-                // React state se desfase por mServedView stale post-blur.
-                defaultValue={profile.lastName ?? ''}
-                key="input-lastname-mgc2733"
+                // MGC-2746 — switch a `value` controlado, idem input-name.
+                // Walk vc=313 sobre 7c0538f mostró que el uncontrolled
+                // preservaba el texto pero NO el wipe nativo input→input.
+                // Controlled + guards en setLastNameSync preserva ambos
+                // lados. selection prop mantiene cursor estable en re-render.
+                value={profile.lastName ?? ''}
+                selection={lastNameSelection}
                 onChangeText={setLastNameSync}
+                onSelectionChange={(e) =>
+                  setLastNameSelection(e.nativeEvent.selection)
+                }
                 onBlur={(e) => {
                   // MGC-2733 safety net — idem input-name: cast defensivo a
                   // TextInputFocusEventData, `?? ''` para undefined → '' y
@@ -1257,13 +1294,16 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={ageInputRef}
-                // MGC-2733 — defaultValue + key estable, idem input-name.
-                // EditText uncontrolled preserva el contenido nativo aunque
-                // React state se desfase. Edad preset 16 rara vez modificada;
-                // cubre el caso usuario tipea "30", confirma y próximo mount
-                // ve 30.
-                defaultValue={String(profile.age)}
-                key="input-age-mgc2733"
+                // MGC-2746 — switch a `value` controlado, idem input-name.
+                // Walk vc=313: EditText de edad también se wipeaba en
+                // transición input→input. Controlled + guards preservan el
+                // valor entre inputs. Edad default 16 se aplica en mount y
+                // refleja `profile.age` en cada render.
+                value={String(profile.age)}
+                selection={ageSelection}
+                onSelectionChange={(e) =>
+                  setAgeSelection(e.nativeEvent.selection)
+                }
                 onChangeText={(txt) => {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
