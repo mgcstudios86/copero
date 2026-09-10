@@ -1055,7 +1055,19 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={nameInputRef}
-                value={profile.name}
+                // MGC-2733 — defaultValue + key estable desacopla el EditText
+                // nativo del React state. Antes (value=), el reconcile de RN
+                // podía pisar el texto nativo en builds release cuando
+                // mServedView quedaba stale post-focus-shift: el EditText
+                // mostraba "Q" pero `profile.name` se vaciaba al próximo
+                // commit (vc=303 SHA cd0880a5 walk MGC-2732 F2b FAIL). Con
+                // defaultValue el EditText es uncontrolled — preserva lo que
+                // el usuario tipeó aunque React state esté desfasado. La
+                // reconciliación ocurre en onBlur (safety net) leyendo
+                // `nativeEvent.text`. cherry-pick c608b85 (PR #590 r2, ya
+                // mergeado origin/release-4 vía PR #595 cb96d51).
+                defaultValue={profile.name ?? ''}
+                key="input-name-mgc2733"
                 onChangeText={setNameSync}
                 onBlur={(e) => {
                   // MGC-2733 — safety net sobre PR #594 vc=303 wipe. En RN
@@ -1140,7 +1152,11 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={lastNameInputRef}
-                value={profile.lastName ?? ''}
+                // MGC-2733 — defaultValue + key estable, idem input-name.
+                // EditText uncontrolled preserva el texto nativo aunque
+                // React state se desfase por mServedView stale post-blur.
+                defaultValue={profile.lastName ?? ''}
+                key="input-lastname-mgc2733"
                 onChangeText={setLastNameSync}
                 onBlur={(e) => {
                   // MGC-2733 safety net — idem input-name: cast defensivo a
@@ -1210,7 +1226,13 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={ageInputRef}
-                value={String(profile.age)}
+                // MGC-2733 — defaultValue + key estable, idem input-name.
+                // EditText uncontrolled preserva el contenido nativo aunque
+                // React state se desfase. Edad preset 16 rara vez modificada;
+                // cubre el caso usuario tipea "30", confirma y próximo mount
+                // ve 30.
+                defaultValue={String(profile.age)}
+                key="input-age-mgc2733"
                 onChangeText={(txt) => {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
