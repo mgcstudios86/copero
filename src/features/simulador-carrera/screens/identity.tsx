@@ -144,11 +144,42 @@ export default function IdentityScreen() {
   // invocando `onChange` directo vía fiber — el batching ya no aplica. En
   // nativo, llamar al setter sin wrapper restaura el flujo limpio.
   const setNameSync = useCallback(
-    (value: string) => setName(value),
+    // MGC-2751 — guardia anti-wipe adicional. En builds release Android
+    // (vc=304, walk MGC-2735 sobre PR #594), cuando el usuario tapea un
+    // país del dropdown (`country-ARG`), el EditText enfocado pierde
+    // foco vía el IME bridge y RN-Android a veces dispatcha un
+    // `onChangeText('')` antes del `onBlur` (secuencia opuesta al caso
+    // feliz). El guard existente en `syncNameFromNative` cubre el path
+    // `onBlur`, pero NO este `onChangeText('')` directo: llamaba
+    // `setName('')` → wipeaba `profile.name` aunque el EditText nativo
+    // aún tuviera texto. La guarda es: si llega `''` por `onChangeText`
+    // pero el state canónico tiene contenido, es no-op (preserva el
+    // state). Esto NO rompe el caso "usuario borra todo y empieza de
+    // nuevo" — si tras el guardado el user tipea de verdad, el próximo
+    // `onChangeText` con texto no-vacío sí propaga.
+    (value: string) => {
+      if (typeof value !== 'string') return;
+      if (value.length === 0) {
+        const current = useCareerStore.getState().profile.name ?? '';
+        if (current.length > 0) return;
+      }
+      setName(value);
+    },
     [setName],
   );
   const setLastNameSync = useCallback(
-    (value: string) => setLastName(value),
+    // MGC-2751 — idem setNameSync para apellido. Walk MGC-2735 sobre
+    // vc=304: tras tapeo country-ARG, AMBOS campos (NOMBRE y APELLIDO)
+    // quedaban vacíos porque el IME bridge dispatcha `onChangeText('')`
+    // en cada EditText enfocado. El guard cubre el wipe paralelo.
+    (value: string) => {
+      if (typeof value !== 'string') return;
+      if (value.length === 0) {
+        const current = useCareerStore.getState().profile.lastName ?? '';
+        if (current.length > 0) return;
+      }
+      setLastName(value);
+    },
     [setLastName],
   );
   const setAgeSync = useCallback(
