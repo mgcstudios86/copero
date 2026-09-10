@@ -28,7 +28,7 @@ import { NATIONALITIES } from '@/features/career/nationalities';
 // liga ocurre exclusivamente en /academy paso 3 (cada club expone su league).
 // El campo leagueCode del store queda como default '' y se mantiene el setter
 // `setLeague` por compat con storage migrado (MGC-1501 internal track).
-import { isIdentityComplete } from '@/features/career/identity-state';
+import { isIdentityComplete, shouldCommitNativeText } from '@/features/career/identity-state';
 import type { Foot, PositionGroup } from '@/types/career';
 
 // MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje (PR-379 / MGC-1502).
@@ -143,12 +143,29 @@ export default function IdentityScreen() {
   // `fillRnw` v15 (PR #577 MGC-2496) ya bypasea el DOM event system
   // invocando `onChange` directo vía fiber — el batching ya no aplica. En
   // nativo, llamar al setter sin wrapper restaura el flujo limpio.
+  // MGC-2759 — guardia anti-wipe en el path `onChangeText`. Walk MGC-2735
+  // sobre vc=304: tapear `country-ARG` tras tipear NOMBRE + APELLIDO
+  // wipeaba AMBOS campos. Causa: al mover el foco al Pressable del chip,
+  // el IME bridge de RN-Android pierde `mServedView` y dispatcha un
+  // `onChangeText('')` sobre cada EditText enfocado ANTES del `onBlur`.
+  // `setName('')` borraba el state aunque el EditText nativo aún tuviera
+  // texto. `shouldCommitNativeText` descarta el payload vacío cuando el
+  // state canónico tiene contenido; si el state ya está vacío, propaga
+  // (no rompe "el usuario borra todo y empieza de nuevo").
   const setNameSync = useCallback(
-    (value: string) => setName(value),
+    (value: string) => {
+      const current = useCareerStore.getState().profile.name;
+      if (!shouldCommitNativeText(value, current)) return;
+      setName(value);
+    },
     [setName],
   );
   const setLastNameSync = useCallback(
-    (value: string) => setLastName(value),
+    (value: string) => {
+      const current = useCareerStore.getState().profile.lastName;
+      if (!shouldCommitNativeText(value, current)) return;
+      setLastName(value);
+    },
     [setLastName],
   );
   const setAgeSync = useCallback(
@@ -177,9 +194,22 @@ export default function IdentityScreen() {
   // Belt: usamos `useCareerStore.getState()` (no el `profile` del closure)
   // para leer el valor canónico sin riesgo de closure stale entre el
   // render y el blur (que puede llegar varios frames después).
+  // MGC-2759 — guardia anti-wipe en el path `onBlur`. La safety net de
+  // MGC-2673 leía `e.nativeEvent.text ?? ''`, que en builds release con
+  // `adb shell input text` / Maestro `inputText` llega `undefined`:
+  // `syncNameFromNative('')` hacía `text !== current` → `setName('')` →
+  // wipe (PR #594 vc=303 SHA1 cd0880a5, walk MGC-2732 F2b FAIL).
+  // `shouldCommitNativeText` vuelve la safety net no-op cuando el payload
+  // no es un string útil; cuando RN sí entrega texto válido, reconcilia
+  // como antes.
+  //
+  // Belt: usamos `useCareerStore.getState()` (no el `profile` del closure)
+  // para leer el valor canónico sin riesgo de closure stale entre el
+  // render y el blur (que puede llegar varios frames después).
   const syncNameFromNative = useCallback(
     (text: string) => {
       const current = useCareerStore.getState().profile.name;
+      if (!shouldCommitNativeText(text, current)) return;
       if (text !== current) {
         setName(text);
       }
@@ -189,6 +219,7 @@ export default function IdentityScreen() {
   const syncLastNameFromNative = useCallback(
     (text: string) => {
       const current = useCareerStore.getState().profile.lastName ?? '';
+      if (!shouldCommitNativeText(text, current)) return;
       if (text !== current) {
         setLastName(text);
       }
@@ -197,6 +228,8 @@ export default function IdentityScreen() {
   );
   const syncAgeFromNative = useCallback(
     (text: string) => {
+      // MGC-2759 — idem: un blur sin `text` no debe resetear la edad a 16.
+      if (typeof text !== 'string' || text.length === 0) return;
       const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2);
       const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
       if (!Number.isFinite(parsed)) return;

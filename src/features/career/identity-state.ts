@@ -156,3 +156,46 @@ export const setPreferredFoot = (
   ...state,
   profile: { ...state.profile, preferredFoot: foot },
 });
+
+/**
+ * MGC-2759 — guardia anti-wipe pura para los campos de texto de identity.
+ *
+ * Contexto (regresión release-4 vc=303/304, walks MGC-2732 y MGC-2735):
+ * en builds release Android, dos paths distintos entregan un payload
+ * VACÍO que pisa el texto ya tipeado en `input-name` / `input-lastname`:
+ *
+ *   1. `onBlur` (safety net MGC-2673): `TextInput.onBlur` está tipado como
+ *      `BlurEvent` (TargetedEvent `{target}`) en RN 0.86. El runtime del
+ *      `ReactEditText` a veces adjunta `text`, pero NO cuando el texto se
+ *      inyectó vía `adb shell input text` / Maestro `inputText`. Ahí
+ *      `e.nativeEvent.text` llega `undefined`, el `?? ''` lo vuelve `''`
+ *      y el sync escribía `setName('')`.
+ *
+ *   2. `onChangeText('')` (walk MGC-2735): al tapear un chip del dropdown
+ *      de país, el IME bridge pierde `mServedView` y RN-Android dispatcha
+ *      un `onChangeText('')` ANTES del blur sobre cada EditText enfocado.
+ *
+ * Regla: un payload vacío NUNCA puede borrar un valor canónico no vacío.
+ * Si el state ya está vacío, el payload vacío sí propaga. Un payload no
+ * vacío siempre propaga. Un payload no-string se descarta.
+ *
+ * TRADE-OFF ACEPTADO: con la guardia puesta, el backspace del usuario llega
+ * hasta 1 caracter pero no puede dejar el campo en vacío total — ese último
+ * '' es indistinguible del que dispatcha el IME bridge (el walk MGC-2735
+ * usa un nombre de UN caracter, así que una heurística por longitud tampoco
+ * separa los casos). Costo menor: `isIdentityComplete` exige nombre no
+ * vacío, así que "campo totalmente vacío" nunca es un estado final válido
+ * del form. Fijado en tests/unit/identity-antiwipe-mgc2759.test.ts.
+ *
+ * @param incoming payload que llega del bridge nativo (puede ser undefined)
+ * @param current  valor canónico leído de `useCareerStore.getState()`
+ * @returns true si el valor debe escribirse en el store
+ */
+export const shouldCommitNativeText = (
+  incoming: unknown,
+  current: string | null | undefined,
+): incoming is string => {
+  if (typeof incoming !== 'string') return false;
+  if (incoming.length > 0) return true;
+  return (current ?? '').length === 0;
+};
