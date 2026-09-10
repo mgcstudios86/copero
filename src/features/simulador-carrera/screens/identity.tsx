@@ -159,8 +159,15 @@ export default function IdentityScreen() {
   //
   // Zustand ya propaga vía useSyncExternalStore (sync). Llamar al setter
   // sin wrapper restaura el flujo limpio. El "anti-wipe" del value
-  // controlado se garantiza por separado (defaultValue + key estable en
-  // cada TextInput, ver más abajo).
+  // controlado se garantiza por separado: el TextInput es controlado vía
+  // `value={profile.<field>}` (no `defaultValue`) y la safety net onBlur
+  // tiene guard anti-wipe que descarta el payload `''` (MGC-2759 r3).
+  // El r2 (MGC-2724) usaba `defaultValue + key` para evitar que el bridge
+  // re-aplicara `value=''` al EditText en re-renders, pero el `key`
+  // estable + `defaultValue` re-aplicado por el parent triggeró wipe del
+  // texto tipeado en builds release Android (walk MGC-2732 FAIL vc=303).
+  // r3 vuelve al patrón controlado estándar y confía en que Zustand
+  // empuje `value=profile.<field>` consistente con el EditText nativo.
   const setNameSync = useCallback(
     (value: string) => {
       setName(value);
@@ -1104,28 +1111,22 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={nameInputRef}
-                // MGC-2724 — `defaultValue` + `key` estable en lugar de
-                // `value` controlado. En builds release Android, cuando el
-                // usuario tipea vía `adb shell input text` o Maestro
-                // `inputText`, el evento de focus/blur nativo puede llegar
-                // con timing distinto al de dev: el bridge a veces omite
-                // el dispatch de onChangeText, dejando `profile.name=''`
-                // aunque el EditText nativo muestre el texto. Si el
-                // TextInput es controlado con `value={profile.name}` y el
-                // state queda '', React Native re-aplica `value=''` al
-                // native EditText en el siguiente render → wipe. Con
-                // `defaultValue` el EditText mantiene su propio state
-                // nativo sin que React lo sobrescriba en cada re-render;
-                // `key` estable evita re-mounts espurios que sí resetearían
-                // el EditText. La captura del texto hacia `profile.name`
-                // sigue por `onChangeText` (teclado real) y por la safety
-                // net de onBlur cuando trae un string no-vacío.
-                key="identity-input-name"
-                defaultValue={profile.name ?? ''}
+                // MGC-2759 r3 — valor controlado vía `value={profile.name}`.
+                // El r2 (MGC-2724) usó `defaultValue` + `key` para evitar
+                // re-aplicación del `value` controlado en re-renders del
+                // parent; sin embargo, en builds release Android el bridge
+                // re-aplica el `defaultValue` actual del profile cuando
+                // onChangeText aún no commiteó el nuevo value, lo que
+                // wipeaba el texto tipeado vía `adb shell input text` o
+                // Maestro `inputText` (walk MGC-2732 F2b FAIL vc=303).
+                // r3 vuelve al patrón controlado estándar: Zustand
+                // empuja `value` consistente y la safety net onBlur
+                // preserva el state si el native event llega con `''`.
+                value={profile.name ?? ''}
                 onChangeText={setNameSync}
                 onBlur={(e) => {
-                  // MGC-2724 safety net con guard anti-wipe. El native
-                  // event de onBlur en RN 0.86 Android llega como
+                  // MGC-2759 r3 safety net con guard anti-wipe. El
+                  // native event de onBlur en RN 0.86 Android llega como
                   // `{target: Int32}` sin `text` (ver comentario de
                   // syncNameFromNative). Cast defensivo: si `text` no es
                   // string o es '', no-op. Si RN dispatches un blur con
@@ -1202,12 +1203,12 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={lastNameInputRef}
-                // MGC-2724 — `defaultValue` + `key` estable (idem input-name).
-                key="identity-input-lastname"
-                defaultValue={profile.lastName ?? ''}
+                // MGC-2759 r3 — valor controlado vía `value={profile.lastName}`.
+                // Idem rationale que input-name (ver bloque arriba).
+                value={profile.lastName ?? ''}
                 onChangeText={setLastNameSync}
                 onBlur={(e) => {
-                  // MGC-2724 safety net — idem input-name para apellido.
+                  // MGC-2759 r3 safety net — idem input-name para apellido.
                   const native = e.nativeEvent as unknown as { text?: unknown };
                   syncLastNameFromNative(typeof native.text === 'string' ? native.text : '');
                 }}
@@ -1274,9 +1275,9 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={ageInputRef}
-                // MGC-2724 — `defaultValue` + `key` estable (idem nombre/apellido).
-                key="identity-input-age"
-                defaultValue={String(profile.age)}
+                // MGC-2759 r3 — valor controlado vía `value={String(profile.age)}`.
+                // Idem rationale que input-name (ver bloque arriba).
+                value={String(profile.age)}
                 onChangeText={(txt) => {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
