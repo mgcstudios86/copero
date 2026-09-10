@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -27,7 +27,7 @@ import { NATIONALITIES } from '@/features/career/nationalities';
 // liga ocurre exclusivamente en /academy paso 3 (cada club expone su league).
 // El campo leagueCode del store queda como default '' y se mantiene el setter
 // `setLeague` por compat con storage migrado (MGC-1501 internal track).
-import { isIdentityComplete } from '@/features/career/identity-state';
+import { isIdentityComplete, shouldCommitNativeText } from '@/features/career/identity-state';
 import type { Foot, PositionGroup } from '@/types/career';
 
 // MGC-1652 — WCAG 2.5.5: hitSlop 44dp total por eje (PR-379 / MGC-1502).
@@ -126,6 +126,78 @@ export default function IdentityScreen() {
   // incrementando `profile.age` cada temporada (season.ts:122) — este
   // setter sólo opera durante el alta.
   const setAge = useCareerStore((s) => s.setAge);
+  // MGC-2759 — guardia anti-wipe sobre el path `onChangeText`. Walk MGC-2735
+  // sobre vc=304: tapear `country-ARG` tras tipear NOMBRE + APELLIDO wipeaba
+  // AMBOS campos. Causa: al mover el foco al Pressable del chip, el IME
+  // bridge de RN-Android pierde `mServedView` y dispatcha un
+  // `onChangeText('')` sobre cada EditText enfocado ANTES del `onBlur`.
+  // `setName('')` borraba el state aunque el EditText nativo aún tuviera
+  // texto. `shouldCommitNativeText` descarta el payload vacío cuando el
+  // state canónico tiene contenido; si el state ya está vacío, propaga
+  // (no rompe "el usuario borra todo y empieza de nuevo").
+  //
+  // Belt: usamos `useCareerStore.getState()` (no el `profile` del closure)
+  // para leer el valor canónico sin riesgo de closure stale entre el render
+  // y el commit.
+  const setNameSync = useCallback(
+    (value: string) => {
+      const current = useCareerStore.getState().profile.name;
+      if (!shouldCommitNativeText(value, current)) return;
+      setName(value);
+    },
+    [setName],
+  );
+  const setLastNameSync = useCallback(
+    (value: string) => {
+      const current = useCareerStore.getState().profile.lastName;
+      if (!shouldCommitNativeText(value, current)) return;
+      setLastName(value);
+    },
+    [setLastName],
+  );
+  const setAgeSync = useCallback(
+    (value: number | string) =>
+      setAge(typeof value === 'number' ? value : Number(value)),
+    [setAge],
+  );
+  // MGC-2759 — guardia anti-wipe sobre el path `onBlur` (safety net adb /
+  // Maestro). El handler `syncNameFromNative` reconcilia el state con el
+  // `nativeEvent.text` del EditText cuando el blur llega. Sin la guardia,
+  // builds release con `adb shell input text` llegan `text === undefined` →
+  // `syncNameFromNative('')` wipeaba el campo.
+  const syncNameFromNative = useCallback(
+    (text: string) => {
+      const current = useCareerStore.getState().profile.name;
+      if (!shouldCommitNativeText(text, current)) return;
+      if (text !== current) {
+        setName(text);
+      }
+    },
+    [setName],
+  );
+  const syncLastNameFromNative = useCallback(
+    (text: string) => {
+      const current = useCareerStore.getState().profile.lastName ?? '';
+      if (!shouldCommitNativeText(text, current)) return;
+      if (text !== current) {
+        setLastName(text);
+      }
+    },
+    [setLastName],
+  );
+  const syncAgeFromNative = useCallback(
+    (text: string) => {
+      if (typeof text !== 'string' || text.length === 0) return;
+      const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2);
+      const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
+      if (!Number.isFinite(parsed)) return;
+      const current = useCareerStore.getState().profile.age;
+      if (parsed !== current) {
+        setAge(parsed);
+      }
+    },
+    [setAge],
+  );
   // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
   // WCAG 2.5.5) pueda disparar foco en tap perimetral. hitSlop en TextInput
   // nativo Android no extiende el hitbox de focus. Compatible con el
@@ -955,7 +1027,8 @@ export default function IdentityScreen() {
               <TextInput
                 ref={nameInputRef}
                 value={profile.name}
-                onChangeText={setName}
+                onChangeText={setNameSync}
+                onBlur={(e) => syncNameFromNative(e.nativeEvent.text ?? '')}
                 placeholder={t('identity.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1024,7 +1097,8 @@ export default function IdentityScreen() {
               <TextInput
                 ref={lastNameInputRef}
                 value={profile.lastName ?? ''}
-                onChangeText={setLastName}
+                onChangeText={setLastNameSync}
+                onBlur={(e) => syncLastNameFromNative(e.nativeEvent.text ?? '')}
                 placeholder={t('identity.lastNamePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1091,8 +1165,9 @@ export default function IdentityScreen() {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
                   const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
-                  setAge(parsed);
+                  setAgeSync(parsed);
                 }}
+                onBlur={(e) => syncAgeFromNative(e.nativeEvent.text ?? '')}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 keyboardType="number-pad"
