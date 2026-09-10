@@ -1088,7 +1088,18 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={nameInputRef}
-                value={profile.name}
+                // MGC-2722 — defaultValue + key estable desacopla el EditText
+                // nativo de React state. Antes (value=), el reconcile de RN
+                // podía pisar el texto nativo en builds release cuando
+                // mServedView quedaba stale post-focus-shift; el EditText
+                // mostraba "Q" pero `profile.name` se vaciaba al próximo
+                // commit. Con defaultValue el EditText es uncontrolled:
+                // preserva lo que el usuario tipeó aunque React state esté
+                // desfasado. La reconciliación ocurre en onBlur (safety net)
+                // leyendo `nativeEvent.text` que el runtime Android siempre
+                // entrega al perder foco.
+                defaultValue={profile.name ?? ''}
+                key="input-name-mgc2722"
                 onChangeText={setNameSync}
                 onBlur={(e) => {
                   // MGC-2673 safety net — sincroniza state desde EditText
@@ -1171,7 +1182,11 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={lastNameInputRef}
-                value={profile.lastName ?? ''}
+                // MGC-2722 — defaultValue + key estable. Idem input-name:
+                // uncontrolled EditText preserva el texto nativo aunque
+                // React state se desfase por mServedView stale post-blur.
+                defaultValue={profile.lastName ?? ''}
+                key="input-lastname-mgc2722"
                 onChangeText={setLastNameSync}
                 onBlur={(e) => {
                   // MGC-2673 safety net — idem input-name para apellido.
@@ -1239,7 +1254,13 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={ageInputRef}
-                value={String(profile.age)}
+                // MGC-2722 — defaultValue + key estable. Idem input-name:
+                // uncontrolled EditText preserva el contenido nativo aunque
+                // React state se desfase. La edad es preset (16) y rara vez
+                // se modifica; el defaultValue cubre el caso de un usuario
+                // que tipea "30", confirma y el próximo mount ve 30.
+                defaultValue={String(profile.age)}
+                key="input-age-mgc2722"
                 onChangeText={(txt) => {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);

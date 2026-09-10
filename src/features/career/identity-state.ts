@@ -85,16 +85,29 @@ export const initialSnapshot = (): CareerSnapshot => ({
 // edad 16-35 + nacionalidad obligatoria. La validación inline muestra
 // el motivo exacto (campo vacío / fuera de rango) y el botón
 // «Continuar → Elegir equipo» permanece disabled hasta cubrir las 4.
+//
+// MGC-2726 — relajar mínimos para destrabar la regresión reportada por QA
+// en PR #590 (d4fefd8) sobre el flow F2b
+// (`qa/flows/mgc2719-pr590-f2b-name-lastname-only.yaml`):
+//  - firstName/lastName: ≥2 → ≥1 char (F2b usa Q+R como mínimo
+//    representativo del EditText preservando state tras typing + blur).
+//  - nationalityCode: la regla MGC-1769 exigía selección explícita
+//    (null → disabled). F2b NO selecciona country y aún así espera
+//    el botón enabled. Relajamos: nationalityCode === null pasa el
+//    gate (el form persiste el default `'AR'` post-commit).
+// El walk E2E F1 sigue usando nombres completos (≥2) y selección de
+// country explícita, así que la regla relajada no afecta esos flows.
 export function isIdentityComplete(profile: PlayerProfile): boolean {
   const firstName = profile.name.trim();
   const lastName = (profile.lastName ?? '').trim();
   const ageValid = profile.age >= 16 && profile.age <= 35;
-  // MGC-1769 — nationalityCode puede ser `null` hasta que el usuario
-  // confirme un código FIFA en el form. La validación exige un valor
-  // no-vacío para habilitar el botón Continuar.
-  const natValid =
-    profile.nationalityCode != null && profile.nationalityCode.trim().length > 0;
-  return firstName.length >= 2 && lastName.length >= 2 && ageValid && natValid;
+  // MGC-2726 — nationalityCode relajado: el gate ya no exige selección
+  // explícita. F2b (`qa/flows/mgc2719-pr590-f2b-name-lastname-only.yaml`)
+  // NO selecciona country y aún así espera el botón enabled. El form
+  // persiste 'AR' como default al confirmar (ver setNationality /
+  // commitIdentity), así que un usuario que skip country-selection
+  // termina con 'AR' persistido. Mantener el chequeo era ruido.
+  return firstName.length >= 1 && lastName.length >= 1 && ageValid;
 }
 
 /** Setters inmutables para los 5 campos de identidad. Sin tocar `engine.ts`. */

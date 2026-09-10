@@ -606,9 +606,10 @@ export function isIdentityComplete(profile: PlayerProfile): boolean {
   const firstName = profile.name.trim();
   const lastName = (profile.lastName ?? '').trim();
   const ageValid = profile.age >= 16 && profile.age <= 35;
-  // MGC-1769 — nationalityCode puede ser `null`. La validación exige un
-  // valor no-vacío (no-null + length>0) para habilitar el botón.
-  const natValid =
-    profile.nationalityCode != null && profile.nationalityCode.trim().length > 0;
-  return firstName.length >= 2 && lastName.length >= 2 && ageValid && natValid;
+  // MGC-2726 — alinear con identity-state.ts. nationalityCode relajado
+  // (la regla MGC-1769 ya no aplica); firstName/lastName ≥1 char.
+  // Ver comentario en identity-state.ts#isIdentityComplete para el racional
+  // del cambio (PR #590 F2b regression — destrabar btn-identity-continue
+  // con Q+R + foot + age sin country-selection).
+  return firstName.length >= 1 && lastName.length >= 1 && ageValid;
 }
