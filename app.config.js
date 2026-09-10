@@ -94,7 +94,7 @@ module.exports = ({ config } = {}) => ({
     // `cli.appVersionSource: remote` en eas.json, el server EAS es la
     // fuente de verdad al build; mantener ambos sincronizados evita drift
     // entre `Constants.expoConfig` y `expo-application` en runtime.
-    versionCode: 15,
+    versionCode: 280,
     // MGC-839: NO declarar AD_ID. Per MGC-4919 rootcause, play-services-ads-*
     // AARs autolinkeados la inyectan transitivamente y declarar el permiso
     // no la remueve. Copero no usa ads → Play Console warning se resuelve
@@ -130,6 +130,17 @@ module.exports = ({ config } = {}) => ({
   // Los IDs concretos por unidad se leen directo desde process.env
   // en el provider nativo.
   extra: {
+    // MGC-2856 — restaurar fix router root sobre e440ce9 (multi-slot save
+    // MGC-2572). Sin override, expo-router escanea `src/app/` primero y
+    // trata `src/app/router.tsx` (que importa `react-router-dom`, sólo
+    // usado en web) como entry nativo → APK cold-start falla con
+    // "Unable to resolve module react-router-dom" y abre
+    // `expo-router-unmatched`. `root: 'app'` fuerza a expo-router a
+    // montar `app/` (entry nativo real), preservando `src/app/router.tsx`
+    // solo para bundle web. Misma fix que MGC-2536 (5402bb7) y cherry-pick
+    // MGC-2656 (413d4b1) sobre release-4. Bloquea MGC-2582 QA walk.
+    // Refs: MGC-2536, MGC-2572, MGC-2582, MGC-2656.
+    router: { root: 'app' },
     // ProjectId de Expo (MGC-388). Requerido por `eas build --local`
     // para resolver el proyecto antes de invocar builders nativos.
     // Generado vía `eas init --account mgcstudios --non-interactive`
