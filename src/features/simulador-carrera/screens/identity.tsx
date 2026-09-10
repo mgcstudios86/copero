@@ -150,6 +150,56 @@ export default function IdentityScreen() {
     },
     [setAge],
   );
+  // MGC-2746 — guardia anti-wipe sobre la safety net onBlur. En RN 0.86
+  // Android, el evento nativo `onBlur` del TextInput está tipado como
+  // `BubblingEventHandler<Readonly<{target: Int32}>>` (AndroidTextInput
+  // NativeComponent.js:367) — el payload SÍ incluye el campo `text` en
+  // runtime (el ReactEditText envía el contenido actual en onBlurEvent),
+  // pero **NO es confiable en builds release con `adb shell input text` /
+  // Maestro `inputText`**: uiautomator confirma text='Q' en el EditText
+  // pero `e.nativeEvent.text` llega `undefined`. Sin guardia,
+  // `nativeBlurText` devolvía '' y `syncNameFromNative('') → setName('')`
+  // wipeaba el state que acabábamos de tipear. La guarda es: si la safety
+  // net no trae un string no-vacío, es no-op (preserva el state existente).
+  // Si en algún build/future el blur sí dispatchea text válido, seguimos
+  // reconciliando como antes.
+  //
+  // Belt: usamos `useCareerStore.getState()` (no el `profile` del closure)
+  // para leer el valor canónico sin riesgo de closure stale entre el
+  // render y el blur (que puede llegar varios frames después).
+  const syncNameFromNative = useCallback(
+    (text: string) => {
+      if (typeof text !== 'string' || text.length === 0) return;
+      const current = useCareerStore.getState().profile.name;
+      if (text !== current) {
+        setName(text);
+      }
+    },
+    [setName],
+  );
+  const syncLastNameFromNative = useCallback(
+    (text: string) => {
+      if (typeof text !== 'string' || text.length === 0) return;
+      const current = useCareerStore.getState().profile.lastName ?? '';
+      if (text !== current) {
+        setLastName(text);
+      }
+    },
+    [setLastName],
+  );
+  const syncAgeFromNative = useCallback(
+    (text: string) => {
+      if (typeof text !== 'string' || text.length === 0) return;
+      const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2);
+      const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
+      if (!Number.isFinite(parsed)) return;
+      const current = useCareerStore.getState().profile.age;
+      if (parsed !== current) {
+        setAge(parsed);
+      }
+    },
+    [setAge],
+  );
   // MGC-1760 — ref al TextInput para que el Pressable wrapper (con hitSlop
   // WCAG 2.5.5) pueda disparar foco en tap perimetral. hitSlop en TextInput
   // nativo Android no extiende el hitbox de focus. Compatible con el
@@ -998,8 +1048,37 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={nameInputRef}
-                value={profile.name}
+                // MGC-2746 — defaultValue + key estable desacopla el EditText
+                // nativo del React state. Antes (value=), el reconcile de RN
+                // pisaba el contenido nativo cuando el usuario tipeaba en un
+                // EditText hermano: el blur→focus del siguiente input forzaba
+                // una re-render con profile.name desactualizado (state='' por
+                // mServedView stale) que sobreescribía el texto tipeado en el
+                // EditText anterior. Walk MGC-2745 sobre APK vc=310
+                // (SHA 47ea5b5c4e85, PR #598 404cee6) reprodujo: tap input-name
+                // + inputText "QR" → tap input-lastname → input-name mostraba
+                // placeholder "Ej. Lionel" otra vez. defaultValue hace el
+                // EditText uncontrolled: el contenido nativo que tipeó el
+                // usuario persiste aunque React state esté desfasado. La
+                // reconciliación ocurre en onBlur (safety net) leyendo
+                // nativeEvent.text; la guarda anti-wipe filtra blur con
+                // text=undefined → '' para no wipear el state legítimo.
+                defaultValue={profile.name ?? ''}
+                key="input-name-mgc2746"
                 onChangeText={setNameSync}
+                onBlur={(e) => {
+                  // MGC-2746 safety net — sincroniza state desde EditText
+                  // nativo al perder foco. En RN 0.86 Android, `TextInput.onBlur`
+                  // está tipado como `BlurEvent` (TargetedEvent {target}) pero
+                  // el runtime a veces trae `text` en `nativeEvent`. En builds
+                  // release con `adb shell input text` / Maestro `inputText`,
+                  // `e.nativeEvent.text` llega `undefined` y `?? ''` lo
+                  // convierte en ''. La guarda dentro de `syncNameFromNative`
+                  // detecta el string vacío y hace no-op — preserva el state
+                  // actual en vez de wipearlo a ''.
+                  const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
+                  syncNameFromNative(text);
+                }}
                 placeholder={t('identity.namePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1067,8 +1146,19 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={lastNameInputRef}
-                value={profile.lastName ?? ''}
+                // MGC-2746 — defaultValue + key estable, idem input-name.
+                // EditText uncontrolled preserva el texto nativo aunque
+                // React state se desfase post-blur entre inputs hermanos.
+                defaultValue={profile.lastName ?? ''}
+                key="input-lastname-mgc2746"
                 onChangeText={setLastNameSync}
+                onBlur={(e) => {
+                  // MGC-2746 safety net — idem input-name: cast defensivo a
+                  // TextInputFocusEventData, `?? ''` para undefined → '' y
+                  // syncLastNameFromNative filtra el empty via guard anti-wipe.
+                  const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
+                  syncLastNameFromNative(text);
+                }}
                 placeholder={t('identity.lastNamePlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="words"
@@ -1130,12 +1220,26 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={ageInputRef}
-                value={String(profile.age)}
+                // MGC-2746 — defaultValue + key estable, idem input-name.
+                // EditText uncontrolled preserva el contenido nativo aunque
+                // React state se desfase post-blur. Edad preset 16 rara vez
+                // modificada; cubre el caso usuario tipea "30", cambia de
+                // input y al volver sigue mostrando "30".
+                defaultValue={String(profile.age)}
+                key="input-age-mgc2746"
                 onChangeText={(txt) => {
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
                   const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
                   setAgeSync(parsed);
+                }}
+                onBlur={(e) => {
+                  // MGC-2746 safety net — idem input-name/input-lastname para
+                  // edad, reaplicando el clamp numérico antes de reconciliar.
+                  // La guarda anti-wipe dentro de syncAgeFromNative rechaza
+                  // string vacío (filtra el caso undefined → '' del cast).
+                  const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
+                  syncAgeFromNative(text);
                 }}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}
