@@ -4,13 +4,8 @@ import { AnimatedNumber } from './AnimatedNumber'
 
 type IconProps = { className?: string }
 
-type NumProps = { n: number; animate: boolean }
-function Num({ n, animate }: NumProps) {
-  return animate ? (
-    <AnimatedNumber value={n} className="tabular-nums" />
-  ) : (
-    <span className="tabular-nums">{n}</span>
-  )
+function Num({ n, animate }: { n: number; animate: boolean }) {
+  return animate ? <AnimatedNumber value={n} className="tabular-nums" /> : <span className="tabular-nums">{n}</span>
 }
 
 export function MatchesIcon({ className = 'h-5 w-5' }: IconProps) {

@@ -39,7 +39,7 @@
     "react-native-view-shot": "5.1.0",
     "react-native-web": "^0.21.2",
     "react-native-worklets": "0.10.4",
-    "react-router-dom": "^6.30.0",
+    "react-router-dom": "^7.18.3",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
@@ -54,9 +54,9 @@
     "eslint-config-expo": "~57.0.1",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import": "^2.32.0",
+    "jsdom": "^25.0.1",
     "typescript": "~5.9",
-    "vitest": "^2.1.9",
-    "jsdom": "^25.0.1"
+    "vitest": "^2.1.9"
   },
   "overrides": {
     "react-native-worklets": "0.10.4",

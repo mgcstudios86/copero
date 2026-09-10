@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
-import { fillRnw, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
+import { fillRnw, passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
 
 /**
  * MGC-396 — capturas visuales post-fix `palette.copero.primary` → verde.
@@ -38,16 +38,13 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     // MGC-2254 v3 / MGC-2356: fillRnw = fill + dispatchEvent('input') para
     // forzar que RNW dispare onChangeText en el runner self-hosted.
     await fillRnw(page.locator('[data-testid="input-name"]'), 'Calvo');
-    // MGC-2475: input-lastname es required por isIdentityComplete post MGC-1628.
-    await fillRnw(page.locator('[data-testid="input-lastname"]'), 'Test');
+    // MGC-2616 F7a: canContinue requiere input-lastname poblado.
+    await fillRnw(page.locator('[data-testid="input-lastname"]'), 'Regression');
     await page.locator('[data-testid="pos-ST"]').click();
     await fillRnw(page.locator('[data-testid="input-nationality-search"]'), 'arg');
     await page.waitForTimeout(400);
     // MGC-1348 v3 — `force:true` por hit-test RNW (country-ARG).
-    // MGC-2494: `force: true` salta el hit-test y el onPress del Pressable
-    // RNW nunca corría → nationalityCode quedaba null. `pressRnw` clickea de
-    // verdad (con fallbacks).
-    await pressRnw(page.getByTestId('country-ARG'));
+    await page.getByTestId('country-ARG').click({ force: true });
     await expect(page.locator('[data-testid="btn-identity-continue"]')).toBeEnabled({ timeout: 15_000 });
     await page.locator('[data-testid="btn-identity-continue"]').click();
 
@@ -56,8 +53,10 @@ test.describe('MGC-396 — capturas post-fix verde primario', () => {
     // (no /draft). Navegamos directo a /draft para mantener el intent del
     // spec MGC-396 (capturas visuales del flow draft → tu-jugador → club).
     // MGC-2494: WF2 (MGC-1648) interpone team-select entre identity y dashboard.
+    // MGC-2505: WF3 (MGC-1649) interpone season-hub tras team-select.
     await passTeamSelect(page);
-    await page.waitForURL('**/simulador-carrera/(dashboard|season-hub)', { timeout: 15_000 });
+    await passSeasonHub(page);
+    await expect(page.getByTestId('season-hub-screen')).toBeVisible({ timeout: 15_000 });
     await page.goto('/simulador-carrera/draft');
     await page.waitForSelector('[data-testid="draft-screen"]', { timeout: 10_000 });
     await page.waitForTimeout(500);
