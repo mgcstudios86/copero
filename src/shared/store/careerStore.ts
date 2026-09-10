@@ -978,11 +978,3 @@ if (isPersistentStorage && !isPersistentStorage()) {
     '[copero:career] AsyncStorage no resolvió; persistencia en memoria (force-stop pierde la partida).',
   );
 }
-
-// MGC-2264: el runner copero-heavy no siempre entrega el `input` sintético de
-// Playwright al `onChangeText` de RNW. El hook permite que los specs E2E
-// sincronicen el estado sin alterar el comportamiento nativo.
-if (typeof window !== 'undefined') {
-  (window as unknown as { __careerStore?: typeof useCareerStore }).__careerStore =
-    useCareerStore;
-}

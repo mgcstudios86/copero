@@ -82,8 +82,12 @@ export default function SeasonHubScreen() {
     router.push('/simulador-carrera/temporada');
   }, [router]);
 
+  // MGC-2259 — wire a /semanal (F2.3) que ya tiene el chain completo a
+  // /match -> /post-match (commitMatch) -> /social-events. El placeholder
+  // F1 /week-decision solo hace weeklyChoice + resolveMatchweek y vuelve
+  // al hub, saltandose /post-match y dejando F4 social-events inalcanzable.
   const onDecideWeek = useCallback(() => {
-    router.push('/simulador-carrera/week-decision');
+    router.push('/simulador-carrera/semanal');
   }, [router]);
 
   // Sticky footer altura fija (PR-394 box-none / MGC-1381 pattern):

@@ -25,13 +25,13 @@
  * armado en el root y la app sobrevive — la pantalla rota puede mostrar
  * un mensaje en lugar del launcher.
  */
-import { Component, type ErrorInfo, type ReactElement, type ReactNode } from 'react';
+import React, { Component } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface Props {
-  children: ReactNode;
+  children: React.ReactNode;
   /** Componente custom de fallback (opcional). */
-  fallback?: (err: Error, reset: () => void) => ReactNode;
+  fallback?: (err: Error, reset: () => void) => React.ReactNode;
   /** Etiqueta para logs. Default: 'ErrorBoundary'. */
   label?: string;
 }
@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo): void {
+  componentDidCatch(error: Error, info: React.ErrorInfo): void {
     // Log explícito — Sentry y Metro dev ambos capturan console.error.
     // Antes el crash se perdía sin telemetría y QA sólo veía el launcher.
     // eslint-disable-next-line no-console
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null });
   };
 
-  render(): ReactNode {
+  render(): React.ReactNode {
     if (!this.state.hasError || !this.state.error) {
       return this.props.children;
     }
@@ -75,7 +75,7 @@ interface FallbackProps {
   onReset: () => void;
 }
 
-function DefaultFallback({ error, onReset }: FallbackProps): ReactElement {
+function DefaultFallback({ error, onReset }: FallbackProps): React.ReactElement {
   return (
     <View style={styles.root} accessibilityRole="alert">
       <Text style={styles.title}>Algo salió mal</Text>

@@ -132,13 +132,12 @@ describe('MGC-2131 / PR #482 — country Pressable sin hitSlop (regresión MGC-2
     // 1) ScrollView gesture handler, 2) hitSlop expandido, 3) parent
     // overflow:hidden. Si el comentario se trunca, el reader puede
     // reintroducir el bug sin entender la cadena causal.
-    // Anclar en el comentario canónico "MGC-2081 — country Pressable SIN
-    // hitSlop" (no en la primera mención one-liner que aparece dentro de
-    // un comentario previo y captura 8 chars antes del primer `[a-z]`).
-    // Cortar en el próximo comentario de otro ticket (`// MGC-NNNN` o
-    // `// MGC-NNNN vN`) para no capturar el bloque siguiente.
+    // Anclar en el comentario canónico em-dash "MGC-2081 — country Pressable
+    // SIN hitSlop" para NO capturar la primera mención one-liner en
+    // `causa raíz del bug MGC-2081 hitSlop` (precede `*/}` y no documenta
+    // ScrollView). Cortar en próximo `// MGC-NNNN` o fin de comentario.
     const m2081Comment = IDENTITY_SRC.match(
-      /MGC-2081\s*—\s*country Pressable SIN hitSlop[\s\S]*?(?=\n\s*\/\/\s*MGC-\d{4}(?!\s*—\s*country)|\n\s*\n|\*\/\})/i
+      /MGC-2081\s+—\s+country Pressable SIN hitSlop[\s\S]{0,3000}?(?=\n\s*\/\/\s*MGC-\d{4}|\n\s*\n|\*\/\})/i
     );
     expect(m2081Comment, 'No se encontró bloque comentario MGC-2081').toBeTruthy();
     const text = m2081Comment?.[0] ?? '';

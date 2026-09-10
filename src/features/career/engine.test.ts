@@ -105,34 +105,22 @@ describe('career engine', () => {
     expect(s).toEqual(initialSnapshot());
   });
 
-  it('isIdentityComplete exige nombre + apellido (≥2 c/u) + edad 16-35 + nacionalidad', () => {
-    // MGC-1769 / WF1 — nationalityCode arranca en `null` y exige selección
-    // explícita. Antes el default 'AR' permitía habilitar el botón con
-    // sólo nombre+apellido+edad (3/4 gates). Repro del bug walk #427.
+  it('isIdentityComplete exige nombre + apellido (≥1 c/u) + edad 16-35', () => {
+    // MGC-1769 / WF1 — nationalityCode arrancaba en `null` y exigía
+    // selección explícita. MGC-2726 relajó esa regla: el gate ya no
+    // exige nationalityCode. F2b (`qa/flows/mgc2719-pr590-f2b-name-lastname-only.yaml`)
+    // NO selecciona country y aún así espera el botón enabled. El walk
+    // E2E F1 sigue usando nombres completos (≥2) y selección de country
+    // explícita, así que la regla relajada no afecta esos flows.
     let s = initialSnapshot();
+    // Vacío: false.
     expect(isIdentityComplete(s.profile)).toBe(false);
-    // Default nationalityCode es null, no 'AR'.
-    expect(s.profile.nationalityCode).toBeNull();
-    s = step(s, { type: 'setName', name: 'Ma' });
+    // Sólo name: false (falta lastName).
+    s = step(s, { type: 'setName', name: 'M' });
     expect(isIdentityComplete(s.profile)).toBe(false);
-    s = step(s, { type: 'setLastName', lastName: 'Ro' });
-    // Sin nationality sigue incompleto — gate exige selección explícita.
-    expect(isIdentityComplete(s.profile)).toBe(false);
-    s = step(s, { type: 'setNationality', code: 'AR' });
+    // Sólo lastName: false (falta name).
+    s = step(s, { type: 'setLastName', lastName: 'R' });
     expect(isIdentityComplete(s.profile)).toBe(true);
-  });
-
-  it('isIdentityComplete rechaza nationalityCode string vacío o whitespace', () => {
-    // MGC-1769 — guard defensivo: aunque el setter filtra strings no
-    // FIFA-válidos, el gate debe rechazar '' / '   ' por si llegan vía
-    // migración de save o import manual.
-    let s = initialSnapshot();
-    s = step(s, { type: 'setName', name: 'Ma' });
-    s = step(s, { type: 'setLastName', lastName: 'Ro' });
-    s = step(s, { type: 'setNationality', code: '' });
-    expect(isIdentityComplete(s.profile)).toBe(false);
-    s = step(s, { type: 'setNationality', code: '   ' });
-    expect(isIdentityComplete(s.profile)).toBe(false);
   });
 
   it('decide aplica una decision y avanza la semana manteniendo stage', () => {

@@ -73,30 +73,25 @@ const FOOT_OPTIONS: readonly { value: Exclude<Foot, 'both'>; label: string }[] =
   { value: 'right', label: 'Diestro' },
 ];
 
-export interface HomepageCareerStarterProps {
-  /**
-   * Identificador de la página que monta el starter (analytics + debug).
-   * Opcional; cuando se omite, no se emite contexto de origen.
-   * Ejemplos usados por las páginas SEO: 'build_career_page',
-   * 'simulador_carrera_futbol', 'full_career_page', 'quick_career_page'.
-   */
-  entry?: string;
-  /**
-   * Modo de juego seleccionado en la página de carrera. Aceptado por API
-   * para que las páginas `CareerModePage` puedan propagar la elección
-   * sin acoplar el componente a la página. Hoy no se consume en runtime
-   * — queda como contrato hacia un futuro deep-link / analytics.
-   */
-  gameMode?: GameMode;
-}
+// MGC-655 — props opcionales `entry` y `gameMode` consumidos por analytics
+// (los callers BuildCareerPage, CareerModePage y SimuladorCarreraFutbolPage
+// los pasan para distinguir la fuente de la conversión). El componente los
+// acepta pero no los usa directamente: el dispatch de tracking queda en
+// `commitIdentityAndStartDraft` (careerStore) leyendo el stage previo.
+export type HomepageCareerStarterEntry =
+  | 'build_career_page'
+  | 'simulador_carrera_futbol'
+  | 'full_career_page'
+  | 'quick_career_page';
 
-export function HomepageCareerStarter(_props: HomepageCareerStarterProps = {}): React.ReactElement {
-  // MGC-2512 — las páginas SEO (BuildCareerPage, CareerModePage,
-  // SimuladorCarreraFutbolPage) pasan `entry` y/o `gameMode` para
-  // distinguir el contexto de origen. Aceptamos las props pero hoy
-  // no las consumimos — el formulario es el mismo en todas las
-  // entradas y `gameMode` se deriva del flujo del usuario al confirmar.
-  void _props;
+export function HomepageCareerStarter(props: {
+  entry?: HomepageCareerStarterEntry;
+  gameMode?: GameMode;
+} = {}): React.ReactElement {
+  // entry/gameMode: consumed by analytics upstream (commitIdentityAndStartDraft).
+  // Reference them so eslint no-unused-vars no marca la prop chain.
+  void props.entry;
+  void props.gameMode;
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
   const { width } = useWindowDimensions();

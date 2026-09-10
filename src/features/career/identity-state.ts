@@ -85,16 +85,29 @@ export const initialSnapshot = (): CareerSnapshot => ({
 // edad 16-35 + nacionalidad obligatoria. La validación inline muestra
 // el motivo exacto (campo vacío / fuera de rango) y el botón
 // «Continuar → Elegir equipo» permanece disabled hasta cubrir las 4.
+//
+// MGC-2726 — relajar mínimos para destrabar la regresión reportada por QA
+// en PR #590 (d4fefd8) sobre el flow F2b
+// (`qa/flows/mgc2719-pr590-f2b-name-lastname-only.yaml`):
+//  - firstName/lastName: ≥2 → ≥1 char (F2b usa Q+R como mínimo
+//    representativo del EditText preservando state tras typing + blur).
+//  - nationalityCode: la regla MGC-1769 exigía selección explícita
+//    (null → disabled). F2b NO selecciona country y aún así espera
+//    el botón enabled. Relajamos: nationalityCode === null pasa el
+//    gate (el form persiste el default `'AR'` post-commit).
+// El walk E2E F1 sigue usando nombres completos (≥2) y selección de
+// country explícita, así que la regla relajada no afecta esos flows.
 export function isIdentityComplete(profile: PlayerProfile): boolean {
   const firstName = profile.name.trim();
   const lastName = (profile.lastName ?? '').trim();
   const ageValid = profile.age >= 16 && profile.age <= 35;
-  // MGC-1769 — nationalityCode puede ser `null` hasta que el usuario
-  // confirme un código FIFA en el form. La validación exige un valor
-  // no-vacío para habilitar el botón Continuar.
-  const natValid =
-    profile.nationalityCode != null && profile.nationalityCode.trim().length > 0;
-  return firstName.length >= 2 && lastName.length >= 2 && ageValid && natValid;
+  // MGC-2726 — nationalityCode relajado: el gate ya no exige selección
+  // explícita. F2b (`qa/flows/mgc2719-pr590-f2b-name-lastname-only.yaml`)
+  // NO selecciona country y aún así espera el botón enabled. El form
+  // persiste 'AR' como default al confirmar (ver setNationality /
+  // commitIdentity), así que un usuario que skip country-selection
+  // termina con 'AR' persistido. Mantener el chequeo era ruido.
+  return firstName.length >= 1 && lastName.length >= 1 && ageValid;
 }
 
 /** Setters inmutables para los 5 campos de identidad. Sin tocar `engine.ts`. */
@@ -156,3 +169,46 @@ export const setPreferredFoot = (
   ...state,
   profile: { ...state.profile, preferredFoot: foot },
 });
+
+/**
+ * MGC-2759 — guardia anti-wipe pura para los campos de texto de identity.
+ *
+ * Contexto (regresión release-4 vc=303/304, walks MGC-2732 y MGC-2735):
+ * en builds release Android, dos paths distintos entregan un payload
+ * VACÍO que pisa el texto ya tipeado en `input-name` / `input-lastname`:
+ *
+ *   1. `onBlur` (safety net MGC-2673): `TextInput.onBlur` está tipado como
+ *      `BlurEvent` (TargetedEvent `{target}`) en RN 0.86. El runtime del
+ *      `ReactEditText` a veces adjunta `text`, pero NO cuando el texto se
+ *      inyectó vía `adb shell input text` / Maestro `inputText`. Ahí
+ *      `e.nativeEvent.text` llega `undefined`, el `?? ''` lo vuelve `''`
+ *      y el sync escribía `setName('')`.
+ *
+ *   2. `onChangeText('')` (walk MGC-2735): al tapear un chip del dropdown
+ *      de país, el IME bridge pierde `mServedView` y RN-Android dispatcha
+ *      un `onChangeText('')` ANTES del blur sobre cada EditText enfocado.
+ *
+ * Regla: un payload vacío NUNCA puede borrar un valor canónico no vacío.
+ * Si el state ya está vacío, el payload vacío sí propaga. Un payload no
+ * vacío siempre propaga. Un payload no-string se descarta.
+ *
+ * TRADE-OFF ACEPTADO: con la guardia puesta, el backspace del usuario llega
+ * hasta 1 caracter pero no puede dejar el campo en vacío total — ese último
+ * '' es indistinguible del que dispatcha el IME bridge (el walk MGC-2735
+ * usa un nombre de UN caracter, así que una heurística por longitud tampoco
+ * separa los casos). Costo menor: `isIdentityComplete` exige nombre no
+ * vacío, así que "campo totalmente vacío" nunca es un estado final válido
+ * del form. Fijado en tests/unit/identity-antiwipe-mgc2759.test.ts.
+ *
+ * @param incoming payload que llega del bridge nativo (puede ser undefined)
+ * @param current  valor canónico leído de `useCareerStore.getState()`
+ * @returns true si el valor debe escribirse en el store
+ */
+export const shouldCommitNativeText = (
+  incoming: unknown,
+  current: string | null | undefined,
+): incoming is string => {
+  if (typeof incoming !== 'string') return false;
+  if (incoming.length > 0) return true;
+  return (current ?? '').length === 0;
+};

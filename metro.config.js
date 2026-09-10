@@ -154,7 +154,32 @@ if (config.web) {
 // splitChunks real y aplique el threshold de pre-carga correcto.
 config._coperoSplitChunks = true;
 
-// MGC-743 — Metro no incluye `woff2` en `assetExts` por defecto (la lista
+// MGC-2532 r2 — redireccionar react-router(/-dom) a un stub local en
+// platform!=web, en lugar de devolver `{type: 'empty'}` desde
+// customResolver (que rompia el resolver chain de Expo Router 57 y
+// causaba Unmatched Route en cold-start — MGC-2532 / MGC-2537 / MGC-2538).
+//
+// Estrategia: resolver devuelve `{filePath: <stub>}` (modulo real en
+// disco), preservando el module graph intacto. El stub exporta un
+// objeto vacio valido, asi Hermes parsea OK (sin `import(/* @vite-ignore */)`)
+// y Expo Router no detecta inconsistencia.
+//
+// Por que blockList NO funciona:
+// react-router-dom ES alcanzable desde el entry nativo (prueba: Hermes
+// parse error en chunk-7SIULPXI.js — MGC-2512). blockList haria que
+// Metro falle el bundle con "Unable to resolve module" porque el
+// require() queda reachable pero sin resolution.
+//
+// Por que customResolver empty tampoco funciona (PR #566 SHA dd18e1e):
+// el resolver chain queda "patched", Expo Router 57 lo detecta y
+// renderiza la pantalla Unmatched por defecto.
+//
+// Por que filePath a stub funciona:
+// Metro resuelve a un file real, lo agrega al module graph con un
+// module ID valido, el prelude evalua OK, Hermes parsea el stub (sin
+// sintaxis `/* @vite-ignore */`). Expo Router no detecta anomalia
+// porque el module graph esta completo y consistente.
+const reactRouterStubPath = path.join(__dirname, 'src', 'shims', 'react-router-native.js');
 // viene de metro-config/src/defaults/defaults.js e incluye ttf/otf pero
 // no woff2). Sin esta entrada, `require('../assets/fonts/woff2/X.woff2')`
 // falla con "Unable to resolve module".
@@ -198,8 +223,42 @@ config.resolver.resolveRequest = function customFontBlockResolver(
     context &&
     typeof context.originModulePath === 'string' &&
     ttfInGoogleFonts.test(context.originModulePath);
+  // MGC-2512 — bloquear react-router(/-dom) en platform!=web.
+  // react-router v7.x genera `import(/* @vite-ignore */)` y
+  // `require(/* @vite-ignore */ /* webpackIgnore: true */ ...)` que
+  // Hermes 0.86 parsea como "Invalid expression encountered" en
+  // android/app/build/generated/assets/react/release/index.android.bundle.
+  // Bloqueamos en native devolviendo un módulo vacío: en native la
+  // navegación la provee Expo Router + react-native-screens, no RR.
+  const isReactRouter =
+    typeof moduleName === 'string' &&
+    (moduleName === 'react-router' ||
+      moduleName === 'react-router-dom' ||
+      moduleName.startsWith('react-router/') ||
+      moduleName.startsWith('react-router-dom/'));
+  if (platform !== 'web' && isReactRouter) {
+    return { type: 'empty' };
+  }
   if (platform === 'web' && isFontRequire && isFromGoogleFonts) {
     return { type: 'empty' };
+  }
+  // MGC-2532 r2 — redireccionar react-router(/-dom) al stub local en
+  // platform!=web. Devolvemos `{filePath}` (modulo real, no `{type:'empty'}`)
+  // para que Metro lo agregue al module graph con ID valido. Esto
+  // preserva el resolver chain intacto (Expo Router 57 NO detecta
+  // inconsistencia → no renderiza Unmatched) y blinda a Hermes del
+  // parse error `import(/* @vite-ignore */)` (el stub no contiene esa
+  // sintaxis). Aplica a native platforms unicamente.
+  const isNativePlat =
+    platform === 'ios' || platform === 'android' || platform === 'native';
+  const isReactRouterModule =
+    typeof moduleName === 'string' &&
+    (moduleName === 'react-router' ||
+      moduleName === 'react-router-dom' ||
+      moduleName === 'react-router-dom-v5-compat' ||
+      moduleName === '@remix-run/router');
+  if (isNativePlat && isReactRouterModule) {
+    return { type: 'sourceFile', filePath: reactRouterStubPath };
   }
   if (typeof previousResolveRequest === 'function') {
     return previousResolveRequest.call(this, context, moduleName, platform);
