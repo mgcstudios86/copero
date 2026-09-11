@@ -346,14 +346,17 @@ jobs:
           fi
       - uses: marocchino/sticky-pull-request-comment@v2
         with:
-          name: copero-web-build
-          path: dist/
-          if-no-files-found: error
-          retention-days: 14
+          header: devops-ci
+          message: |
+            ## CI DevOps — ${{ github.event.pull_request.head.sha }}
 
-  devops-comment:
-    name: devops-comment (gate §8.1)
-    runs-on: ubuntu-latest
+            ${{ steps.status.outputs.result }}
+
+            - Workflow: `ci (copero)`
+            - Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            - SHA: `${{ github.event.pull_request.head.sha }}` (target `main`)
+            - §8.3: builds **--local** (sin EAS cloud); runner `ubuntu-latest` (MGC-2263).
+            - §8.1 gate #3 cumplido.
             - Artefacto: `copero-web-build` (sólo si `build-web` ✅)
         env:
           GITHUB_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
