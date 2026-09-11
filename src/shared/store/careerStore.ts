@@ -808,6 +808,14 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         return false;
       }
       if (!saved) {
+        // MGC-2999 — defensa en profundidad. Si no hay payload para el
+        // slot activo (slot recién creado vía picker sin payload legacy,
+        // o slot vaciado por deleteSlot), el store podría seguir
+        // cargando state del slot previo. Reseteamos a initialSnapshot
+        // y dejamos que el caller (`dashboard.onSlotChanged`) o el
+        // próximo `applyAndPersist` reescriban limpio bajo el key
+        // activo. Esto garantiza que dos slots nunca comparten state.
+        setSnapshot(() => initialSnapshot());
         set((s) => ({ ...s, hydrated: true }));
         return false;
       }

@@ -46,7 +46,7 @@
  */
 
 import type { CareerSaveState, SeasonLog } from '@/types/career';
-import { createRngSnapshot } from './rng';
+import { createRngSnapshot, seedFromString } from './rng';
 import { initialProfile } from './identity-state';
 import { STAT_INIT } from './position-stats';
 import { NO_MODIFIERS } from './events';
@@ -405,6 +405,13 @@ export async function listSlots(): Promise<{ slots: SlotMeta[]; activeSlotId: st
  * vía `slugifySlotName`; si el slug choca con un slot existente, se
  * anexa `-2`, `-3`, … Devuelve el meta del slot creado (id + name) o
  * del slot existente si el nombre colisiona exactamente.
+ *
+ * MGC-2999 — al crear el slot escribimos un payload v:2 limpio con
+ * `seed = seedFromString(slotId)` para que la nueva partida arranque
+ * con state AISLADO del slot activo previo (antes `createSlot` sólo
+ * agregaba el índice y el siguiente `saveCareerSave` desde el store
+ * pisaba el key nuevo con el state del slot anterior — byte-identical
+ * save:v2:default === save:v2:nuevoSlotId).
  */
 export async function createSlot(name: string): Promise<{ id: string; name: string }> {
   await ensureDefaultSlotMigrated();
@@ -421,8 +428,31 @@ export async function createSlot(name: string): Promise<{ id: string; name: stri
     id = `${baseSlug.slice(0, SLOT_ID_MAX - suffix.length)}${suffix}`;
     n += 1;
   }
+  // Append ANTES del setItem para que el dedup-by-name del siguiente
+  // `createSlot` con el mismo nombre encuentre la entry con el name
+  // real (si llamáramos `saveCareerSave` primero, su index entry
+  // tendría `name = 'Partida guardada'` y rompería el dedup-by-name).
   await appendIndexEntry({ id, name: trimmed, savedAt: Date.now() });
-  logPersist('log', `[persistence] create-slot id=${id} name=${trimmed}`);
+  // Payload v:2 inicial con seed derivado del slotId — único por slot
+  // y determinista (re-create con mismo nombre → mismo seed). El
+  // `blankCareerSave` aplica los defaults F3.2 vía `hydrateF3Fields`
+  // cuando se carga; acá sólo necesitamos un shape serializable v:2.
+  const freshSeed = seedFromString(id);
+  const initial: CareerSaveState = {
+    ...blankCareerSave(),
+    seed: freshSeed,
+    rng: createRngSnapshot(freshSeed),
+    // Stage 'identity' → el usuario ve el form en vez del dashboard de
+    // una carrera fantasma. Si viniera de un switch mid-carrera, el
+    // primer `commitIdentityAndStartDraft` reemplazará este payload.
+    stage: 'identity',
+  };
+  const storage = pickStorage();
+  await storage.setItem(slotKey(id), JSON.stringify(initial));
+  logPersist(
+    'log',
+    `[persistence] create-slot id=${id} name=${trimmed} seed=${freshSeed} stage=identity`,
+  );
   return { id, name: trimmed };
 }
 
