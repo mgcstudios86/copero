@@ -50,12 +50,12 @@ permissions:
 jobs:
   playwright-web:
     name: Playwright (web, headless)
-    # ADR-0027 (MGC-2927/MGC-2939): runner-01 VPS 954Mi no corre Playwright
-    # (>4GB). npm ci tarda 42 min y muere con ECONNRESET por swap thrash.
-    # Pasamos QA a runner-02 macOS ARM64 (label copero-ci, ya en el pool per
-    # ADR-0026) hasta que llegue runner Linux dedicado (MGC-2931).
+    # ADR-0027 (MGC-2927): runner-01 VPS 954Mi no corre Playwright (>4GB).
+    # Pasamos QA a runner-02 macOS 16GB ARM64 (label copero-ci, ya en el
+    # pool per ADR-0026) hasta que llegue runner Linux dedicado (MGC-2931).
     # Compite con el gate de merge `copero-ci`, pero `cancel-in-progress`
-    # serializa suites largas y el gate corre ~3 min.
+    # serializa suites largas y el gate corre ~3 min. Patrón idéntico a
+    # MGC-1263 (CEO opción C APK Mac local).
     runs-on: [self-hosted, copero-ci, macOS]
     # MGC-380: 15min insuficiente; bump a 30min.
     # MGC-444: 30min insufficient cuando el runner self-hosted tiene
@@ -144,24 +144,6 @@ jobs:
       - name: Build Expo web bundle
         run: npm run build:web
         env:
-          # MGC-2954 — gate para que `src/shared/store/careerStore.ts`
-          # exponga `window.__careerStore` en el bundle. Metro inline
-          # `EXPO_PUBLIC_*` en build time, así que el bloque con
-          # `process.env.EXPO_PUBLIC_E2E === '1'` sobrevive tree-shaking
-          # en CI (donde NODE_ENV=production elimina el bloque si el
-          # gate dependiera de NODE_ENV). Solo se setea acá — NO se
-          # exporta en workflows de release prod, garantizando que el
-          # bundle shipped a usuarios NO expone el store.
-          #
-          # IMPORTANTE: el cache de transforms de Metro vive en tmpdir y NO
-          # incluye el valor de `EXPO_PUBLIC_*` en su clave. En un runner
-          # self-hosted, `qa.yml` y `ci.yml` comparten ese tmpdir, así que
-          # un bundle cacheado con el gate abierto podía filtrarse al build
-          # de `ci.yml` (y viceversa). Por eso `build:web` corre con
-          # `expo export --clear` (package.json). Verificado localmente:
-          # con EXPO_PUBLIC_E2E=1 → 1 hit de `__careerStore` en el bundle;
-          # sin la var y con --clear → 0 hits.
-          EXPO_PUBLIC_E2E: '1'
           # Placeholders — DevOps inyecta valores reales vía Infisical.
           # Si vacío: el build igual corre; algunos SDKs nativos pueden fallar en web.
           INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID: ${{ secrets.INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID || '' }}
