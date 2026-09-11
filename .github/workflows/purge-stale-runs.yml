@@ -34,19 +34,34 @@ jobs:
     runs-on: [self-hosted, copero-ci]
     timeout-minutes: 10
     steps:
-      - name: Listar runs encolados y PRs abiertos contra main
+      - name: Listar runs encolados y PRs abiertos
+        # MGC-2909 (root cause): el bug era `--base main` en `gh pr list`.
+        # Filtrar por `--base main` dejaba fuera TODAS las ramas cuyo PR
+        # target era `release-N` o una feature branch de integración, y sus
+        # `workflow_dispatch` encolados eran cancelados cada 15min (PRs #612,
+        # #613, #614 contra release-5; #513/#503 contra release-2). Ademas
+        # ramas base de PRs abiertos (ej. `feat/multi-slot-save` es base de
+        # #614) no se protegian: si QA agent dispara un dispatch sobre la
+        # base de integración, el run se purga aunque haya PR vivo apuntando
+        # a ella. Fix: listar TODOS los PRs abiertos (sin filtro --base) y
+        # conservar tanto headRefName como baseRefName.
         id: list
         env:
           GH_TOKEN: ${{ secrets.DEV_BOT_TOKEN }}
         run: |
           set -euo pipefail
-          # 1) PRs abiertos contra main (todas las branches con PR vivo).
-          OPEN_BRANCHES=$(gh pr list --repo mgcstudios/copero \
-              --state open --base main --json headRefName \
+          # 1) PRs abiertos (head + base) — sin filtro --base.
+          OPEN_HEADS=$(gh pr list --repo mgcstudios/copero \
+              --state open --json headRefName \
               --jq '.[].headRefName' | sort -u)
-          OPEN_COUNT=$(printf '%s\n' "$OPEN_BRANCHES" | grep -c . || true)
-          echo "PRs abiertos contra main: $OPEN_COUNT"
-          printf '%s\n' "$OPEN_BRANCHES" | head -20
+          OPEN_BASES=$(gh pr list --repo mgcstudios/copero \
+              --state open --json baseRefName \
+              --jq '.[].baseRefName' | sort -u)
+          OPEN_COUNT=$(printf '%s\n' "$OPEN_HEADS" | grep -c . || true)
+          echo "PRs abiertos (heads): $OPEN_COUNT"
+          printf '%s\n' "$OPEN_HEADS" | head -20
+          echo "Bases de PRs abiertos:"
+          printf '%s\n' "$OPEN_BASES" | head -20
           # 2) Runs encolados. gh run list --json fields --jq filtra.
           # MGC-351 M1 (iter 1): removida variable muerta INPROG_JSON
           # (solo se logueaba length, no se consumía downstream).
@@ -64,8 +79,11 @@ jobs:
             # Fix: usar `printf '%s\n'` para QUEUED_JSON así el delimitador
             # de cierre queda en su propia línea. Volvemos a `<<EOF` (es el
             # delimitador soportado por la doc oficial).
-            echo "open_branches<<EOF"
-            printf '%s\n' "$OPEN_BRANCHES"
+            echo "open_heads<<EOF"
+            printf '%s\n' "$OPEN_HEADS"
+            echo "EOF"
+            echo "open_bases<<EOF"
+            printf '%s\n' "$OPEN_BASES"
             echo "EOF"
             echo "queued_json<<EOF"
             printf '%s\n' "$QUEUED_JSON"
@@ -78,11 +96,15 @@ jobs:
         run: |
           set -euo pipefail
           # Parsear outputs.
-          OPEN_BRANCHES=$(echo "${{ steps.list.outputs.open_branches }}")
+          OPEN_HEADS=$(echo "${{ steps.list.outputs.open_heads }}")
+          OPEN_BASES=$(echo "${{ steps.list.outputs.open_bases }}")
           QUEUED_JSON='${{ steps.list.outputs.queued_json }}'
           CANCELLED=0
           # MGC-351 M1 (iter 1): removida variable muerta SKIPPED (nunca se incrementaba).
-          ALWAYS_KEEP='main'
+          # MGC-2909: agregados globs `release-*` (todas las release branches)
+          # y `main`. Las release branches son base legitima de PR de release-N
+          # (#612, #613 target=release-5) y sus dispatch NO deben purgarse.
+          ALWAYS_KEEP='main release-*'
           # Iterar runs encolados.
           # MGC-351 H1 (iter 1): done< <(...) reemplaza el pipe | while para que
           # CANCELLED persista fuera del loop (el pipe creaba subshell).
@@ -100,14 +122,27 @@ jobs:
               echo "[skip] run=$DBID event=$EVENT no es workflow_dispatch"
               continue
             fi
-            # - branch es main (release/push directo).
-            if [[ "$BRANCH" == "$ALWAYS_KEEP" ]]; then
-              echo "[skip] run=$DBID branch=main event=$EVENT"
+            # - branch matchea ALWAYS_KEEP (main, release-*).
+            ALWAYS_KEEP_MATCH=0
+            for pat in $ALWAYS_KEEP; do
+              if [[ "$BRANCH" == $pat ]]; then
+                echo "[skip] run=$DBID branch=$BRANCH matched ALWAYS_KEEP=$pat"
+                ALWAYS_KEEP_MATCH=1
+                break
+              fi
+            done
+            if [[ "$ALWAYS_KEEP_MATCH" -eq 1 ]]; then
               continue
             fi
-            # - branch tiene PR abierto contra main.
-            if printf '%s\n' "$OPEN_BRANCHES" | grep -qx "$BRANCH"; then
-              echo "[skip] run=$DBID branch=$BRANCH PR abierto"
+            # - branch tiene PR abierto como headRefName.
+            if printf '%s\n' "$OPEN_HEADS" | grep -qx "$BRANCH"; then
+              echo "[skip] run=$DBID branch=$BRANCH head de PR abierto"
+              continue
+            fi
+            # MGC-2909: branch es baseRefName de un PR abierto
+            # (rama de integración, ej. feat/multi-slot-save base de #614).
+            if printf '%s\n' "$OPEN_BASES" | grep -qx "$BRANCH"; then
+              echo "[skip] run=$DBID branch=$BRANCH base de PR abierto"
               continue
             fi
             echo "[cancel] run=$DBID wf=$WF branch=$BRANCH event=$EVENT created=$CREATED"
