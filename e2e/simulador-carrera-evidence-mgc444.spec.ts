@@ -174,18 +174,19 @@ test.describe('MGC-444 — simulador-carrera evidencia E2E', () => {
     // preview dashboard + h1 player card + aria-label dorsal). Usar el heading
     // del player card como anchor estable para evitar strict-mode violation.
     await expect(page.getByRole('heading', { name: 'Mateo Romero Persistente' })).toBeVisible();
-    // Validar que zustand persist guardó el storage antes de recargar
-    // MGC-385 / PR #162 (cddc2b3): saveCareerSave escribe a
-    // `copero:career:save:v1` (key versionada). El spec original leía la key
-    // legacy `copero-career` (zustand persist middleware), que queda vacía en
-    // un browser context fresco porque save nunca la toca. Ver
-    // src/features/career/persistence.ts:15 STORAGE_KEY.
+    // Validar que zustand persist guardó el storage antes de recargar.
+    // MGC-2952 / PR #622 (cherry-pick multi-slot sobre release-5):
+    // saveCareerSave ahora escribe al slot activo (`copero:career:save:v2:default`)
+    // en lugar de la key legacy `copero:career:save:v1`. La migración v1→v2
+    // corre en el primer load, pero un browser context fresco arranca sin v1,
+    // así que el save cae directo a v2:default. Ver
+    // src/features/career/persistence.ts:56 SLOT_KEY_PREFIX.
     const lsState = await page.evaluate(() =>
-      localStorage.getItem('copero:career:save:v1'),
+      localStorage.getItem('copero:career:save:v2:default'),
     );
     // eslint-disable-next-line no-console
-    console.log(`[persist] localStorage copero:career:save:v1 length=${lsState?.length ?? 0}`);
-    expect(lsState, 'zustand persist key debe existir').toBeTruthy();
+    console.log(`[persist] localStorage copero:career:save:v2:default length=${lsState?.length ?? 0}`);
+    expect(lsState, 'zustand persist slot v2:default debe existir').toBeTruthy();
     // Reload full — dashboard debe sobrevivir porque el store está persistido
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 });
     await expect(page.getByTestId('dashboard-screen')).toBeVisible({ timeout: 20_000 });

@@ -290,9 +290,9 @@ export function getSnapshot(): CareerSaveV2 {
  * snapshot podía no llegar a disco si el proceso moría antes de que
  * `AsyncStorage.setItem` resolviera (AC7).
  */
-let pendingSave: Promise<void> | null = null;
+let pendingSave: Promise<unknown> | null = null;
 
-export function getPendingSave(): Promise<void> | null {
+export function getPendingSave(): Promise<unknown> | null {
   return pendingSave;
 }
 
@@ -303,9 +303,9 @@ export function getPendingSave(): Promise<void> | null {
  * la promesa resuelta cuando AsyncStorage confirmó la escritura, así
  * el snapshot queda en disco antes de que el proceso muera.
  */
-export function flushPendingSave(): Promise<void> {
-  if (!pendingSave) return Promise.resolve();
-  return pendingSave;
+export async function flushPendingSave(): Promise<void> {
+  if (!pendingSave) return;
+  await pendingSave;
 }
 
 /**
@@ -832,11 +832,16 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       return true;
     },
     // reset: estado inicial sin motor. Borra el save persistido.
+    // MGC-2606 — el `void clearCareerSave()` fire-and-forget generaba una
+    // carrera con el `saveCareerSave` del test siguiente (el `removeItem`
+    // del clear corría en el microtask queue después del `setItem` del
+    // save, borrando el snapshot recién escrito). El comentario anterior
+    // decía "si falla el clear, el próximo save sobrescribe" — la misma
+    // lógica aplica acá: el próximo save del usuario sobrescribe el slot
+    // sí o sí, así que el clear es redundante para la persistencia.
+    // Para CTA destructivo que SÍ necesita clear + await ver `resetAll`.
     reset: () => {
       setSnapshot(() => initialSnapshot());
-      void clearCareerSave().catch(() => {
-        // best-effort: si falla el clear, el próximo save sobrescribe.
-      });
     },
     // MGC-1736 (WF6) — variant awaitable de reset. Ordena:
     //   1) flushPendingSave: drena la save en vuelo al disco para
@@ -977,4 +982,33 @@ if (isPersistentStorage && !isPersistentStorage()) {
   console.warn(
     '[copero:career] AsyncStorage no resolvió; persistencia en memoria (force-stop pierde la partida).',
   );
+}
+
+// MGC-2264 — exponer el store en window para Playwright web.
+// En el runner self-hosted `copero-heavy` (Chromium headless sobre ARM64),
+// RNW no propaga el evento `input` sintetico de `page.fill()` al handler
+// React `onChangeText` en algunos inputs controlados (input-name,
+// input-lastname, input-nationality-search, input-age). El state React queda
+// vacio y `btn-identity-continue` permanece `disabled`. Tests E2E pueden
+// bypasear el path de UI llamando setters directos via `page.evaluate`:
+//   window.__careerStore.getState().setName('CALVO')
+// Solo aplica en build web (typeof window !== 'undefined') y se gatea
+// detrás de EXPO_PUBLIC_E2E === '1' (MGC-2954). Antes era NODE_ENV !== 'production',
+// pero el bundle Expo web de CI corre con NODE_ENV=production y Metro
+// tree-shakeaba el bloque, dejando `window.__careerStore` undefined en
+// Playwright CI aunque el helper e2e/career-test-helpers.ts lo esperara.
+// `EXPO_PUBLIC_*` se inline en el bundle en build time (Metro los expone
+// vía `process.env.EXPO_PUBLIC_*`), así que el gate es estable bajo
+// tree-shaking. El workflow `.github/workflows/qa.yml` inyecta
+// `EXPO_PUBLIC_E2E=1` solo en el step `Build Expo web bundle` (no en
+// runs de producción), garantizando que el bundle shipped a usuarios
+// NO expone el store. Native (iOS/Android) sigue funcionando igual;
+// este bloque es no-op fuera de web y nunca se exporta al bundle hermes.
+if (
+  typeof process !== 'undefined' &&
+  process.env.EXPO_PUBLIC_E2E === '1' &&
+  typeof window !== 'undefined'
+) {
+  (window as unknown as { __careerStore?: typeof useCareerStore }).__careerStore =
+    useCareerStore;
 }

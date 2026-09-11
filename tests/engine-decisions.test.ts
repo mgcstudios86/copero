@@ -134,7 +134,7 @@ describe('localStorage persistence', () => {
 describe('Stats → events coherence', () => {
   it('higher overall produces higher base market value trajectory', () => {
     const base = buildCareerReadyState()
-    const boosted = injectPlayerStats(base, { overall: 90, potential: 95 })
+    const boosted = injectPlayerStats(base, { overall: 90, potential: 95, peakOverall: 90 })
 
     const baseAfter = fastForwardSeasons(base, 4)
     const boostedAfter = fastForwardSeasons(boosted, 4)

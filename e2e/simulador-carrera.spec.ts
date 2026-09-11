@@ -1,6 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { fillRnw, passSeasonHub, passTeamSelect, pressRnw } from './fixtures/rnw-fill';
+import {
+  fillIdentityLastName,
+  fillIdentityName,
+  setIdentityNumber,
+} from './career-test-helpers';
 
 /**
  * MGC-431 — E2E + axe + Lighthouse integral para simulador-carrera (MGC-427).
@@ -89,6 +94,10 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
    *     inicial sigue siendo 100.000€ en el store, verificado por unidad
    *     en src/features/career/engine.test.ts.)
    */
+  // MGC-2954: re-habilitado. El fixme de MGC-2926 se puso cuando el bundle web
+  // de CI no exponía `window.__careerStore` (gate NODE_ENV tree-shakeado), así
+  // que el helper de MGC-2264 lanzaba y el spec moría antes del stepper.
+  // Gate corregido a process.env.EXPO_PUBLIC_E2E === '1' (inyectado por qa.yml).
   test('CALVO/10/Derecho/AR/ST → dashboard → academy → Vélez', async ({ page }, testInfo) => {
     // ── 1. LANDING: goto directo a /simulador-carrera/identity ────────
     // MGC-2254: el home dejo de ser dispatcher (MGC-1397 / PR #340).
@@ -100,14 +109,18 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
 
     // ── 2. IDENTITY: completar los 5 campos del AC ────────────────────
-    // 2a. Nombre = CALVO
-    await fillRnw(page.getByTestId('input-name'), 'CALVO');
+    // 2a. Nombre = CALVO (MGC-2264: bypass via window.__careerStore.setName).
+    await fillIdentityName(page, 'CALVO');
     // MGC-2616 F7a: canContinue requiere input-lastname poblado.
-    await fillRnw(page.getByTestId('input-lastname'), 'CALVO');
+    await fillIdentityLastName(page, 'CALVO');
 
     // 2b. Número = 10. El estado inicial arranca en 9 (ver engine.ts:36),
     //     por lo que una pulsación sobre "Sumar número" deja 10.
-    await page.getByTestId('btn-number-plus').click();
+    // MGC-2974: el stepper +/- ya no existe en la UI de identity desde
+    // el cut de release-2 (PR #498). Usamos el setter directo del store
+    // expuesto por MGC-2264 (gate EXPO_PUBLIC_E2E=1) — mismo patrón
+    // que fillIdentityName / fillIdentityLastName.
+    await setIdentityNumber(page, 10);
     // MGC-405: el display del número en identity.tsx no expone aria-label
     // accesible para query directo (`getByLabel('Número 10')` falla). El Text
     // interno renderiza `{profile.number}` literal — verificamos que el texto
@@ -121,8 +134,9 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // 2c. Posición = ST (attack group) — tap en el field map
     await page.getByTestId('pos-ST').click();
 
-    // 2d. Pie hábil = Diestro (identity.footRight en es)
-    await page.getByRole('button', { name: 'Diestro', exact: true }).click();
+    // 2d. Pie hábil = Diestro (identity.footRight key en store; el botón
+    //    visible usa `identity.right` → "Derecha" en es).
+    await page.getByRole('button', { name: 'Derecha', exact: true }).click();
 
     // 2e. Nacionalidad = Argentina (filtra por "arg" para robustez i18n).
     // MGC-1348 v3 — `force: true` bypassa el actionability check de Playwright.
@@ -271,19 +285,23 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
    * Cubre la regresión reportada en MGC-437 / MGC-464 contra el field map
    * dot activo. Acepta que la pantalla renderice los 4 grupos atacables.
    */
+  // MGC-2954: re-habilitado (ver nota MGC-2264 del walk principal).
   test('axe 0 sobre /identity ciclando ST/CAM/CB/GK (post MGC-462)', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
 
     // Defaults mínimos para que el journey completo no bloquee otros
-    // navigations.
-    await fillRnw(page.getByTestId('input-name'), 'Regresion');
+    // navigations. (MGC-2264: bypass via window.__careerStore setters.)
+    await fillIdentityName(page, 'Regresion');
     // MGC-2616 F7a: canContinue requiere input-lastname poblado.
-    await fillRnw(page.getByTestId('input-lastname'), 'Regresion');
-    await page.getByTestId('btn-number-plus').click(); // 9 → 10
-    // MGC-2616 F7b: identity.footRight = "Diestro" en es, "Right" en en.
-    await page.getByRole('button', { name: 'Diestro', exact: true }).click();
+    await fillIdentityLastName(page, 'Regresion');
+    await setIdentityNumber(page, 10); // MGC-2974: bypass store (stepper removido release-2)
+    // MGC-2616 F7b: store key `identity.footRight` = 'Diestro', pero el
+    // botón visible usa `identity.right` → 'Derecha' en es. El spec
+    // quedó RED al re-habilitarse (MGC-2974 desbloqueó el paso previo)
+    // porque buscaba el label interno.
+    await page.getByRole('button', { name: 'Derecha', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
     await page.getByTestId('country-ARG').click({ force: true });
@@ -312,6 +330,7 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
    * monitor de regresión. Útil cuando el flow completo flakea por el Alert
    * de academy.tsx en RN Web y queremos aislar los gates a11y.
    */
+  // MGC-2954: re-habilitado (ver nota MGC-2264 del walk principal).
   test('axe 0 sobre /dashboard y /academy (puerta rápida)', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     // Dashboard sólo es alcanzable con identidad válida. La escribimos vía
@@ -319,13 +338,15 @@ test.describe('MGC-431 — simulador-carrera walk end-to-end', () => {
     // continuamos, y luego salimos a academy vía el botón.
     await page.goto(`${BASE}/simulador-carrera/identity`);
     await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
-    await fillRnw(page.getByTestId('input-name'), 'CALVO');
+    // MGC-2264: bypass via window.__careerStore setters (flake RNW fill()).
+    await fillIdentityName(page, 'CALVO');
     // MGC-2616 F7a: canContinue requiere input-lastname poblado.
-    await fillRnw(page.getByTestId('input-lastname'), 'CALVO');
-    await page.getByTestId('btn-number-plus').click();
+    await fillIdentityLastName(page, 'CALVO');
+    await setIdentityNumber(page, 10); // MGC-2974: bypass store (stepper removido release-2)
     await page.getByTestId('pos-ST').click();
-    // MGC-2616 F7b: identity.footRight = "Diestro" en es, "Right" en en.
-    await page.getByRole('button', { name: 'Diestro', exact: true }).click();
+    // MGC-2616 F7b: store key `identity.footRight` = 'Diestro'; botón
+    // visible usa `identity.right` → 'Derecha' en es.
+    await page.getByRole('button', { name: 'Derecha', exact: true }).click();
     // MGC-1348 v3 — `force:true` por hit-test RNW (ver bloque 2e).
     await fillRnw(page.getByTestId('input-nationality-search'), 'arg');
     await page.getByTestId('country-ARG').click({ force: true });
