@@ -1262,6 +1262,12 @@ export default function IdentityScreen() {
                 defaultValue={String(profile.age)}
                 key="input-age-mgc2722"
                 onChangeText={(txt) => {
+                  // MGC-2940 — simetría con setNameSync / setLastNameSync:
+                  // el path onChangeText de input-age debe pasar por
+                  // shouldCommitNativeText para no colapsar a 16 cuando el
+                  // bridge nativo entrega '' (walk MGC-2735 / MGC-2937).
+                  const currentAge = useCareerStore.getState().profile.age;
+                  if (!shouldCommitNativeText(txt, String(currentAge))) return;
                   // Acepta sólo dígitos. El clamp final lo hace setAge.
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
                   const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);

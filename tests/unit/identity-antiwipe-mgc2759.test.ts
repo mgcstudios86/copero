@@ -103,3 +103,62 @@ describe('MGC-2759 secuencia del walk MGC-2735 (country-ARG tap)', () => {
     expect(runSequence('', ['Qu', 'Q', ''])).toBe('Q');
   });
 });
+
+describe('MGC-2940 input-age onChangeText — guardia anti-wipe simétrica con setNameSync', () => {
+  /**
+   * Replica el path `onChangeText` de `input-age` (identity.tsx:1164) tras
+   * el fix: la guarda `shouldCommitNativeText` corre ANTES del parse +
+   * setAge. Si la guardia rechaza, NO se commitea la edad. Si acepta, se
+   * aplica la transformación cleaned → parsed tal cual el código real.
+   *
+   * El walk MGC-2937 sobre APK vc=320 (PR #600 1357ea4) reportó
+   * `input-age.text = 16` tras tipear 20. Ese APK precede a PR #601
+   * (MGC-2759 vc=325), PR #604 (MGC-2764 vc=324) y MGC-2765 (vc=322),
+   * así que la evidencia original no es concluyente para `main`. Este
+   * test fija el contrato del path `onChangeText` sobre el código actual
+   * (donde `input-age` era el único TextInput de identity sin la guarda).
+   */
+  const runOnChangeAge = (initial: number, txt: unknown): number => {
+    if (!shouldCommitNativeText(txt, String(initial))) return initial;
+    const cleaned = (txt as string).replace(/[^0-9]/g, '').slice(0, 2);
+    return cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
+  };
+
+  it('payload vacío sobre edad=20 NO resetea a 16 (regresión walk MGC-2937)', () => {
+    // Antes del fix: cleaned='' → parsed=16 → setAge(16) pisaba la edad
+    // tipeada por el usuario. Después del fix:
+    //   shouldCommitNativeText('', '20') === false  → early-return.
+    expect(runOnChangeAge(20, '')).toBe(20);
+  });
+
+  it('payload no-string sobre edad=20 NO resetea a 16', () => {
+    // Mismo modo de fallo que MGC-2759 sobre build release con
+    // `adb shell input text` / Maestro `inputText`: el bridge entrega
+    // `undefined` / `null` / un valor primitivo no esperado.
+    expect(runOnChangeAge(20, undefined)).toBe(20);
+    expect(runOnChangeAge(20, null)).toBe(20);
+    expect(runOnChangeAge(20, 42)).toBe(20);
+  });
+
+  it("payload '20' sobre edad=16 SI commitea (caso feliz: el usuario tipea)", () => {
+    // Estado inicial del form: edad = preset (16). El usuario tipea '20'.
+    expect(runOnChangeAge(16, '20')).toBe(20);
+  });
+
+  it("payload '20' sobre edad=20 es idempotente (mismo valor, no resetea)", () => {
+    // El caller (setAgeSync) compara `parsed !== current` antes de escribir;
+    // aquí sólo verificamos que la guardia deja pasar el payload.
+    expect(runOnChangeAge(20, '20')).toBe(20);
+  });
+
+  it("re-tipeo parcial '2' sobre edad=20 SI commitea (parsed=2, clamp final en setAge)", () => {
+    // El clamp 16-35 vive dentro de `setAge` en el store; este test sólo
+    // cubre el path del componente. La pre-condición de la guardia
+    // ('2' es string no vacío) se cumple y el parsed llega al setter.
+    expect(runOnChangeAge(20, '2')).toBe(2);
+  });
+});
+
+// MGC-2973 — retrigger CI tras cancelaciones purge-stale-runs (MGC-2909 fix ya merged PR #615/#616).
+// Sin cambio funcional: comment-only para forzar pull_request event fresco sobre runners healthy.
+
