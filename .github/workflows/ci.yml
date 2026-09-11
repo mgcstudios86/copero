@@ -3,6 +3,15 @@
 # Política §8.3: builds --local; runner self-hosted (Mac mini del operador).
 # Trigger: push/PRs contra main y contra ramas de release train (`release-*`).
 #
+# MGC-2934: jobs encadenados lint → typecheck → test-web → build-web para
+# evitar 4 jobs en paralelo sobre runner-01 (954Mi VPS). RSS multiplicativo
+# previo: 4 jobs × VmPeak 1.6GB = 6.4GB virtual demand → swap thrash a 1.7GB
+# → broker GH Actions heartbeat falla (MGC-2786/2908/2912/2933). Wall-clock
+# serie ≈ 1+14+5+8 = 28min (typecheck sigue siendo el cuello de botella).
+# Si un upstream termina `skipped` por el filter de paths, el siguiente job
+# sigue corriendo si su propio filter es `true` (no hay fail-fast en cadena
+# por skip; sí por failure/cancelled).
+#
 # MGC-2212/MGC-2217: antes solo disparaba en `main`, así que las PRs del release
 # train (RFC-001, target `release-1`/`release-2`) quedaban sin checks y el gate
 # CI se validaba a mano con `workflow_dispatch` repetido. Como `concurrency` tiene
@@ -139,8 +148,11 @@ jobs:
   typecheck:
     name: typecheck (tsc --noEmit)
     runs-on: [self-hosted, copero-ci]
-    needs: changes
-    if: needs.changes.outputs.typecheck == 'true'
+    # MGC-2934: encadenar tras lint para evitar 4 jobs en paralelo sobre
+    # runner-01 (954Mi). lint skipped por filter no debe tumbar typecheck;
+    # sólo falla si lint corrió y terminó failure/cancelled.
+    needs: [changes, lint]
+    if: always() && needs.changes.outputs.typecheck == 'true' && needs.lint.result != 'failure' && needs.lint.result != 'cancelled'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -172,8 +184,9 @@ jobs:
   test-web:
     name: test web (vitest)
     runs-on: [self-hosted, copero-ci]
-    needs: changes
-    if: needs.changes.outputs.tests == 'true'
+    # MGC-2934: encadenar tras typecheck.
+    needs: [changes, lint, typecheck]
+    if: always() && needs.changes.outputs.tests == 'true' && needs.typecheck.result != 'failure' && needs.typecheck.result != 'cancelled'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -206,8 +219,10 @@ jobs:
   build-web:
     name: build web (expo export --platform web)
     runs-on: [self-hosted, copero-ci]
-    needs: changes
-    if: needs.changes.outputs.web == 'true'
+    # MGC-2934: encadenar tras test-web (último del serial para que
+    # expo export corra con el árbol ya validado por lint/typecheck/tests).
+    needs: [changes, lint, typecheck, test-web]
+    if: always() && needs.changes.outputs.web == 'true' && needs.test-web.result != 'failure' && needs.test-web.result != 'cancelled'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
