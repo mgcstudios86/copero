@@ -287,13 +287,49 @@ jobs:
         # seguir si está saturada.
         continue-on-error: true
 
+  # ADR-0029 Capa 3 — anti-fabricación de SHA citation. Cita el SHA que el
+  # PR body o el comentario sticky van a marcar como "CI verde"; verifica
+  # contra los commits del PR con check-runs exitosos. Si el SHA citado no
+  # pertenece al green_sha_set, falla antes de que `devops-comment` publique
+  # el verdict PASS. Caso de referencia: PR #612 squash 308d0986 citó
+  # run 34565250199 sobre 10e9c2a80 (FAILURE) cuando el HEAD real 5b6b238d
+  # tuvo run 34566703382 FAILURE.
+  sha-citation-check:
+    name: sha-citation (ADR-0029 Capa 3)
+    runs-on: [self-hosted, copero-ci]
+    needs: [changes, lint, typecheck, test-web, build-web]
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify SHA citation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          # MGC-2986: sha-citation-check corre ANTES del devops-comment
+          # y por tanto no puede ver el check-run devops-comment sobre
+          # este SHA (aún no publicado). El check Capa 2 (CI-green)
+          # lo hace el devops-comment, que sí tiene acceso a los
+          # resultados de todos los jobs upstream vía `needs:`. Aquí
+          # sólo validamos Capa 3 (anti-fabricación SHA citation).
+          SKIP_CAPA_2: "1"
+        run: |
+          set -euo pipefail
+          chmod +x paperclip/runtime/pre-merge-check.sh
+          # MGC-2986: Capa 3 corre ANTES del devops-comment para impedir
+          # publicación de "CI verde" sobre un SHA no verificado. Si la
+          # Capa 3 falla, el merge queda bloqueado en la puerta del runner.
+          ./paperclip/runtime/pre-merge-check.sh --pr "${PR_NUMBER}" --sha "${PR_HEAD_SHA}"
+
   devops-comment:
     name: devops-comment (gate §8.1)
     runs-on: [self-hosted, copero-ci]
     # MGC-2236: `changes` debe estar en `needs:` para que
     # `needs.changes.outputs.*` se evalúe (los outputs del job de paths-filter
     # se propagan sólo si el job aparece en la lista de dependencias).
-    needs: [changes, lint, typecheck, test-web, build-web]
+    # MGC-2986: añadir sha-citation-check al needs para que el verdict
+    # PASS sólo se publique si Capa 3 también aprobó.
+    needs: [changes, lint, typecheck, test-web, build-web, sha-citation-check]
     if: always() && github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
@@ -304,6 +340,7 @@ jobs:
           TYPECHECK_RESULT: ${{ needs.typecheck.result }}
           TEST_RESULT: ${{ needs.test-web.result }}
           BUILD_RESULT: ${{ needs.build-web.result }}
+          SHA_CITATION_RESULT: ${{ needs.sha-citation-check.result }}
           LINT_FILTER: ${{ needs.changes.outputs.lint }}
           TYPECHECK_FILTER: ${{ needs.changes.outputs.typecheck }}
           TESTS_FILTER: ${{ needs.changes.outputs.tests }}
@@ -326,6 +363,7 @@ jobs:
             echo "| typecheck (tsc --noEmit) | $(icon "$TYPECHECK_RESULT") |"
             echo "| test-web (vitest) | $(icon "$TEST_RESULT") |"
             echo "| build-web (expo export) | $(icon "$BUILD_RESULT") |"
+            echo "| sha-citation (ADR-0029 Capa 3) | $(icon "$SHA_CITATION_RESULT") |"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
           # MGC-1860 — gate §8.1 #3 sólo se cumple si cada job que debía
@@ -358,18 +396,25 @@ jobs:
           typecheck_ok="no"
           test_ok="no"
           build_ok="no"
+          sha_citation_ok="no"
           if ok "$LINT_RESULT" "$LINT_FILTER"; then lint_ok="yes"; fi
           if ok "$TYPECHECK_RESULT" "$TYPECHECK_FILTER"; then typecheck_ok="yes"; fi
           if ok "$TEST_RESULT" "$TESTS_FILTER"; then test_ok="yes"; fi
           if ok "$BUILD_RESULT" "$WEB_FILTER"; then build_ok="yes"; fi
+          # MGC-2986 / ADR-0029 Capa 3: el job sha-citation-check debe
+          # haber terminado SUCCESS. Si terminó FAIL/SKIPPED/CANCELLED,
+          # el gate NO publica verdict PASS — el comentario "CI verde"
+          # no se emite y el merge queda bloqueado.
+          if ok "$SHA_CITATION_RESULT" ""; then sha_citation_ok="yes"; fi
           if [[ "$lint_ok" == "yes" \
              && "$typecheck_ok" == "yes" \
              && "$test_ok" == "yes" \
-             && "$build_ok" == "yes" ]]; then
+             && "$build_ok" == "yes" \
+             && "$sha_citation_ok" == "yes" ]]; then
             echo "verdict=PASS" >> "$GITHUB_OUTPUT"
           else
             echo "verdict=FAIL" >> "$GITHUB_OUTPUT"
-            echo "::error title=§8.1 gate #3 no cumplido:: lint=$LINT_RESULT(filter=$LINT_FILTER) typecheck=$TYPECHECK_RESULT(filter=$TYPECHECK_FILTER) test-web=$TEST_RESULT(filter=$TESTS_FILTER) build-web=$BUILD_RESULT(filter=$WEB_FILTER)"
+            echo "::error title=§8.1 gate #3 no cumplido:: lint=$LINT_RESULT(filter=$LINT_FILTER) typecheck=$TYPECHECK_RESULT(filter=$TYPECHECK_FILTER) test-web=$TEST_RESULT(filter=$TESTS_FILTER) build-web=$BUILD_RESULT(filter=$WEB_FILTER) sha-citation=$SHA_CITATION_RESULT"
             exit 1
           fi
       - uses: marocchino/sticky-pull-request-comment@v2

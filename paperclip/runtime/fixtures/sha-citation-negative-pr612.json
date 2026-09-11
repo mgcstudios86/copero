@@ -1,0 +1,27 @@
+{
+  "_comment": "Caso NEGATIVO — fabricación tipo PR #612 (MGC-2968 / MGC-2986). HEAD del merge 5b6b238d tiene TODOS los check-runs en SUCCESS (Capa 2 PASS), pero el comentario sticky cita un SHA anterior 10e9c2a80 cuyo run (34565250199) NO está en el green_sha_set. La Capa 3 debe rechazarlo: SHA citado ∉ green_sha_set, run head_sha ∉ PR.commits (porque 10e9c2a80 no es el HEAD actual aunque sí esté en la lista de commits del PR — pero su check-runs son FAILURE).",
+  "pr_number": 612,
+  "pr_head_sha": "5b6b238d5e7a9b3c1f4d8e2a7b9c0d1e2f3a4b5c",
+  "merge_commit_sha": "308d0986c0a7b5d3e8f1a4b7c2d9e0f3a6b8c1d4",
+  "pr_commits": [
+    "10e9c2a80b3c5d7e9f1a4b6c8d0e2f4a6b8c0d2e",
+    "5b6b238d5e7a9b3c1f4d8e2a7b9c0d1e2f3a4b5c"
+  ],
+  "green_sha_set": [
+    "5b6b238d5e7a9b3c1f4d8e2a7b9c0d1e2f3a4b5c"
+  ],
+  "pr_body_sha_citations": [],
+  "latest_sticky_comment": {
+    "header": "devops-ci-gate-strict",
+    "body": "## CI DevOps — 10e9c2a80\n\n| Job | Result |\n| --- | --- |\n| lint (eslint) | ✅ pass |\n| typecheck (tsc --noEmit) | ✅ pass |\n| test-web (vitest) | ✅ pass |\n| build-web (expo export) | ✅ pass |\n\n- Workflow: `ci (copero)`\n- Run: https://github.com/mgcstudios/copero/actions/runs/34565250199\n- SHA: `10e9c2a80` (target `main`)\n- §8.3: builds **--local** (sin EAS cloud); runner `[self-hosted, copero-ci]`.\n- §8.1 gate #3 veredicto: **PASS**.",
+    "cited_sha": "10e9c2a80b3c5d7e9f1a4b6c8d0e2f4a6b8c0d2e",
+    "cited_run_id": "34565250199"
+  },
+  "expected_verdict": "FAIL",
+  "expected_capa2_verdict": "PASS",
+  "expected_failure_reasons": [
+    "sha=10e9c2a80∉green_sha_set",
+    "run=34565250199=head_sha=10e9c2a80∉green_sha_set"
+  ],
+  "expected_log_line": "capa3=sha=10e9c2a80∉green_sha_set,run=34565250199=head_sha=10e9c2a80∉green_sha_set"
+}

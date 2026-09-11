@@ -48,14 +48,47 @@ permissions:
   contents: read
 
 jobs:
+  # ADR-0029 Capa 3 — anti-fabricación de SHA citation en QA. Mismo gate
+  # que ci.yml pero corre en el runner QA dedicado. Si la cita del SHA
+  # en el PR body o comentario sticky no verifica contra el green_sha_set
+  # del PR, bloqueamos ANTES de gastar 60min de suite Playwright sobre un
+  # SHA que el reviewer no podrá certificar como verde. Caso de
+  # referencia: PR #612 squash 308d0986 (MGC-2968 / MGC-2986).
+  sha-citation-qa-check:
+    name: sha-citation (ADR-0029 Capa 3)
+    # QA dedicated runner. La Capa 3 es barata (3-4 calls REST); no
+    # tiene sentido correrla en copero-ci porque queremos que el rechazo
+    # ocurra incluso cuando CI no se disparó (paths filter no matchea
+    # los 4 jobs base pero igual hay QA en cola).
+    runs-on: [self-hosted, copero-qa, Linux]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify SHA citation (Capa 3)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # La QA workflow corre en un workflow separado de CI y no puede
+          # ver los check-runs de CI en tiempo real sobre el mismo SHA.
+          # Sin este skip, Capa 2 (CI-green) falla falsamente en el primer
+          # run de una PR porque todos los checks aparecen `missing`.
+          # Capa 3 (anti-fabricación SHA citation) sigue activa — sigue
+          # siendo capaz de bloquear PR #612 / MGC-2968.
+          SKIP_CAPA_2: "1"
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          chmod +x paperclip/runtime/pre-merge-check.sh
+          ./paperclip/runtime/pre-merge-check.sh --pr "${PR_NUMBER}" --sha "${PR_HEAD_SHA}"
+
   playwright-web:
     name: Playwright (web, headless)
-    # ADR-0027 (MGC-2927): runner-01 VPS 954Mi no corre Playwright (>4GB).
-    # Pasamos QA a runner-02 macOS 16GB ARM64 (label copero-ci, ya en el
-    # pool per ADR-0026) hasta que llegue runner Linux dedicado (MGC-2931).
+    # ADR-0027 (MGC-2927/MGC-2939): runner-01 VPS 954Mi no corre Playwright
+    # (>4GB). npm ci tarda 42 min y muere con ECONNRESET por swap thrash.
+    # Pasamos QA a runner-02 macOS ARM64 (label copero-ci, ya en el pool per
+    # ADR-0026) hasta que llegue runner Linux dedicado (MGC-2931).
     # Compite con el gate de merge `copero-ci`, pero `cancel-in-progress`
-    # serializa suites largas y el gate corre ~3 min. Patrón idéntico a
-    # MGC-1263 (CEO opción C APK Mac local).
+    # serializa suites largas y el gate corre ~3 min.
     runs-on: [self-hosted, copero-ci, macOS]
     # MGC-380: 15min insuficiente; bump a 30min.
     # MGC-444: 30min insufficient cuando el runner self-hosted tiene
@@ -144,6 +177,24 @@ jobs:
       - name: Build Expo web bundle
         run: npm run build:web
         env:
+          # MGC-2954 — gate para que `src/shared/store/careerStore.ts`
+          # exponga `window.__careerStore` en el bundle. Metro inline
+          # `EXPO_PUBLIC_*` en build time, así que el bloque con
+          # `process.env.EXPO_PUBLIC_E2E === '1'` sobrevive tree-shaking
+          # en CI (donde NODE_ENV=production elimina el bloque si el
+          # gate dependiera de NODE_ENV). Solo se setea acá — NO se
+          # exporta en workflows de release prod, garantizando que el
+          # bundle shipped a usuarios NO expone el store.
+          #
+          # IMPORTANTE: el cache de transforms de Metro vive en tmpdir y NO
+          # incluye el valor de `EXPO_PUBLIC_*` en su clave. En un runner
+          # self-hosted, `qa.yml` y `ci.yml` comparten ese tmpdir, así que
+          # un bundle cacheado con el gate abierto podía filtrarse al build
+          # de `ci.yml` (y viceversa). Por eso `build:web` corre con
+          # `expo export --clear` (package.json). Verificado localmente:
+          # con EXPO_PUBLIC_E2E=1 → 1 hit de `__careerStore` en el bundle;
+          # sin la var y con --clear → 0 hits.
+          EXPO_PUBLIC_E2E: '1'
           # Placeholders — DevOps inyecta valores reales vía Infisical.
           # Si vacío: el build igual corre; algunos SDKs nativos pueden fallar en web.
           INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID: ${{ secrets.INFISICAL_EXPO_PUBLIC_ADMOB_APP_ID || '' }}

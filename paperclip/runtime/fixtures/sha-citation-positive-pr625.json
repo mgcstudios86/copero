@@ -1,0 +1,24 @@
+{
+  "_comment": "Caso POSITIVO — cita correcta sobre el HEAD real con check-runs verdes. PR #625 (MGC-2974 spec stepper): SHA citado d40cd9c corresponde al HEAD con 32 specs Playwright PASS y run 34571877608 conclusion=success. La Capa 3 debe aprobarlo.",
+  "pr_number": 625,
+  "pr_head_sha": "d40cd9c1a5b7e9f3d1c4a6b8d0e2f4a6b8c0d2e4",
+  "merge_commit_sha": "d40cd9c1a5b7e9f3d1c4a6b8d0e2f4a6b8c0d2e4",
+  "pr_commits": [
+    "d40cd9c1a5b7e9f3d1c4a6b8d0e2f4a6b8c0d2e4"
+  ],
+  "green_sha_set": [
+    "d40cd9c1a5b7e9f3d1c4a6b8d0e2f4a6b8c0d2e4"
+  ],
+  "pr_body_sha_citations": [
+    "d40cd9c1a5b7e9f3d1c4a6b8d0e2f4a6b8c0d2e4"
+  ],
+  "latest_sticky_comment": {
+    "header": "devops-ci-gate-strict",
+    "body": "## CI DevOps — d40cd9c\n\n| Job | Result |\n| --- | --- |\n| lint (eslint) | ✅ pass |\n| typecheck (tsc --noEmit) | ✅ pass |\n| test-web (vitest) | ✅ pass |\n| build-web (expo export) | ✅ pass |\n| sha-citation (ADR-0029 Capa 3) | ✅ pass |\n\n- Workflow: `ci (copero)`\n- Run: https://github.com/mgcstudios/copero/actions/runs/34571877608\n- SHA: `d40cd9c` (target `main`)\n- §8.3: builds **--local** (sin EAS cloud); runner `[self-hosted, copero-ci]`.\n- §8.1 gate #3 veredicto: **PASS**.",
+    "cited_sha": "d40cd9c1a5b7e9f3d1c4a6b8d0e2f4a6b8c0d2e4",
+    "cited_run_id": "34571877608"
+  },
+  "expected_verdict": "PASS",
+  "expected_failure_reasons": [],
+  "expected_log_line": "verdict=PASS capa3=ok"
+}
