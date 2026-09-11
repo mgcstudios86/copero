@@ -1,4 +1,4 @@
-# ci.yml — Copero (MGC-290, MGC-1880)
+# ci.yml — Copero (MGC-290, MGC-1880, MGC-2933)
 # Pipeline CI: lint (eslint), typecheck (tsc), test web (vitest), build web (Expo web export).
 # Política §8.3: builds --local; runner self-hosted (Mac mini del operador).
 # Trigger: push/PRs contra main y contra ramas de release train (`release-*`).
@@ -26,6 +26,17 @@
 # efectiva está en qa.yml: Playwright corre solo en `[self-hosted, copero-qa,
 # Linux]` (runner-01). Quedarse solo en macOS convertía CI en single-point-of-failure
 # porque el único runner macOS queda libre solo cuando no hay iOS release ni QA largo.
+#
+# MGC-2933: runner-01 (Linux, 954MB RAM) hace swap thrash en cada `npm ci` y el
+# broker de GitHub Actions entra en heartbeat fallido → lease-zombie (offline +
+# busy=true mientras el worker sigue). El thrash NO se resuelve con flags de npm
+# ci (--prefer-offline ya activo). Decisión CEO MGC-2966 Opción B: jobs pesados
+# (lint/typecheck/test-web) se enrutan a runner-02 macOS (`[self-hosted, macOS]`)
+# que tiene 8+ cores y está idle. runner-01 queda QA-only (Playwright ya estaba
+# separado por qa.yml). `build-web` conserva ambos runners porque sólo corre
+# en PRs que tocan `app/**` y rara vez coincide con jobs pesados en macOS.
+# Trade-off aceptado: runner-02 macOS queda como SPOF de CI pesada; mientras
+# no haya iOS release largo ni QA macOS concurrente, la cola queda baja.
 
 name: ci (copero)
 
@@ -111,7 +122,7 @@ jobs:
 
   lint:
     name: lint (eslint)
-    runs-on: [self-hosted, copero-ci]
+    runs-on: [self-hosted, macOS]
     needs: changes
     if: needs.changes.outputs.lint == 'true'
     steps:
@@ -147,10 +158,12 @@ jobs:
 
   typecheck:
     name: typecheck (tsc --noEmit)
-    runs-on: [self-hosted, copero-ci]
-    # MGC-2934: encadenar tras lint para evitar 4 jobs en paralelo sobre
-    # runner-01 (954Mi). lint skipped por filter no debe tumbar typecheck;
-    # sólo falla si lint corrió y terminó failure/cancelled.
+    # MGC-2933: typecheck corre en runner-02 macOS (`[self-hosted, macOS]`)
+    # porque runner-01 Linux (954Mi) entra en swap thrash durante npm ci.
+    # MGC-2934: encadenar tras lint para serializar. lint skipped por filter
+    # no debe tumbar typecheck; sólo falla si lint corrió y terminó
+    # failure/cancelled.
+    runs-on: [self-hosted, macOS]
     needs: [changes, lint]
     if: always() && needs.changes.outputs.typecheck == 'true' && needs.lint.result != 'failure' && needs.lint.result != 'cancelled'
     steps:
@@ -183,8 +196,9 @@ jobs:
 
   test-web:
     name: test web (vitest)
-    runs-on: [self-hosted, copero-ci]
+    # MGC-2933: test-web en runner-02 macOS (`[self-hosted, macOS]`).
     # MGC-2934: encadenar tras typecheck.
+    runs-on: [self-hosted, macOS]
     needs: [changes, lint, typecheck]
     if: always() && needs.changes.outputs.tests == 'true' && needs.typecheck.result != 'failure' && needs.typecheck.result != 'cancelled'
     steps:
@@ -369,7 +383,7 @@ jobs:
             - Workflow: `ci (copero)`
             - Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
             - SHA: `${{ github.event.pull_request.head.sha }}` (target `main`)
-            - §8.3: builds **--local** (sin EAS cloud); runner `[self-hosted, copero-ci]`.
+            - §8.3: builds **--local** (sin EAS cloud); runners `copero-ci` (cambios+build-web) y `macOS` (lint/typecheck/test-web, MGC-2933).
             - §8.1 gate #3 veredicto: **${{ steps.status.outputs.verdict }}**.
             - Artefacto: `copero-web-build` (sólo si `build-web` ✅)
         env:
