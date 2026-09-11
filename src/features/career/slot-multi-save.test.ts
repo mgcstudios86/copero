@@ -154,4 +154,116 @@ describe('MGC-2099-A · multi-slot save + UI save-picker', () => {
     // Cursor vuelve al default automáticamente.
     expect(await getActiveSlotId()).toBe('default');
   });
+
+  // MGC-2999 — regresión bug SaveSlotPicker duplicaba state entre slots.
+  // Síntoma original: tras `createSlot('SaveB')` el save:v2:saveb-* tenía
+  // los MISMOS bytes que save:v2:default. AC: bytes divergen y seed es
+  // determinista-per-slot pero distinto entre slots.
+  it('createSlot inicializa payload v:2 limpio y AISLADO del slot activo previo', async () => {
+    const persistence = await import('./persistence');
+
+    // Sembramos el slot default con un state ficticio "Save A" en stage
+    // season + seed identificable, simulando una carrera ya avanzada.
+    const base = persistence.blankCareerSave();
+    const saveA = {
+      ...base,
+      stage: 'season' as const,
+      seed: 1048675450,
+      profile: {
+        ...base.profile,
+        name: 'SaveA',
+        lastName: 'Velez',
+        club: { id: 'velez', name: 'Vélez Sarsfield', presupuesto: 1, interes: true } as never,
+      },
+    };
+    await persistence.saveCareerSave(saveA, 'default');
+    await persistence.setActiveSlot('default');
+
+    // AC 1: createSlot escribe payload propio, no devuelve null y el
+    // loadCareerSave(slot) resuelve con shape v:2 válido.
+    const created = await persistence.createSlot('SaveB_Boca_PR2999');
+    expect(created.id).toMatch(/saveb-boca-pr2999/);
+    const loadedNew = await persistence.loadCareerSave(created.id);
+    expect(loadedNew).not.toBeNull();
+    expect(loadedNew?.v).toBe(2);
+
+    // AC 2: bytes divergen. Serializamos el payload del slot nuevo y
+    // verificamos que NO contenga "SaveA" ni "Velez" — un clone del
+    // slot activo violaría este check.
+    const payloadBytes = JSON.stringify(loadedNew);
+    expect(payloadBytes).not.toContain('SaveA');
+    expect(payloadBytes).not.toContain('Velez');
+    expect(payloadBytes).not.toContain('1048675450');
+
+    // AC 3: seed distinto y determinista-per-slot. Mismo slotId → mismo
+    // seed (re-creación idempotente del meta colisionante), pero
+    // distinto del seed de Save A.
+    expect(loadedNew?.seed).not.toBe(1048675450);
+    const reloadedAgain = await persistence.loadCareerSave(created.id);
+    expect(reloadedAgain?.seed).toBe(loadedNew?.seed);
+
+    // AC 4: el slot default NO se tocó — sigue con el state de Save A.
+    const loadedDefault = await persistence.loadCareerSave('default');
+    expect(loadedDefault?.profile.name).toBe('SaveA');
+    expect(loadedDefault?.seed).toBe(1048675450);
+  });
+
+  // MGC-2999 — defense in depth en hydrateFromSave. Cuando el slot
+  // activo no tiene payload (caso edge: index tiene el slot pero el
+  // payload fue borrado externamente sin pasar por clearCareerSave,
+  // p.ej. corrupción de disco o test setup que elimina solo la key),
+  // el store NO debe arrastrar state del slot previo.
+  it('store hydrateFromSave resetea a initialSnapshot cuando el slot activo no tiene payload', async () => {
+    const persistence = await import('./persistence');
+    const storeModule = await import('@/shared/store/careerStore');
+
+    // Sembramos un state "Dirty" en default + activamos default.
+    const base = persistence.blankCareerSave();
+    await persistence.saveCareerSave(
+      {
+        ...base,
+        stage: 'season' as const,
+        seed: 777,
+        profile: { ...base.profile, name: 'Dirty', lastName: 'Carryover' },
+      },
+      'default',
+    );
+    await persistence.setActiveSlot('default');
+
+    // Hidratamos el store con state de Dirty.
+    const store = storeModule.useCareerStore.getState();
+    await store.hydrateFromSave();
+    expect(storeModule.useCareerStore.getState().profile.name).toBe('Dirty');
+    expect(storeModule.useCareerStore.getState().seed).toBe(777);
+
+    // Forzamos "slot activo vacío" sin pasar por clearCareerSave
+    // (clearCareerSave resetea el cursor a default — eso no es lo que
+    // queremos testear). Sembramos un slot con payload en
+    // 'dirty-slot', lo activamos, y luego sembramos-storage para
+    // borrar SÓLO la key del payload (no tocamos el cursor ni el índice).
+    await persistence.saveCareerSave(base, 'dirty-slot');
+    await persistence.setActiveSlot('dirty-slot');
+    persistence.__seedForTests({}); // wipe el memory backend entero
+    // Re-sembramos el cursor activo + el payload de Dirty para que el
+    // store siga hidratando primero con Dirty (motivamos el state
+    // pre-acquire), luego borramos solo la key del nuevo slot.
+    await persistence.saveCareerSave(
+      {
+        ...base,
+        stage: 'season' as const,
+        seed: 777,
+        profile: { ...base.profile, name: 'Dirty', lastName: 'Carryover' },
+      },
+      'default',
+    );
+    await persistence.setActiveSlot('dirty-slot'); // cursor al slot vacío
+    persistence.__seedForTests({}); // wipe otra vez — slot activo ahora vacío
+
+    await store.hydrateFromSave();
+    const afterReset = storeModule.useCareerStore.getState();
+    expect(afterReset.stage).toBe('identity');
+    expect(afterReset.profile.name).not.toBe('Dirty');
+    expect(afterReset.profile.lastName).not.toBe('Carryover');
+    expect(afterReset.seed).not.toBe(777);
+  });
 });
