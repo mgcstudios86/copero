@@ -18,7 +18,7 @@
     },
     "android": {
       "package": "com.mgcstudios.copero",
-      "versionCode": 16,
+      "versionCode": 364,
       "adaptiveIcon": {
         "backgroundColor": "#0B1320",
         "foregroundImage": "./assets/android-icon-foreground.png",

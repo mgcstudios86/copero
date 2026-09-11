@@ -94,7 +94,8 @@ module.exports = ({ config } = {}) => ({
     // `cli.appVersionSource: remote` en eas.json, el server EAS es la
     // fuente de verdad al build; mantener ambos sincronizados evita drift
     // entre `Constants.expoConfig` y `expo-application` en runtime.
-    versionCode: 280,
+    // MGC-3035 — bump 363 → 364 para APK fix input-age controlled.
+    versionCode: 364,
     // MGC-839: NO declarar AD_ID. Per MGC-4919 rootcause, play-services-ads-*
     // AARs autolinkeados la inyectan transitivamente y declarar el permiso
     // no la remueve. Copero no usa ads → Play Console warning se resuelve

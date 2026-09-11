@@ -294,6 +294,27 @@ export default function IdentityScreen() {
   // el LanguageSwitcher marcara EN/中文 seleccionado.
   const { t } = useLocale();
 
+  // MGC-3035 — input-age pasa a CONTROLLED. El defaultValue+key stable
+  // que tenía (MGC-2722, PR #620) preservaba el texto nativo, pero el
+  // EditText de input-age arranca con `defaultValue="16"` (2 chars) +
+  // `maxLength={2}`. Cuando el bridge nativo está lleno, LengthFilter
+  // RECHAZA silenciosamente cualquier keystroke del IME y `onChangeText`
+  // nunca dispara → `profile.age` colapsa a 16. Los intentos previos
+  // (MGC-3029 setNativeProps onFocus, MGC-3032 clearTextOnFocus) NO
+  // resolvieron: el primero corre JS-side después del focus event; el
+  // segundo es iOS-only en RN 0.86 (verificado en
+  // node_modules/react-native/.../ReactEditText.kt — clearTextOnFocus NO
+  // está implementado en Android Kotlin, sólo en iOS RCTBaseTextInputView.mm).
+  //
+  // Solución controlada: state local `ageDraft` que pasamos como `value=`
+  // al TextInput. Al recibir focus y mostrar el preset "16", vaciamos el
+  // state. React reconcilia dentro del mismo frame → EditText.setText('')
+  // corre nativo ANTES de que el IME window publique el primer keystroke.
+  // El EditText queda vacío, LengthFilter acepta hasta 2 chars, y
+  // onChangeText dispara normalmente. En blur sin tipear restauramos el
+  // preset para que un focus+cancel del usuario no deje el campo vacío.
+  const [ageDraft, setAgeDraft] = useState<string>(String(profile.age));
+  const ageFocusedRef = useRef(false);
   const [nationalityQuery, setNationalityQuery] = useState('');
   // MGC-1503 — UX-005 P0 del audit MGC-1500. Por defecto la pantalla cape el
   // listado a las 5 primeras (MGC-1448) para no romper el budget vertical del
@@ -1254,24 +1275,63 @@ export default function IdentityScreen() {
             >
               <TextInput
                 ref={ageInputRef}
-                // MGC-2722 — defaultValue + key estable. Idem input-name:
-                // uncontrolled EditText preserva el contenido nativo aunque
-                // React state se desfase. La edad es preset (16) y rara vez
-                // se modifica; el defaultValue cubre el caso de un usuario
-                // que tipea "30", confirma y el próximo mount ve 30.
-                defaultValue={String(profile.age)}
-                key="input-age-mgc2722"
+                // MGC-3035 — `value={ageDraft}` (controlled). Ver el
+                // comentario del useState ageDraft arriba para el rationale.
+                // El key estable se conserva para que React no remonte el
+                // EditText al re-renderizar el padre (la cleanup del
+                // IME bridge es async; un remount tira el TextWatcher y
+                // deja al usuario tipeando contra un EditText zombie).
+                value={ageDraft}
+                key="input-age-mgc3035"
+                onFocus={() => {
+                  ageFocusedRef.current = true;
+                  // MGC-3035 — clear-on-focus. Si el EditText muestra el
+                  // preset (== profile.age canónico) o ya quedó vacío de
+                  // un cancel previo, vaciamos el state. React reconcilia
+                  // dentro del mismo frame → EditText.setText('') nativo.
+                  // NO usamos clearTextOnFocus (iOS-only en RN 0.86) ni
+                  // setNativeProps onFocus (MGC-3029 — corría JS-side
+                  // tarde, fuera del ciclo InputConnection.attach).
+                  setAgeDraft((current) => {
+                    if (current === '' || current === String(profile.age)) {
+                      return '';
+                    }
+                    return current;
+                  });
+                }}
                 onChangeText={(txt) => {
-                  // Acepta sólo dígitos. El clamp final lo hace setAge.
+                  // MGC-3035 — controlled: actualizamos ageDraft Y
+                  // commiteamos a profile.age. Mantenemos la guardia
+                  // shouldCommitNativeText (MGC-2759) contra payloads
+                  // vacíos que pisan el state cuando el bridge Android
+                  // entrega '' por IME stale.
+                  const currentAge = useCareerStore.getState().profile.age;
+                  if (!shouldCommitNativeText(txt, String(currentAge))) return;
                   const cleaned = txt.replace(/[^0-9]/g, '').slice(0, 2);
-                  const parsed = cleaned === '' ? 16 : Number.parseInt(cleaned, 10);
+                  setAgeDraft(cleaned);
+                  if (cleaned === '') return;
+                  const parsed = Number.parseInt(cleaned, 10);
+                  if (!Number.isFinite(parsed)) return;
                   setAgeSync(parsed);
                 }}
                 onBlur={(e) => {
-                  // MGC-2673 safety net — idem nombre/apellido para edad,
-                  // reaplicando el clamp numérico antes de reconciliar.
+                  ageFocusedRef.current = false;
+                  // MGC-2673 safety net — sincroniza desde el EditText
+                  // nativo. Si el bridge entregó texto (release builds
+                  // con Maestro inputText a veces llegan sin onChangeText
+                  // y el blur trae el contenido canónico), reconciliamos
+                  // contra profile.age.
                   const text = (e.nativeEvent as TextInputFocusEventData).text ?? '';
                   syncAgeFromNative(text);
+                  // MGC-3035 — restore preset on cancel. Si el usuario
+                  // enfocó pero no tipeó (o borró todo), el state quedó
+                  // '' y el EditText visible está vacío. Restauramos el
+                  // preset canónico para no mostrar un campo vacío entre
+                  // el form inicial y la próxima edición.
+                  setAgeDraft((current) => {
+                    if (current !== '') return current;
+                    return String(profile.age);
+                  });
                 }}
                 placeholder={t('identity.agePlaceholder')}
                 placeholderTextColor={colors.textMuted}
