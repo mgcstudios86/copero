@@ -1,4 +1,4 @@
-# purge-stuck-inprogress.yml — Copero (ADR-0024, MGC-2159, MGC-2790)
+# purge-stuck-inprogress.yml — Copero (ADR-0024, MGC-2159, MGC-2790, MGC-13)
 # Auto-cancela jobs in_progress sin progreso real.
 # Complementa purge-stale-runs.yml (que solo cubre queued).
 # Política §8.3: corre --local en el runner self-hosted copero-ci.
@@ -90,9 +90,16 @@ jobs:
           with open("inprog.jsonl") as f:
               runs = [json.loads(line) for line in f if line.strip()]
 
-          stuck, skip_active, skip_young = [], [], []
+          stuck, skip_active, skip_young, skip_no_started = [], [], [], []
           for r in runs:
-              started = dt.datetime.fromisoformat(r["started_at"].replace("Z", "+00:00"))
+              started_at = r.get("started_at")
+              # Runs queued pero sin started_at no son "stuck in_progress" — los maneja
+              # purge-stale-runs.yml (cubre queued). Acá solo clasificamos
+              # runs que efectivamente arrancaron.
+              if not started_at:
+                  skip_no_started.append({"id": r["id"], "name": r["name"], "branch": r["head_branch"]})
+                  continue
+              started = dt.datetime.fromisoformat(started_at.replace("Z", "+00:00"))
               age = (now - started).total_seconds()
               thr = thr_qa_sec if r["name"] == "qa" else thr_default_sec
               if age < thr:
@@ -123,12 +130,13 @@ jobs:
               "stuck": stuck,
               "skip_active": skip_active,
               "skip_young": skip_young,
+              "skip_no_started": skip_no_started,
               "evaluated": len(stuck) + len(skip_active),
               "total_in_progress": len(runs),
           }
           with open("classify.json", "w") as f:
               json.dump(out, f, indent=2)
-          print(f"in_progress_total={out['total_in_progress']} skip_young={len(skip_young)} evaluated={out['evaluated']} stuck={len(stuck)} skip_active={len(skip_active)}")
+          print(f"in_progress_total={out['total_in_progress']} skip_no_started={len(skip_no_started)} skip_young={len(skip_young)} evaluated={out['evaluated']} stuck={len(stuck)} skip_active={len(skip_active)}")
           PYEOF
 
           CLASSIFY_OUT=$(cat classify.json)
@@ -136,6 +144,7 @@ jobs:
           STUCK_COUNT=$(echo "$CLASSIFY_OUT" | jq '.stuck | length')
           SKIP_ACTIVE=$(echo "$CLASSIFY_OUT" | jq '.skip_active | length')
           SKIP_YOUNG=$(echo "$CLASSIFY_OUT" | jq '.skip_young | length')
+          SKIP_NO_STARTED=$(echo "$CLASSIFY_OUT" | jq '.skip_no_started | length')
           EVALUATED=$(echo "$CLASSIFY_OUT" | jq '.evaluated')
           TOTAL_INPROG=$(echo "$CLASSIFY_OUT" | jq '.total_in_progress')
 
@@ -143,6 +152,8 @@ jobs:
           echo "$CLASSIFY_OUT" | jq '.stuck'
           echo "skip_active_runs:"
           echo "$CLASSIFY_OUT" | jq '.skip_active'
+          echo "skip_no_started_runs:"
+          echo "$CLASSIFY_OUT" | jq '.skip_no_started'
 
           {
             echo "stuck_ids<<EOF"
@@ -151,6 +162,7 @@ jobs:
             echo "stuck_count=$STUCK_COUNT"
             echo "skip_active=$SKIP_ACTIVE"
             echo "skip_young=$SKIP_YOUNG"
+            echo "skip_no_started=$SKIP_NO_STARTED"
             echo "evaluated=$EVALUATED"
             echo "in_progress_total=$TOTAL_INPROG"
           } >> "$GITHUB_OUTPUT"
@@ -220,6 +232,7 @@ jobs:
           - threshold_qa_min: \`$THRESHOLD_MIN_QA\`
           - step_grace_min: \`$STEP_GRACE_MIN\`
           - in_progress_total: \`${{ steps.classify.outputs.in_progress_total || 0 }}\`
+          - skip_no_started (queued, lo maneja purge-stale-runs): \`${{ steps.classify.outputs.skip_no_started || 0 }}\`
           - skip_young (dentro del threshold): \`${{ steps.classify.outputs.skip_young || 0 }}\`
           - evaluated (sobre threshold, sin grace filter): \`${{ steps.classify.outputs.evaluated || 0 }}\`
           - stuck (auto-cancelados): \`${{ steps.classify.outputs.stuck_count || 0 }}\`
