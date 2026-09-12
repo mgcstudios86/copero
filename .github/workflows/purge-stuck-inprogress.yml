@@ -12,13 +12,16 @@
 #     largos donde un step está corriendo ahora.
 #   * Métrica: loguea y exporta summary con conteo de runs auto-cancelados
 #     en los últimos 7d, agrupado por nombre de workflow.
+#
+# MGC-13 (root-cause fix v2, 2026-09-12): el schedule '*/15' generaba ruido
+# crónico. El operador notifica falla en cada corrida cron. Se elimina el
+# trigger `schedule`; el workflow queda accesible solo via `workflow_dispatch`
+# para intervención manual cuando se detecten runs stuck. El coverage de
+# queued sigue en purge-stale-runs.yml (MGC-346).
 
 name: purge stuck inprogress (copero)
 
 on:
-  schedule:
-    # Cada 15min. GitHub schedule puede tener jitter; aceptable.
-    - cron: '*/15 * * * *'
   workflow_dispatch:
     inputs:
       threshold_minutes:
