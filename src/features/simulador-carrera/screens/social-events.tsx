@@ -161,7 +161,7 @@ export default function SocialEventsScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -209,7 +209,7 @@ export default function SocialEventsScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -328,7 +328,7 @@ function OutcomeCard({
             <Text
               style={{
                 color: colors.textOnPrimary,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: fontWeight.bold,
                 letterSpacing: 1,
               }}
@@ -395,7 +395,7 @@ function ModifiersCard({
         <Text
           style={{
             color: colors.textMuted,
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: 2,
             fontWeight: fontWeight.bold,
           }}
@@ -424,7 +424,7 @@ function ModifiersCard({
       <Text
         style={{
           color: colors.textMuted,
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: 2,
           fontWeight: fontWeight.bold,
         }}

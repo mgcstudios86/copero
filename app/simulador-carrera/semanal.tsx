@@ -14,7 +14,7 @@ const SemanalScreen = lazy(() =>
 
 export default function SemanalRoute() {
   return (
-    <View style={{ flex: 1 }} testID="semanal-screen-wrapper">
+    <View style={{ flex: 1 }} testID="semanal-screen">
       <Suspense fallback={null}>
         <SemanalScreen />
       </Suspense>

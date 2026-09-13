@@ -129,7 +129,7 @@ export default function SeasonHubScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -214,7 +214,7 @@ export default function SeasonHubScreen() {
             <Text
               style={{
                 color: colors.textMuted,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: fontWeight.bold,
                 letterSpacing: 2,
               }}
@@ -251,7 +251,7 @@ export default function SeasonHubScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -311,7 +311,7 @@ export default function SeasonHubScreen() {
           <Text
             style={{
               color: colors.primary,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -498,8 +498,10 @@ function StatChip({ label, value }: { label: string; value: number }) {
 function FatigueBar({ value }: { value: number }) {
   const { colors, radii, spacing } = useTheme();
   const clamped = Math.max(0, Math.min(100, value));
+  // MGC-42.C — usar tokens del theme en lugar de hex literales.
+  // `warning` cubre la zona intermedia (30-60% fatiga); `danger` la zona baja.
   const fillColor =
-    clamped >= 60 ? colors.primary : clamped >= 30 ? '#E0A82E' : '#D9534F';
+    clamped >= 60 ? colors.primary : clamped >= 30 ? colors.warning : colors.danger;
   return (
     <View
       accessibilityRole="progressbar"

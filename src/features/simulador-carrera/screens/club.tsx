@@ -304,7 +304,7 @@ function Metric({
       <Text
         style={{
           color: colors.textMuted,
-          fontSize: 9,
+          fontSize: 12,
           fontWeight: fontWeight.bold,
           letterSpacing: 1,
         }}

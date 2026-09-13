@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { AppState, Platform, View, StyleSheet } from 'react-native';
+import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { useFonts } from 'expo-font';
 import {
@@ -111,10 +111,12 @@ function ThemedShell() {
       */}
       {!hydrated ? (
         <View
-          style={[styles.root, { backgroundColor: colors.bg }]}
+          style={[styles.root, styles.hydrationGate, { backgroundColor: colors.bg }]}
           testID="career-hydrate-gate"
           accessibilityLabel="Cargando carrera guardada"
-        />
+        >
+          <ActivityIndicator color={colors.primary} />
+        </View>
       ) : (
         <>
       {/* MGC-653 — SiteHeader global con 7 nav links + LanguageSwitcher +
@@ -136,43 +138,15 @@ function ThemedShell() {
             `.native.tsx` / `.web.tsx`; mantiene coherencia entre bundles. */}
         <Stack.Screen name="index" />
         {/*
-          MGC-782 code-split: las 4 screens del juego viven en
-          `src/features/game/screens/*` y se registran acá vía `getComponent`
-          lazy. Antes eran wrappers `app/{categoria,ronda,fin,compass}.tsx`
-          que Expo Router trataba como entry points de la SPA — Metro
-          bundleaba el engine + words + scoring (FSM completa) en el chunk
-          inicial del home, arrastrando ~25-40 KB gz al entry. Al sacar las
-          rutas del filesystem de `app/` y registrarlas explícitamente con
-          `getComponent: () => import(...)`, Metro emite chunks asincrónicos
-          dedicados que sólo se descargan al navegar a /categoria, /ronda,
-          /fin o /compass. Native safety (MGC-724) preservado: el cambio
-          es de organización; no toca metro.config.js.
-
-          Mismo patrón que MGC-771 para simulador-carrera. Las typings de
-          Expo Router 57 omiten `getComponent` (el runtime lo soporta y
-          Metro lo respeta para emitir chunks async) — @ts-expect-error
-          por línea para destrabar typecheck.
+          MGC-42.C — Rutas del juego de palabras / quiz Ideología Futbolística
+          removidas del root layout. Categoría/ronda/fin/compass montaban el
+          motor legacy (`@/features/game/screens/*`), fuera del simulador de
+          carrera. Auditoría UX MGC-44 las marcó como dead routes; las entry
+          points canónicas son las pantallas del simulador (`/simulador-carrera/...`).
+          Los file-based wrappers `app/simulador-carrera/{categoria,ronda,fin,compass}.tsx`
+          quedan como Redirect al index del simulador para preservar deep links
+          históricos sin mostrar el quiz legacy.
         */}
-        <Stack.Screen
-          name="categoria"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/categoria').then((m) => m.default)}
-        />
-        <Stack.Screen
-          name="ronda"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/ronda').then((m) => m.default)}
-        />
-        <Stack.Screen
-          name="fin"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/fin').then((m) => m.default)}
-        />
-        <Stack.Screen
-          name="compass"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/compass').then((m) => m.default)}
-        />
         {/*
           MGC-1160 — ver comentario paralelo en `_layout.native.tsx`.
           `simulador-carrera/identity` resuelve via file-based route,
@@ -246,4 +220,8 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  hydrationGate: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

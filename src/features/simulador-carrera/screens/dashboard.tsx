@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -501,10 +501,12 @@ export default function DashboardScreen() {
           )}
         </Section>
 
-        {/* National team */}
+        {/* National team — MGC-42.C: card informativa (sin acción tappable).
+            El Pressable original tenía `onPress={() => undefined}` (handler
+            muerto del catálogo UX MGC-44). La card ahora es View puro para
+            no sugerir affordance inexistente; a11y label se preserva. */}
         <Section title={copy.resolve('dashboard_selection_h2')}>
-          <Pressable
-            onPress={() => undefined}
+          <View
             style={{
               borderRadius: radii.lg,
               borderWidth: 1,
@@ -534,7 +536,7 @@ export default function DashboardScreen() {
                 ? copy.resolve('state_picked_national')
                 : copy.resolve('dashboard_selection_empty')}
             </Text>
-          </Pressable>
+          </View>
         </Section>
 
         {/* Recommended strategy (motor → UI sin hardcodeo) */}

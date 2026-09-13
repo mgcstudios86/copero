@@ -142,27 +142,8 @@ function ThemedShell() {
             native; evita que el primer render en web resuelva
             `simulador-carrera` cuando AsyncStorage está vacío. */}
         <Stack.Screen name="index" />
-        {/* MGC-782 code-split — ver comentario en app/_layout.tsx */}
-        <Stack.Screen
-          name="categoria"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/categoria').then((m) => m.default)}
-        />
-        <Stack.Screen
-          name="ronda"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/ronda').then((m) => m.default)}
-        />
-        <Stack.Screen
-          name="fin"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/fin').then((m) => m.default)}
-        />
-        <Stack.Screen
-          name="compass"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/compass').then((m) => m.default)}
-        />
+        {/* MGC-42.C — Rutas del juego de palabras removidas. Ver comentario
+            paralelo en app/_layout.tsx. */}
         {/*
           MGC-1160 — ver comentario paralelo en `_layout.native.tsx`.
           `simulador-carrera/identity` resuelve via file-based route,

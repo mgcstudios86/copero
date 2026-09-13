@@ -14,7 +14,7 @@ const TransferOffersScreen = lazy(() =>
 
 export default function TransferOffersRoute() {
   return (
-    <View style={{ flex: 1 }} testID="transfer-offers-route">
+    <View style={{ flex: 1 }} testID="transfer-offers-screen">
       <Suspense fallback={null}>
         <TransferOffersScreen />
       </Suspense>

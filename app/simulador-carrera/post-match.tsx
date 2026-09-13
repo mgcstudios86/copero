@@ -10,7 +10,7 @@ const PostMatchScreen = lazy(() =>
 
 export default function PostMatchRoute() {
   return (
-    <View style={{ flex: 1 }} testID="post-match-screen-wrapper">
+    <View style={{ flex: 1 }} testID="post-match-screen">
       <Suspense fallback={null}>
         <PostMatchScreen />
       </Suspense>

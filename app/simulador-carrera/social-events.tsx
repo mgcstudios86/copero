@@ -20,7 +20,7 @@ const SocialEventsScreen = lazy(() =>
 
 export default function SocialEventsRoute() {
   return (
-    <View style={{ flex: 1 }} testID="social-events-screen-wrapper">
+    <View style={{ flex: 1 }} testID="social-events-screen">
       <Suspense fallback={null}>
         <SocialEventsScreen />
       </Suspense>

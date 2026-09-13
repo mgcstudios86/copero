@@ -120,7 +120,7 @@ export default function MatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -157,7 +157,7 @@ export default function MatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -224,7 +224,7 @@ export default function MatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -276,7 +276,7 @@ export default function MatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -332,7 +332,7 @@ function StatTile({ label, value, testID, colors, spacing, fontSize, fontWeight,
       }}
       testID={testID}
     >
-      <Text style={{ color: colors.textMuted, fontSize: 10, letterSpacing: 1 }}>
+      <Text style={{ color: colors.textMuted, fontSize: 12, letterSpacing: 1 }}>
         {label.toUpperCase()}
       </Text>
       <Text

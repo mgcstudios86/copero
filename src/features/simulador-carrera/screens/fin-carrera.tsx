@@ -184,7 +184,7 @@ export default function FinCarreraScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -212,7 +212,7 @@ export default function FinCarreraScreen() {
                 <Text
                   style={{
                     color: colors.textMuted,
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: fontWeight.bold,
                     letterSpacing: 1,
                   }}
@@ -248,7 +248,7 @@ export default function FinCarreraScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -309,7 +309,7 @@ export default function FinCarreraScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -389,7 +389,7 @@ function Stat({
       <Text
         style={{
           color: colors.textMuted,
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: fontWeight.bold,
           letterSpacing: 2,
         }}
