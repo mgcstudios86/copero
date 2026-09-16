@@ -93,9 +93,9 @@ export default function DashboardScreen() {
   const log = storedLog ?? EMPTY_LOG;
   const openAcademy = useCareerStore((s) => s.openAcademy);
   const startDraft = useCareerStore((s) => s.startDraft);
-  // MGC-1650 (WF4) — `startMatch` calcula el MatchOutcome y lo
-  // deposita en `matchStore` (transient).
-  const startMatch = useCareerStore((s) => s.startMatch);
+  // MGC-1650 (WF4) — el cálculo del MatchOutcome vivía acá. MGC-245 lo
+  // movió a `/simulador-carrera/alineacion` (la pantalla media entre
+  // dashboard y /match). El destructure de `startMatch` se removió.
 
   // MGC-1769 — nationalityCode puede ser `null` en /identity. En
   // /dashboard la carrera ya pasó `commitIdentity` (gate exige no-null),
@@ -126,17 +126,21 @@ export default function DashboardScreen() {
     //   · Sin club → abrir academy para que el jugador fiche (path
     //     legacy pre-club; mismo flushPendingSave de MGC-722 para
     //     sobrevivir force-stop).
-    //   · Con club → MGC-1650 (WF4 partido + WF5 post-partido). El
-    //     CTA "Jugar la próxima fecha" ahora dispara `startMatch()`
-    //     y navega a `/simulador-carrera/match`.
+    //   · Con club → MGC-245 (alineación táctica previa). El CTA
+    //     "Jugar la próxima fecha" ahora navega a `/simulador-carrera/alineacion`
+    //     para que el usuario elija táctica (conservadora / todo /
+    //     lider) ANTES de que `startMatch()` corra. Antes (MGC-1650)
+    //     el flow saltaba directo a `/match` → auto-play sin selección
+    //     (bug AC3 MGC-240). La nueva pantalla `/alineacion` setea
+    //     `matchStore.alignment` y dispara `startMatch()` en su CTA
+    //     "Confirmar alineación".
     if (!profile.club) {
       openAcademy();
       await flushPendingSave();
       router.push('/simulador-carrera/academy');
       return;
     }
-    await startMatch();
-    router.push('/simulador-carrera/match');
+    router.push('/simulador-carrera/alineacion');
   };
 
   // MGC-209: CTA al flow de 6 pantallas (draft → tu-jugador → club → temporada → fin-carrera).
