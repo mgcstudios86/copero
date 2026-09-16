@@ -661,15 +661,27 @@ export function resolveWeeklyMatch(
     ast: profile.stats.ast, // ast V2 no está en `MatchOutcome`; placeholder
   };
 
-  const nextCareer: CareerStats = {
-    ...profile.career,
-    matchweekStats: nextStats,
-  };
+  // MGC-246 — roll de lesión al final del partido. Si ya hay lesión
+  // activa (fechasOut > 0) NO se re-rolea: la rehabilitación drena
+  // semanalmente vía `advanceWeek`. Si dispara, pisamos `career.lesion`
+  // con la nueva Injury (kind + fechasOut + affectedAttr canónico).
+  let injuryFired: import('@/types/career').Injury | null = null;
+  if (nextCareer.lesion.fechasOut === 0) {
+    injuryFired = maybeRollInjury(
+      { ...profile, career: nextCareer },
+      nextCareer.doubleShiftStreak ?? 0,
+      rng,
+    );
+  }
+
+  const nextCareerWithInjury: CareerStats = injuryFired
+    ? { ...nextCareer, lesion: injuryFired, weeklyInjuryFlipped: true }
+    : nextCareer;
 
   const nextProfile: PlayerProfile = {
     ...profile,
     stats: total,
-    career: nextCareer,
+    career: nextCareerWithInjury,
   };
 
   return { profile: nextProfile, match, rngSnapshot: snapshotRng(rng) };

@@ -257,6 +257,15 @@ export type Copy = {
     ctaNextWeekHint: string;
     ctaBackToHub: string;
     ctaBackToHubHint: string;
+    // MGC-246 — etiqueta MVP en pantalla post-match + tarjeta de lesionados.
+    mvpBadge: string;
+    mvpBadgeA11y: string;
+    injuriesTitle: string;
+    injuriesEmpty: string;
+    injuryKindLeve: string;
+    injuryKindMedia: string;
+    injuryKindGrave: string;
+    injuryRecoveryWeeks: string;
 };
   // MGC-1632 (F3.2) — transfer system entre temporadas (ADR-0017 §4).
   transfers: {
@@ -585,6 +594,15 @@ export const COPY: Record<Locale, Copy> = {
       ctaNextWeekHint: 'Aplica los cambios y avanza a la próxima fecha',
       ctaBackToHub: 'Volver al hub',
       ctaBackToHubHint: 'Descarta los cambios y vuelve al dashboard',
+      // MGC-246 — etiqueta MVP + tarjeta de lesionados.
+      mvpBadge: 'MVP',
+      mvpBadgeA11y: 'Figura del partido',
+      injuriesTitle: 'LESIONADOS',
+      injuriesEmpty: 'Sin lesionados en este partido.',
+      injuryKindLeve: 'Lesión leve',
+      injuryKindMedia: 'Lesión media',
+      injuryKindGrave: 'Lesión grave',
+      injuryRecoveryWeeks: '{count} sem. de recuperación',
 },
     transfers: {
       eyebrow: 'MERCADO DE PASES',
@@ -901,6 +919,15 @@ export const COPY: Record<Locale, Copy> = {
       ctaNextWeekHint: 'Apply the changes and advance to the next matchweek',
       ctaBackToHub: 'Back to hub',
       ctaBackToHubHint: 'Discard the changes and return to the dashboard',
+      // MGC-246 — MVP badge + injuries card.
+      mvpBadge: 'MVP',
+      mvpBadgeA11y: 'Player of the match',
+      injuriesTitle: 'INJURIES',
+      injuriesEmpty: 'No injuries in this match.',
+      injuryKindLeve: 'Minor injury',
+      injuryKindMedia: 'Moderate injury',
+      injuryKindGrave: 'Severe injury',
+      injuryRecoveryWeeks: '{count} wk of recovery',
 },
     transfers: {
       eyebrow: 'TRANSFER WINDOW',
@@ -1217,6 +1244,15 @@ export const COPY: Record<Locale, Copy> = {
       ctaNextWeekHint: '应用变动并进入下一比赛周',
       ctaBackToHub: '返回主页',
       ctaBackToHubHint: '丢弃变动并返回仪表盘',
+      // MGC-246 — MVP 标签 + 伤员卡片。
+      mvpBadge: 'MVP',
+      mvpBadgeA11y: '本场最佳',
+      injuriesTitle: '伤员',
+      injuriesEmpty: '本场无伤员。',
+      injuryKindLeve: '轻伤',
+      injuryKindMedia: '中度伤',
+      injuryKindGrave: '重伤',
+      injuryRecoveryWeeks: '{count} 周恢复',
 },
     transfers: {
       eyebrow: '转会市场',

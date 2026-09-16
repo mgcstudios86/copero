@@ -1,5 +1,6 @@
 /**
  * MGC-1650 — WF5 pantalla /post-match.
+ * MGC-246 — etiqueta MVP (rating ≥ 7.5) + tarjeta de lesionados del partido.
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -11,6 +12,11 @@ import { useMatchStore } from '@/shared/store/matchStore';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { useLocale } from '@/i18n/locale-context';
 import { clampCareerStat } from '@/features/career/match';
+import type { InjuryKind } from '@/types/career';
+
+// MGC-246 — umbral MVP del partido. Consistente con el rating mínimo
+// que el motor `deltasFromRating` ya trata como "actuación sólida".
+const MVP_RATING_THRESHOLD = 7.5;
 
 const HIT_SLOP_44 = { top: 22, left: 22, right: 22, bottom: 22 } as const;
 
@@ -80,6 +86,13 @@ export default function PostMatchScreen() {
     if (!preview) return 0;
     return Math.max(0, Math.min(100, (preview.rating / 10) * 100));
   }, [preview]);
+
+  // MGC-246 — flag MVP (rating ≥ 7.5) y lesión activa post-partido.
+  // `nextProfile.career.lesion` viaja populado desde `resolveWeeklyMatch`
+  // (que ahora rola `maybeRollInjury` al final del match si fechasOut=0).
+  const isMvp = !!preview && preview.rating >= MVP_RATING_THRESHOLD;
+  const activeInjury = nextProfile?.career.lesion;
+  const hasInjury = !!activeInjury && activeInjury.fechasOut > 0;
 
   if (!outcome || !preview || !previousProfile || !nextProfile) {
     return (
@@ -201,6 +214,94 @@ export default function PostMatchScreen() {
           <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
             {ratingLabelKey(preview.rating, t)}
           </Text>
+          {isMvp ? (
+            <View
+              style={{
+                marginTop: spacing[2],
+                paddingHorizontal: spacing[3],
+                paddingVertical: spacing[1],
+                borderRadius: radii.pill,
+                backgroundColor: colors.primary,
+              }}
+              testID="post-match-mvp-badge"
+              accessibilityLabel={t('postMatch.mvpBadgeA11y')}
+            >
+              <Text
+                style={{
+                  color: colors.bg,
+                  fontSize: fontSize.sm,
+                  fontWeight: fontWeight.bold,
+                  letterSpacing: 2,
+                }}
+              >
+                {t('postMatch.mvpBadge')}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* MGC-246 — tarjeta de lesionados del partido (omitable). */}
+        <View
+          style={{
+            borderRadius: radii.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+            padding: spacing[4],
+            gap: spacing[2],
+          }}
+          testID="post-match-injuries"
+        >
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: 10,
+              letterSpacing: 2,
+              fontWeight: fontWeight.bold,
+            }}
+          >
+            {t('postMatch.injuriesTitle')}
+          </Text>
+          {hasInjury && activeInjury ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingHorizontal: spacing[2],
+                paddingVertical: spacing[2],
+                borderRadius: radii.md,
+                backgroundColor: colors.surface2,
+              }}
+              testID="post-match-injury-item"
+            >
+              <Text
+                style={{ color: colors.text, fontSize: fontSize.sm }}
+                testID="post-match-injury-kind"
+              >
+                {injuryKindLabel(activeInjury.kind, t)}
+              </Text>
+              <Text
+                style={{
+                  color: colors.danger,
+                  fontSize: fontSize.md,
+                  fontWeight: fontWeight.bold,
+                }}
+                testID="post-match-injury-weeks"
+              >
+                {t('postMatch.injuryRecoveryWeeks', {
+                  count: activeInjury.fechasOut,
+                })}
+              </Text>
+            </View>
+          ) : (
+            <Text
+              style={{ color: colors.textMuted, fontSize: fontSize.xs }}
+              testID="post-match-injuries-empty"
+            >
+              {t('postMatch.injuriesEmpty')}
+            </Text>
+          )}
         </View>
 
         <View
@@ -373,6 +474,21 @@ function ratingLabelKey(rating: number, t: Translator): string {
   if (rating >= 5.0) return t('postMatch.ratingRegular');
   if (rating >= 3.0) return t('postMatch.ratingPoor');
   return t('postMatch.ratingBad');
+}
+
+// MGC-246 — etiqueta humana para `InjuryKind`. Consume las claves i18n
+// `postMatch.injuryKind*` agregadas en `src/i18n/copy.ts` (es/en/zh-CN).
+function injuryKindLabel(kind: InjuryKind, t: Translator): string {
+  switch (kind) {
+    case 'leve':
+      return t('postMatch.injuryKindLeve');
+    case 'media':
+      return t('postMatch.injuryKindMedia');
+    case 'grave':
+      return t('postMatch.injuryKindGrave');
+    default:
+      return kind;
+  }
 }
 
 function reputationLabel(value: string, t: Translator): string {
