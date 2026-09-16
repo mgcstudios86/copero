@@ -66,6 +66,23 @@ export default function FinCarreraScreen() {
   // MGC-1736 — guard de doble tap + estado "loading" durante el await.
   const [restarting, setRestarting] = useState(false);
 
+  // MGC-215 — modal de confirmación destructiva. El CTA "Nueva partida"
+  // abre un modal nativo que pide confirmación antes de invocar
+  // `resetAll` (que limpia TODAS las keys de AsyncStorage vía
+  // `wipeAllCoperoKeys` — game stats + quiz + carrera). Sin este paso,
+  // un tap accidental perdería el save legacy y el high score del juego
+  // de palabras. El modal es accesible (role="alert", hint i18n) y se
+  // descarta con tap fuera / botón "Cancelar".
+  const [confirmingRestart, setConfirmingRestart] = useState(false);
+  const openConfirm = useCallback(() => {
+    if (restarting) return;
+    setConfirmingRestart(true);
+  }, [restarting]);
+  const cancelConfirm = useCallback(() => {
+    if (restarting) return;
+    setConfirmingRestart(false);
+  }, [restarting]);
+
   const summary = useMemo(() => {
     if (!log) return null;
     return buildRetirementSummary(profile, log);
@@ -118,23 +135,6 @@ export default function FinCarreraScreen() {
     if (!mounted.current) return;
     router.replace('/simulador-carrera/identity');
   };
-
-  // MGC-215 — modal de confirmación destructiva. El CTA "Nueva partida"
-  // abre un modal nativo que pide confirmación antes de invocar
-  // `resetAll` (que limpia TODAS las keys de AsyncStorage vía
-  // `wipeAllCoperoKeys` — game stats + quiz + carrera). Sin este paso,
-  // un tap accidental perdería el save legacy y el high score del juego
-  // de palabras. El modal es accesible (role="alert", hint i18n) y se
-  // descarta con tap fuera / botón "Cancelar".
-  const [confirmingRestart, setConfirmingRestart] = useState(false);
-  const openConfirm = useCallback(() => {
-    if (restarting) return;
-    setConfirmingRestart(true);
-  }, [restarting]);
-  const cancelConfirm = useCallback(() => {
-    if (restarting) return;
-    setConfirmingRestart(false);
-  }, [restarting]);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} edges={['bottom']}>
