@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/design';
@@ -32,7 +32,6 @@ export default function SemanalScreen() {
   const profile = useCareerStore((s) => s.profile);
   const weeklyChoice = useCareerStore((s) => s.weeklyChoice);
   const resolveMatchweek = useCareerStore((s) => s.resolveMatchweek);
-  const startMatch = useCareerStore((s) => s.startMatch);
 
   const positionStats: PositionStats = profile.positionStats ?? STAT_INIT;
 
@@ -49,13 +48,14 @@ export default function SemanalScreen() {
     if (optionId === 'doble_turno') {
       // doble turno consume partido → resolvemos matchweek tras la choice.
       await resolveMatchweek();
-      // MGC-1802 P0-6 — wire UI→match: cargamos el MatchOutcome en
-      // matchStore (transient) y navegamos a /match. Antes la mutación
-      // de apps/goals quedaba invisible porque ningún componente
-      // navegaba al resultado del partido (QA MGC-1739: 'Jugar temporada'
-      // simulaba 38 semanas silenciosamente).
-      await startMatch();
-      router.push('/simulador-carrera/match');
+      // MGC-261 fix — insertar pantalla `/alineacion` entre semanal y /match.
+      // Antes (PR #16) este handler llamaba `startMatch()` y navegaba directo
+      // a /match → el usuario saltaba la decisión táctica pre-partido
+      // (regression MGC-245 AC3). Ahora dejamos que `/alineacion` sea el
+      // gate obligatorio: el usuario elige conservadora/todo/lider, su
+      // `matchStore.alignment` queda seteado, y desde ahí `onConfirm`
+      // dispara `startMatch()` + navega a /match con el chip de alineación.
+      router.push('/simulador-carrera/alineacion');
     }
   };
 
@@ -85,7 +85,7 @@ export default function SemanalScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -100,7 +100,7 @@ export default function SemanalScreen() {
             }}
             accessibilityRole="header"
           >
-            Decisión semanal V2
+            Decisión semanal
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
             6 opciones con árbol posicional · {injured ? 'Lesión activa: solo rehabilitación' : 'Elegí una opción'}
@@ -121,7 +121,7 @@ export default function SemanalScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -189,20 +189,42 @@ export default function SemanalScreen() {
                   prob: {Math.round(opt.prob * 100)}% · deltas posicionales:{' '}
                   {Object.keys(opt.successDeltas).join(', ') || 'ninguno'}
                 </Text>
-                <Text
-                  style={{
-                    color: blocked ? colors.textMuted : colors.primary,
-                    fontSize: fontSize.sm,
-                    fontWeight: fontWeight.semibold,
-                  }}
-                  onPress={blocked ? undefined : () => onPick(opt.id)}
-                  accessibilityRole={blocked ? 'text' : 'button'}
-                  accessibilityLabel={`Elegir ${opt.id}`}
-                  accessibilityState={{ disabled: blocked }}
-                  testID={`btn-semanal-${opt.id}`}
-                >
-                  {blocked ? 'Bloqueado por lesión' : 'Elegir →'}
-                </Text>
+                {blocked ? (
+                  <Text
+                    style={{
+                      color: colors.textMuted,
+                      fontSize: fontSize.sm,
+                      fontWeight: fontWeight.semibold,
+                    }}
+                    accessibilityRole="text"
+                    accessibilityLabel={`Opción ${opt.id} bloqueada por lesión`}
+                    testID={`btn-semanal-${opt.id}`}
+                  >
+                    Bloqueado por lesión
+                  </Text>
+                ) : (
+                  <Pressable
+                    onPress={() => onPick(opt.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Elegir ${opt.id}`}
+                    testID={`btn-semanal-${opt.id}`}
+                    hitSlop={12}
+                    style={({ pressed }) => ({
+                      alignSelf: 'flex-start',
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text
+                      style={{
+                        color: colors.primary,
+                        fontSize: fontSize.sm,
+                        fontWeight: fontWeight.semibold,
+                      }}
+                    >
+                      Elegir →
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             );
           },
@@ -250,7 +272,7 @@ export default function SemanalScreen() {
               gap: spacing[1],
             }}
           >
-            <Text style={{ color: colors.textMuted, fontSize: 10, letterSpacing: 2 }}>
+            <Text style={{ color: colors.textMuted, fontSize: 12, letterSpacing: 2 }}>
               ÚLTIMA MATCHWEEK
             </Text>
             <Text

@@ -59,29 +59,7 @@ import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { VersionLabel } from '@/components/VersionLabel';
-
-// Mapa stage → ruta de resume (MGC-251). Se conserva tal cual para el CTA
-// "Continuar carrera" cuando hay sesión persistida.
-function resumeRouteForStage(stage: CareerStage): string {
-  switch (stage) {
-    case 'identity':
-      return '/simulador-carrera/identity';
-    case 'dashboard':
-    case 'academy':
-    case 'clubStart':
-      return '/simulador-carrera/dashboard';
-    case 'draft':
-      return '/simulador-carrera/draft';
-    case 'club':
-      return '/simulador-carrera/tu-jugador';
-    case 'season':
-      return '/simulador-carrera/temporada';
-    case 'retirement':
-      return '/simulador-carrera/fin-carrera';
-    default:
-      return '/simulador-carrera/dashboard';
-  }
-}
+import { resumeRouteForStage } from '@/features/career/resumeRoute';
 
 function resumeLabelForStage(stage: CareerStage): string {
   switch (stage) {

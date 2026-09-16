@@ -130,8 +130,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Cachear npm (~/.npm)
+      - name: Cachear npm (~/.npm) (best-effort con timeout)
         uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -171,8 +173,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Cachear npm (~/.npm)
+      - name: Cachear npm (~/.npm) (best-effort con timeout)
         uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -206,8 +210,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Cachear npm (~/.npm)
+      - name: Cachear npm (~/.npm) (best-effort con timeout)
         uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -244,8 +250,10 @@ jobs:
           node-version: '20'
       - name: Instalar eas-cli
         run: bash scripts/install-eas-cli.sh
-      - name: Cachear npm (~/.npm)
+      - name: Cachear npm (~/.npm) (best-effort con timeout)
         uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}

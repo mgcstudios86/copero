@@ -131,27 +131,9 @@ function ThemedShell() {
             `app/simulador-carrera/index.tsx` → `/simulador-carrera/identity`
             e invalida el primer assert del Maestro flow. */}
         <Stack.Screen name="index" />
-        {/* MGC-782 code-split — ver comentario en app/_layout.tsx */}
-        <Stack.Screen
-          name="categoria"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/categoria').then((m) => m.default)}
-        />
-        <Stack.Screen
-          name="ronda"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/ronda').then((m) => m.default)}
-        />
-        <Stack.Screen
-          name="fin"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/fin').then((m) => m.default)}
-        />
-        <Stack.Screen
-          name="compass"
-          // @ts-expect-error Expo Router 57 typings omiten getComponent.
-          getComponent={() => import('@/features/game/screens/compass').then((m) => m.default)}
-        />
+        {/* MGC-42.C — Rutas del juego de palabras removidas. Ver comentario
+            paralelo en app/_layout.tsx. Las screens de `features/game/*` ya
+            no son alcanzables desde el root layout nativo. */}
         {/*
           MGC-1160 — `simulador-carrera/identity` se resuelve via file-based
           route `app/simulador-carrera/identity.tsx` (MGC-379 + MGC-429 +

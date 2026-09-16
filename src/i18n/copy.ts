@@ -334,6 +334,15 @@ export type Copy = {
     statMinutes: string;
     ctaFinalize: string;
     ctaFinalizeHint: string;
+    // MGC-245 — chip de alineación que muestra la táctica elegida en
+    // `/alineacion` (conservadora / todo / lider) o "Sin selección"
+    // si el usuario llegó a `/match` por un path que no pasó por
+    // `/alineacion` (deeplink legacy MGC-1650).
+    alignmentChipLabel: string;
+    alignmentConservative: string;
+    alignmentAllIn: string;
+    alignmentLeader: string;
+    alignmentNone: string;
   };
 
   /**
@@ -652,6 +661,12 @@ export const COPY: Record<Locale, Copy> = {
       statMinutes: 'Minutos',
       ctaFinalize: 'Finalizar partido',
       ctaFinalizeHint: 'Pasa a la pantalla de post-partido para confirmar',
+      // MGC-245
+      alignmentChipLabel: 'ALINEACIÓN',
+      alignmentConservative: 'Conservadora',
+      alignmentAllIn: 'Ir con todo',
+      alignmentLeader: 'Líder',
+      alignmentNone: 'Sin selección',
     },
     // MGC-1736 (WF6) — fin de carrera / retiro.
     retire: {
@@ -962,6 +977,12 @@ export const COPY: Record<Locale, Copy> = {
       statMinutes: 'Minutes',
       ctaFinalize: 'Finish match',
       ctaFinalizeHint: 'Open the post-match screen to confirm',
+      // MGC-245
+      alignmentChipLabel: 'ALIGNMENT',
+      alignmentConservative: 'Conservative',
+      alignmentAllIn: 'All-in',
+      alignmentLeader: 'Leader',
+      alignmentNone: 'No selection',
     },
     // MGC-1736 (WF6) — fin de carrera / retiro.
     retire: {
@@ -1272,6 +1293,12 @@ export const COPY: Record<Locale, Copy> = {
       statMinutes: '分钟',
       ctaFinalize: '结束比赛',
       ctaFinalizeHint: '进入赛后屏幕以确认',
+      // MGC-245
+      alignmentChipLabel: '战术选择',
+      alignmentConservative: '保守',
+      alignmentAllIn: '全力进攻',
+      alignmentLeader: '领袖',
+      alignmentNone: '未选择',
     },
     // MGC-1736 (WF6) — fin de carrera / retiro.
     retire: {

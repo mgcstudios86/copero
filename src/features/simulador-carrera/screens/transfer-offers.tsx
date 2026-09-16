@@ -154,7 +154,7 @@ export default function TransferOffersScreen({ injectedState }: Props) {
               paddingHorizontal: spacing[4],
               paddingVertical: spacing[2],
               borderRadius: radii.pill,
-              backgroundColor: '#FBBF24',
+              backgroundColor: colors.warning,
             }}
           >
             <Text
@@ -195,7 +195,7 @@ export default function TransferOffersScreen({ injectedState }: Props) {
           style={{
             borderRadius: radii.lg,
             borderWidth: 1,
-            borderColor: transferState.forcedTransfer ? '#D9534F' : colors.border,
+            borderColor: transferState.forcedTransfer ? colors.danger : colors.border,
             backgroundColor: colors.surface,
             padding: spacing[4],
             gap: spacing[2],
@@ -214,7 +214,7 @@ export default function TransferOffersScreen({ injectedState }: Props) {
           {transferState.forcedTransfer ? (
             <Text
               style={{
-                color: '#D9534F',
+                color: colors.danger,
                 fontSize: fontSize.sm,
                 fontWeight: fontWeight.bold,
               }}
@@ -388,7 +388,7 @@ function OfferCard({
                 offer.expectedRole === 'starter'
                   ? colors.textOnPrimary
                   : colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 1,
             }}
@@ -456,7 +456,7 @@ function Stat({ label, value }: { label: string; value: string }) {
       <Text
         style={{
           color: colors.textMuted,
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: fontWeight.bold,
           letterSpacing: 1,
           textTransform: 'uppercase',

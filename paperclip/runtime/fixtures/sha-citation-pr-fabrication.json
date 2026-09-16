@@ -1,0 +1,27 @@
+{
+  "_comment": "Caso NEGATIVO refinado — fabricación verdadera. PR body cita SHA 'deadbeef...' que NO está en PR.commits (fabricación real: SHA inventado o de otro PR). El sticky cita un SHA válido del PR pero el run citado es de otro PR (head_sha no está en PR.commits). La Capa 3 debe rechazarlo: SHA citado ∉ PR.commits (fabricación confirmada), run head_sha ∉ PR.commits (cross-PR citation).",
+  "pr_number": 999,
+  "pr_head_sha": "abcd1234567890abcdef1234567890abcdef1234",
+  "merge_commit_sha": "abcd1234567890abcdef1234567890abcdef1234",
+  "pr_commits": [
+    "abcd1234567890abcdef1234567890abcdef1234"
+  ],
+  "green_sha_set": [
+    "abcd1234567890abcdef1234567890abcdef1234"
+  ],
+  "pr_body_sha_citations": [
+    "deadbeef0000000000000000000000000000beef"
+  ],
+  "latest_sticky_comment": {
+    "header": "devops-ci-gate-strict",
+    "body": "## CI DevOps — abcd123\n\n| Job | Result |\n| --- | --- |\n| lint (eslint) | ✅ pass |\n| typecheck (tsc --noEmit) | ✅ pass |\n| test-web (vitest) | ✅ pass |\n| build-web (expo export) | ✅ pass |\n\n- Workflow: `ci (copero)`\n- Run: https://github.com/mgcstudios/copero/actions/runs/99999999999\n- SHA: `abcd123` (target `main`)",
+    "cited_sha": "abcd1234567890abcdef1234567890abcdef1234",
+    "cited_run_id": "11111111111"
+  },
+  "expected_verdict": "FAIL",
+  "expected_failure_reasons": [
+    "sha=deadbeef0000000000000000000000000000beef∉PR.commits",
+    "run=11111111111=head_sha="
+  ],
+  "expected_log_line": "capa3=sha=deadbeef0000000000000000000000000000beef∉PR.commits,run=11111111111=head_sha="
+}

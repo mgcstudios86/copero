@@ -249,7 +249,7 @@ export default function DraftScreen() {
                   <Text
                     style={{
                       color: colors.textMuted,
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: fontWeight.bold,
                       letterSpacing: 1,
                     }}
@@ -288,7 +288,7 @@ export default function DraftScreen() {
                 <Text
                   style={{
                     color: colors.textMuted,
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: fontWeight.bold,
                     letterSpacing: 1,
                   }}
@@ -322,7 +322,7 @@ export default function DraftScreen() {
             <Text
               style={{
                 color: colors.primary,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: fontWeight.bold,
                 letterSpacing: 2,
               }}

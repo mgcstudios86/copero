@@ -1,24 +1,11 @@
-// app/simulador-carrera/ronda.tsx — MGC-1210
+// app/simulador-carrera/ronda.tsx — MGC-42.C
 //
-// Wrapper file-based para `/simulador-carrera/ronda`. Resuelve el "Unmatched
-// Route" del deep link `copero://simulador-carrera/ronda` (APK MGC-1194 PR-303
-// SHA 6629ccc3). Mismo patrón que `categoria.tsx` — chunk async desde
-// `@/features/game/screens/ronda` (MGC-782 code-split).
-import React, { Suspense, lazy } from 'react';
-import { View } from 'react-native';
-
-const RondaScreen = lazy(() =>
-  import('@/features/game/screens/ronda').then((m) => ({
-    default: m.default,
-  })),
-);
+// Ruta legacy del juego de palabras (MGC-1210). Auditoría UX MGC-44 lo marcó
+// como dead route fuera del simulador de carrera. Esta entrada queda como
+// Redirect al index del simulador para preservar deep links viejos sin
+// montar el motor legacy del quiz.
+import { Redirect } from 'expo-router';
 
 export default function RondaRoute() {
-  return (
-    <View style={{ flex: 1 }} testID="ronda-screen">
-      <Suspense fallback={null}>
-        <RondaScreen />
-      </Suspense>
-    </View>
-  );
+  return <Redirect href="/simulador-carrera" />;
 }

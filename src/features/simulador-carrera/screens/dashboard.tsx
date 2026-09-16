@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -93,9 +93,9 @@ export default function DashboardScreen() {
   const log = storedLog ?? EMPTY_LOG;
   const openAcademy = useCareerStore((s) => s.openAcademy);
   const startDraft = useCareerStore((s) => s.startDraft);
-  // MGC-1650 (WF4) — `startMatch` calcula el MatchOutcome y lo
-  // deposita en `matchStore` (transient).
-  const startMatch = useCareerStore((s) => s.startMatch);
+  // MGC-1650 (WF4) — el cálculo del MatchOutcome vivía acá. MGC-245 lo
+  // movió a `/simulador-carrera/alineacion` (la pantalla media entre
+  // dashboard y /match). El destructure de `startMatch` se removió.
 
   // MGC-1769 — nationalityCode puede ser `null` en /identity. En
   // /dashboard la carrera ya pasó `commitIdentity` (gate exige no-null),
@@ -126,17 +126,21 @@ export default function DashboardScreen() {
     //   · Sin club → abrir academy para que el jugador fiche (path
     //     legacy pre-club; mismo flushPendingSave de MGC-722 para
     //     sobrevivir force-stop).
-    //   · Con club → MGC-1650 (WF4 partido + WF5 post-partido). El
-    //     CTA "Jugar la próxima fecha" ahora dispara `startMatch()`
-    //     y navega a `/simulador-carrera/match`.
+    //   · Con club → MGC-245 (alineación táctica previa). El CTA
+    //     "Jugar la próxima fecha" ahora navega a `/simulador-carrera/alineacion`
+    //     para que el usuario elija táctica (conservadora / todo /
+    //     lider) ANTES de que `startMatch()` corra. Antes (MGC-1650)
+    //     el flow saltaba directo a `/match` → auto-play sin selección
+    //     (bug AC3 MGC-240). La nueva pantalla `/alineacion` setea
+    //     `matchStore.alignment` y dispara `startMatch()` en su CTA
+    //     "Confirmar alineación".
     if (!profile.club) {
       openAcademy();
       await flushPendingSave();
       router.push('/simulador-carrera/academy');
       return;
     }
-    await startMatch();
-    router.push('/simulador-carrera/match');
+    router.push('/simulador-carrera/alineacion');
   };
 
   // MGC-209: CTA al flow de 6 pantallas (draft → tu-jugador → club → temporada → fin-carrera).
@@ -501,10 +505,12 @@ export default function DashboardScreen() {
           )}
         </Section>
 
-        {/* National team */}
+        {/* National team — MGC-42.C: card informativa (sin acción tappable).
+            El Pressable original tenía `onPress={() => undefined}` (handler
+            muerto del catálogo UX MGC-44). La card ahora es View puro para
+            no sugerir affordance inexistente; a11y label se preserva. */}
         <Section title={copy.resolve('dashboard_selection_h2')}>
-          <Pressable
-            onPress={() => undefined}
+          <View
             style={{
               borderRadius: radii.lg,
               borderWidth: 1,
@@ -534,7 +540,7 @@ export default function DashboardScreen() {
                 ? copy.resolve('state_picked_national')
                 : copy.resolve('dashboard_selection_empty')}
             </Text>
-          </Pressable>
+          </View>
         </Section>
 
         {/* Recommended strategy (motor → UI sin hardcodeo) */}
