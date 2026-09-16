@@ -32,7 +32,6 @@ export default function SemanalScreen() {
   const profile = useCareerStore((s) => s.profile);
   const weeklyChoice = useCareerStore((s) => s.weeklyChoice);
   const resolveMatchweek = useCareerStore((s) => s.resolveMatchweek);
-  const startMatch = useCareerStore((s) => s.startMatch);
 
   const positionStats: PositionStats = profile.positionStats ?? STAT_INIT;
 
@@ -49,13 +48,14 @@ export default function SemanalScreen() {
     if (optionId === 'doble_turno') {
       // doble turno consume partido → resolvemos matchweek tras la choice.
       await resolveMatchweek();
-      // MGC-1802 P0-6 — wire UI→match: cargamos el MatchOutcome en
-      // matchStore (transient) y navegamos a /match. Antes la mutación
-      // de apps/goals quedaba invisible porque ningún componente
-      // navegaba al resultado del partido (QA MGC-1739: 'Jugar temporada'
-      // simulaba 38 semanas silenciosamente).
-      await startMatch();
-      router.push('/simulador-carrera/match');
+      // MGC-261 fix — insertar pantalla `/alineacion` entre semanal y /match.
+      // Antes (PR #16) este handler llamaba `startMatch()` y navegaba directo
+      // a /match → el usuario saltaba la decisión táctica pre-partido
+      // (regression MGC-245 AC3). Ahora dejamos que `/alineacion` sea el
+      // gate obligatorio: el usuario elige conservadora/todo/lider, su
+      // `matchStore.alignment` queda seteado, y desde ahí `onConfirm`
+      // dispara `startMatch()` + navega a /match con el chip de alineación.
+      router.push('/simulador-carrera/alineacion');
     }
   };
 
