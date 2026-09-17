@@ -1,31 +1,46 @@
 /**
- * i18n — copy del SiteHeader (MGC-653).
+ * i18n — copy del SiteHeader (MGC-653) + home body (MGC-320).
  *
- * Fuente de verdad única para los strings del header global. Mantenido en
- * un módulo plano (no `i18next`) para evitar agregar dependencias nativas
- * nuevas al bundle (`expo-localization` requiere app.config.js plugin entry
- * y un rebuild nativo; el alcance de MGC-653 es solo el header). Cuando el
+ * Fuente de verdad única para los strings del header global y los strings
+ * del body de la home (MGC-320). Mantenido en un módulo plano (no
+ * `i18next`) para evitar agregar dependencias nativas nuevas al bundle
+ * (`expo-localization` requiere app.config.js plugin entry y un rebuild
+ * nativo; el alcance de MGC-653 es solo el header + home body). Cuando el
  * resto de la app necesite localización, este módulo se migra a `i18next`
  * + `expo-localization` siguiendo el plan documentado en ADR-0014.
  *
- * Locales soportados: `es` (default), `en`, `zh-CN`.
+ * Locales soportados: `es` (default), `en`, `zh-CN`, `pt-BR` (MGC-320).
  *
  * Patrón de lookup: `t('nav.simulator')` devuelve el string traducido del
  * locale activo, con fallback a `es` si falta la clave en el locale pedido.
  */
 
-export type Locale = 'es' | 'en' | 'zh-CN';
+export type Locale = 'es' | 'en' | 'zh-CN' | 'pt-BR';
 
-export const SUPPORTED_LOCALES: Locale[] = ['es', 'en', 'zh-CN'];
+export const SUPPORTED_LOCALES: Locale[] = ['es', 'en', 'zh-CN', 'pt-BR'];
 
 export const LOCALE_LABEL: Record<Locale, string> = {
   es: 'ES',
   en: 'EN',
   'zh-CN': '中文',
+  'pt-BR': 'PT',
 };
 
 export type Copy = {
   brand: string;
+  // MGC-320 — strings del body de la home (`app/index.tsx`).
+  // Antes el body tenía los strings hardcoded en español (Bug B del
+  // padre MGC-306): cambiar el chip del LanguageSwitcher sólo propagaba
+  // al header + panel Ajustes, no al splashCopy ni al CTA "Jugar".
+  // Estos keys los consume `useLocale().t('home.*')` y el componente
+  // se re-renderiza al cambiar el locale porque el provider está en
+  // el root layout (`_layout.native.tsx`).
+  home: {
+    eyebrow: string;
+    title: string;
+    body: string;
+    play: string;
+  };
   nav: {
     simulator: string;
     buildCareer: string;
@@ -377,6 +392,13 @@ export type Copy = {
 export const COPY: Record<Locale, Copy> = {
   es: {
     brand: 'Copero',
+    // MGC-320 — body home en español (default).
+    home: {
+      eyebrow: 'COPERO · SIMULADOR DE CARRERA',
+      title: 'Convertite en leyenda',
+      body: 'Tomá decisiones, asumí consecuencias y construí tu carrera futbolística paso a paso.',
+      play: 'Jugar',
+    },
     nav: {
       simulator: 'Simulador de carrera',
       buildCareer: 'Crea tu carrera',
@@ -693,6 +715,13 @@ export const COPY: Record<Locale, Copy> = {
   },
   en: {
     brand: 'Copero',
+    // MGC-320 — body home en inglés.
+    home: {
+      eyebrow: 'COPERO · CAREER SIMULATOR',
+      title: 'Become a legend',
+      body: 'Make decisions, face consequences and build your football career one step at a time.',
+      play: 'Play',
+    },
     nav: {
       simulator: 'Career Simulator',
       buildCareer: 'Build your career',
@@ -1009,6 +1038,13 @@ export const COPY: Record<Locale, Copy> = {
   },
   'zh-CN': {
     brand: 'Copero',
+    // MGC-320 — body home en chino simplificado.
+    home: {
+      eyebrow: 'COPERO · 职业生涯模拟器',
+      title: '成为传奇',
+      body: '做出决定，承担后果，一步步打造你的足球生涯。',
+      play: '开始游戏',
+    },
     nav: {
       simulator: '足球生涯模拟器',
       buildCareer: '创建你的足球生涯',
@@ -1321,6 +1357,328 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: '是，清除全部',
       confirmCancel: '取消',
       confirmDismiss: '关闭弹窗且不清除',
+    },
+  },
+  // MGC-320 — locale pt-BR (Bug A del padre MGC-306). Solo poblamos
+  // las claves que el header, settings y home body necesitan; el resto
+  // cae al fallback `es` (regla del `t()` en `locale-context.tsx`).
+  // El alcance del fix de MGC-320 es el selector + propagación + persistencia;
+  // la traducción completa del juego sigue siendo follow-up de MGC-306.
+  'pt-BR': {
+    brand: 'Copero',
+    home: {
+      eyebrow: 'COPERO · SIMULADOR DE CARREIRA',
+      title: 'Vire uma lenda',
+      body: 'Tome decisões, assuma consequências e construa sua carreira de futebol passo a passo.',
+      play: 'Jogar',
+    },
+    nav: {
+      simulator: 'Simulador de carreira',
+      buildCareer: 'Crie sua carreira',
+      fullCareer: 'Carreira completa',
+      quickCareer: 'Carreira rápida',
+      howToPlay: 'Como jogar',
+      mechanics: 'Mecânicas',
+      faq: 'FAQ',
+      play: 'Jogar',
+      primary: 'Navegação principal',
+      languageLabel: 'Trocar idioma',
+      menuOpen: 'Abrir menu',
+      menuClose: 'Fechar menu',
+      settings: 'Ajustes',
+    },
+    settings: {
+      title: 'Ajustes',
+      version: 'Versão',
+      build: 'Build',
+      language: 'Idioma',
+      resetCareer: 'Resetar carreira',
+      howToPlay: 'Como jogar',
+      feedback: 'Enviar feedback',
+      feedbackSubject: 'Feedback Copero',
+      close: 'Fechar',
+    },
+    identity: {
+      eyebrow: 'COPERO · NOVA CARREIRA',
+      title: 'Crie seu jogador',
+      subtitle: 'Passo 1 de 2 — Seu jogador',
+      stepIndicator: 'Passo 1 de 2',
+      fieldName: 'Nome',
+      namePlaceholder: 'Ex. Lionel',
+      fieldLastName: 'Sobrenome',
+      lastNamePlaceholder: 'Ex. Messi',
+      fieldAge: 'Idade (16–35)',
+      agePlaceholder: '19',
+      ageHelp: 'Seu jogador começa nesta idade e se aposenta aos 35.',
+      ageA11y: 'Idade do jogador, entre 16 e 35 anos',
+      nameA11y: 'Nome do jogador',
+      lastNameA11y: 'Sobrenome do jogador',
+      fieldFoot: 'Pé dominante',
+      footLeft: 'Esquerdo',
+      footRight: 'Direito',
+      footBoth: 'Ambos',
+      fieldNationality: 'Nacionalidade',
+      nationalityPlaceholder: 'Buscar país…',
+      nationalityNoMatches: 'Sem resultados.',
+      nationalityExpandLabel: 'Ver todas as {n}',
+      nationalityCollapseLabel: 'Ver menos',
+      nationalityCollapseA11y: 'Ver menos nacionalidades',
+      nationalityExpandA11y: 'Ver todas as {n} nacionalidades',
+      nationalityHint: 'Digite para buscar entre as {n} nacionalidades.',
+      nationalitySearchA11y: 'Selecionar nacionalidade',
+      jerseyEyebrow: 'PREVIEW DA CAMISA',
+      jerseyCaption: '{position} · OVR 50',
+      fieldLeague: 'Liga de origem',
+      leagueOpenHint: 'Abre a lista de ligas',
+      leaguePlaceholder: 'Selecionar liga…',
+      leagueSearchPlaceholder: 'Buscar liga…',
+      leagueSearchA11y: 'Buscar liga',
+      leagueNoMatches: 'Sem resultados.',
+      fieldPosition: 'Posição',
+      positionA11y: 'Posição {label}',
+      positionChipsA11y: 'Posição: {label}',
+      positionGroupGk: 'GK',
+      positionGroupDef: 'DEF',
+      positionGroupMid: 'MID',
+      positionGroupFwd: 'FWD',
+      fieldMapA11y: 'Mapa do campo com posições',
+      numberLabel: 'NÚMERO (1–99)',
+      numberDecrement: 'Diminuir número',
+      numberIncrement: 'Aumentar número',
+      ageLabel: 'IDADE (16–35)',
+      ageErrorLow: 'A idade mínima é 16 anos.',
+      ageErrorHigh: 'A idade máxima é 35 anos.',
+      nameErrorShort: 'O nome deve ter pelo menos 2 caracteres.',
+      nameErrorLong: 'O nome não pode passar de 24 caracteres.',
+      continueHint: 'Preencha nome e sobrenome para continuar.',
+      continue: 'Continuar → Escolher clube',
+      continueA11yHint: 'Salva a identidade e abre a seleção de clube',
+      nationalityOptionA11y: 'Selecionar nacionalidade {name}',
+    },
+    teamSelect: {
+      eyebrow: 'ESCOLHA SEU CLUBE',
+      title: 'Em que clube você começa sua carreira?',
+      subtitle:
+        'Seu primeiro clube define o começo. Depois, entre temporadas, você pode receber ofertas de clubes com melhor reputação.',
+      reputationLabel: 'REPUTAÇÃO',
+      reputationValue: '{n} / 5',
+      cardA11y: '{name}, {league}, reputação {reputation} de {maxReputation}',
+      selectedBadge: 'Selecionado',
+      continueHint: 'Toque em um clube para selecioná-lo.',
+      continue: 'Começar carreira',
+      continueA11yHint: 'Salva o clube escolhido e abre o dashboard',
+    },
+    seasonHub: {
+      eyebrow: 'HUB DA TEMPORADA',
+      heroName: '{name}',
+      position: '{position}',
+      age: '{age} anos',
+      club: '{club}',
+      freeAgent: 'Sem clube',
+      week: 'SEMANA {week}/38',
+      fatigueEyebrow: 'FADIGA',
+      fatigueValue: '{value}/100',
+      statsEyebrow: 'STATS DA POSIÇÃO',
+      statsNote: 'Outras posições somam no F2',
+      statVision: 'Visão',
+      statPass: 'Passe',
+      statDribble: 'Drible',
+      statStamina: 'Resistência',
+      nextMatchEyebrow: 'PRÓXIMO JOGO',
+      nextMatchVs: 'vs {rival}',
+      nextMatchJornada: 'Rodada {week}',
+      nextMatchEmpty: 'Sem adversário ainda',
+      ctaViewTable: 'Ver tabela',
+      ctaViewTableHint: 'Abre a linha do tempo das temporadas',
+      ctaDecide: 'Decidir semana →',
+      ctaDecideHint: 'Abre a decisão semanal com as 4 opções',
+    },
+    weekDecision: {
+      eyebrow: 'DECISÃO SEMANAL',
+      title: 'O que você faz esta semana?',
+      subtitle: 'Escolha uma opção. F2 substitui pela árvore posicional completa.',
+      optDoubleShift: 'Turno duplo',
+      optDoubleShiftDesc: 'Alto risco · alta recompensa. Aumenta fadiga.',
+      optSimpleShift: 'Turno simples',
+      optSimpleShiftDesc: 'Equilíbrio · risco baixo · deltas moderados.',
+      optRest: 'Descanso',
+      optRestDesc: 'Recupera fadiga · sem jogo nesta semana.',
+      optTraining: 'Treino físico',
+      optTrainingDesc: 'Melhora um stat posicional específico.',
+      backHint: 'Voltar ao hub da temporada',
+    },
+    temporada: {
+      traits: {
+        eyebrow: 'TRAÇOS DO JOGADOR',
+        title: 'Como seu jogador se comporta',
+        subtitle: 'Toque em um ou dois traços para definir seu estilo. Cada um muda como os eventos se desenrolam e quais clubes aparecem.',
+        capHint: 'Máximo 2 traços',
+        itemA11y: 'Traço {name}, {selected}',
+        a11ySelected: 'selecionado',
+        a11yNotSelected: 'não selecionado',
+        'magneto-mediatico': {
+          name: 'Ímã de mídia',
+          desc: 'Atrai patrocinadores e manchetes. Mais ofertas e eventos midiáticos, mas maior exposição.',
+        },
+        trotamundos: {
+          name: 'Globetrotter',
+          desc: 'Se adapta rápido a ligas novas. Transferências internacionais melhores e drift de OVR no exterior.',
+        },
+      },
+    },
+    postMatch: {
+      eyebrow: 'DEPOIS DO JOGO',
+      title: 'Como você encerra a noite?',
+      ratingLabel: 'Nota do jogo',
+      luckGatePassed: 'Seu nível segura a fase: a sorte joga a favor nesta semana.',
+      luckGateBlocked: 'Sem nível não há sorte: você paga o desgaste sem prêmio.',
+      continue: 'Continuar',
+      continueHint: 'Fechar o evento e avançar para a próxima semana',
+      evDescanso: 'Descanso',
+      evDescansoDesc: 'Você fica em casa. Recupera físico e encerra a semana tranquilo.',
+      evFiesta: 'Festa',
+      evFiestaDesc: 'Você sai para festejar com o elenco. Moral sobe, físico desce.',
+      evGambling: 'Jogo',
+      evGamblingDesc: 'A noite termina na mesa de jogo. Madrugada, ressaca e mais risco de lesão.',
+      evCompraLujosa: 'Compra de luxo',
+      evCompraLujosaDesc: 'Você se dá um luxo. Moral nas alturas, foco no treino cai.',
+      evPremiacion: 'Prêmio individual',
+      evPremiacionDesc: 'Você é eleito o craque da rodada. Moral e confiança no topo.',
+      sectionLabel: 'RESUMO DO JOGO',
+      subtitle: 'Sua nota e as mudanças que serão aplicadas ao confirmar.',
+      ratingA11y: 'Nota {rating} em 10',
+      ratingOutstanding: ' atuação brilhante',
+      ratingSolid: ' atuação sólida',
+      ratingRegular: ' partida correta',
+      ratingPoor: ' abaixo do esperado',
+      ratingBad: ' noite difícil',
+      changesTitle: 'MUDANÇAS',
+      statMoral: 'Moral',
+      statFisico: 'Energia',
+      statConfianza: 'Confiança',
+      statGoals: 'Gols da partida',
+      reputationTitle: 'REPUTAÇÃO',
+      prensa: 'Imprensa: {value}',
+      hinchada: 'Torcida: {value}',
+      vestuario: 'Vestiário: {value}',
+      repPrensaEnsalzada: 'enaltecida',
+      repPrensaNeutral: 'neutra',
+      repPrensaCritica: 'crítica',
+      repPrensaHostil: 'hostil',
+      repHinchadaIdolo: 'ídolo',
+      repHinchadaAceptado: 'aceito',
+      repHinchadaDiscutido: 'discutido',
+      repHinchadaOdiado: 'odiado',
+      repVestuarioCapitan: 'capitão moral',
+      repVestuarioIntegrado: 'integrado',
+      repVestuarioAislado: 'isolado',
+      nextTitle: 'PRÓXIMO',
+      nextWeek: 'Semana {week} / 38',
+      ctaNextWeek: 'Próxima semana →',
+      ctaNextWeekHint: 'Aplica as mudanças e avança para a próxima rodada',
+      ctaBackToHub: 'Voltar ao hub',
+      ctaBackToHubHint: 'Descarta as mudanças e volta ao dashboard',
+    },
+    transfers: {
+      eyebrow: 'MERCADO DA BOLA',
+      title: 'Fim de temporada',
+      subtitle: 'Seu rendimento define quais clubes te buscam.',
+      verdictElite: 'Os grandes te querem. Três ofertas de elite na mesa.',
+      verdictStrong: 'Boa temporada. Dois clubes do meio te fazem proposta.',
+      verdictHold: 'Temporada correta. Você fica a menos que apareça algo melhor.',
+      verdictHoldLow: 'Temporada fraca mas sem alarme. Você fica onde está.',
+      verdictDescent: 'Temporada ruim. O clube te empurra para fora.',
+      verdictRetirement: 'A estrada acaba aqui. Hora de pendurar as chuteiras.',
+      noOffers: 'Não chegou oferta. Você fica no clube.',
+      forcedTransfer: 'Saída forçada: o clube não te quer na próxima.',
+      deadline: 'Você tem até a semana {{week}} para decidir.',
+      offerRole: 'Papel esperado',
+      roleStarter: 'Titular',
+      roleRotation: 'Rotação',
+      offerYears: 'Contrato',
+      offerWage: 'Salário',
+      offerReputation: 'Reputação',
+      accept: 'Aceitar',
+      acceptHint: 'Assinar com este clube',
+      decline: 'Recusar tudo',
+      declineHint: 'Ficar no seu clube atual',
+    },
+    decisionTree: {
+      nodePretemporada: 'Pré-temporada: a comissão técnica mede do zero.',
+      nodeEntrenamientoBase: 'Treino da semana com o elenco.',
+      nodeDobleSesion: 'Sessão dupla: manhã e tarde sem respiro.',
+      nodeGimnasio: 'Trabalho de musculação e força.',
+      nodeVideoAnalisis: 'Sessão de vídeo com o analista.',
+      nodeCharlaTecnico: 'Conversa cara a cara com o técnico.',
+      nodeVestuarioTension: 'Tensão no vestiário depois do último resultado.',
+      nodePartidoLiga: 'Jogo de liga: rodada comum.',
+      nodePartidoCopa: 'Jogo de copa: mata-mata.',
+      nodeDerbi: 'Clássico: o jogo do ano.',
+      nodeVisitanteHostil: 'Visitante em campo hostil.',
+      nodeRuedaPrensa: 'Coletiva com jornalistas afiados.',
+      nodeRedesSociales: 'Você exagera nas redes sociais.',
+      nodeOfertaAgente: 'Seu representante traz uma proposta.',
+      nodeConvocatoriaJuvenil: 'Convocação para a seleção juvenil.',
+      nodeAmistosoInternacional: 'Amistoso internacional com viagem longa.',
+      nodeManejoMolestia: 'Você carrega um desconforto: precisa administrar.',
+      nodeRotacionBanco: 'Rotação: você começa no banco.',
+      nodeCierreMercado: 'Última semana do mercado da bola.',
+      nodeFinalTemporada: 'Final de temporada: tudo se decide.',
+      outBrillante: 'Brilhante',
+      outSolido: 'Sólido',
+      outCorrecto: 'Correto',
+      outIrregular: 'Irregular',
+      outFlojo: 'Fraco',
+      outDesastre: 'Desastre',
+    },
+    match: {
+      loading: 'Carregando jogo…',
+      loadError: 'Não conseguimos carregar o jogo. Volte ao hub e tente de novo.',
+      ctaLoadErrorBack: 'Voltar ao hub',
+      weekLabel: 'SEMANA',
+      title: 'Seu jogo',
+      subtitle: 'Resultado, eventos e seu rendimento na rodada.',
+      finalLabel: 'FIM',
+      rival: 'Adversário',
+      cleanSheet: 'Vela invicta',
+      resultClosed: 'Resultado fechado',
+      eventsTitle: 'EVENTOS',
+      noEvents: 'Sem gols neste jogo.',
+      goalEvent: 'Gol. Finalização letal.',
+      yourGameTitle: 'SEU JOGO',
+      statGoals: 'Gols',
+      statAst: 'Assist.',
+      statPassPct: 'Passe %',
+      statMinutes: 'Minutos',
+      ctaFinalize: 'Finalizar jogo',
+      ctaFinalizeHint: 'Vai para a tela de pós-jogo para confirmar',
+    },
+    retire: {
+      eyebrow: 'CARREIRA COMPLETA',
+      title: 'FIM DE CARREIRA',
+      subtitle: 'Encerramento da carreira. Resumo das suas melhores temporadas, vitrine e legado.',
+      statRetirementAge: 'IDADE DE APOSENTADORIA',
+      statFinalOvr: 'OVR FINAL',
+      statApps: 'JOGOS',
+      statGoalsAssists: 'GOLS + ASSIST.',
+      attributesTitle: 'ATRIBUTOS NA APOSENTADORIA',
+      attributesA11y: 'Atributos na aposentadoria',
+      trophyTitle: 'VITRINE',
+      trophyEmpty: 'Sem títulos na sua carreira.',
+      legadoTitle: 'LEGADO',
+      ovrDelta: 'OVR {{initial}} → {{final}}',
+      legadoLead: 'Cresceu de novato a referência.',
+      retiredAt: 'Você se aposentou aos {{age}} anos.',
+      restart: 'Começar nova carreira',
+      restartA11y: 'Apaga a carreira atual e volta ao início',
+      backSeason: 'Voltar à temporada',
+      backSeasonA11y: 'Volta ao hub da temporada',
+      notFinished: 'Sua carreira ainda não terminou. Volte à temporada para jogar completa.',
+      confirmTitle: 'Começar uma nova carreira?',
+      confirmBody: 'Você vai apagar a partida salva, o high score do minigame e o progresso do quiz. O app fica como recém-instalado.',
+      confirmAccept: 'Sim, apagar tudo',
+      confirmCancel: 'Cancelar',
+      confirmDismiss: 'Fechar o diálogo sem apagar',
     },
   },
 };
