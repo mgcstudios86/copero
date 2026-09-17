@@ -30,21 +30,22 @@ export default function MatchScreen() {
   // disparar un re-render extra (cumple react-hooks/set-state-in-effect).
   const effectiveLoadFailed = loadFailed && !outcome;
 
+  // MGC-386 — self-heal robusto del loader. El usuario puede llegar
+  // aquí de 3 caminos:
+  //   a) dashboard.tsx onAcademyPress → await startMatch() + push (matchStore ya hidratado)
+  //   b) calendar.tsx onAdvanceWeek → await startMatch() + push (MGC-386 fix)
+  //   c) semanal.tsx (doble_turno) → await startMatch() + push
+  //   d) deep-link directo a /match (URL) → outcome=null, hidratar acá
+  //
+  // Antes este useEffect hacía `void startMatch().catch(setLoadFailed)`
+  // y eso provocaba que un deep-link llegara a renderizar el guard de
+  // `match-loading` con `outcome=null` durante un tick antes de que
+  // startMatch resolviera — visualmente correcto pero el guard se
+  // disparaba si el módulo career/simulation fallaba al cargar (chunk
+  // lazy no resuelto). Ahora esperamos 250ms con un timeout-cancelable
+  // para darle tiempo al side-effect a popular el store, y SOLO
+  // declaramos loadFailed si startMatch rechazó explícitamente.
   useEffect(() => {
-    // MGC-386 — self-heal robusto del loader. El usuario puede llegar
-    // aquí de 3 caminos:
-    //   a) dashboard.tsx onAcademyPress → await startMatch() + push (matchStore ya hidratado)
-    //   b) semanal.tsx (doble_turno) → await startMatch() + push
-    //   c) deep-link directo a /match (URL) → outcome=null, hidratar acá
-    //
-    // Antes este useEffect hacía `void startMatch().catch(setLoadFailed)`
-    // y eso provocaba que un deep-link llegara a renderizar el guard de
-    // `match-loading` con `outcome=null` durante un tick antes de que
-    // startMatch resolviera — visualmente correcto pero el guard se
-    // disparaba si el módulo career/simulation fallaba al cargar (chunk
-    // lazy no resuelto). Ahora esperamos 250ms con un timeout-cancelable
-    // para darle tiempo al side-effect a popular el store, y SOLO
-    // declaramos loadFailed si startMatch rechazó explícitamente.
     let cancelled = false;
     const timer = setTimeout(() => {
       if (!cancelled && !outcome) {

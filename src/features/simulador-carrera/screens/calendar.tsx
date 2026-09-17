@@ -48,6 +48,14 @@ export default function CalendarScreen() {
   const profile = useCareerStore((s) => s.profile);
   const advance = useCareerStore((s) => s.advance);
   const advanceSeason = useCareerStore((s) => s.advanceSeason);
+  // MGC-386 — MGC-1650 (WF4 partido). Mismo patrón que dashboard.tsx y
+  // semanal.tsx: hidratar `matchStore` con el MatchOutcome ANTES de
+  // navegar a /simulador-carrera/match. Antes la pantalla quedaba
+  // montada con `outcome=null` y el loader self-heal corría startMatch()
+  // como side-effect, lo que en builds con tree-shaking de los chunks
+  // lazy de career/simulation podía disparar `match-load-error`
+  // antes de que la mutación hidratara el store.
+  const startMatch = useCareerStore((s) => s.startMatch);
 
   const week = Math.max(0, profile.week ?? PRETEMPORADA_WEEK);
   const season = Math.max(1, profile.season ?? 1);
@@ -106,9 +114,19 @@ export default function CalendarScreen() {
     // regular nueva (semana 1..37). En pretemporada y `fin` no
     // disparamos match (sería antifuncional).
     if (week + 1 >= 1 && week + 1 < SEASON_LENGTH) {
+      // MGC-386 — poblar `matchStore.outcome` ANTES del push para que
+      // /match no evalúe el guard con `outcome=null`. Si startMatch
+      // lanza (imports rotos), caemos al redirect del loader (back to
+      // season-hub) sin quedar colgados en el dashboard.
+      try {
+        await startMatch();
+      } catch {
+        // best-effort: el self-heal del match screen reintenta y, si
+        // vuelve a fallar, expone match-load-error con CTA al hub.
+      }
       router.push('/simulador-carrera/match');
     }
-  }, [advance, router, week]);
+  }, [advance, router, startMatch, week]);
 
   const onAdvanceSeason = useCallback(async () => {
     await advanceSeason();
