@@ -15,9 +15,15 @@
  * locale activo, con fallback a `es` si falta la clave en el locale pedido.
  */
 
-export type Locale = 'es' | 'en' | 'zh-CN' | 'pt-BR';
+// MGC-320 / MGC-357 — `SUPPORTED_LOCALES` es la fuente de verdad única
+// para los locales del simulador. Derivamos `Locale` con `(typeof
+// SUPPORTED_LOCALES)[number]` para que cualquier alta/baja fluya
+// automáticamente al tipo (y rompa en compile-time si alguien olvida
+// poblar `COPY`, `LOCALE_LABEL`, etc.). Mantener este orden: `es`
+// primero (default) y luego el resto en orden de aparición histórica.
+export const SUPPORTED_LOCALES = ['es', 'en', 'zh-CN', 'pt-BR'] as const;
 
-export const SUPPORTED_LOCALES: Locale[] = ['es', 'en', 'zh-CN', 'pt-BR'];
+export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 export const LOCALE_LABEL: Record<Locale, string> = {
   es: 'ES',
