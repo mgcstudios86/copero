@@ -77,7 +77,16 @@ module.exports = ({ config } = {}) => ({
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
   experiments: {
-    newArchEnabled: true,
+    // MGC-316: QA APK debuggable falla con "PlatformConstants could not be
+    // found" TurboModule lookup. El native binary compilado en SDK 57 + RN
+    // 0.86 con newArchEnabled=true no incluye PlatformConstants en el lookup
+    // (codegen no expone core RN specs al JS bundle pre-empaquetado). Forzamos
+    // newArchEnabled=false → legacy bridge, lookup por nombre legacy funciona
+    // sin requerir codegen spec. Si en el futuro se necesita new arch, abrir
+    // ticket para investigar por qué el codegen omite PlatformConstants (ver
+    // upstream https://github.com/facebook/react-native/issues sobre
+    // TurboModule registration en RN 0.86+Expo SDK 57 con profile preview-apk).
+    newArchEnabled: false,
   },
   ios: {
     supportsTablet: true,
