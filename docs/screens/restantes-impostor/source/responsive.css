@@ -1,0 +1,55 @@
+/* responsive.css — mobile-first portrait.
+ * Breakpoints por device class (mismo criterio que matrix de export PNG):
+ *  - compact: 360px
+ *  - standard: 390px (default)
+ *  - pro max: 430px
+ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--line-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+.screen {
+  width: 100%;
+  min-height: 100vh;
+  padding: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+}
+
+/* Compact (Android gama baja, 360x640) */
+@media (max-width: 374px) {
+  .screen { max-width: 360px; }
+  .screen__header { padding: var(--space-3) var(--space-3) var(--space-2); }
+  .screen__body { padding: var(--space-3); }
+  .btn--primary { font-size: var(--text-sm); }
+}
+
+/* Standard (iPhone 14/15 baseline, 390x844) — default */
+@media (min-width: 375px) and (max-width: 414px) {
+  .screen { max-width: 390px; }
+  .screen__header { padding: var(--space-4) var(--space-4) var(--space-3); }
+  .screen__body { padding: var(--space-4); }
+}
+
+/* Pro Max (430+) */
+@media (min-width: 415px) {
+  .screen { max-width: 430px; }
+  .screen__header { padding: var(--space-5) var(--space-5) var(--space-4); }
+  .screen__body { padding: var(--space-5); }
+}
+
+/* Safe area iOS (top 44pt status bar, bottom 34pt home indicator) */
+.screen__header { padding-top: max(var(--space-4), env(safe-area-inset-top, 0px)); }
+.screen__footer { padding-bottom: max(var(--space-4), env(safe-area-inset-bottom, 0px)); }

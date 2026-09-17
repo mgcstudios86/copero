@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modo Copero — Calendario copa</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="copero-calendario">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Copa nacional 2026</span>
+        <button class="icon-btn" aria-label="Brackets">⌘</button>
+      </div>
+      <h1 class="t-h2">Calendario</h1>
+      <div class="filters" style="padding-top:var(--space-2);">
+        <button class="chip chip--ghost">Octavos</button>
+        <button class="chip chip--primary">Cuartos</button>
+        <button class="chip">Semis</button>
+        <button class="chip">Final</button>
+      </div>
+    </header>
+
+    <section class="screen__body">
+      <!-- Phase banner -->
+      <div class="card" style="background:linear-gradient(135deg, var(--color-accent-soft), var(--color-surface)); border-color:var(--color-accent);">
+        <div class="card__row">
+          <span class="t-eyebrow" style="color:var(--color-accent);">Fase actual</span>
+          <span class="chip chip--primary">Cuartos</span>
+        </div>
+        <h3 class="t-h3">Cuartos de final</h3>
+        <p class="t-small">4 partidos en 2 semanas. Single elimination. Ganador avanza a semis.</p>
+      </div>
+
+      <!-- Match cards -->
+      <div class="list list--gap-md">
+        <div class="card card--accent">
+          <div class="card__row">
+            <span class="t-meta t-uppercase">Cuartos · 1</span>
+            <span class="chip chip--primary">HOY</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); flex:1;">
+              <div class="avatar avatar--lg" style="background:var(--color-primary-soft); color:var(--color-primary);">AR</div>
+              <span class="t-small">Argentina</span>
+            </div>
+            <span class="t-meta">vs</span>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); flex:1;">
+              <div class="avatar avatar--lg">BR</div>
+              <span class="t-small">Brasil</span>
+            </div>
+          </div>
+          <button class="btn btn--primary btn--full">Jugar partido</button>
+        </div>
+
+        <div class="card">
+          <div class="card__row">
+            <span class="t-meta t-uppercase">Cuartos · 2</span>
+            <span class="chip chip--ghost">Próxima semana</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); flex:1;">
+              <div class="avatar avatar--lg">UY</div>
+              <span class="t-small">Uruguay</span>
+            </div>
+            <span class="t-meta">vs</span>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); flex:1;">
+              <div class="avatar avatar--lg">CL</div>
+              <span class="t-small">Chile</span>
+            </div>
+          </div>
+          <span class="t-meta">Pendiente resultado</span>
+        </div>
+
+        <div class="card">
+          <div class="card__row">
+            <span class="t-meta t-uppercase">Cuartos · 3</span>
+            <span class="chip chip--ghost">Sem 36</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); flex:1;">
+              <div class="avatar avatar--lg">MX</div>
+              <span class="t-small">México</span>
+            </div>
+            <span class="t-meta">vs</span>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); flex:1;">
+              <div class="avatar avatar--lg">ES</div>
+              <span class="t-small">España</span>
+            </div>
+          </div>
+          <span class="t-meta">Pendiente resultado</span>
+        </div>
+
+        <div class="card">
+          <div class="card__row">
+            <span class="t-meta t-uppercase">Cuartos · 4</span>
+            <span class="chip chip--ghost">Sem 36</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); flex:1;">
+              <div class="avatar avatar--lg">CO</div>
+              <span class="t-small">Colombia</span>
+            </div>
+            <span class="t-meta">vs</span>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); flex:1;">
+              <div class="avatar avatar--lg">FR</div>
+              <span class="t-small">Francia</span>
+            </div>
+          </div>
+          <span class="t-meta">Pendiente resultado</span>
+        </div>
+      </div>
+
+      <!-- Standings cup -->
+      <div class="card">
+        <h3 class="card__title">Estado del torneo</h3>
+        <div class="stat-strip">
+          <div class="stat-strip__cell"><span class="stat-strip__value">3/4</span><span class="stat-strip__label">Partidos</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">2-1</span><span class="stat-strip__label">Record</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">+€2M</span><span class="stat-strip__label">Premio</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

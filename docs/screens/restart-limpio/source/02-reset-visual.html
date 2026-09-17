@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restart — Reset visual fresh</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="restart-reset">
+    <header class="screen__header">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-2); padding-top:var(--space-5);">
+        <span class="t-eyebrow">Reinicio completado</span>
+        <h1 class="t-h1" style="text-align:center;">Estado fresh</h1>
+        <p class="t-small" style="text-align:center;">Tu app está como recién instalada. Vamos a empezar de nuevo.</p>
+      </div>
+    </header>
+
+    <section class="screen__body">
+      <!-- Welcome back -->
+      <div class="state">
+        <span class="state__icon" style="font-size:72px;">👋</span>
+        <h3 class="state__title">¡Bienvenido de vuelta!</h3>
+        <p class="state__body">Elegí un equipo y empezá una nueva carrera.</p>
+      </div>
+
+      <!-- Steps -->
+      <div class="card">
+        <h3 class="card__title">Próximos pasos</h3>
+        <div class="list list--gap-md">
+          <div class="list-item card--accent">
+            <span style="font-size:24px; color:var(--color-primary);">①</span>
+            <div class="list-item__main">
+              <div class="list-item__title">Elegí idioma</div>
+              <div class="list-item__subtitle">ES · EN · PT</div>
+            </div>
+            <span class="chip chip--primary">Listo</span>
+          </div>
+          <div class="list-item card--accent">
+            <span style="font-size:24px; color:var(--color-primary);">②</span>
+            <div class="list-item__main">
+              <div class="list-item__title">Elegí equipo</div>
+              <div class="list-item__subtitle">3 presets + custom</div>
+            </div>
+            <span class="chip chip--ghost">Pendiente</span>
+          </div>
+          <div class="list-item">
+            <span style="font-size:24px; color:var(--color-text-muted);">③</span>
+            <div class="list-item__main">
+              <div class="list-item__title">Tutorial primer partido</div>
+              <div class="list-item__subtitle">Aprendé las mecánicas</div>
+            </div>
+            <span class="chip chip--ghost">Pendiente</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset summary -->
+      <div class="card">
+        <h3 class="card__title">Resumen del reinicio</h3>
+        <div class="list-item">
+          <span style="font-size:20px; color:var(--color-success);">✓</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Storage limpiado</div>
+            <div class="list-item__subtitle">28 MB liberados</div>
+          </div>
+        </div>
+        <div class="list-item">
+          <span style="font-size:20px; color:var(--color-success);">✓</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Cache invalidado</div>
+            <div class="list-item__subtitle">Próxima carga limpia</div>
+          </div>
+        </div>
+        <div class="list-item">
+          <span style="font-size:20px; color:var(--color-success);">✓</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Preferencias reiniciadas</div>
+            <div class="list-item__subtitle">Defaults de fábrica</div>
+          </div>
+        </div>
+        <div class="list-item">
+          <span style="font-size:20px; color:var(--color-warning);">⚠</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Idioma conservado</div>
+            <div class="list-item__subtitle">Sigue en Español</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Elegir equipo</button>
+    </footer>
+  </main>
+</body>
+</html>

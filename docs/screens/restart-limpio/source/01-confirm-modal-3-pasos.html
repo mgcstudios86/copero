@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restart — Modal 3 pasos</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="restart-modal">
+    <header class="screen__header" style="opacity:0.3;">
+      <h1 class="t-h2">Fondo</h1>
+    </header>
+
+    <section class="screen__body" style="opacity:0.3;"></section>
+
+    <div class="modal-backdrop" style="position:absolute;">
+      <div class="modal" style="border-top:var(--border-chip) solid var(--color-danger);">
+        <span class="modal__handle"></span>
+        <div class="state" style="padding:var(--space-3) 0;">
+          <span class="state__icon" style="color:var(--color-danger);">⚠</span>
+          <h2 class="modal__title" style="text-align:center; color:var(--color-danger);">¿Empezar de cero?</h2>
+          <p class="state__body" style="text-align:center;">Esto borra toda la carrera actual. Vas a pasar por el onboarding de nuevo.</p>
+        </div>
+
+        <!-- Stepper (3 pasos) -->
+        <div class="stepper">
+          <div class="stepper__step stepper__step--done"></div>
+          <div class="stepper__step stepper__step--current"></div>
+          <div class="stepper__step"></div>
+        </div>
+        <p class="t-meta" style="text-align:center;">Paso 2 de 3 · Confirmación</p>
+
+        <div class="card card--danger">
+          <h3 class="card__title" style="color:var(--color-danger);">Vas a perder</h3>
+          <div class="list list--gap-md">
+            <div class="list-item" style="background:var(--color-danger-soft); border-color:var(--color-danger);">
+              <span style="font-size:20px;">🏆</span>
+              <div class="list-item__main">
+                <div class="list-item__title">3 temporadas completas</div>
+                <div class="list-item__subtitle">114 partidos jugados</div>
+              </div>
+            </div>
+            <div class="list-item" style="background:var(--color-danger-soft); border-color:var(--color-danger);">
+              <span style="font-size:20px;">⚽</span>
+              <div class="list-item__main">
+                <div class="list-item__title">Plantilla evolucionada</div>
+                <div class="list-item__subtitle">23 jugadores con stats</div>
+              </div>
+            </div>
+            <div class="list-item" style="background:var(--color-danger-soft); border-color:var(--color-danger);">
+              <span style="font-size:20px;">🏆</span>
+              <div class="list-item__main">
+                <div class="list-item__title">2 copas ganadas</div>
+                <div class="list-item__subtitle">Nacional 2025 · Continental 2026</div>
+              </div>
+            </div>
+            <div class="list-item" style="background:var(--color-danger-soft); border-color:var(--color-danger);">
+              <span style="font-size:20px;">⭐</span>
+              <div class="list-item__main">
+                <div class="list-item__title">325 puntos de prestigio</div>
+                <div class="list-item__subtitle">Ranking histórico</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--danger">
+          <span class="callout__icon">⛔</span>
+          <span class="callout__body">Esta acción es IRREVERSIBLE. El backup automático no cubre el restart limpio.</span>
+        </div>
+
+        <p class="t-small" style="text-align:center; color:var(--color-text-muted);">Tip: exportá tu save antes si querés conservarlo como respaldo.</p>
+      </div>
+    </div>
+
+    <footer class="screen__footer" style="position:relative; z-index:101; background:var(--color-surface); border-top:var(--border-hairline) solid var(--color-border);">
+      <button class="btn btn--danger btn--full btn--lg">Continuar (paso 3)</button>
+      <button class="btn btn--secondary btn--full">Cancelar</button>
+    </footer>
+  </main>
+</body>
+</html>

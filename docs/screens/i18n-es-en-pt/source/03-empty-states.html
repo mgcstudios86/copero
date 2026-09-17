@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>i18n — Empty/loading/error traducidos</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="i18n-states">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Galería de estados</span>
+        <span style="width:44px;"></span>
+      </div>
+      <h1 class="t-h2">Estados traducidos</h1>
+      <div class="filters">
+        <button class="chip chip--primary">ES</button>
+        <button class="chip">EN</button>
+        <button class="chip">PT</button>
+      </div>
+    </header>
+
+    <section class="screen__body">
+      <!-- Empty -->
+      <div class="card">
+        <span class="t-eyebrow">Empty · ES</span>
+        <div class="state">
+          <span class="state__icon">📭</span>
+          <h3 class="state__title">No hay jugadores en el mercado</h3>
+          <p class="state__body">Volvé a revisar más tarde o ajustá los filtros de búsqueda.</p>
+          <button class="btn btn--secondary">Limpiar filtros</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="t-eyebrow">Empty · EN</span>
+        <div class="state">
+          <span class="state__icon">📭</span>
+          <h3 class="state__title">No players in the market</h3>
+          <p class="state__body">Check back later or adjust your search filters.</p>
+          <button class="btn btn--secondary">Clear filters</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="t-eyebrow">Empty · PT</span>
+        <div class="state">
+          <span class="state__icon">📭</span>
+          <h3 class="state__title">Sem jogadores no mercado</h3>
+          <p class="state__body">Volte mais tarde ou ajuste os filtros de busca.</p>
+          <button class="btn btn--secondary">Limpar filtros</button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="card">
+        <span class="t-eyebrow">Loading · ES</span>
+        <div class="state">
+          <div class="spinner"></div>
+          <h3 class="state__title">Cargando partido...</h3>
+          <p class="state__body">Resolviendo simulación.</p>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="card card--danger">
+        <span class="t-eyebrow" style="color:var(--color-danger);">Error · ES</span>
+        <div class="state">
+          <span class="state__icon" style="color:var(--color-danger);">⚠</span>
+          <h3 class="state__title">No se pudo guardar la partida</h3>
+          <p class="state__body">Verificá el espacio disponible y reintentá.</p>
+          <button class="btn btn--primary">Reintentar</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

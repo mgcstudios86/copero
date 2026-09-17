@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post-match — Argentina 2-1 Brasil</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="post-match-resumen">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Semana 12 · Resultado</span>
+        <button class="icon-btn" aria-label="Compartir">↗</button>
+      </div>
+    </header>
+
+    <section class="screen__body">
+      <!-- Resultado -->
+      <div class="card" style="text-align:center;">
+        <span class="t-eyebrow">Final</span>
+        <div style="display:flex; align-items:center; justify-content:center; gap:var(--space-4); padding:var(--space-3) 0;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-2);">
+            <div class="avatar avatar--lg" style="background:var(--color-primary-soft); color:var(--color-primary);">AR</div>
+            <span class="t-small">Argentina</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1);">
+            <span style="font-family:var(--font-display); font-size:48px; font-weight:var(--weight-bold); color:var(--color-text-strong);">2 — 1</span>
+            <span class="t-mono t-small">FT</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-2);">
+            <div class="avatar avatar--lg">BR</div>
+            <span class="t-small">Brasil</span>
+          </div>
+        </div>
+        <div class="card__row" style="justify-content:center; gap:var(--space-2);">
+          <span class="chip chip--success">Victoria</span>
+          <span class="chip chip--ghost">+3 pts</span>
+        </div>
+      </div>
+
+      <!-- MVP Card -->
+      <div class="mvp-card">
+        <span class="mvp-card__crown">👑</span>
+        <span class="t-eyebrow" style="color:var(--color-primary);">MVP del partido</span>
+        <div class="avatar avatar--xl" style="background:var(--color-primary); color:var(--color-bg); width:96px; height:96px; font-size:36px;">M9</div>
+        <div>
+          <h3 class="t-h3" style="margin:0;">M. Di María</h3>
+          <p class="t-small" style="margin:var(--space-1) 0 0;">Extremo · 2 goles · 1 asistencia</p>
+        </div>
+        <div class="stat-strip" style="width:100%;">
+          <div class="stat-strip__cell"><span class="stat-strip__value">9.4</span><span class="stat-strip__label">Rating</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">2</span><span class="stat-strip__label">Goles</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">1</span><span class="stat-strip__label">Asist</span></div>
+        </div>
+      </div>
+
+      <!-- Lesionados -->
+      <div class="card card--danger">
+        <div class="card__row">
+          <span class="t-small t-uppercase" style="color:var(--color-danger);">Lesionados</span>
+          <span class="chip chip--danger chip--sm">1 jugador</span>
+        </div>
+        <div class="list-item" style="background:var(--color-danger-soft); border-color:var(--color-danger);">
+          <div class="avatar avatar--lg">C5</div>
+          <div class="list-item__main">
+            <div class="list-item__title">L. Martínez</div>
+            <div class="list-item__subtitle">Esguince tobillo · 3 semanas</div>
+          </div>
+          <span class="t-small" style="color:var(--color-danger);">−25% rating</span>
+        </div>
+      </div>
+
+      <!-- Moral delta -->
+      <div class="card">
+        <h3 class="card__title">Moral del equipo</h3>
+        <div class="card__row">
+          <span class="t-small">Moral media post-partido</span>
+          <div style="display:flex; align-items:center; gap:var(--space-2);">
+            <span class="t-mono">74</span>
+            <span class="chip chip--success chip--sm">+8</span>
+          </div>
+        </div>
+        <div class="progress"><div class="progress__fill" style="width:74%"></div></div>
+        <p class="t-small" style="margin:0;">Victoria por +1 gol con remontada. Bono moral aplicado.</p>
+      </div>
+
+      <!-- Stats rápidas -->
+      <div class="card">
+        <h3 class="card__title">Estadísticas</h3>
+        <div class="stat-strip">
+          <div class="stat-strip__cell"><span class="stat-strip__value">58%</span><span class="stat-strip__label">Pos.</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">12</span><span class="stat-strip__label">Tiros</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">6</span><span class="stat-strip__label">Corn.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Continuar temporada</button>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-2);">
+        <button class="btn btn--secondary btn--full">Ver tabla</button>
+        <button class="btn btn--secondary btn--full">Stats jugador</button>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

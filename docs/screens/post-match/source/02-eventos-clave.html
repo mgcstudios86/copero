@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post-match — Eventos clave</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="post-match-eventos">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Argentina 2-1 Brasil · FT</span>
+        <span style="width:44px;"></span>
+      </div>
+      <h1 class="t-h2">Eventos del partido</h1>
+    </header>
+
+    <section class="screen__body">
+      <!-- Timeline -->
+      <div class="card">
+        <div style="display:flex; flex-direction:column; gap:var(--space-4);">
+          <div style="display:flex; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); width:48px;">
+              <span class="t-mono t-small">12'</span>
+              <div style="width:2px; flex:1; background:var(--color-border);"></div>
+            </div>
+            <div style="flex:1; padding-bottom:var(--space-3);">
+              <span class="chip chip--warning chip--sm">Tarjeta amarilla</span>
+              <p class="t-body" style="margin:var(--space-1) 0 0;">C. Romero · Falta sobre atacante rival</p>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); width:48px;">
+              <span class="t-mono t-small">24'</span>
+              <div style="width:2px; flex:1; background:var(--color-border);"></div>
+            </div>
+            <div style="flex:1; padding-bottom:var(--space-3);">
+              <span class="chip chip--danger chip--sm">⚽ Gol</span>
+              <p class="t-body" style="margin:var(--space-1) 0 0;"><strong>Brasil 1-0</strong> · Neymar (penal)</p>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); width:48px;">
+              <span class="t-mono t-small">38'</span>
+              <div style="width:2px; flex:1; background:var(--color-border);"></div>
+            </div>
+            <div style="flex:1; padding-bottom:var(--space-3);">
+              <span class="chip chip--success chip--sm">🔄 Cambio</span>
+              <p class="t-body" style="margin:var(--space-1) 0 0;">Sale J. Álvarez · Entra L. Martínez</p>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); width:48px;">
+              <span class="t-mono t-small">56'</span>
+              <div style="width:2px; flex:1; background:var(--color-border);"></div>
+            </div>
+            <div style="flex:1; padding-bottom:var(--space-3);">
+              <span class="chip chip--primary chip--sm">⚽ Gol</span>
+              <p class="t-body" style="margin:var(--space-1) 0 0;"><strong>Argentina 1-1</strong> · M. Di María (asist. E. Fernández)</p>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); width:48px;">
+              <span class="t-mono t-small">71'</span>
+              <div style="width:2px; flex:1; background:var(--color-border);"></div>
+            </div>
+            <div style="flex:1; padding-bottom:var(--space-3);">
+              <span class="chip chip--danger chip--sm">🩹 Lesión</span>
+              <p class="t-body" style="margin:var(--space-1) 0 0;">L. Martínez · Esguince tobillo · 3 semanas de baja</p>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:var(--space-3);">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1); width:48px;">
+              <span class="t-mono t-small">87'</span>
+              <div style="width:2px; flex:1; background:var(--color-border);"></div>
+            </div>
+            <div style="flex:1;">
+              <span class="chip chip--primary chip--sm">⚽ Gol</span>
+              <p class="t-body" style="margin:var(--space-1) 0 0;"><strong>Argentina 2-1</strong> · M. Di María (tiro libre)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen -->
+      <div class="card">
+        <h3 class="card__title">Resumen</h3>
+        <div class="stat-strip">
+          <div class="stat-strip__cell"><span class="stat-strip__value">5</span><span class="stat-strip__label">Eventos</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">3</span><span class="stat-strip__label">AR</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">2</span><span class="stat-strip__label">BR</span></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Continuar temporada</button>
+    </footer>
+  </main>
+</body>
+</html>

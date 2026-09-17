@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding — Welcome carousel</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="onboarding-welcome">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="btn btn--ghost btn--sm">Saltar</button>
+        <span class="t-eyebrow">1 de 3</span>
+        <span style="width:44px;"></span>
+      </div>
+    </header>
+
+    <section class="carousel screen__body">
+      <!-- Slide 1 -->
+      <div class="carousel__hero">⚽</div>
+      <div style="display:flex; flex-direction:column; gap:var(--space-2); text-align:center;">
+        <span class="t-eyebrow">Bienvenido a Copero</span>
+        <h1 class="t-h1">Simulador de carrera futbolística</h1>
+        <p class="t-body">Conocé jugadores, disputá temporadas enteras y competí en copas internacionales.</p>
+      </div>
+      <div class="dots">
+        <span class="dots__dot dots__dot--active"></span>
+          <span class="dots__dot"></span>
+          <span class="dots__dot"></span>
+        </div>
+      </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Siguiente</button>
+    </footer>
+  </main>
+</body>
+</html>

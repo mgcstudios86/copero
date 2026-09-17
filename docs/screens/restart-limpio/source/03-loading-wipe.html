@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restart — Loading wipe storage</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="restart-loading">
+    <section class="screen__body" style="justify-content:center; min-height:100vh;">
+      <div class="state" style="padding:var(--space-7);">
+        <div class="spinner" style="width:64px; height:64px; border-width:5px;"></div>
+        <span class="t-eyebrow">Reiniciando...</span>
+        <h2 class="t-h2" style="text-align:center;">Limpiando almacenamiento</h2>
+
+        <!-- Wipe steps -->
+        <div class="card" style="width:100%; max-width:340px; padding:var(--space-4);">
+          <div class="list list--gap-md">
+            <div class="list-item">
+              <span style="font-size:18px; color:var(--color-success);">✓</span>
+              <div class="list-item__main">
+                <div class="list-item__title">Partidas guardadas</div>
+                <div class="list-item__subtitle">5 saves eliminados</div>
+              </div>
+              <span class="chip chip--success chip--sm">OK</span>
+            </div>
+            <div class="list-item">
+              <span style="font-size:18px; color:var(--color-success);">✓</span>
+              <div class="list-item__main">
+                <div class="list-item__title">Configuración</div>
+                <div class="list-item__subtitle">Preferencias reiniciadas</div>
+              </div>
+              <span class="chip chip--success chip--sm">OK</span>
+            </div>
+            <div class="list-item">
+              <span class="spinner" style="width:18px; height:18px; border-width:2px; flex-shrink:0;"></span>
+              <div class="list-item__main">
+                <div class="list-item__title">Cache</div>
+                <div class="list-item__subtitle">Limpiando 18 MB...</div>
+              </div>
+              <span class="chip chip--ghost chip--sm">67%</span>
+            </div>
+            <div class="list-item">
+              <span style="font-size:18px; color:var(--color-text-muted);">○</span>
+              <div class="list-item__main">
+                <div class="list-item__title">Datos del motor</div>
+                <div class="list-item__subtitle">Pendiente</div>
+              </div>
+              <span class="chip chip--ghost chip--sm">--</span>
+            </div>
+            <div class="list-item">
+              <span style="font-size:18px; color:var(--color-text-muted);">○</span>
+              <div class="list-item__main">
+                <div class="list-item__title">Verificación final</div>
+                <div class="list-item__subtitle">Pendiente</div>
+              </div>
+              <span class="chip chip--ghost chip--sm">--</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="t-small" style="text-align:center; max-width:280px;">No cierres la app durante el proceso. Tiempo estimado: 12 segundos.</p>
+
+        <button class="btn btn--secondary">Cancelar</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mercado — M. Di María detalle</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="mercado-detalle">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <button class="icon-btn" aria-label="Favorito">♡</button>
+      </div>
+    </header>
+
+    <section class="screen__body">
+      <!-- Player hero -->
+      <div class="card" style="align-items:center; text-align:center;">
+        <div class="avatar avatar--xl" style="background:var(--color-primary-soft); color:var(--color-primary); width:96px; height:96px; font-size:36px;">M9</div>
+        <div style="display:flex; flex-direction:column; gap:var(--space-1); align-items:center;">
+          <h2 class="t-h2" style="margin:0;">M. Di María</h2>
+          <span class="t-meta">Extremo derecho · 26 años · 🇦🇷 Argentina</span>
+        </div>
+        <div class="card__row" style="justify-content:center; gap:var(--space-3);">
+          <span class="chip chip--primary">88 OVR</span>
+          <span class="chip chip--success">Potencial 92</span>
+        </div>
+      </div>
+
+      <!-- Stats grid -->
+      <div class="card">
+        <h3 class="card__title">Atributos</h3>
+        <div style="display:flex; flex-direction:column; gap:var(--space-3);">
+          <div>
+            <div class="card__row"><span class="t-small">Ritmo</span><span class="t-mono t-small">91</span></div>
+            <div class="progress"><div class="progress__fill" style="width:91%"></div></div>
+          </div>
+          <div>
+            <div class="card__row"><span class="t-small">Tiro</span><span class="t-mono t-small">84</span></div>
+            <div class="progress"><div class="progress__fill" style="width:84%"></div></div>
+          </div>
+          <div>
+            <div class="card__row"><span class="t-small">Pase</span><span class="t-mono t-small">89</span></div>
+            <div class="progress"><div class="progress__fill" style="width:89%"></div></div>
+          </div>
+          <div>
+            <div class="card__row"><span class="t-small">Regate</span><span class="t-mono t-small">90</span></div>
+            <div class="progress"><div class="progress__fill" style="width:90%"></div></div>
+          </div>
+          <div>
+            <div class="card__row"><span class="t-small">Defensa</span><span class="t-mono t-small">42</span></div>
+            <div class="progress"><div class="progress__fill" style="width:42%; background:var(--color-warning);"></div></div>
+          </div>
+          <div>
+            <div class="card__row"><span class="t-small">Físico</span><span class="t-mono t-small">71</span></div>
+            <div class="progress"><div class="progress__fill" style="width:71%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ofertas en curso -->
+      <div class="card">
+        <h3 class="card__title">Ofertas en curso</h3>
+        <div class="list list--gap-md">
+          <div class="list-item card--accent" style="border-color:var(--color-primary); border-width:var(--border-chip);">
+            <div class="list-item__main">
+              <div class="list-item__title">Argentina (mi club)</div>
+              <div class="list-item__subtitle">Tu oferta actual</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end;">
+              <span class="t-mono" style="color:var(--color-primary); font-weight:var(--weight-bold);">€ 12.5M</span>
+              <span class="chip chip--primary chip--sm">Pendiente</span>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="list-item__main">
+              <div class="list-item__title">Francia</div>
+              <div class="list-item__subtitle">Recibida hace 2 días</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end;">
+              <span class="t-mono">€ 11.8M</span>
+              <span class="chip chip--ghost chip--sm">Competencia</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Salario demand -->
+      <div class="card">
+        <div class="card__row">
+          <span class="t-small">Salario semanal demandado</span>
+          <span class="t-mono">€ 95K</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Duración contrato</span>
+          <span class="t-small">3 años</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Cláusula de rescisión</span>
+          <span class="t-mono">€ 45M</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <div style="display:flex; gap:var(--space-3); align-items:center; justify-content:space-between;">
+        <div>
+          <span class="t-meta">Precio</span>
+          <div class="t-mono" style="font-size:var(--text-xl); color:var(--color-primary); font-weight:var(--weight-bold);">€ 12.5M</div>
+        </div>
+        <button class="btn btn--primary btn--lg">Mejorar oferta</button>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modo Copero — Selección copa nacional</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="copero-seleccion">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Modo copero</span>
+        <button class="icon-btn" aria-label="Info">ℹ</button>
+      </div>
+      <h1 class="t-h2">Elegí tu copa</h1>
+      <p class="t-small">Cada copa es un torneo independiente. Ganar la copa te da bonificación de moral y prestigio.</p>
+    </header>
+
+    <section class="screen__body">
+      <div class="state" style="padding:var(--space-3) var(--space-2);">
+        <span class="state__icon" style="color:var(--color-accent);">🏆</span>
+        <h2 class="t-h3">Copa nacional · 16 equipos</h2>
+      </div>
+
+      <!-- Bracket inicial -->
+      <div class="card">
+        <h3 class="card__title">Bracket de la primera ronda</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3);">
+          <!-- Match 1 -->
+          <div class="bracket__match" style="margin:0;">
+            <div class="bracket__team bracket__team--winner">
+              <span>🥇 Argentina</span>
+              <span class="bracket__score">★</span>
+            </div>
+            <div class="bracket__team">
+              <span>#16 Bolivia</span>
+              <span class="bracket__score">—</span>
+            </div>
+          </div>
+          <!-- Match 2 -->
+          <div class="bracket__match" style="margin:0;">
+            <div class="bracket__team">
+              <span>#8 Uruguay</span>
+              <span class="bracket__score">—</span>
+            </div>
+            <div class="bracket__team">
+              <span>#9 Paraguay</span>
+              <span class="bracket__score">—</span>
+            </div>
+          </div>
+          <!-- Match 3 -->
+          <div class="bracket__match" style="margin:0;">
+            <div class="bracket__team">
+              <span>#5 Brasil</span>
+              <span class="bracket__score">—</span>
+            </div>
+            <div class="bracket__team">
+              <span>#12 Venezuela</span>
+              <span class="bracket__score">—</span>
+            </div>
+          </div>
+          <!-- Match 4 -->
+          <div class="bracket__match" style="margin:0;">
+            <div class="bracket__team">
+              <span>#4 Chile</span>
+              <span class="bracket__score">—</span>
+            </div>
+            <div class="bracket__team">
+              <span>#13 Perú</span>
+              <span class="bracket__score">—</span>
+            </div>
+          </div>
+          <!-- Match 5 -->
+          <div class="bracket__match" style="margin:0;">
+            <div class="bracket__team">
+              <span>#6 México</span>
+              <span class="bracket__score">—</span>
+            </div>
+            <div class="bracket__team">
+              <span>#11 USA</span>
+              <span class="bracket__score">—</span>
+            </div>
+          </div>
+          <!-- Match 6 -->
+          <div class="bracket__match" style="margin:0;">
+            <div class="bracket__team">
+              <span>#3 España</span>
+              <span class="bracket__score">—</span>
+            </div>
+            <div class="bracket__team">
+              <span>#14 Ecuador</span>
+              <span class="bracket__score">—</span>
+            </div>
+          </div>
+          <!-- Match 7 -->
+          <div class="bracket__match" style="margin:0;">
+            <div class="bracket__team">
+              <span>#7 Colombia</span>
+              <span class="bracket__score">—</span>
+            </div>
+            <div class="bracket__team">
+              <span>#10 Panamá</span>
+              <span class="bracket__score">—</span>
+            </div>
+          </div>
+          <!-- Match 8 -->
+          <div class="bracket__match" style="margin:0;">
+            <div class="bracket__team">
+              <span>#2 Francia</span>
+              <span class="bracket__score">—</span>
+            </div>
+            <div class="bracket__team">
+              <span>#15 Costa Rica</span>
+              <span class="bracket__score">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info card -->
+      <div class="card">
+        <div class="card__row">
+          <span class="t-small">Fase actual</span>
+          <span class="chip chip--primary">Octavos</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Próximo partido</span>
+          <span class="t-small">vs #16 Bolivia</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Premio campeón</span>
+          <span class="chip chip--success chip--sm">+€5M · +25 moral</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Iniciar octavos</button>
+      <button class="btn btn--ghost btn--full">Ver copas internacionales</button>
+    </footer>
+  </main>
+</body>
+</html>

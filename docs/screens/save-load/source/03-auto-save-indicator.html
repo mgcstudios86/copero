@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Save/Load — Auto-save indicator</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="save-load-autosave">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">T3 · S12 · AR</span>
+        <span style="font-size:var(--text-xs); color:var(--color-text-muted); display:inline-flex; align-items:center; gap:var(--space-1);">
+          <span style="width:6px; height:6px; border-radius:50%; background:var(--color-success); display:inline-block;"></span>
+          Auto
+        </span>
+      </div>
+      <h1 class="t-h2">Calendario</h1>
+    </header>
+
+    <section class="screen__body">
+      <!-- Toast indicator (visible en el top) -->
+      <div class="toast">
+        <span class="toast__dot"></span>
+        <span>Guardado automáticamente · hace 8 seg</span>
+      </div>
+
+      <div class="card">
+        <h3 class="card__title">Estado del guardado</h3>
+        <div class="card__row">
+          <span class="t-small">Último guardado</span>
+          <span class="t-mono t-small">17/09 · 14:23:08</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Frecuencia</span>
+          <span class="t-small">Cada 30 seg</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Próximo</span>
+          <span class="t-mono t-small">en 22 seg</span>
+        </div>
+        <hr class="divider">
+        <div style="display:flex; gap:var(--space-2);">
+          <button class="btn btn--primary btn--full">Guardar ahora</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card__title">Historial de autoguardados</h3>
+        <div class="list list--gap-md">
+          <div class="list-item">
+            <span style="font-size:20px; color:var(--color-success);">●</span>
+            <div class="list-item__main">
+              <div class="list-item__title">Guardado #248</div>
+              <div class="list-item__subtitle">14:23:08 · 12 KB</div>
+            </div>
+            <button class="icon-btn">↻</button>
+          </div>
+          <div class="list-item">
+            <span style="font-size:20px; color:var(--color-success);">●</span>
+            <div class="list-item__main">
+              <div class="list-item__title">Guardado #247</div>
+              <div class="list-item__subtitle">14:22:38 · 11 KB</div>
+            </div>
+            <button class="icon-btn">↻</button>
+          </div>
+          <div class="list-item">
+            <span style="font-size:20px; color:var(--color-success);">●</span>
+            <div class="list-item__main">
+              <div class="list-item__title">Guardado #246</div>
+              <div class="list-item__subtitle">14:22:08 · 11 KB</div>
+            </div>
+            <button class="icon-btn">↻</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <span class="callout__icon">ℹ</span>
+        <span class="callout__body">El autoguardado se ejecuta después de cada acción importante (partido, traspaso, fin de semana).</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

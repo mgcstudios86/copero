@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>i18n — Selector onboarding</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="i18n-onboarding">
+    <header class="screen__header">
+      <span class="t-eyebrow" style="text-align:center;">Idioma / Language / Idioma</span>
+      <h1 class="t-h2" style="text-align:center;">Elegí tu idioma</h1>
+      <p class="t-small" style="text-align:center;">Podés cambiarlo después desde Configuración.</p>
+    </header>
+
+    <section class="screen__body">
+      <div class="list list--gap-md">
+        <!-- ES -->
+        <div class="list-item card--accent" style="border-color:var(--color-primary); border-width:var(--border-chip); padding:var(--space-4);">
+          <div class="flag" style="background:linear-gradient(to bottom, #74ACDF 33%, #FFFFFF 33% 66%, #74ACDF 66%);"></div>
+          <div class="list-item__main">
+            <div class="list-item__title">Español</div>
+            <div class="list-item__subtitle">Argentina · LATAM · España</div>
+          </div>
+          <span class="chip chip--primary">Recomendado</span>
+        </div>
+
+        <!-- EN -->
+        <div class="list-item" style="padding:var(--space-4);">
+          <div class="flag" style="background:linear-gradient(135deg, #012169 25%, #FFFFFF 25% 50%, #C8102E 50% 75%, #FFFFFF 75%);"></div>
+          <div class="list-item__main">
+            <div class="list-item__title">English</div>
+            <div class="list-item__subtitle">United States · United Kingdom</div>
+          </div>
+          <button class="icon-btn" aria-label="Seleccionar">→</button>
+        </div>
+
+        <!-- PT -->
+        <div class="list-item" style="padding:var(--space-4);">
+          <div class="flag" style="background:linear-gradient(to right, #046A38 40%, #FFE15A 40% 60%, #DA291C 60%);"></div>
+          <div class="list-item__main">
+            <div class="list-item__title">Português</div>
+            <div class="list-item__subtitle">Brasil · Portugal</div>
+          </div>
+          <button class="icon-btn" aria-label="Seleccionar">→</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:24px;">📍</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Detectamos tu ubicación</div>
+            <div class="list-item__subtitle">Buenos Aires, Argentina</div>
+          </div>
+          <div class="toggle toggle--on"><span class="toggle__knob"></span></div>
+        </div>
+        <p class="t-small">Auto-seleccionar idioma según región. Lo podés cambiar manualmente.</p>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Continuar en Español</button>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post-match — CTAs post partido</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="post-match-cta">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">¿Qué sigue?</span>
+        <span style="width:44px;"></span>
+      </div>
+      <h1 class="t-h2">Después del partido</h1>
+    </header>
+
+    <section class="screen__body">
+      <p class="t-body">Partido finalizado. Elegí cómo querés continuar la carrera.</p>
+
+      <!-- CTAs principales -->
+      <div class="card card--accent">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:32px;">📅</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Continuar temporada</div>
+            <div class="list-item__subtitle">Avanzar a la semana 13 · Argentina vs México</div>
+          </div>
+        </div>
+        <button class="btn btn--primary btn--full">Ir a semana 13</button>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:32px;">📊</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Ver tabla de posiciones</div>
+            <div class="list-item__subtitle">Argentina sigue 3.º · +5 DG</div>
+          </div>
+        </div>
+        <button class="btn btn--secondary btn--full">Abrir tabla</button>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:32px;">⚽</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Stats del jugador MVP</div>
+            <div class="list-item__subtitle">M. Di María · Rating 9.4 · 2 goles</div>
+          </div>
+        </div>
+        <button class="btn btn--secondary btn--full">Ver detalle</button>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:32px;">🎯</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Ajustar táctica</div>
+            <div class="list-item__subtitle">Probar otra formación antes del próximo partido</div>
+          </div>
+        </div>
+        <button class="btn btn--secondary btn--full">Editar formación</button>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:32px;">💾</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Guardar partida</div>
+            <div class="list-item__subtitle">Auto-guardado al cerrar</div>
+          </div>
+        </div>
+        <button class="btn btn--ghost btn--full">Guardar manualmente</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding — Selección equipo inicial</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="onboarding-equipo">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Atrás">←</button>
+        <span class="t-eyebrow">Paso 2 de 3</span>
+        <span style="width:44px;"></span>
+      </div>
+      <h1 class="t-h2">Elegí tu equipo</h1>
+      <p class="t-small">Podés elegir uno de los presets o crear un club custom.</p>
+    </header>
+
+    <section class="screen__body">
+      <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:var(--space-3);">
+        <!-- Preset 1: Argentina -->
+        <div class="preset-card preset-card--selected">
+          <div class="preset-card__crest" style="background:var(--color-primary-soft); color:var(--color-primary);">AR</div>
+          <h3 class="preset-card__name">Argentina</h3>
+          <span class="preset-card__meta">⭐ Dificultad media</span>
+        </div>
+
+        <!-- Preset 2: Brasil -->
+        <div class="preset-card">
+          <div class="preset-card__crest" style="background:#FFDF00; color:#009C3B;">BR</div>
+          <h3 class="preset-card__name">Brasil</h3>
+          <span class="preset-card__meta">⭐⭐ Avanzado</span>
+        </div>
+
+        <!-- Preset 3: España -->
+        <div class="preset-card">
+          <div class="preset-card__crest" style="background:#AA151B; color:#FFFFFF;">ES</div>
+          <h3 class="preset-card__name">España</h3>
+          <span class="preset-card__meta">⭐ Dificultad media</span>
+        </div>
+      </div>
+
+      <!-- Custom -->
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <div class="preset-card__crest" style="background:var(--color-surface-2); color:var(--color-text-muted); font-size:var(--text-md);">+</div>
+          <div class="list-item__main">
+            <div class="list-item__title">Crear club custom</div>
+            <div class="list-item__subtitle">Nombre, escudo, colores y dorsal</div>
+          </div>
+        </div>
+        <div class="input">
+          <span class="input__label">Nombre del club</span>
+          <input class="input__field" type="text" placeholder="Ej: Club Atlético Nuevo" />
+        </div>
+        <div class="input">
+          <span class="input__label">Dorsal inicial</span>
+          <input class="input__field t-mono" type="text" value="9" />
+        </div>
+      </div>
+
+      <!-- Resumen selección -->
+      <div class="card card--accent">
+        <div class="card__row">
+          <span class="t-small t-uppercase">Tu selección</span>
+          <span class="chip chip--primary">Argentina</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Dorsal del jugador</span>
+          <span class="t-mono">9</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Plantilla inicial</span>
+          <span class="t-small">23 jugadores · 85 OVR medio</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Confirmar y comenzar</button>
+      <button class="btn btn--ghost btn--full">Ver más opciones</button>
+    </footer>
+  </main>
+</body>
+</html>

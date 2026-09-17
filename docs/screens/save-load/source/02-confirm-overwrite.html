@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Save/Load — Confirm overwrite</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="save-load-overwrite">
+    <header class="screen__header" style="opacity:0.3;">
+      <h1 class="t-h2">Fondo</h1>
+    </header>
+
+    <section class="screen__body" style="opacity:0.3;"></section>
+
+    <div class="modal-backdrop" style="position:absolute;">
+      <div class="modal">
+        <span class="modal__handle"></span>
+        <div class="state" style="padding:var(--space-3) 0;">
+          <span class="state__icon" style="color:var(--color-warning);">⚠</span>
+          <h2 class="modal__title" style="text-align:center;">¿Sobrescribir partida?</h2>
+          <p class="state__body" style="text-align:center;">Vas a perder el progreso de la partida seleccionada.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="card__title">Partida a sobrescribir</h3>
+          <div class="list-item">
+            <div class="avatar avatar--lg">BR</div>
+            <div class="list-item__main">
+              <div class="list-item__title">Carrera rápida</div>
+              <div class="list-item__subtitle">Brasil · T1 · S8 · 6 PG</div>
+            </div>
+            <span class="chip chip--danger chip--sm">Borrar</span>
+          </div>
+        </div>
+
+        <div class="card card--accent">
+          <h3 class="card__title">Partida actual</h3>
+          <div class="list-item" style="background:var(--color-primary-soft); border-color:var(--color-primary);">
+            <div class="avatar avatar--lg" style="background:var(--color-primary); color:var(--color-bg);">AR</div>
+            <div class="list-item__main">
+              <div class="list-item__title">Argentina · T3 · S12</div>
+              <div class="list-item__subtitle">19 PG · 71 pts · 8 invicto</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout--danger">
+          <span class="callout__icon">🗑️</span>
+          <span class="callout__body">Esta acción no se puede deshacer. La partida anterior se borrará permanentemente.</span>
+        </div>
+      </div>
+    </div>
+
+    <footer class="screen__footer" style="opacity:0.3;"></footer>
+
+    <footer class="screen__footer" style="background:transparent; border-top:none; position:relative; z-index:101;">
+      <button class="btn btn--primary btn--full btn--lg">Sobrescribir y guardar</button>
+      <button class="btn btn--secondary btn--full">Cancelar</button>
+    </footer>
+  </main>
+</body>
+</html>

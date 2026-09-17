@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mercado de pases — Disponibles</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="mercado-lista">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Período de pases · Invierno</span>
+        <button class="icon-btn" aria-label="Más opciones">⋯</button>
+      </div>
+      <h1 class="t-h2">Mercado</h1>
+      <div class="card" style="padding:var(--space-3); background:var(--color-primary-soft); border-color:var(--color-primary);">
+        <div class="card__row">
+          <span class="t-small t-uppercase">Presupuesto disponible</span>
+          <span class="t-mono" style="font-weight:var(--weight-bold); color:var(--color-primary);">€ 18.5M</span>
+        </div>
+        <div class="card__row">
+          <span class="t-meta">Cierre en 14 días</span>
+          <span class="chip chip--warning chip--sm">2/3 usados</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="screen__body">
+      <!-- Search -->
+      <div class="search input">
+        <span class="search__icon">🔍</span>
+        <input class="input__field search__field" type="text" placeholder="Buscar jugador..." />
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <button class="chip chip--primary">Todos</button>
+        <button class="chip">Arquero</button>
+        <button class="chip">Defensor</button>
+        <button class="chip">Mediocampista</button>
+        <button class="chip">Delantero</button>
+      </div>
+
+      <!-- Filter chips (range + sort) -->
+      <div class="card" style="padding:var(--space-3);">
+        <div class="card__row">
+          <span class="t-small">Edad</span>
+          <span class="t-small t-mono">20 — 30</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Valor</span>
+          <span class="t-small t-mono">€ 0M — € 15M</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Ordenar por</span>
+          <span class="select" style="flex:0;">
+            <select class="input__field select__field" style="min-width:140px; padding-top:var(--space-2); padding-bottom:var(--space-2);">
+              <option>Rating</option>
+              <option>Valor</option>
+              <option>Edad</option>
+              <option>Potencial</option>
+            </select>
+          </span>
+        </div>
+      </div>
+
+      <!-- Player list -->
+      <div class="list list--gap-md">
+        <div class="list-item" style="cursor:pointer;">
+          <div class="avatar avatar--lg" style="background:var(--color-primary-soft); color:var(--color-primary);">M9</div>
+          <div class="list-item__main">
+            <div class="list-item__title">M. Di María</div>
+            <div class="list-item__subtitle">Extremo · 26 años · AR</div>
+            <div class="card__row" style="margin-top:var(--space-1);">
+              <span class="chip chip--success chip--sm">88 OVR</span>
+              <span class="t-meta">Potencial 92</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:var(--space-1);">
+            <span class="t-mono" style="color:var(--color-primary); font-weight:var(--weight-bold);">€ 12.5M</span>
+            <span class="t-meta">Sem. €95K</span>
+          </div>
+        </div>
+
+        <div class="list-item">
+          <div class="avatar avatar--lg">C3</div>
+          <div class="list-item__main">
+            <div class="list-item__title">C. Romero</div>
+            <div class="list-item__subtitle">Defensor · 24 años · AR</div>
+            <div class="card__row" style="margin-top:var(--space-1);">
+              <span class="chip chip--success chip--sm">85 OVR</span>
+              <span class="t-meta">Potencial 89</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:var(--space-1);">
+            <span class="t-mono" style="color:var(--color-primary); font-weight:var(--weight-bold);">€ 9.8M</span>
+            <span class="t-meta">Sem. €72K</span>
+          </div>
+        </div>
+
+        <div class="list-item">
+          <div class="avatar avatar--lg">E7</div>
+          <div class="list-item__main">
+            <div class="list-item__title">E. Fernández</div>
+            <div class="list-item__subtitle">Mediocampista · 22 años · AR</div>
+            <div class="card__row" style="margin-top:var(--space-1);">
+              <span class="chip chip--primary chip--sm">87 OVR</span>
+              <span class="t-meta">Potencial 93</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:var(--space-1);">
+            <span class="t-mono" style="color:var(--color-primary); font-weight:var(--weight-bold);">€ 11.2M</span>
+            <span class="t-meta">Sem. €85K</span>
+          </div>
+        </div>
+
+        <div class="list-item">
+          <div class="avatar avatar--lg">J9</div>
+          <div class="list-item__main">
+            <div class="list-item__title">J. Álvarez</div>
+            <div class="list-item__subtitle">Delantero · 23 años · AR</div>
+            <div class="card__row" style="margin-top:var(--space-1);">
+              <span class="chip chip--primary chip--sm">86 OVR</span>
+              <span class="t-meta">Potencial 90</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:var(--space-1);">
+            <span class="t-mono" style="color:var(--color-primary); font-weight:var(--weight-bold);">€ 10.5M</span>
+            <span class="t-meta">Sem. €80K</span>
+          </div>
+        </div>
+
+        <div class="list-item">
+          <div class="avatar avatar--lg">L1</div>
+          <div class="list-item__main">
+            <div class="list-item__title">L. Martínez</div>
+            <div class="list-item__subtitle">Arquero · 30 años · AR</div>
+            <div class="card__row" style="margin-top:var(--space-1);">
+              <span class="chip chip--info chip--sm">82 OVR</span>
+              <span class="t-meta">Potencial 83</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:var(--space-1);">
+            <span class="t-mono" style="color:var(--color-primary); font-weight:var(--weight-bold);">€ 4.2M</span>
+            <span class="t-meta">Sem. €38K</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--secondary btn--full">Ver mis ofertas (2)</button>
+    </footer>
+  </main>
+</body>
+</html>

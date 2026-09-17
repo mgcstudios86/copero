@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding — Tutorial primer partido</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="onboarding-tutorial">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="btn btn--ghost btn--sm">Saltar tutorial</button>
+        <span class="t-eyebrow">3 de 3</span>
+        <span style="width:44px;"></span>
+      </div>
+      <h1 class="t-h2">Tu primer partido</h1>
+    </header>
+
+    <section class="screen__body">
+      <div class="card" style="text-align:center; background:linear-gradient(135deg, var(--color-accent-soft), var(--color-surface)); border-color:var(--color-accent);">
+        <span class="t-eyebrow" style="color:var(--color-accent);">Tutorial interactivo</span>
+        <h3 class="t-h3">Semana 1 · Argentina vs México</h3>
+        <p class="t-small">Seguí las indicaciones para jugar tu primer partido. Cada paso explica una mecánica.</p>
+      </div>
+
+      <!-- Match preview -->
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3);">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-2); flex:1;">
+            <div class="avatar avatar--lg" style="background:var(--color-primary-soft); color:var(--color-primary);">AR</div>
+            <span class="t-small">Argentina</span>
+          </div>
+          <span class="t-meta">vs</span>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-2); flex:1;">
+            <div class="avatar avatar--lg">MX</div>
+            <span class="t-small">México</span>
+          </div>
+        </div>
+        <div class="stat-strip">
+          <div class="stat-strip__cell"><span class="stat-strip__value">85</span><span class="stat-strip__label">OVR</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">82</span><span class="stat-strip__label">OVR</span></div>
+          <div class="stat-strip__cell"><span class="stat-strip__value">+3</span><span class="stat-strip__label">DG</span></div>
+        </div>
+      </div>
+
+      <!-- Coachmark step 1 -->
+      <div class="coachmark">
+        <h4 class="coachmark__title">① Toca "Jugar partido"</h4>
+        <p class="coachmark__body">Esto simula el partido completo usando el motor RNG determinista.</p>
+      </div>
+
+      <!-- Coachmark step 2 -->
+      <div class="card card--accent">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:32px; color:var(--color-primary);">②</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Elegí táctica rápida</div>
+            <div class="list-item__subtitle">Ofensiva · Equilibrada · Defensiva</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--space-2);">
+          <button class="btn btn--secondary btn--sm">Ofensiva</button>
+          <button class="btn btn--primary btn--sm">Equilibrada</button>
+          <button class="btn btn--secondary btn--sm">Defensiva</button>
+        </div>
+      </div>
+
+      <!-- Coachmark step 3 -->
+      <div class="card card--accent">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:32px; color:var(--color-primary);">③</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Revisá el resumen</div>
+            <div class="list-item__subtitle">Resultado, MVP, eventos clave y moral</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tip -->
+      <div class="callout">
+        <span class="callout__icon">💡</span>
+        <span class="callout__body">Tip: la táctica elegida modifica el delta de moral del equipo post-partido. Más ofensiva = más riesgo.</span>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Empezar temporada</button>
+      <button class="btn btn--secondary btn--full">Practicar primero</button>
+    </footer>
+  </main>
+</body>
+</html>

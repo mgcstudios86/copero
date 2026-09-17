@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playoffs — Cuartos de final</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="playoffs-bracket">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Semana 35 · Playoffs</span>
+        <button class="icon-btn" aria-label="Más opciones">⋯</button>
+      </div>
+      <div class="screen__header-row">
+        <h1 class="t-h2">Bracket playoffs</h1>
+        <span class="chip chip--warning">Cuartos</span>
+      </div>
+    </header>
+
+    <section class="screen__body">
+      <div class="card">
+        <div class="card__row">
+          <span class="t-small t-uppercase">Tu equipo</span>
+          <span class="chip chip--primary">#3 · Argentina</span>
+        </div>
+        <p class="t-body" style="margin:0;">Próximo rival: <strong>#6 México</strong> · Ida en casa</p>
+      </div>
+
+      <!-- Bracket: 3 cols (cuartos | semis | final) -->
+      <div class="bracket">
+        <!-- Col 1: Cuartos -->
+        <div class="bracket__col">
+          <div class="bracket__match">
+            <span class="t-meta t-uppercase">Cuartos · Ida</span>
+            <div class="bracket__team bracket__team--winner">
+              <span>#1 España</span>
+              <span class="bracket__score">2 - 0</span>
+            </div>
+            <div class="bracket__team">
+              <span>#8 Chile</span>
+              <span class="bracket__score">0 - 1</span>
+            </div>
+          </div>
+          <div class="bracket__match">
+            <div class="bracket__team bracket__team--winner">
+              <span>#4 Francia</span>
+              <span class="bracket__score">3 - 1</span>
+            </div>
+            <div class="bracket__team">
+              <span>#5 Inglaterra</span>
+              <span class="bracket__score">1 - 2</span>
+            </div>
+          </div>
+          <div class="bracket__match">
+            <div class="bracket__team bracket__team--winner">
+              <span>#3 Argentina</span>
+              <span class="bracket__score">2 - 1</span>
+            </div>
+            <div class="bracket__team">
+              <span>#6 México</span>
+              <span class="bracket__score">1 - 0</span>
+            </div>
+          </div>
+          <div class="bracket__match">
+            <div class="bracket__team bracket__team--winner">
+              <span>#2 Uruguay</span>
+              <span class="bracket__score">1 - 0</span>
+            </div>
+            <div class="bracket__team">
+              <span>#7 Colombia</span>
+              <span class="bracket__score">0 - 2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 2: Semis -->
+        <div class="bracket__col">
+          <div class="bracket__match">
+            <span class="t-meta t-uppercase">Semis · 1</span>
+            <div class="bracket__team bracket__team--winner">
+              <span>#1 España</span>
+              <span class="bracket__score">— - —</span>
+            </div>
+            <div class="bracket__team">
+              <span>#4 Francia</span>
+              <span class="bracket__score">— - —</span>
+            </div>
+          </div>
+          <div class="bracket__match">
+            <span class="t-meta t-uppercase">Semis · 2</span>
+            <div class="bracket__team bracket__team--winner">
+              <span>#3 Argentina</span>
+              <span class="bracket__score">— - —</span>
+            </div>
+            <div class="bracket__team">
+              <span>#2 Uruguay</span>
+              <span class="bracket__score">— - —</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 3: Final -->
+        <div class="bracket__col">
+          <div class="bracket__match" style="border-color:var(--color-accent); border-width:var(--border-chip);">
+            <span class="t-meta t-uppercase" style="color:var(--color-accent);">Final</span>
+            <div class="bracket__team">
+              <span>TBD</span>
+              <span class="bracket__score">— - —</span>
+            </div>
+            <div class="bracket__team">
+              <span>TBD</span>
+              <span class="bracket__score">— - —</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Próximo partido callout -->
+      <div class="callout">
+        <span class="callout__icon">⚽</span>
+        <span class="callout__body">Semis vs <strong>Uruguay</strong> se juegan cuando cierres cuartos. Toque "Resolver playoff" para avanzar.</span>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Resolver cuartos</button>
+      <button class="btn btn--secondary btn--full">Ver resumen</button>
+    </footer>
+  </main>
+</body>
+</html>

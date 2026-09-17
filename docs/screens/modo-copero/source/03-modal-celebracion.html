@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modo Copero — Modal celebración</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="copero-celebracion">
+    <div class="modal-backdrop" style="position:absolute;">
+      <div class="modal" style="background:linear-gradient(180deg, var(--color-primary-soft), var(--color-surface)); border-top:var(--border-chip) solid var(--color-primary);">
+        <span class="modal__handle"></span>
+        <div class="state" style="padding:var(--space-3) 0;">
+          <span class="state__icon" style="font-size:72px; color:var(--color-primary);">🏆</span>
+          <span class="t-eyebrow">¡CAMPEÓN DE LA COPA!</span>
+          <h2 class="t-h1" style="text-align:center; color:var(--color-primary); margin:0;">Argentina</h2>
+          <p class="state__body">Final ganada 3-1 a Brasil. Récord del torneo: 4-1.</p>
+        </div>
+
+        <div class="card" style="background:var(--color-surface-2);">
+          <h3 class="card__title">Premios obtenidos</h3>
+          <div class="list list--gap-md">
+            <div class="list-item">
+              <span style="font-size:24px;">💰</span>
+              <div class="list-item__main">
+                <span class="list-item__title">Premio en efectivo</span>
+                <span class="list-item__subtitle">Transferido al presupuesto</span>
+              </div>
+              <span class="t-mono" style="color:var(--color-primary);">+€5M</span>
+            </div>
+            <div class="list-item">
+              <span style="font-size:24px;">📈</span>
+              <div class="list-item__main">
+                <span class="list-item__title">Bono moral</span>
+                <span class="list-item__subtitle">Aplicado al plantel</span>
+              </div>
+              <span class="chip chip--success chip--sm">+25</span>
+            </div>
+            <div class="list-item">
+              <span style="font-size:24px;">⭐</span>
+              <div class="list-item__main">
+                <span class="list-item__title">Prestigio</span>
+                <span class="list-item__subtitle">Ranking histórico</span>
+              </div>
+              <span class="chip chip--primary chip--sm">+150</span>
+            </div>
+            <div class="list-item">
+              <span style="font-size:24px;">🎟️</span>
+              <div class="list-item__main">
+                <span class="list-item__title">Clasificación internacional</span>
+                <span class="list-item__subtitle">Copa Libertadores 2027</span>
+              </div>
+              <span class="chip chip--info chip--sm">Nuevo</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <span class="callout__icon">📅</span>
+          <span class="callout__body">Volvés a la temporada regular en la semana 39. Playoffs nacionales cierran temporada.</span>
+        </div>
+      </div>
+    </div>
+
+    <header class="screen__header" style="opacity:0.3;">
+      <h1 class="t-h2">Fondo simulado</h1>
+    </header>
+
+    <footer class="screen__footer" style="opacity:0.3;">
+      <button class="btn btn--primary btn--full">Volver a temporada</button>
+    </footer>
+  </main>
+</body>
+</html>

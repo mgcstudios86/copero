@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mercado — Confirmar traspaso</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="mercado-confirmar">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Confirmar operación</span>
+        <span style="width:44px;"></span>
+      </div>
+    </header>
+
+    <section class="screen__body">
+      <div class="state" style="padding-top:var(--space-5); padding-bottom:0;">
+        <div class="avatar avatar--xl" style="background:var(--color-primary-soft); color:var(--color-primary); width:96px; height:96px; font-size:36px;">M9</div>
+        <h2 class="t-h2">¿Confirmás el traspas de M. Di María?</h2>
+        <p class="state__body">Esta operación se ejecuta al cerrar el período de pases. No se puede revertir.</p>
+      </div>
+
+      <!-- Presupuesto antes/después -->
+      <div class="card">
+        <h3 class="card__title">Impacto presupuestario</h3>
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:var(--space-3); align-items:center;">
+          <div style="display:flex; flex-direction:column; gap:var(--space-1);">
+            <span class="t-meta t-uppercase">Antes</span>
+            <span class="t-mono" style="font-size:var(--text-xl); font-weight:var(--weight-bold);">€ 31M</span>
+          </div>
+          <span style="font-size:24px; color:var(--color-text-muted);">→</span>
+          <div style="display:flex; flex-direction:column; gap:var(--space-1);">
+            <span class="t-meta t-uppercase">Después</span>
+            <span class="t-mono" style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-warning);">€ 18.5M</span>
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="card__row">
+          <span class="t-small">Salario semanal</span>
+          <span class="t-small">€ 78K → € 95K</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Margen restante</span>
+          <span class="chip chip--warning chip--sm">Bajo</span>
+        </div>
+      </div>
+
+      <!-- Moral equipo -->
+      <div class="card">
+        <h3 class="card__title">Moral del plantel</h3>
+        <div style="display:flex; gap:var(--space-3); align-items:center;">
+          <div style="flex:1;">
+            <div class="card__row">
+              <span class="t-small">Moral media</span>
+              <span class="t-mono">74 → 76</span>
+            </div>
+            <div class="progress"><div class="progress__fill" style="width:76%"></div></div>
+          </div>
+        </div>
+        <p class="t-small" style="margin:0;">+2 por reforzar posición prioritaria. Otros jugadores podrían sentirse amenazados.</p>
+      </div>
+
+      <!-- Detalles operación -->
+      <div class="card">
+        <div class="card__row">
+          <span class="t-small">Club vendedor</span>
+          <span class="t-small">Italia</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Comisión agente</span>
+          <span class="t-mono">€ 0.5M</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Bono por objetivos</span>
+          <span class="t-mono">€ 2M (cond.)</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Cierre</span>
+          <span class="t-small">14 días</span>
+        </div>
+      </div>
+
+      <!-- Warning callout -->
+      <div class="callout callout--danger">
+        <span class="callout__icon">⚠</span>
+        <span class="callout__body">Si rechazás esta oferta antes del cierre, el jugador queda libre y se va al mejor postor.</span>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Confirmar traspaso</button>
+      <button class="btn btn--secondary btn--full">Cancelar</button>
+    </footer>
+  </main>
+</body>
+</html>

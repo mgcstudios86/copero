@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>i18n — Selector en Settings</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="i18n-settings">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Configuración</span>
+        <span style="width:44px;"></span>
+      </div>
+      <h1 class="t-h2">Idioma y región</h1>
+    </header>
+
+    <section class="screen__body">
+      <div class="card">
+        <h3 class="card__title">Idioma de la interfaz</h3>
+        <div class="list list--gap-md">
+          <div class="list-item card--accent" style="border-color:var(--color-primary);">
+            <div class="flag" style="background:linear-gradient(to bottom, #74ACDF 33%, #FFFFFF 33% 66%, #74ACDF 66%);"></div>
+            <div class="list-item__main">
+              <div class="list-item__title">Español</div>
+              <div class="list-item__subtitle">Activo ahora</div>
+            </div>
+            <span class="chip chip--primary">✓</span>
+          </div>
+          <div class="list-item">
+            <div class="flag" style="background:linear-gradient(135deg, #012169 25%, #FFFFFF 25% 50%, #C8102E 50% 75%, #FFFFFF 75%);"></div>
+            <div class="list-item__main">
+              <div class="list-item__title">English</div>
+              <div class="list-item__subtitle">Cambiar a inglés</div>
+            </div>
+            <button class="icon-btn">→</button>
+          </div>
+          <div class="list-item">
+            <div class="flag" style="background:linear-gradient(to right, #046A38 40%, #FFE15A 40% 60%, #DA291C 60%);"></div>
+            <div class="list-item__main">
+              <div class="list-item__title">Português</div>
+              <div class="list-item__subtitle">Mudar para português</div>
+            </div>
+            <button class="icon-btn">→</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="card__title">Formato de fecha y números</h3>
+        <div class="card__row">
+          <span class="t-small">Formato de fecha</span>
+          <span class="t-small t-mono">DD/MM/YYYY</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Separador decimal</span>
+          <span class="t-small t-mono">, (coma)</span>
+        </div>
+        <div class="card__row">
+          <span class="t-small">Moneda</span>
+          <span class="t-small t-mono">EUR (€)</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:24px;">🔄</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Auto-detectar al abrir</div>
+            <div class="list-item__subtitle">Lee el idioma del sistema operativo</div>
+          </div>
+          <div class="toggle toggle--on"><span class="toggle__knob"></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:var(--space-3);">
+          <span style="font-size:24px;">💾</span>
+          <div class="list-item__main">
+            <div class="list-item__title">Persistencia entre sesiones</div>
+            <div class="list-item__subtitle">Tu elección se guarda automáticamente</div>
+          </div>
+          <span class="chip chip--success chip--sm">Activo</span>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

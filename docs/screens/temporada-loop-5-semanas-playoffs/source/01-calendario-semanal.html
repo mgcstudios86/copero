@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendario semanal — Temporada 3 · Semana 12</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="calendario-semanal">
+    <!-- Header -->
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+          <span class="t-eyebrow">Temporada 3 · Semana 12</span>
+        </div>
+        <button class="icon-btn" aria-label="Más opciones">⋯</button>
+      </div>
+      <div class="screen__header-row">
+        <h1 class="t-h2">Calendario</h1>
+        <span class="chip chip--primary">Fase regular</span>
+      </div>
+    </header>
+
+    <!-- Body -->
+    <section class="screen__body">
+      <!-- Season progress -->
+      <div class="card">
+        <div class="card__row">
+          <span class="t-small t-uppercase">Avance temporada</span>
+          <span class="t-mono t-small">12 / 38</span>
+        </div>
+        <div class="progress"><div class="progress__fill" style="width:31.5%"></div></div>
+        <div class="card__row">
+          <span class="t-meta">Faltan 26 semanas para playoffs</span>
+          <span class="chip chip--ghost chip--sm">W12</span>
+        </div>
+      </div>
+
+      <!-- Calendar grid -->
+      <div>
+        <div class="cal-grid" style="margin-bottom:var(--space-2);">
+          <span class="cal-grid__day-label">L</span>
+          <span class="cal-grid__day-label">M</span>
+          <span class="cal-grid__day-label">M</span>
+          <span class="cal-grid__day-label">J</span>
+          <span class="cal-grid__day-label">V</span>
+          <span class="cal-grid__day-label">S</span>
+          <span class="cal-grid__day-label">D</span>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-grid__cell cal-grid__cell--played" title="Sem 11"><span>5</span><span class="t-meta">2-1</span></div>
+          <div class="cal-grid__cell cal-grid__cell--played"><span>6</span><span class="t-meta">—</span></div>
+          <div class="cal-grid__cell cal-grid__cell--played"><span>7</span><span class="t-meta">0-3</span></div>
+          <div class="cal-grid__cell cal-grid__cell--played"><span>8</span><span class="t-meta">1-1</span></div>
+          <div class="cal-grid__cell cal-grid__cell--played"><span>9</span><span class="t-meta">3-0</span></div>
+          <div class="cal-grid__cell cal-grid__cell--played"><span>10</span><span class="t-meta">2-2</span></div>
+          <div class="cal-grid__cell cal-grid__cell--played"><span>11</span><span class="t-meta">1-0</span></div>
+          <!-- Current week -->
+          <div class="cal-grid__cell cal-grid__cell--today"><span>12</span><span class="t-meta">HOY</span></div>
+          <div class="cal-grid__cell"><span>13</span></div>
+          <div class="cal-grid__cell"><span>14</span></div>
+          <div class="cal-grid__cell"><span>15</span></div>
+          <div class="cal-grid__cell"><span>16</span></div>
+          <div class="cal-grid__cell"><span>17</span></div>
+          <div class="cal-grid__cell"><span>18</span></div>
+          <div class="cal-grid__cell cal-grid__cell--disabled"><span>19</span></div>
+          <div class="cal-grid__cell cal-grid__cell--disabled"><span>20</span></div>
+          <div class="cal-grid__cell cal-grid__cell--disabled"><span>21</span></div>
+          <div class="cal-grid__cell cal-grid__cell--disabled"><span>22</span></div>
+          <div class="cal-grid__cell cal-grid__cell--disabled"><span>23</span></div>
+          <div class="cal-grid__cell cal-grid__cell--disabled"><span>24</span></div>
+          <div class="cal-grid__cell cal-grid__cell--disabled"><span>25</span></div>
+        </div>
+      </div>
+
+      <!-- Today's match -->
+      <div class="card card--accent">
+        <div class="card__row">
+          <span class="t-eyebrow">Partido de hoy</span>
+          <span class="chip chip--primary">Día 12</span>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3);">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-2); flex:1;">
+            <div class="avatar avatar--lg" style="background:var(--color-primary-soft); color:var(--color-primary);">AR</div>
+            <span class="t-small">Argentina</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-1);">
+            <span class="t-meta t-uppercase">vs</span>
+            <span class="t-mono t-small">21:00</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:var(--space-2); flex:1;">
+            <div class="avatar avatar--lg">BR</div>
+            <span class="t-small">Brasil</span>
+          </div>
+        </div>
+        <button class="btn btn--primary btn--full btn--lg">Jugar partido</button>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="stat-strip">
+        <div class="stat-strip__cell">
+          <span class="stat-strip__value">7</span>
+          <span class="stat-strip__label">PJ</span>
+        </div>
+        <div class="stat-strip__cell">
+          <span class="stat-strip__value">4</span>
+          <span class="stat-strip__label">PG</span>
+        </div>
+        <div class="stat-strip__cell">
+          <span class="stat-strip__value">+5</span>
+          <span class="stat-strip__label">DG</span>
+        </div>
+      </div>
+
+      <!-- Playoff projection -->
+      <div class="card">
+        <div class="card__row">
+          <span class="t-small t-uppercase">Proyección playoffs</span>
+          <span class="chip chip--success chip--sm">En zona</span>
+        </div>
+        <p class="t-body" style="margin:0;">Si mantenés el ritmo, entrás a playoffs como #3 del bracket.</p>
+        <div class="progress"><div class="progress__fill" style="width:74%"></div></div>
+        <span class="t-meta">74% chances de clasificar</span>
+      </div>
+    </section>
+
+    <!-- Tab bar -->
+    <nav class="tab-bar">
+      <div class="tab-bar__item tab-bar__item--active">
+        <span style="font-size:20px;">📅</span>
+        <span>Temporada</span>
+      </div>
+      <div class="tab-bar__item">
+        <span style="font-size:20px;">👥</span>
+        <span>Equipo</span>
+      </div>
+      <div class="tab-bar__item">
+        <span style="font-size:20px;">🏆</span>
+        <span>Copas</span>
+      </div>
+      <div class="tab-bar__item">
+        <span style="font-size:20px;">📊</span>
+        <span>Stats</span>
+      </div>
+    </nav>
+  </main>
+</body>
+</html>

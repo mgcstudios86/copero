@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Save/Load — Lista de partidas</title>
+  <link rel="stylesheet" href="../../restantes-impostor/source/tokens.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/responsive.css">
+  <link rel="stylesheet" href="../../restantes-impostor/source/components.css">
+</head>
+<body>
+  <main class="screen" data-screen="save-load-lista">
+    <header class="screen__header">
+      <div class="screen__header-row">
+        <button class="icon-btn" aria-label="Volver">←</button>
+        <span class="t-eyebrow">Partidas guardadas</span>
+        <button class="icon-btn" aria-label="Nueva">＋</button>
+      </div>
+      <h1 class="t-h2">Mis carreras</h1>
+      <div class="card" style="padding:var(--space-3);">
+        <div class="card__row">
+          <span class="t-small">Slots usados</span>
+          <span class="t-mono t-small">3 / 5</span>
+        </div>
+        <div class="progress"><div class="progress__fill" style="width:60%"></div></div>
+      </div>
+    </header>
+
+    <section class="screen__body">
+      <!-- Slot 1 (current) -->
+      <div class="save-slot save-slot--current">
+        <div class="save-slot__top">
+          <span class="save-slot__title">Carrera principal</span>
+          <span class="chip chip--primary">Actual</span>
+        </div>
+        <div class="save-slot__meta">Argentina · Temporada 3 · Semana 12</div>
+        <div class="card__row">
+          <span class="t-meta">Último guardado</span>
+          <span class="t-meta t-mono">hace 4 min</span>
+        </div>
+        <div style="display:flex; gap:var(--space-2);">
+          <button class="btn btn--primary btn--sm" style="flex:1;">Continuar</button>
+          <button class="btn btn--secondary btn--sm">⋯</button>
+        </div>
+      </div>
+
+      <!-- Slot 2 -->
+      <div class="save-slot">
+        <div class="save-slot__top">
+          <span class="save-slot__title">Carrera rápida</span>
+          <span class="chip chip--ghost">Manual</span>
+        </div>
+        <div class="save-slot__meta">Brasil · Temporada 1 · Semana 8</div>
+        <div class="card__row">
+          <span class="t-meta">Guardado</span>
+          <span class="t-meta t-mono">ayer 22:14</span>
+        </div>
+        <div style="display:flex; gap:var(--space-2);">
+          <button class="btn btn--secondary btn--sm" style="flex:1;">Cargar</button>
+          <button class="btn btn--secondary btn--sm">⋯</button>
+        </div>
+      </div>
+
+      <!-- Slot 3 -->
+      <div class="save-slot">
+        <div class="save-slot__top">
+          <span class="save-slot__title">Test modo copero</span>
+          <span class="chip chip--ghost">Manual</span>
+        </div>
+        <div class="save-slot__meta">México · Temporada 2 · Cuartos final</div>
+        <div class="card__row">
+          <span class="t-meta">Guardado</span>
+          <span class="t-meta t-mono">3 días atrás</span>
+        </div>
+        <div style="display:flex; gap:var(--space-2);">
+          <button class="btn btn--secondary btn--sm" style="flex:1;">Cargar</button>
+          <button class="btn btn--secondary btn--sm">⋯</button>
+        </div>
+      </div>
+
+      <!-- Empty slot 4 -->
+      <div class="save-slot" style="border-style:dashed; background:transparent;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:var(--space-2); padding:var(--space-3);">
+          <span style="font-size:24px; color:var(--color-text-muted);">＋</span>
+          <span class="t-small">Slot vacío</span>
+        </div>
+      </div>
+
+      <!-- Empty slot 5 -->
+      <div class="save-slot" style="border-style:dashed; background:transparent;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:var(--space-2); padding:var(--space-3);">
+          <span style="font-size:24px; color:var(--color-text-muted);">＋</span>
+          <span class="t-small">Slot vacío</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="screen__footer">
+      <button class="btn btn--primary btn--full btn--lg">Nueva carrera</button>
+    </footer>
+  </main>
+</body>
+</html>
