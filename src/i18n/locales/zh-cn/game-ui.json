@@ -54,5 +54,14 @@
   "outcome.suspensionRuin": "停赛 · 生涯崩塌",
   "outcome.plusOneClean": "+1 OVR · 保持清白",
   "outcome.minusTwoTemporary": "-2 OVR · 临时影响",
-  "common.playerFallback": "球员"
+  "common.playerFallback": "球员",
+  "calendar.eyebrow": "赛程",
+  "calendar.title": "第 {{season}} 赛季",
+  "calendar.week.pre": "季前赛",
+  "calendar.week.current": "当前周: {{week}} / 38",
+  "calendar.standingsTitle": "积分榜",
+  "calendar.ownPosition": "你的俱乐部: 第 {{position}} 位",
+  "calendar.cta.startSeason": "开始赛季",
+  "calendar.cta.advanceWeek": "推进一周",
+  "calendar.cta.newSeason": "新赛季"
 }
