@@ -1620,7 +1620,6 @@ export const COPY: Record<Locale, Copy> = {
       ctaNextWeekHint: 'Aplica as mudanças e avança para a próxima rodada',
       ctaBackToHub: 'Voltar ao hub',
       ctaBackToHubHint: 'Descarta as mudanças e volta ao dashboard',
-      // MGC-246 — etiqueta MVP + cartão de lesionados.
       mvpBadge: 'MVP',
       mvpBadgeA11y: 'Craque da partida',
       injuriesTitle: 'LESIONADOS',
