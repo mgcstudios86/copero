@@ -18,6 +18,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useEffect, act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { LocaleProvider, useLocale } from './locale-context';
+import type { Locale } from './copy';
 
 // React 19 requiere este flag para que `act(...)` no emita la advertencia
 // "The current testing environment is not configured to support act(...)".
@@ -30,10 +31,17 @@ import { LocaleProvider, useLocale } from './locale-context';
 //
 // jsdom + React 19 `act` + `createRoot` bastan porque el provider no
 // tiene side effects visuales; sólo necesitamos flushar el render inicial.
+//
+// MGC-357 — `Capture.locale`/`setLocale` derivan de `Locale` (en
+// `@/i18n/copy`) para que el guard siga verde al agregar `pt-BR` o
+// cualquier locale futuro, sin necesidad de editar este archivo. Si
+// TypeScript reporta drift acá, es síntoma de un cambio en
+// `SUPPORTED_LOCALES` que requiere actualizar el comportamiento bajo
+// prueba.
 type Capture = {
   t: ((path: string, values?: Record<string, string | number>) => string) | null;
-  locale: 'es' | 'en' | 'zh-CN' | null;
-  setLocale: ((next: 'es' | 'en' | 'zh-CN') => void) | null;
+  locale: Locale | null;
+  setLocale: ((next: Locale) => void) | null;
 };
 const capture: Capture = { t: null, locale: null, setLocale: null };
 

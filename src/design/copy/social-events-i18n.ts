@@ -19,13 +19,25 @@
  */
 import { useMemo } from 'react';
 import { useLocale } from '@/i18n/locale-context';
+import type { Locale } from '@/i18n/copy';
 import { copy as esArCopy } from './es-AR/simulador-carrera';
 import { copy as enCopy } from './en-US/simulador-carrera';
 import { copy as zhCopy } from './zh-CN/simulador-carrera';
 import type { CopyMatrix } from './es-AR/simulador-carrera';
 
-/** Mapa locale → CopyMatrix (subset i18n de las 28 social_*). */
-const LOCALE_COPY: Record<'es' | 'en' | 'zh-CN', CopyMatrix> = {
+/**
+ * Mapa locale → CopyMatrix (subset i18n de las 28 social_*).
+ *
+ * MGC-357 — el helper sólo traduce `es`/`en`/`zh-CN` hoy. `pt-BR` (y
+ * cualquier locale futuro agregado a `SUPPORTED_LOCALES`) cae al
+ * fallback `esArCopy` vía el `?.` de la línea 51 — no necesitamos
+ * poblar `pt-BR` acá hasta que se traduzca el subset de social_*.
+ * Usamos `Partial<Record<Locale, CopyMatrix>>` para que el tipo
+ * refleje exactamente la realidad: subset parcial de locales
+ * soportados, no un set cerrado que se rompa cada vez que el
+ * `Locale` type se extiende.
+ */
+const LOCALE_COPY: Partial<Record<Locale, CopyMatrix>> = {
   es: esArCopy,
   en: enCopy,
   'zh-CN': zhCopy,
