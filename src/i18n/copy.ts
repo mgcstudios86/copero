@@ -362,6 +362,14 @@ export type Copy = {
     backSeason: string;
     backSeasonA11y: string;
     notFinished: string;
+    // MGC-215 — modal de confirmación destructiva antes de "Nueva partida".
+    // El CTA es destructivo (limpia AsyncStorage + memoria + navega a
+    // /identity) y no debe dispararse con un tap accidental.
+    confirmTitle: string;
+    confirmBody: string;
+    confirmAccept: string;
+    confirmCancel: string;
+    confirmDismiss: string;
   };
 
 };
@@ -675,6 +683,12 @@ export const COPY: Record<Locale, Copy> = {
       backSeason: 'Volver a la temporada',
       backSeasonA11y: 'Regresa al hub de temporada',
       notFinished: 'Tu carrera todavía no terminó. Volvé a la temporada para jugarla completa.',
+      // MGC-215 — modal de confirmación antes del wipe.
+      confirmTitle: '¿Empezar una nueva carrera?',
+      confirmBody: 'Vas a borrar la partida guardada, el high score del juego y el progreso del quiz. La app queda como recién instalada.',
+      confirmAccept: 'Sí, borrar todo',
+      confirmCancel: 'Cancelar',
+      confirmDismiss: 'Cerrar el diálogo sin borrar',
     },
   },
   en: {
@@ -985,6 +999,12 @@ export const COPY: Record<Locale, Copy> = {
       backSeason: 'Back to season',
       backSeasonA11y: 'Return to the season hub',
       notFinished: 'Your career has not finished yet. Go back to the season to play it fully.',
+      // MGC-215 — destructive confirmation modal before wipe.
+      confirmTitle: 'Start a new career?',
+      confirmBody: 'You will erase the saved career, the game high score and the quiz progress. The app will look like a fresh install.',
+      confirmAccept: 'Yes, erase everything',
+      confirmCancel: 'Cancel',
+      confirmDismiss: 'Close dialog without erasing',
     },
   },
   'zh-CN': {
@@ -1295,6 +1315,12 @@ export const COPY: Record<Locale, Copy> = {
       backSeason: '返回赛季',
       backSeasonA11y: '回到赛季主页',
       notFinished: '你的职业生涯尚未结束。返回赛季继续完整地打完。',
+      // MGC-215 — wipe 前的破坏性确认弹窗
+      confirmTitle: '开始新的职业生涯？',
+      confirmBody: '将清除已保存的职业生涯、单词游戏最高分和测验进度。应用状态会回到全新安装的样子。',
+      confirmAccept: '是，清除全部',
+      confirmCancel: '取消',
+      confirmDismiss: '关闭弹窗且不清除',
     },
   },
 };
