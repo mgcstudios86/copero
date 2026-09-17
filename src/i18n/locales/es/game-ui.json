@@ -54,5 +54,14 @@
   "outcome.suspensionRuin": "Suspensión · carrera en ruinas",
   "outcome.plusOneClean": "+1 OVR · limpio",
   "outcome.minusTwoTemporary": "-2 OVR · temporal",
-  "common.playerFallback": "JUGADOR"
+  "common.playerFallback": "JUGADOR",
+  "calendar.eyebrow": "CALENDARIO",
+  "calendar.title": "Temporada {{season}}",
+  "calendar.week.pre": "Pretemporada",
+  "calendar.week.current": "Semana actual: {{week}} / 38",
+  "calendar.standingsTitle": "Tabla de posiciones",
+  "calendar.ownPosition": "Tu club: posición {{position}}",
+  "calendar.cta.startSeason": "Empezar temporada",
+  "calendar.cta.advanceWeek": "Avanzar semana",
+  "calendar.cta.newSeason": "Nueva temporada"
 }
