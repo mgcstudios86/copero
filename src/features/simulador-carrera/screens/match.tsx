@@ -43,7 +43,10 @@ export default function MatchScreen() {
   // declaramos loadFailed si startMatch rechazó explícitamente.
   useEffect(() => {
     if (outcome) {
-      setLoadFailed(false);
+      // outcome presente → no hay error de carga. El render gate
+      // `loadFailed && !outcome` ya excluye el error view cuando
+      // outcome está hidratado, así que evitamos setState síncrono
+      // (regla react-hooks/set-state-in-effect).
       return;
     }
     let cancelled = false;
