@@ -25,13 +25,46 @@ export default function MatchScreen() {
   const reset = useMatchStore((s) => s.reset);
   const startMatch = useCareerStore((s) => s.startMatch);
   const [loadFailed, setLoadFailed] = useState(false);
+  // MGC-386 — derive en render en vez de setState en effect: cuando
+  // `outcome` arriba hidrata el store, enmascaramos loadFailed sin
+  // disparar un re-render extra (cumple react-hooks/set-state-in-effect).
+  const effectiveLoadFailed = loadFailed && !outcome;
 
   useEffect(() => {
-    if (!outcome) {
-      // MGC-1729 (MEDIUM-2): `startMatch` hace imports dinámicos; si uno
-      // falla la pantalla quedaba colgada en «Cargando partido» sin salida.
-      void startMatch().catch(() => setLoadFailed(true));
-    }
+    // MGC-386 — self-heal robusto del loader. El usuario puede llegar
+    // aquí de 3 caminos:
+    //   a) dashboard.tsx onAcademyPress → await startMatch() + push (matchStore ya hidratado)
+    //   b) semanal.tsx (doble_turno) → await startMatch() + push
+    //   c) deep-link directo a /match (URL) → outcome=null, hidratar acá
+    //
+    // Antes este useEffect hacía `void startMatch().catch(setLoadFailed)`
+    // y eso provocaba que un deep-link llegara a renderizar el guard de
+    // `match-loading` con `outcome=null` durante un tick antes de que
+    // startMatch resolviera — visualmente correcto pero el guard se
+    // disparaba si el módulo career/simulation fallaba al cargar (chunk
+    // lazy no resuelto). Ahora esperamos 250ms con un timeout-cancelable
+    // para darle tiempo al side-effect a popular el store, y SOLO
+    // declaramos loadFailed si startMatch rechazó explícitamente.
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (!cancelled && !outcome) {
+        setLoadFailed(true);
+      }
+    }, 250);
+    void startMatch()
+      .then(() => {
+        if (!cancelled) setLoadFailed(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadFailed(true);
+      })
+      .finally(() => {
+        clearTimeout(timer);
+      });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [outcome, startMatch]);
 
   useEffect(() => {
@@ -42,7 +75,7 @@ export default function MatchScreen() {
     };
   }, [committed, reset]);
 
-  if (loadFailed && !outcome) {
+  if (effectiveLoadFailed) {
     return (
       <SafeAreaView
         style={[styles.safe, { backgroundColor: colors.bg }]}

@@ -34,16 +34,58 @@ export default function PostMatchScreen() {
   const reset = useMatchStore((s) => s.reset);
   const discardMatch = useCareerStore((s) => s.discardMatch);
   const commitMatch = useCareerStore((s) => s.commitMatch);
+  // MGC-386 — el self-heal del useEffect (deep-link al /post-match)
+  // llama startMatch para hidratar matchStore. Si el jugador nunca
+  // jugó un partido esta semana, startMatch sigue resolviendo y
+  // depositando un outcome (es determinista por week+seed).
+  const startMatch = useCareerStore((s) => s.startMatch);
   // MGC-1903 / MGC-2085 — F4 social events. El motor (`commitMatch`
   // desde PR #476) popula `socialEventPending` en el mismo tick que el
   // `await` resuelve, por lo que NO leemos el hook (stale) sino el
   // snapshot FRESCO via `useCareerStore.getState()` después del await.
 
   useEffect(() => {
-    if (!outcome || !preview || !previousProfile || !nextProfile) {
-      router.replace('/simulador-carrera/dashboard');
+    if (outcome && preview && previousProfile && nextProfile) {
+      return;
     }
-  }, [outcome, preview, previousProfile, nextProfile, router]);
+    // MGC-386 — self-heal análogo al match screen. Si llegamos por
+    // deep-link o por back-forward sin `matchStore` hidratado, le
+    // pedimos a `startMatch` que cargue el outcome antes de decidir
+    // redirigir. Antes este useEffect redirigía inmediatamente al
+    // dashboard apenas veía `outcome=null`, lo que rompía los flujos
+    // que navegan dashboard→match→post-match pero donde el chunk lazy
+    // del store aún no había resuelto el outcome cuando se montó
+    // /post-match (back-forward, deep-link desde notif, etc.).
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (!cancelled) {
+        const fresh = useMatchStore.getState();
+        if (!fresh.outcome || !fresh.preview || !fresh.previousProfile || !fresh.nextProfile) {
+          router.replace('/simulador-carrera/season-hub');
+        }
+      }
+    }, 300);
+    void startMatch()
+      .then(() => {
+        if (cancelled) return;
+        const fresh = useMatchStore.getState();
+        if (!fresh.outcome || !fresh.preview || !fresh.previousProfile || !fresh.nextProfile) {
+          router.replace('/simulador-carrera/season-hub');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          router.replace('/simulador-carrera/season-hub');
+        }
+      })
+      .finally(() => {
+        clearTimeout(timer);
+      });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [outcome, preview, previousProfile, nextProfile, router, startMatch]);
 
   useEffect(() => {
     return () => {
