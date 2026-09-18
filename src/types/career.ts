@@ -355,7 +355,7 @@ export type CareerSnapshot = {
    * avanzado al menos una fecha.
    */
   seasonStandings?: Record<string, import('@/features/career/phase').StandingRow>;
-  seasonFixtures?: Array<{ week: number; homeId: string; awayId: string; homeGoals: number; awayGoals: number }>;
+  seasonFixtures?: { week: number; homeId: string; awayId: string; homeGoals: number; awayGoals: number }[];
 };
 
 /** Identificadores de decisión del catálogo de strategies.md (MGC-439). */
@@ -565,12 +565,13 @@ export type CareerSaveState = {
    * la primera fecha jugada.
    */
   seasonStandings?: Record<string, import('@/features/career/phase').StandingRow>;
-  seasonFixtures?: Array<{
+  seasonFixtures?: {
     week: number;
     homeId: string;
     awayId: string;
     homeGoals: number;
     awayGoals: number;
+  }[];
   }>;
 };
 

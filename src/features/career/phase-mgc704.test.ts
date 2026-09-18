@@ -146,7 +146,7 @@ describe('MGC-704 liga slice', () => {
     // tener PJ=4 (5 clubes impares → 1 bye cada fecha, todos juegan 4).
     const fixtures = generateLeagueFixtures(clubs, 777);
     let standings = emptyStandings(clubs);
-    const accumulatedFixtures: Array<typeof fixtures[number] & { homeGoals: number; awayGoals: number }> = [];
+    const accumulatedFixtures: (typeof fixtures[number] & { homeGoals: number; awayGoals: number })[] = [];
     for (const f of fixtures) {
       const r = simulateMatchGoals(f.homeId, f.awayId, 777 + f.week);
       standings = applyResultToStandings(standings, f.homeId, f.awayId, r.homeGoals, r.awayGoals);

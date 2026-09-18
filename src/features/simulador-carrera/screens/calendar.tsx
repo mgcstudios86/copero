@@ -10,7 +10,6 @@ import { ACADEMY_CLUBS } from '@/features/career/clubs';
 import { createRng } from '@/features/career/rng';
 import {
   buildCalendar,
-  buildStandings,
   getStandingsForDisplay,
   phaseFromWeek,
   PHASE_LABELS,

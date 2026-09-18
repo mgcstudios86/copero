@@ -203,7 +203,7 @@ export function emptyStandings(clubs: string[]): Record<string, StandingRow> {
 export function generateLeagueFixtures(
   clubs: string[],
   seed: number,
-): Array<{ week: number; homeId: string; awayId: string }> {
+): { week: number; homeId: string; awayId: string }[] {
   if (clubs.length < 2) return [];
   const n = clubs.length;
   const BYE = '__BYE__';
@@ -223,7 +223,7 @@ export function generateLeagueFixtures(
     order[i] = order[j]!;
     order[j] = tmp;
   }
-  const fixtures: Array<{ week: number; homeId: string; awayId: string }> = [];
+  const fixtures: { week: number; homeId: string; awayId: string }[] = [];
   const rounds = slots - 1;
   for (let r = 0; r < rounds; r++) {
     const week = r + 1;
