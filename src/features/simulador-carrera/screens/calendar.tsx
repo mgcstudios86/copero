@@ -11,6 +11,7 @@ import { createRng } from '@/features/career/rng';
 import {
   buildCalendar,
   buildStandings,
+  getStandingsForDisplay,
   phaseFromWeek,
   PHASE_LABELS,
   PRETEMPORADA_WEEK,
@@ -49,6 +50,10 @@ export default function CalendarScreen() {
   const profile = useCareerStore((s) => s.profile);
   const advance = useCareerStore((s) => s.advance);
   const advanceSeason = useCareerStore((s) => s.advanceSeason);
+  // MGC-704 — slice persistible de liga. Se lee en el render para que
+  // la tabla se actualice al instante tras cada `recordMatchweekResults`
+  // disparado por el flujo WF4+WF5 (commitMatch) o el weekly flow.
+  const seasonStandings = useCareerStore((s) => s.seasonStandings);
   // MGC-386 — MGC-1650 (WF4 partido). Mismo patrón que dashboard.tsx y
   // semanal.tsx: hidratar `matchStore` con el MatchOutcome ANTES de
   // navegar a /simulador-carrera/match. Antes la pantalla quedaba
@@ -100,8 +105,10 @@ export default function CalendarScreen() {
 
   const standings: StandingRow[] = useMemo(() => {
     const clubs = opponents.length > 0 ? opponents : ['Libre'];
-    return buildStandings(seed, clubs, week);
-  }, [seed, opponents, week]);
+    // MGC-704 — consume el slice persistible si tiene datos; cae al
+    // placeholder determinista en pretemporada o saves legacy.
+    return getStandingsForDisplay(seed, clubs, week, seasonStandings);
+  }, [seed, opponents, week, seasonStandings]);
 
   const clubPosition = useMemo(() => {
     const own = profile.club?.name ?? opponents[0] ?? 'Tu club';
