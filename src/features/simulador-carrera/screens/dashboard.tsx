@@ -9,6 +9,7 @@ import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
 import { ResetCareerButton } from '@/features/simulador-carrera/components/ResetCareerButton';
 import { SaveSlotPicker } from '@/features/career/components/SaveSlotPicker';
+import { AutoSaveIndicator } from '@/features/career/components/AutoSaveIndicator';
 import { getActiveSlotId, listSlots } from '@/features/career/persistence';
 
 // Lazy-load del bloque "Estrategia recomendada" (MGC-482).
@@ -180,6 +181,20 @@ export default function DashboardScreen() {
           onSlotChanged={onSlotChanged}
           testID="dashboard-save-picker"
         />
+        {/* MGC-480 — header indicator de auto-guardado. Refleja el
+            estado de `persistSnapshot` (`isSaving` + `lastSavedAt`)
+            para reducir la ansiedad "¿se guardó?" del usuario. Render
+            condicional: si el slot activo es `default` y nunca se
+            guardó, el indicator dice "Sin guardar" sin afirmar lo
+            contrario. */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <AutoSaveIndicator testID="dashboard-autosave" />
+        </View>
         {/* Jersey hero (MGC-532): lazy-loaded para code-split fuera del chunk
             inicial de /dashboard. Mismo testid canónico que identity.tsx para
             que los specs e2e post-navigate home→dashboard encuentren el hero

@@ -63,6 +63,21 @@ type CareerStore = CareerSnapshot & {
    * post-force-stop. No se persiste (es state runtime del gate).
    */
   hydrated: boolean;
+  /**
+   * MGC-480 — timestamp (epoch ms) del último `saveCareerSave`
+   * confirmado por AsyncStorage. La UI del dashboard lo muestra en
+   * el header como "Auto-guardado HH:MM" (modo pasivo) o "Guardando…"
+   * (modo `isSaving=true`). `null` cuando nunca se guardó esta
+   * sesión (ej. force-stop sin flush) — el header en ese caso dice
+   * "Sin guardar". No se persiste; cada arranque arranca en `null`
+   * y se popula en el primer `persistSnapshot` que confirme.
+   */
+  lastSavedAt: number | null;
+  /** MGC-480 — true mientras hay una save en vuelo (`pendingSave`
+   *  no-nulo). Toggleado por `persistSnapshot` cuando arranca y
+   *  cuando la promesa resuelve. Se usa para el spinner animado
+   *  del header. */
+  isSaving: boolean;
   setName: (name: string) => void;
   // MGC-1628 / WF1 — apellido separado del nombre. Mismo patrón que
   // `setName`: applyAndPersist spread inmutable, sin tocar motor.
@@ -400,12 +415,39 @@ async function writeLastSnapshotToDisk(): Promise<void> {
  * completa antes de background. Errores de AsyncStorage (quota, red
  * en web fallback) no rompen la mutación de la store; la UI sigue
  * funcionando y el próximo save reintenta.
+ *
+ * MGC-480 — al arrancar la save flippea `isSaving=true` (UI muestra
+ * "Guardando…" en el header) y al resolverse setea `isSaving=false`
+ * + `lastSavedAt=Date.now()`. El flip a `true` es síncrono (no
+ * espera `setItem`), por eso el header reacciona instantáneamente al
+ * tap; el flip a `false` espera la resolución del setItem (incl.
+ * el caso de fallo → `lastSavedAt` no se actualiza, `isSaving`
+ * queda en false para no trabar la UI).
  */
 function persistSnapshot(s: CareerStore): void {
-  const next = saveCareerSave(snapshotToSave(s)).catch(() => {
-    // Silencioso: persistencia best-effort. Loguear en QA si aparece
-    // recurrentemente (hoy no hay logger central).
-  });
+  // MGC-480 — flip isSaving al arrancar. Usamos `set((prev) => ...)`
+  // vía store.setState para no acoplar este helper a la `setSnapshot`
+  // privada (que mezcla set + setSnapshot internamente).
+  useCareerStore.setState({ isSaving: true });
+  const next = saveCareerSave(snapshotToSave(s))
+    .then(() => {
+      // Éxito: refrescar timestamp + bajar flag. El `set` vía
+      // `useCareerStore.setState` es la API pública de Zustand
+      // para mutar sin pasar por el setSnapshot privado (que
+      // asume shape `CareerSnapshot` y rompería tipos con campos
+      // extra como `lastSavedAt`/`isSaving`).
+      useCareerStore.setState({
+        lastSavedAt: Date.now(),
+        isSaving: false,
+      });
+    })
+    .catch(() => {
+      // Silencioso: persistencia best-effort. Loguear en QA si aparece
+      // recurrentemente (hoy no hay logger central). Bajamos el flag
+      // para que el header no quede colgado en "Guardando…" si
+      // AsyncStorage rechazó la escritura.
+      useCareerStore.setState({ isSaving: false });
+    });
   // MGC-277 review CTO: capturar la promesa compuesta en una variable
   // local para que la comparación de identidad (===) cierre
   // correctamente cuando hay saves encadenadas. Antes, `pendingSave`
@@ -465,6 +507,12 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     // `hydrateFromSave()` resuelva. Se flippea a `true` al final del
     // action — éxito, vacío, o error, todos garantizan progreso.
     hydrated: false,
+    // MGC-480 — inicialización del header de auto-save. `null` para
+    // el timestamp significa "no se guardó en esta sesión" (la UI
+    // muestra "Sin guardar" en el header hasta el primer save
+    // confirmado). `false` para `isSaving` es el estado neutral.
+    lastSavedAt: null,
+    isSaving: false,
     // Setters livianos: identity-state, sin motor.
     setName: (name) => applyAndPersist((s) => ({ ...s, profile: { ...s.profile, name } })),
     // MGC-1628 / WF1 — apellido separado. Persiste junto al resto del

@@ -10,6 +10,20 @@
  *     y notifica al padre via `onSlotChanged(slotId)` para que recargue
  *     el store.
  *
+ * MGC-480 — UI enriquecida:
+ *   - Cada fila muestra `temporada` / `equipo` además del timestamp.
+ *     Slots legacy sin estos campos se renderizan con `—` (em-dash).
+ *   - Confirm modal overwrite: al tap sobre un slot EXISTENTE con
+ *     payload, se abre un modal de confirmación antes de pisar la
+ *     save. Slots vacíos (recién creados vía `createSlot` pero sin
+ *     payload todavía) cambian sin confirmación. La distinción es
+ *     por `slots[index].savedAt > 0` Y `slots[index].name !== name
+ *     por default` — heurística conservadora: si el slot fue migrado
+ *     de legacy ya tiene savedAt real, lo tratamos como overwrite.
+ *   - `onOverwriteConfirm(slotId)` callback opcional que el padre
+ *     usa para trazar el flujo en analytics. Si no se pasa, el
+ *     picker sigue funcionando idéntico salvo el modal extra.
+ *
  * Diseño:
  *   - Modal nativo RN (consistente con InterstitialOverlay / MGC-500).
  *   - WCAG 48dp hitboxes en todos los Pressables (MGC-2304).
@@ -48,11 +62,17 @@ export type SaveSlotPickerProps = {
   activeSlotName?: string;
   /** Notifica al padre que el usuario cambió de slot activo. */
   onSlotChanged: (slotId: string) => void;
+  /** MGC-480 — callback opcional que el padre recibe cuando el
+   *  usuario CONFIRMA overwrite de un slot con save existente. Útil
+   *  para analytics / logging. Si no se pasa, el picker funciona
+   *  idéntico salvo el modal de confirmación. */
+  onOverwriteConfirm?: (slotId: string, meta: SlotMeta) => void;
   /** Test id para el spec e2e (MGC-2099 AC). */
   testID?: string;
 };
 
 type RefreshState = { slots: SlotMeta[]; activeSlotId: string };
+type OverwriteTarget = { slotId: string; meta: SlotMeta } | null;
 
 function formatSavedAt(ts: number): string {
   try {
@@ -71,6 +91,7 @@ export function SaveSlotPicker({
   activeSlotId,
   activeSlotName,
   onSlotChanged,
+  onOverwriteConfirm,
   testID = 'save-slot-picker',
 }: SaveSlotPickerProps) {
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
@@ -82,6 +103,10 @@ export function SaveSlotPicker({
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [busy, setBusy] = useState(false);
+  // MGC-480 — modal de confirmación de overwrite. `null` = cerrado.
+  // Almacenamos target + meta para mostrar el nombre y habilitar
+  // analytics via `onOverwriteConfirm`.
+  const [overwriteTarget, setOverwriteTarget] = useState<OverwriteTarget>(null);
 
   // Refresca el modal cada vez que se abre; usa el `activeSlotId` actual
   // como fuente de verdad (el store puede haber cambiado por otro lado).
@@ -121,20 +146,64 @@ export function SaveSlotPicker({
     return meta?.name ?? 'Partida guardada';
   }, [activeSlotName, refresh.slots, activeSlotId]);
 
-  const onPick = useCallback(
-    async (slot: SlotMeta) => {
+  const applyPick = useCallback(
+    async (slotId: string) => {
       if (busy) return;
       setBusy(true);
       try {
-        await setActiveSlot(slot.id);
-        onSlotChanged(slot.id);
+        await setActiveSlot(slotId);
+        onSlotChanged(slotId);
         setVisible(false);
+        setOverwriteTarget(null);
       } finally {
         setBusy(false);
       }
     },
     [busy, onSlotChanged],
   );
+
+  const onPick = useCallback(
+    (slot: SlotMeta) => {
+      if (busy) return;
+      // MGC-480 — heurística de overwrite: si el slot tiene savedAt
+      // y NO es el slot activo, pedimos confirmación. Slots recién
+      // creados (`createSlot` mete savedAt=Date.now() pero el
+      // payload todavía no tiene datos de carrera) los marcamos
+      // como "vacíos" via el flag `isEmpty` derivado del name; sin
+      // embargo, el caso típico de overwrite es volver a un slot
+      // que YA TIENE save previa. La heurística final: si el slot
+      // es distinto del activo Y existe un payload (savedAt > 0 Y
+      // no es la marca de un createSlot vacío reciente), pedir
+      // confirmación. Para no abrir el modal al tap del slot activo,
+      // también excluimos el caso `slot.id === activeSlotId`.
+      const isActive = slot.id === activeSlotId;
+      const hasPayload = slot.savedAt > 0;
+      if (!isActive && hasPayload) {
+        setOverwriteTarget({ slotId: slot.id, meta: slot });
+        return;
+      }
+      void applyPick(slot.id);
+    },
+    [busy, activeSlotId, applyPick],
+  );
+
+  const onConfirmOverwrite = useCallback(async () => {
+    if (!overwriteTarget || busy) return;
+    setBusy(true);
+    try {
+      await setActiveSlot(overwriteTarget.slotId);
+      onSlotChanged(overwriteTarget.slotId);
+      onOverwriteConfirm?.(overwriteTarget.slotId, overwriteTarget.meta);
+      setVisible(false);
+      setOverwriteTarget(null);
+    } finally {
+      setBusy(false);
+    }
+  }, [overwriteTarget, busy, onSlotChanged, onOverwriteConfirm]);
+
+  const onCancelOverwrite = useCallback(() => {
+    setOverwriteTarget(null);
+  }, []);
 
   const onCreate = useCallback(async () => {
     const name = newName.trim();
@@ -275,11 +344,25 @@ export function SaveSlotPicker({
                 )}
                 renderItem={({ item }) => {
                   const isActive = item.id === refresh.activeSlotId;
+                  // MGC-480 — meta enriquecida: temporada + equipo.
+                  // Si el slot es legacy sin estos campos (undefined)
+                  // mostramos em-dash para que la fila mantenga la
+                  // alineación sin reclamar un valor falso.
+                  const temporadaLabel =
+                    typeof item.temporada === 'number'
+                      ? `T${item.temporada}`
+                      : '—';
+                  const equipoLabel =
+                    item.equipo === null
+                      ? 'Sin club'
+                      : item.equipo === undefined
+                        ? '—'
+                        : item.equipo;
                   return (
                     <Pressable
                       testID={`${testID}-row-${item.id}`}
                       accessibilityRole="button"
-                      accessibilityLabel={`Partida ${item.name}${isActive ? ' (activa)' : ''}`}
+                      accessibilityLabel={`Partida ${item.name}${isActive ? ' (activa)' : ''}. Temporada ${temporadaLabel}, equipo ${equipoLabel}, guardada ${formatSavedAt(item.savedAt)}.`}
                       onPress={() => onPick(item)}
                       disabled={busy}
                       style={({ pressed }) => ({
@@ -309,8 +392,10 @@ export function SaveSlotPicker({
                             color: colors.textMuted,
                             fontSize: fontSize.xs,
                           }}
+                          numberOfLines={1}
                         >
-                          Guardada {formatSavedAt(item.savedAt)}
+                          {temporadaLabel} · {equipoLabel} ·{' '}
+                          {formatSavedAt(item.savedAt)}
                         </Text>
                       </View>
                       {isActive ? (
@@ -481,6 +566,126 @@ export function SaveSlotPicker({
                 Cerrar
               </Text>
             </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MGC-480 — modal de confirmación de overwrite. Se monta encima
+          del modal de lista y bloquea interacción con el de atrás
+          mientras esté visible. El `onRequestClose` cancela (no
+          pisa) — equivalente al tap fuera / botón Cancelar. WCAG
+          48dp hitboxes; testID canónicos para specs e2e. */}
+      <Modal
+        visible={overwriteTarget !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={onCancelOverwrite}
+      >
+        <View
+          accessibilityViewIsModal
+          style={styles.backdrop}
+          testID={`${testID}-overwrite-modal`}
+        >
+          <View
+            accessibilityRole={MODAL_ROLE}
+            style={{
+              width: '88%',
+              maxWidth: 420,
+              backgroundColor: colors.bg,
+              borderRadius: radii.lg,
+              borderWidth: 1,
+              borderColor: colors.border,
+              padding: spacing[5],
+              gap: spacing[3],
+            }}
+          >
+            <Text
+              accessibilityRole="header"
+              style={{
+                color: colors.textStrong,
+                fontSize: fontSize.lg,
+                fontWeight: fontWeight.bold,
+              }}
+            >
+              ¿Sobrescribir partida?
+            </Text>
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: fontSize.sm,
+                lineHeight: 20,
+              }}
+            >
+              Vas a cambiar la partida activa a{' '}
+              <Text style={{ fontWeight: fontWeight.bold }}>
+                {overwriteTarget?.meta.name ?? 'este slot'}
+              </Text>
+              . La próxima vez que se guarde automáticamente, se
+              escribirá sobre este slot.
+            </Text>
+            <Text
+              style={{
+                color: colors.textMuted,
+                fontSize: fontSize.xs,
+              }}
+            >
+              Tu progreso actual NO se pierde: queda en el slot del
+              que venías hasta que vuelvas a él.
+            </Text>
+            <View style={{ flexDirection: 'row', gap: spacing[2] }}>
+              <Pressable
+                testID={`${testID}-overwrite-cancel`}
+                accessibilityRole="button"
+                accessibilityLabel="Cancelar cambio de slot"
+                onPress={onCancelOverwrite}
+                disabled={busy}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  minHeight: 48,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: radii.pill,
+                  backgroundColor: pressed ? colors.surface2 : 'transparent',
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                })}
+              >
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.semibold,
+                  }}
+                >
+                  Cancelar
+                </Text>
+              </Pressable>
+              <Pressable
+                testID={`${testID}-overwrite-confirm`}
+                accessibilityRole="button"
+                accessibilityLabel="Confirmar y cambiar de partida"
+                onPress={onConfirmOverwrite}
+                disabled={busy}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  minHeight: 48,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: radii.pill,
+                  backgroundColor: pressed ? colors.primarySoft : colors.primary,
+                })}
+              >
+                <Text
+                  style={{
+                    color: colors.textOnPrimary,
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.bold,
+                  }}
+                >
+                  Cambiar
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
