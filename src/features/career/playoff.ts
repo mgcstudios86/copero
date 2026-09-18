@@ -60,7 +60,11 @@ export type BracketRng = {
  */
 export function buildPlayoffBracket(
   seeded: string[],
-  rng: BracketRng,
+  // El bracket inicial no consume RNG: los BYE avanzan directo y los
+  // partidos se resolverán al llamar `resolvePlayoffMatch` desde
+  // `advancePlayoffRound`. El parámetro queda en la firma para mantener
+  // simetría con las funciones que sí lo usan (API pública estable).
+  _rng: BracketRng,
 ): PlayoffMatch[] {
   if (seeded.length < 4) {
     throw new Error(
@@ -77,7 +81,7 @@ export function buildPlayoffBracket(
     padded.push(`BYE-${padded.length + 1}`);
   }
 
-  const pairings: Array<[number, number]> = [
+  const pairings: [number, number][] = [
     [0, 7],
     [1, 6],
     [2, 5],
