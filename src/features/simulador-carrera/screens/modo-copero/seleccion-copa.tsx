@@ -17,7 +17,7 @@
  */
 
 import React, { useCallback, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -38,7 +38,7 @@ const TEAMS_32 = [
 
 export default function SeleccionCopaScreen() {
   const router = useRouter();
-  const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
+  const { colors, spacing, fontSize } = useTheme();
 
   // Generamos un bracket determinista para mostrar antes de confirmar.
   // El seed usa fecha del día → cambia día a día, ok para preview.
@@ -123,7 +123,7 @@ export default function SeleccionCopaScreen() {
 }
 
 function BracketPreview({ matches, playerId }: { matches: Match[]; playerId: string }) {
-  const { colors, radii, spacing, fontSize } = useTheme();
+  const { colors, spacing } = useTheme();
   // 4 columnas × 2 partidos = 8 partidos de octavos visibles
   const cols = useMemo(() => {
     const out: Match[][] = [[], [], [], []];
@@ -153,7 +153,7 @@ function BracketPreview({ matches, playerId }: { matches: Match[]; playerId: str
 }
 
 function MatchCard({ match, playerId }: { match: Match; playerId: string }) {
-  const { colors, radii, spacing, fontSize } = useTheme();
+  const { colors, radii, spacing } = useTheme();
   const teamStyle = (tid: string | null) => {
     const isPlayer = tid === playerId;
     return {
