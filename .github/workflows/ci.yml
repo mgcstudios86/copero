@@ -133,7 +133,7 @@ jobs:
       - name: Cachear npm (~/.npm) (best-effort con timeout)
         uses: actions/cache@v4
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 5
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -176,7 +176,7 @@ jobs:
       - name: Cachear npm (~/.npm) (best-effort con timeout)
         uses: actions/cache@v4
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 5
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -213,7 +213,7 @@ jobs:
       - name: Cachear npm (~/.npm) (best-effort con timeout)
         uses: actions/cache@v4
         continue-on-error: true
-        timeout-minutes: 2
+        timeout-minutes: 5
         with:
           path: ~/.npm
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}

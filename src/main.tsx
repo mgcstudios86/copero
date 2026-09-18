@@ -34,3 +34,5 @@ createRoot(root).render(
     </BrowserRouter>
   </StrictMode>,
 )
+
+// MGC-644: CI infra validation touch — fuerza lint/typecheck/tests path filters
