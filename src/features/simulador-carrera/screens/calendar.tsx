@@ -134,10 +134,26 @@ export default function CalendarScreen() {
 
   const onAdvanceWeek = useCallback(async () => {
     await advance();
+    const nextWeek = week + 1;
+    // MGC-702 — al cruzar al rango de playoffs (semanas 35..37), el CTA
+    // primario debe routear a /playoff en lugar de /match. Si seguimos
+    // lanzando startMatch() en playoff, se dispara un partido regular
+    // falso y el bracket queda huérfano (walk 38 fechas → Season End
+    // directo, reportado por QA MGC-689). Mantenemos el resto del chain
+    // auto-trigger idéntico para semanas 1..34 y el corte en semana 38
+    // (`fin`) sigue gobernado por `onAdvanceSeason`.
+    if (nextWeek >= PLAYOFF_START_WEEK && nextWeek < SEASON_LENGTH) {
+      // Auto-transition a playoffs (MGC-609 AC2). El bracket screen
+      // evalúa su propio gate con `bracketChampion(bracket)`; si la
+      // edición del usuario no clasificó, el self-heal del playoff
+      // screen expone un CTA de fallback a season-summary.
+      router.push('/simulador-carrera/playoff');
+      return;
+    }
     // Auto-trigger del chain al partido cuando entramos en una fecha
-    // regular nueva (semana 1..37). En pretemporada y `fin` no
+    // regular nueva (semana 1..34). En pretemporada y `fin` no
     // disparamos match (sería antifuncional).
-    if (week + 1 >= 1 && week + 1 < SEASON_LENGTH) {
+    if (nextWeek >= 1 && nextWeek < SEASON_LENGTH) {
       // MGC-386 — poblar `matchStore.outcome` ANTES del push para que
       // /match no evalúe el guard con `outcome=null`. Si startMatch
       // lanza (imports rotos), caemos al redirect del loader (back to
