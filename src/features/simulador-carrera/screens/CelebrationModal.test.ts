@@ -153,14 +153,21 @@ describe('playoff.tsx — wiring del modal (MGC-601)', () => {
  * Modal nativo de react-native en vuelo y descarta el push. Resultado:
  * el botón vuelve a playoff en lugar de ir a season-summary.
  *
- * Solución aplicada (opción 1 del fix sugerido): reordenar el handler
- * para que onCloseSeason() (que ejecuta router.push) corra ANTES de
- * setShowCelebration(false). celebrationDismissed se setea también
- * antes para evitar el re-show mid-transition.
+ * Iteración 1 (PR-32 / ab860c5) — sólo reordenó las llamadas
+ * (dismissed → navigate → hide modal). QA confirmó MGC-620 que el
+ * reorder no fue suficiente: el teardown nativo del Modal y el
+ * router.push() viven en el mismo batch de React y el push se sigue
+ * cancelando antes del stack swap.
  *
- * Patrón de test: estructural (lee el source y verifica el orden de
- * las llamadas dentro de onCelebrationNewSeason). Evita mockear
- * expo-router / Animated native.
+ * Solución aplicada (iteración 2, opción 2 del análisis MGC-614):
+ * Diferir el setShowCelebration(false) con
+ * InteractionManager.runAfterInteractions para que el teardown del
+ * Modal espere a que la animación/commits de la navegación terminen.
+ * celebrationDismissed=true se setea sincrónicamente para que el
+ * useEffect([champion, dismissed]) no reabra el modal mid-transition.
+ *
+ * Patrón de test: estructural (lee el source y verifica la forma del
+ * handler). Evita mockear expo-router / Animated native.
  */
 describe('playoff.tsx — fix navegación Nueva temporada (MGC-614)', () => {
   const src = readFileSync(
@@ -179,22 +186,37 @@ describe('playoff.tsx — fix navegación Nueva temporada (MGC-614)', () => {
     return src.slice(arrowIdx, closeIdx);
   }
 
-  it('reordena handler: navega ANTES de desmontar el modal', () => {
+  it('importa InteractionManager de react-native', () => {
+    // Necesario para el fix de race condition en MGC-614 (iter 2).
+    expect(src).toMatch(
+      /import\s*\{[^}]*InteractionManager[^}]*\}\s*from\s*'react-native'/,
+    );
+  });
+
+  it('reordena handler: navega antes de desmontar el modal', () => {
     const body = extractHandlerBody();
     const idxDismissed = body.indexOf('setCelebrationDismissed(true)');
     const idxCloseSeason = body.indexOf('onCloseSeason()');
-    const idxHideModal = body.indexOf('setShowCelebration(false)');
+    const idxDeferredHide = body.indexOf('InteractionManager.runAfterInteractions');
 
-    // Sanity: las tres llamadas están presentes.
+    // Sanity: las tres piezas están presentes.
     expect(idxDismissed).toBeGreaterThan(-1);
     expect(idxCloseSeason).toBeGreaterThan(-1);
-    expect(idxHideModal).toBeGreaterThan(-1);
+    expect(idxDeferredHide).toBeGreaterThan(-1);
 
-    // El orden es lo crítico: dismissed → navigate → hide modal.
-    // Si el hide modal va primero, el Modal nativo se desmonta en
-    // vuelo y descarta el push (ver root cause en MGC-614).
+    // El orden es crítico: dismissed → navigate → defer hide modal.
     expect(idxDismissed).toBeLessThan(idxCloseSeason);
-    expect(idxCloseSeason).toBeLessThan(idxHideModal);
+    expect(idxCloseSeason).toBeLessThan(idxDeferredHide);
+  });
+
+  it('difiere setShowCelebration(false) con InteractionManager.runAfterInteractions', () => {
+    // El teardown NO debe ocurrir sincrónicamente: se difiere hasta
+    // que las animaciones/interacciones pendientes terminen, para no
+    // cancelar el router.push en vuelo (MGC-620 evidence).
+    const body = extractHandlerBody();
+    expect(body).toMatch(
+      /InteractionManager\.runAfterInteractions\(\s*\(\)\s*=>\s*\{[\s\S]*?setShowCelebration\(false\)[\s\S]*?\}\s*\)/,
+    );
   });
 
   it('mantiene celebrationDismissed=true antes de la navegación', () => {
