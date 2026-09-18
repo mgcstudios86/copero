@@ -65,9 +65,9 @@ export default function ListaJugadoresScreen() {
       void openMarket();
     }
     // marketState referenciado para que el effect re-corre al cambiar temporada.
-  }, [openMarket, marketState?.season]);
+  }, [openMarket, marketState]);
 
-  const pool: MarketPlayer[] = marketState?.pool ?? [];
+  const pool = useMemo<MarketPlayer[]>(() => marketState?.pool ?? [], [marketState?.pool]);
   const filtered = useMemo(() => {
     const criteria: FilterCriteria = {};
     if (position) criteria.position = position;

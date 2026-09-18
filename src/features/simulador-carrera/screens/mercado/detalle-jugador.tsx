@@ -43,7 +43,7 @@ export default function DetalleJugadorScreen() {
   const playerId = typeof params.playerId === 'string' ? params.playerId : '';
   const player = useMemo(
     () => (marketState?.pool ? findMarketPlayer(marketState.pool, playerId) : null),
-    [marketState?.pool, playerId],
+    [marketState, playerId],
   );
 
   // Auto-crear la offer si llegamos sin una pre-existente. Esto cubre el
@@ -280,7 +280,7 @@ export default function DetalleJugadorScreen() {
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
-  const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
+  const { colors, spacing, fontSize, fontWeight } = useTheme();
   return (
     <View
       style={{

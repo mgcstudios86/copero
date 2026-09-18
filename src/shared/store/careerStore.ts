@@ -38,11 +38,7 @@ import {
   evaluatePurchaseOffer,
   findMarketPlayer,
   generateMarketPool,
-  isPlayerStillAvailable,
-  openMarketState as buildMarketState,
   type MarketOffer,
-  type MarketPlayer,
-  type MarketState,
 } from '@/features/career/market';
 import type { CareerAction } from '@/features/career/engine';
 import type {
