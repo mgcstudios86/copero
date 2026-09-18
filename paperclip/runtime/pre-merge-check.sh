@@ -321,6 +321,32 @@ EXTRACT_RUN_IDS() {
     | grep -oE '[0-9]+' || true
 }
 
+# MGC-633: citas SHA calificadas como CONTEXTO (cherry-pick source,
+# base de main, refs commit, fork commit, upstream commit) NO son
+# fabricación. Son referencias que documentan de dónde viene el
+# trabajo o sobre qué base se construyó, no claims de commits que el
+# PR introduce. Excluirlas del chequeo de PR.commits y reportarlas
+# como notice explícito para auditoría.
+#
+# Cada patrón debe terminar con un whitespace o un paréntesis de
+# apertura seguido del SHA entre backticks. Mantener la lista corta
+# y conservadora: añadir un calificador nuevo es una decisión de
+# política, no de parsing.
+EXTRACT_CONTEXT_SHAS() {
+  printf '%s\n' "$1" \
+    | grep -oE 'Cherry-pick (desde commit|source|de commit)[[:space:]]+`[0-9a-f]{7,40}`' \
+    | grep -oE '[0-9a-f]{7,40}' || true
+  printf '%s\n' "$1" \
+    | grep -oE 'base en `main` \(`[0-9a-f]{7,40}`' \
+    | grep -oE '[0-9a-f]{7,40}' || true
+  printf '%s\n' "$1" \
+    | grep -oE 'Refs commit[[:space:]]+`[0-9a-f]{7,40}`' \
+    | grep -oE '[0-9a-f]{7,40}' || true
+  printf '%s\n' "$1" \
+    | grep -oE '(fork commit|upstream commit)[[:space:]]+`[0-9a-f]{7,40}`' \
+    | grep -oE '[0-9a-f]{7,40}' || true
+}
+
 # Lista de comentarios — tomar el último del bot devops-comment-ci-gate-strict.
 # El sticky-publish añade header `devops-ci-gate-strict`. Si no hay sticky,
 # tomar el último comentario humano del PR (puede contener SHA citation
@@ -335,6 +361,14 @@ CITED_SHAS_RAW+="$(EXTRACT_SHAS "$LATEST_STICKY_BODY")"
 CITED_SHAS_RAW+=$'\n'
 CITED_SHAS_RAW+="$(EXTRACT_SHAS "$LATEST_USER_BODY")"
 
+# MGC-633: extraer también las citas calificadas como contexto (no fabricación).
+CONTEXT_SHAS_RAW=""
+CONTEXT_SHAS_RAW+="$(EXTRACT_CONTEXT_SHAS "$PR_BODY")"
+CONTEXT_SHAS_RAW+=$'\n'
+CONTEXT_SHAS_RAW+="$(EXTRACT_CONTEXT_SHAS "$LATEST_STICKY_BODY")"
+CONTEXT_SHAS_RAW+=$'\n'
+CONTEXT_SHAS_RAW+="$(EXTRACT_CONTEXT_SHAS "$LATEST_USER_BODY")"
+
 CITED_RUN_RAW=""
 CITED_RUN_RAW+="$(EXTRACT_RUN_IDS "$PR_BODY")"
 CITED_RUN_RAW+=$'\n'
@@ -345,6 +379,8 @@ CITED_RUN_RAW+="$(EXTRACT_RUN_IDS "$LATEST_USER_BODY")"
 # Filtrar: una línea es SHA sólo si TODOS sus caracteres están en [0-9a-f].
 # Esto evita que un run id "34571877608" (dígitos puros) matchee como SHA.
 CITED_SHAS="$(printf '%s\n' "$CITED_SHAS_RAW" | awk '/^[0-9a-f]{7,40}$/' | sort -u || true)"
+# MGC-633: set de citas de contexto (skip fabricación check).
+CONTEXT_SHAS="$(printf '%s\n' "$CONTEXT_SHAS_RAW" | awk '/^[0-9a-f]{7,40}$/' | sort -u || true)"
 # Filtrar: una línea es run id sólo si TODOS sus caracteres son dígitos.
 CITED_RUN_IDS="$(printf '%s\n' "$CITED_RUN_RAW" | awk '/^[0-9]+$/' | sort -u || true)"
 
@@ -442,7 +478,16 @@ printf '| sha-citation (Capa 3) | %d commits verdes en set |\n' "$(printf '%s\n'
 # primer caso bloquea Capa 3.
 SHA_CITATION_FAIL=()
 SHA_CITATION_WARN=()
+SHA_CITATION_CONTEXT=()
 for cited_sha in $CITED_SHAS; do
+  # MGC-633: si el SHA está calificado como contexto (cherry-pick
+  # source, base de main, refs commit, etc.), NO es fabricación.
+  # Reportar como notice explícito y continuar con el siguiente SHA.
+  if grep -qx "$cited_sha" <<<"$CONTEXT_SHAS" 2>/dev/null; then
+    SHA_CITATION_CONTEXT+=("sha=${cited_sha}=qualified-context")
+    continue
+  fi
+
   # ¿Está el SHA citado (o el commit expandido por prefijo) en
   # PR.commits? Si NO, es fabricación real (referencia a un commit
   # que no forma parte del PR). Lo marcamos como FAIL.
@@ -526,6 +571,12 @@ for run_id in $CITED_RUN_IDS; do
     continue
   fi
 done
+
+# MGC-633: reportar citas calificadas como contexto (no fabricación).
+if ((${#SHA_CITATION_CONTEXT[@]} > 0)); then
+  ctx_text="$(IFS=', '; printf '%s' "${SHA_CITATION_CONTEXT[*]}")"
+  echo "::notice title=ADR-0029 Capa 3 context-citations::PR #${PR_NUMBER} SHA ${PR_HEAD_SHA}; citas calificadas como contexto (no fabricación): ${ctx_text}; actor=${ACTOR}" >&2
+fi
 
 # Reportar warnings acumulados (referencias de linaje no verificadas
 # por api-error transitorio, no fabricaciones).
