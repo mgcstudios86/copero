@@ -90,7 +90,12 @@ export default function Home() {
   const careerProfileName = useCareerStore((s) => s.profile.name);
   const hasCareer = careerStage !== 'identity' && careerProfileName.length > 0;
 
-  const goPlay = () => router.push('/simulador-carrera/identity');
+  // MGC-479 — fresh-user cold-start pasa por Welcome (spec PR #655 step 1)
+  // antes de WF1 (identity). El CTA "Jugar" redirige a `/onboarding/welcome`
+  // cuando NO hay career persistida; con carrera existente, va directo a
+  // `/simulador-carrera/identity` para re-crear (UX consistente: si ya
+  // jugaste, "Jugar" significa "empezar otra carrera" y no ver el welcome).
+  const goPlay = () => router.push(hasCareer ? '/simulador-carrera/identity' : '/onboarding/welcome');
   const goResume = () => router.push(resumeRouteForStage(careerStage));
 
   // MGC-1397: el splash ocupa el viewport visible. Mismo cap que pre-MGC-1188

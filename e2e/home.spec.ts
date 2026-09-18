@@ -88,11 +88,13 @@ const SEEDED_PROFILE = {
 };
 
 test.describe('Copero — home + CTA flow (web) — MGC-1397 / MGC-2254', () => {
-  test('cold-start sin carrera: home muestra solo "Jugar" → click → /simulador-carrera/identity', async ({
+  test('cold-start sin carrera: home muestra solo "Jugar" → click → /onboarding/welcome (MGC-479)', async ({
     page,
   }, testInfo) => {
-    // Estado limpio: storage sin perfil, asi `hasCareer === false` y el
-    // home renderiza solo el CTA "Jugar".
+    // MGC-479: estado limpio (`hasCareer === false`) → el CTA "Jugar"
+    // pasa por Welcome (spec PR #655 onboarding-fresh-user, step 1)
+    // antes de WF1 (identity). Carrera persistida sigue yendo directo
+    // a /simulador-carrera/identity (test siguiente).
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await expect(page.getByTestId('home-screen')).toBeVisible({ timeout: 15_000 });
     // Solo el CTA primario, no debe haber "Continuar carrera".
@@ -105,14 +107,15 @@ test.describe('Copero — home + CTA flow (web) — MGC-1397 / MGC-2254', () => 
       fullPage: true,
     });
 
-    // Click "Jugar" navega a /simulador-carrera/identity (AC7.1).
+    // Click "Jugar" navega a /onboarding/welcome (MGC-479 fresh-user).
+    // El Welcome expone testID="welcome-screen" (ver app/onboarding/welcome.tsx).
     await page.getByTestId('btn-career').click();
-    await page.waitForURL(/\/simulador-carrera\/identity$/, { timeout: 15_000 });
-    await expect(page.getByTestId('identity-screen')).toBeVisible({ timeout: 15_000 });
+    await page.waitForURL(/\/onboarding\/welcome$/, { timeout: 15_000 });
+    await expect(page.getByTestId('welcome-screen')).toBeVisible({ timeout: 15_000 });
     // Banner global del layout persiste al navegar.
     await expect(page.getByTestId('ad-banner-web')).toBeVisible();
     await page.screenshot({
-      path: testInfo.outputPath('home-cta-identity.png'),
+      path: testInfo.outputPath('home-cta-welcome.png'),
       fullPage: true,
     });
   });
