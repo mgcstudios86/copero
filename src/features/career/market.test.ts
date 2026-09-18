@@ -103,14 +103,18 @@ describe('MGC-475 — market module', () => {
       verdict: 'pending' as const,
       playerSnapshot: target,
     };
+    // Budget debe superar el value real del pool (Boca/River rep=5 → OVR
+    // 86-90 → value hasta ~161 M EUR). Usamos target.value + margen para
+    // mantener el test determinista sin acoplarse al catálogo de clubes.
+    const startingBudget = target.value + 50;
     const result = applyAcceptedPurchase({
       offer,
-      currentBudget: 100,
+      currentBudget: startingBudget,
       currentPool: pool,
     });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.newBudget).toBe(100 - target.value);
+      expect(result.newBudget).toBe(startingBudget - target.value);
       expect(result.player.id).toBe(target.id);
     }
   });
