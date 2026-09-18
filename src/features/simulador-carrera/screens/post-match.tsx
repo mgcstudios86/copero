@@ -136,6 +136,46 @@ export default function PostMatchScreen() {
   const activeInjury = nextProfile?.career.lesion;
   const hasInjury = !!activeInjury && activeInjury.fechasOut > 0;
 
+  // MGC-476 — eventos-clave del partido, derivados deterministamente del
+  // outcome + preview + nextProfile (sin tocar el resolver). Cada goal se
+  // mapea a un "minuto" sintetico (15..85) para que la lista sea legible.
+  // Reglas de hooks: useMemo debe ejecutarse en cada render; lo movemos
+  // antes del early-return para no romper el orden cuando todavía no hay
+  // match hidratado (deep-link / back-forward).
+  const goalEvents = useMemo(() => {
+    const n = preview?.goals ?? 0;
+    if (n <= 0) return [] as { key: string; minute: number; label: string }[];
+    const items: { key: string; minute: number; label: string }[] = [];
+    for (let i = 0; i < n; i += 1) {
+      const minute = 15 + ((i * 23) % 70); // 15..85 pseudo-random estable
+      const label =
+        i === 0
+          ? t('postMatch.eventoGoal')
+          : t('postMatch.eventoGoalCount', { count: i + 1 });
+      items.push({ key: `goal-${i}`, minute, label });
+    }
+    return items;
+  }, [preview?.goals, t]);
+
+  const keyEvents = useMemo(() => {
+    const items: { key: string; minute: number | null; label: string; tone: 'primary' | 'danger' | 'muted' }[] = [];
+    for (const g of goalEvents) {
+      items.push({ key: g.key, minute: g.minute, label: g.label, tone: 'primary' });
+    }
+    if (isMvp) {
+      items.push({ key: 'mvp', minute: null, label: t('postMatch.eventoMvp'), tone: 'primary' });
+    }
+    if (hasInjury && activeInjury) {
+      items.push({
+        key: 'injury',
+        minute: null,
+        label: injuryKindLabel(activeInjury.kind, t),
+        tone: 'danger',
+      });
+    }
+    return items;
+  }, [goalEvents, isMvp, hasInjury, activeInjury, t]);
+
   if (!outcome || !preview || !previousProfile || !nextProfile) {
     return (
       <SafeAreaView
@@ -155,43 +195,6 @@ export default function PostMatchScreen() {
   const confianzaDelta = clampCareerStat(nextCareer.confianza) - clampCareerStat(prevCareer.confianza);
 
   const nextWeek = Math.min(38, previousProfile.week + 1);
-
-  // MGC-476 — eventos-clave del partido, derivados deterministamente del
-  // outcome + preview + nextProfile (sin tocar el resolver). Cada goal se
-  // mapea a un "minuto" sintetico (15..85) para que la lista sea legible.
-  const goalEvents = useMemo(() => {
-    const n = preview?.goals ?? 0;
-    if (n <= 0) return [] as Array<{ key: string; minute: number; label: string }>;
-    const items: Array<{ key: string; minute: number; label: string }> = [];
-    for (let i = 0; i < n; i += 1) {
-      const minute = 15 + ((i * 23) % 70); // 15..85 pseudo-random estable
-      const label =
-        i === 0
-          ? t('postMatch.eventoGoal')
-          : t('postMatch.eventoGoalCount', { count: i + 1 });
-      items.push({ key: `goal-${i}`, minute, label });
-    }
-    return items;
-  }, [preview?.goals, t]);
-
-  const keyEvents = useMemo(() => {
-    const items: Array<{ key: string; minute: number | null; label: string; tone: 'primary' | 'danger' | 'muted' }> = [];
-    for (const g of goalEvents) {
-      items.push({ key: g.key, minute: g.minute, label: g.label, tone: 'primary' });
-    }
-    if (isMvp) {
-      items.push({ key: 'mvp', minute: null, label: t('postMatch.eventoMvp'), tone: 'primary' });
-    }
-    if (hasInjury && activeInjury) {
-      items.push({
-        key: 'injury',
-        minute: null,
-        label: injuryKindLabel(activeInjury.kind, t),
-        tone: 'danger',
-      });
-    }
-    return items;
-  }, [goalEvents, isMvp, hasInjury, activeInjury, t]);
 
   return (
     <SafeAreaView
