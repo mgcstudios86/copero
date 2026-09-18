@@ -190,6 +190,31 @@ const ENTRIES: Record<string, CopyEntry> = {
   match_m1_conservadora: { raw: 'Actitud conservadora' },
   match_m1_todo: { raw: 'Ir con todo' },
   match_m1_lider: { raw: 'Pedir responsabilidades especiales' },
+  // MGC-245 — pantalla `/alineacion` (selector previo al partido). El
+  // título/subtítulo viven en su propio bloque; los 3 nombres de las
+  // opciones tácticas se reusan desde `match_m1_*` (canónico, ya i18n).
+  alineacion_step: { raw: 'Pre-partido' },
+  alineacion_title: { raw: 'Elegí la alineación táctica' },
+  alineacion_subtitle: {
+    raw: 'Tu decisión cambia cómo se planta el equipo. Después no se vuelve atrás hasta el próximo partido.',
+  },
+  alineacion_delta_conservadora: {
+    raw: 'Planta baja. Prioriza no recibir goles. Menos gol esperado, menos exposición física.',
+  },
+  alineacion_delta_todo: {
+    raw: 'Salimos a ganar desde el minuto uno. Más gol esperado, más huecos atrás.',
+  },
+  alineacion_delta_lider: {
+    raw: 'El equipo te sigue como referente. Capitán visible, moral del grupo sube.',
+  },
+  alineacion_tag_safe: { raw: 'CONSERVADORA' },
+  alineacion_tag_aggressive: { raw: 'AGRESIVA' },
+  alineacion_tag_leader: { raw: 'LÍDER' },
+  alineacion_cta_confirm: { raw: 'Confirmar alineación' },
+  alineacion_cta_hint: {
+    raw: 'Toca una opción arriba para habilitar este botón.',
+  },
+  alineacion_cta_back: { raw: 'Volver al dashboard' },
   feedback_match_safe: { raw: 'Salimos seguros. Esperando el segundo tiempo.', tone: 'neutral' },
   feedback_match_all_in: { raw: 'Salimos a ganar desde el minuto uno.', tone: 'success' },
   feedback_match_lead: { raw: 'El equipo te sigue. Capitán visible.', tone: 'success' },

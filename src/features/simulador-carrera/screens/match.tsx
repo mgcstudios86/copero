@@ -23,6 +23,11 @@ export default function MatchScreen() {
   const previousProfile = useMatchStore((s) => s.previousProfile);
   const committed = useMatchStore((s) => s.committed);
   const reset = useMatchStore((s) => s.reset);
+  // MGC-245 — chip "Alineación elegida" para que el usuario vea
+  // retrospectivamente qué táctica eligió en `/alineacion`. Si el
+  // usuario llegó a `/match` sin pasar por `/alineacion` (deeplink,
+  // fallback legacy MGC-1650), el chip muestra "Sin selección".
+  const alignment = useMatchStore((s) => s.alignment);
   const startMatch = useCareerStore((s) => s.startMatch);
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -176,6 +181,47 @@ export default function MatchScreen() {
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
             {t('match.subtitle')}
+          </Text>
+        </View>
+
+        <View
+          style={{
+            borderRadius: radii.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+            padding: spacing[4],
+            gap: spacing[2],
+          }}
+          testID="match-alignment-chip"
+        >
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: 12,
+              letterSpacing: 2,
+              fontWeight: fontWeight.bold,
+            }}
+          >
+            {t('match.alignmentChipLabel')}
+          </Text>
+          <Text
+            style={{
+              color: colors.textStrong,
+              fontSize: fontSize.sm,
+              fontWeight: fontWeight.bold,
+            }}
+            testID="match-alignment-value"
+          >
+            {alignment
+              ? t(
+                  alignment === 'conservadora'
+                    ? 'match.alignmentConservative'
+                    : alignment === 'todo'
+                    ? 'match.alignmentAllIn'
+                    : 'match.alignmentLeader',
+                )
+              : t('match.alignmentNone')}
           </Text>
         </View>
 

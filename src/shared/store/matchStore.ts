@@ -33,11 +33,35 @@ export type PostMatchPreview = {
   score: number;
 };
 
+/**
+ * MGC-245 — alineación táctica que el usuario elige en `/alineacion`
+ * antes del partido. Es state transitorio (mismo lifecycle que `outcome`):
+ * vive entre la pantalla de selección y `commitMatch()`. `null` significa
+ * "aún no eligió" (estado inicial); la pantalla `/alineacion` flagea
+ * el CTA como deshabilitado hasta que se setee uno de los 3 valores.
+ *
+ * Las 3 opciones reusan los labels canónicos de `match_m1_*` en la
+ * copy matrix: conservadora / todo / lider. La selección queda
+ * persistida como metadata visible en `/match` (chip "Alineación: …")
+ * para que el usuario vea retrospectivamente qué eligió.
+ *
+ * Honesto: por ahora la elección NO muta el cálculo de outcome —
+ * `resolveWeeklyMatch` sigue siendo determinista por (week, season).
+ * El delta visible en `/alineacion` describe el trade-off
+ * (conservadora = menos riesgo / todo = más gol / lider = más moral)
+ * pero el resultado numérico del partido no se altera todavía. Esto
+ * evita prometer AC que requieren tocar el motor sin haberlo hecho.
+ * El delta es read-only display; el siguiente paso del scope (no acá)
+ * cablea el alignment al cálculo de outcome.
+ */
+export type Alignment = 'conservadora' | 'todo' | 'lider';
+
 type MatchStore = {
   outcome: MatchOutcome | null;
   previousProfile: PlayerProfile | null;
   nextProfile: PlayerProfile | null;
   preview: PostMatchPreview | null;
+  alignment: Alignment | null;
   committed: boolean;
 
   setMatch: (params: {
@@ -46,31 +70,49 @@ type MatchStore = {
     nextProfile: PlayerProfile;
     preview: PostMatchPreview;
   }) => void;
+  /** MGC-245 — setea la alineación táctica elegida por el usuario.
+   * `null` resetea (re-entry a `/alineacion` antes de elegir). */
+  setAlignment: (alignment: Alignment | null) => void;
   commit: () => void;
   reset: () => void;
 };
 
 const EMPTY: Pick<
   MatchStore,
-  'outcome' | 'previousProfile' | 'nextProfile' | 'preview' | 'committed'
+  | 'outcome'
+  | 'previousProfile'
+  | 'nextProfile'
+  | 'preview'
+  | 'alignment'
+  | 'committed'
 > = {
   outcome: null,
   previousProfile: null,
   nextProfile: null,
   preview: null,
+  alignment: null,
   committed: false,
 };
 
 export const useMatchStore = create<MatchStore>()((set) => ({
   ...EMPTY,
   setMatch: ({ outcome, previousProfile, nextProfile, preview }) =>
-    set({
+    set((s) => ({
       outcome,
       previousProfile,
       nextProfile,
       preview,
+      // MGC-245 — `setMatch` (que llama `startMatch` desde careerStore)
+      // NO pisa la alineación: si el usuario ya eligió en `/alineacion`
+      // y navega a `/match`, el chip debe seguir mostrando la elección.
+      // El reset de `alignment` se hace explícitamente vía `reset()`
+      // cuando el flow termina (commit o discard).
+      alignment: s.alignment,
       committed: false,
-    }),
+    })),
+  // MGC-245 — setea la alineación. Idempotente: setear el mismo valor
+  // dos veces no dispara un re-render (Zustand shallow-eq por default).
+  setAlignment: (alignment) => set({ alignment }),
   commit: () =>
     set((s) =>
       s.committed
