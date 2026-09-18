@@ -9,9 +9,9 @@ import { useCareerStore } from '@/shared/store/careerStore';
 import { ACADEMY_CLUBS } from '@/features/career/clubs';
 import {
   applySeasonRollover,
+  buildStandings,
   shouldRollover,
 } from '@/features/career/season-rollover';
-import { buildStandings } from '@/features/career/phase';
 
 /**
  * MGC-487 — Pantalla de cierre de temporada (Step 6 de la spec) +
@@ -91,11 +91,18 @@ export default function SeasonSummaryScreen() {
   const cancelConfirm = useCallback(() => setConfirming(false), []);
 
   const onConfirm = useCallback(() => {
-    setConfirming(false);
-    // F2 placeholder: navega al hub de la temporada siguiente.
-    // La integración con `careerStore.applySeasonRollover` que
-    // bumpea `profile.season` + `history[]` se hace en MGC-487.3
-    // (siguiente PR).
+    // MGC-703 / MGC-629 iter4 — NO flipar `confirming=false` en este
+    // handler. El `<Modal>` nativo de RN sobre Android monta un
+    // `DialogFragment` que retiene la transición del stack hasta
+    // dismissarse. Cualquier `setConfirming(false)` en el batch del
+    // onPress (sync, microtask vía InteractionManager, o macrotask vía
+    // setTimeout) dismissea el DialogFragment ANTES que el
+    // router.replace commitee el stack swap → expo-router aborta la
+    // navegación silenciosamente y el usuario queda en season-summary
+    // con el modal cerrado (QA MGC-689 — reproduce anti-pattern
+    // MGC-614/618). Patrón validado por iter1..iter4 de MGC-629:
+    // el Modal se desmonta cuando season-summary unmounts como parte
+    // de la transición. Ver memoria mgc-celebration-modal-backdrop-fix.
     router.replace('/simulador-carrera/season-hub');
   }, [router]);
 

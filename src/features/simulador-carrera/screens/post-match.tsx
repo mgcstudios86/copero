@@ -117,6 +117,12 @@ export default function PostMatchScreen() {
       // el mismo tick que el `await` resuelve; sin el `getState()`
       // post-await, `onNextWeek` decide con el valor pre-commit y
       // enruta al dashboard aún cuando el motor roló un evento.
+      // MGC-705 — deep-link al semanal (no dashboard). Tras commit,
+      // el semanal de la próxima semana es la superficie correcta:
+      // el partido ya está cerrado y la decisión semanal de la
+      // nueva semana vive ahí. Sin este fix, el usuario queda
+      // a 3-back-distance del partido finalizado y la spec
+      // WF5.post → WF3.next se rompe.
       const freshSocialEventPending = useCareerStore.getState()
         .socialEventPending;
       if (freshSocialEventPending) {

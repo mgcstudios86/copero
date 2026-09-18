@@ -79,7 +79,11 @@ export default function SocialEventsScreen() {
 
   const onContinue = useCallback(async () => {
     await clearPostMatch();
-    router.replace('/simulador-carrera/dashboard');
+    // MGC-705 — deep-link al semanal (no dashboard). Tras resolver
+    // el evento social, la decisión semanal de la próxima semana
+    // vive en `/simulador-carrera/semanal` (mismo motivo que el
+    // fix en post-match.tsx#onNextWeek).
+    router.replace('/simulador-carrera/semanal');
   }, [clearPostMatch, router]);
 
   const rolledOutcome = socialEventPending?.id ?? null;
