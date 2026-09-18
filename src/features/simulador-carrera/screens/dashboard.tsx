@@ -74,7 +74,13 @@ export default function DashboardScreen() {
     async (slotId: string) => {
       setActiveSlotId(slotId);
       try {
-        await hydrateFromSave();
+        // MGC-755 iter8 — `force: true` salta la capa C del gate
+        // (early-exit por no-snapshot cacheado). El cambio de slot
+        // activo puede traer payload en otra key de AsyncStorage
+        // aunque el slot anterior estuviera vacío; sin `force` la
+        // próxima hidratación devolvería el resultado cacheado del
+        // slot previo y el state quedaría fantasma.
+        await hydrateFromSave({ force: true, caller: 'dashboard.onSlotChanged' });
         const { slots } = await listSlots();
         const meta = slots.find((s) => s.id === slotId);
         setActiveSlotName(meta?.name);

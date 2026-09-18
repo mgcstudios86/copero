@@ -499,6 +499,11 @@ export async function deleteSlot(slotId: string): Promise<void> {
     await setActiveSlot(DEFAULT_SLOT_ID);
   }
   logPersist('log', `[persistence] delete-slot id=${slotId}`);
+  // MGC-755 iter8 — invalidamos el cache del gate de hidratación
+  // para que el slot vacío tras delete NO devuelva un resultado
+  // cacheado de `ok=true`. Ver `saveCareerSave` para rationale del
+  // dynamic import.
+  void import('@/shared/store/hydrateGate').then((m) => m.invalidate(slotId)).catch(() => {});
 }
 
 /** Devuelve la partida guardada del slot o `null` si no hay nada. */
@@ -748,6 +753,17 @@ async function saveCareerSaveImpl(
       'log',
       `[persistence] save=ok slot=${targetId} bytes=${serialized.length} stage=${state.stage} storage=${storage === resolved ? 'native' : 'memory'}`,
     );
+    // MGC-755 iter8 — invalidamos el cache del gate de hidratación
+    // post-save. Sin esto, si el gate cacheó un `no-snapshot` previo
+    // (cold-start con storage vacío), la próxima `hydrateFromSave`
+    // haría early-exit y NO leería el payload recién escrito. El
+    // dynamic import evita circular dependency: hydrateGate.ts ya
+    // importa desde este módulo (getActiveSlotId), así que un
+    // import estático al revés provocaría TDZ.
+    void import('@/shared/store/hydrateGate').then((m) => m.invalidate(targetId)).catch(() => {
+      // best-effort: si el módulo de gate no cargó (test environment
+      // mockeando persistence), la save sigue siendo válida.
+    });
     return { slotId: targetId };
   } catch (err) {
     // MGC-262 — antes `.catch(() => {})` silenciaba cualquier error. Si
@@ -787,6 +803,12 @@ async function clearCareerSaveImpl(slotId?: string): Promise<void> {
     'log',
     `[persistence] save=clear slot=${targetId} storage=${storage === resolved ? 'native' : 'memory'}`,
   );
+  // MGC-755 iter8 — invalidamos el cache del gate tras clear. Si el
+  // caller siguiente hace `hydrateFromSave`, debe encontrar el slot
+  // vacío y emitir el warn sticky (no devolver el `ok=true` cacheado).
+  // Dynamic import evita circular dep con hydrateGate (que importa
+  // `getActiveSlotId` desde acá).
+  void import('@/shared/store/hydrateGate').then((m) => m.invalidate(targetId)).catch(() => {});
 }
 
 /**
