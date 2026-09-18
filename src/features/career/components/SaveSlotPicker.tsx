@@ -146,6 +146,22 @@ export function SaveSlotPicker({
     return meta?.name ?? 'Partida guardada';
   }, [activeSlotName, refresh.slots, activeSlotId]);
 
+  const applyPick = useCallback(
+    async (slotId: string) => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        await setActiveSlot(slotId);
+        onSlotChanged(slotId);
+        setVisible(false);
+        setOverwriteTarget(null);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, onSlotChanged],
+  );
+
   const onPick = useCallback(
     (slot: SlotMeta) => {
       if (busy) return;
@@ -168,23 +184,7 @@ export function SaveSlotPicker({
       }
       void applyPick(slot.id);
     },
-    [busy, activeSlotId],
-  );
-
-  const applyPick = useCallback(
-    async (slotId: string) => {
-      if (busy) return;
-      setBusy(true);
-      try {
-        await setActiveSlot(slotId);
-        onSlotChanged(slotId);
-        setVisible(false);
-        setOverwriteTarget(null);
-      } finally {
-        setBusy(false);
-      }
-    },
-    [busy, onSlotChanged],
+    [busy, activeSlotId, applyPick],
   );
 
   const onConfirmOverwrite = useCallback(async () => {
