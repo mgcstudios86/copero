@@ -405,6 +405,36 @@ export async function flushPendingSave(): Promise<void> {
 // normal para honrar el flujo `onSlotChanged`.
 let hydrationInFlight: Promise<boolean> | null = null;
 
+// MGC-729 — latch anti-loop para `hydrateFromSave`. QA reprodujo el
+// loop sobre 467d42f con 7 calls de `loadCareerSave` en 30s (window
+// 5s exacta = cadencia del reset de la dedup window). El problema:
+// la dedup window de 5s en `persistence.ts#logPersist` enmascaraba
+// el log pero NO prevenía las llamadas AsyncStorage reales — cada
+// call hacía `getItem` y (al encontrar null) emitía un log tras
+// consumir la ventana. El JS thread de Hermes seguía saturándose.
+// La fix combina tres capas:
+//
+//   1. Dedup STICKY en persistence.ts: emitir `hydrate=null` UNA vez
+//      por (slotId, reason) durante toda la vida del JS bundle.
+//      Sin reset por ventana — los calls posteriores ni siquiera
+//      entran al branch del log.
+//   2. Latch acá: una vez `hydrateFromSave` resuelve exitosamente
+//      (sea true o false), cachear el resultado por `HYDRATION_LATCH_MS`
+//      para que re-llamadas secuenciales no re-lean AsyncStorage.
+//      El slot-change del dashboard invalida el latch (vía
+//      `invalidateHydrationLatch`) antes de re-llamar, así el flujo
+//      onSlotChanged sigue funcionando.
+//   3. El guard `hydrationInFlight` para concurrentes sigue activo
+//      (Promise compartida) — coexiste con el latch sin conflicto.
+type HydrationResult = { ok: boolean; at: number; slotId: string };
+const HYDRATION_LATCH_MS = 30_000;
+let lastHydrationResult: HydrationResult | null = null;
+
+export function invalidateHydrationLatch(): void {
+  lastHydrationResult = null;
+  hydrationInFlight = null;
+}
+
 /**
  * MGC-363 — `lastSnapshot` es el snapshot persistible más reciente del
  * store. Se mantiene sincronizado con cada mutación vía un `subscribe`
@@ -1183,16 +1213,25 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       // MGC-716 — coalesce de llamadas concurrentes. Si ya hay una
       // hidratación en vuelo (StrictMode dev, layout effect doble,
       // reanimated reconciliation), devolvemos la misma Promise en vez
-      // de disparar N lecturas paralelas de AsyncStorage. Cada lectura
-      // extra emitía `[persistence] hydrate=null ... reason=no-snapshot-
-      // in-storage` y, combinado con la cascada de renders que se
-      // gatillaba, saturaba el JS thread hasta dejar la home en blanco.
-      // Llamadas secuenciales (no concurrentes) siguen corriendo
-      // normalmente: el `dashboard.onSlotChanged` depende de un
-      // re-hydrate explícito al cambiar slot (test slot-multi-save
-      // #264 espera reset a initialSnapshot cuando el slot activo
-      // queda sin payload).
+      // de disparar N lecturas paralelas de AsyncStorage.
+      //
+      // MGC-729 — latch anti-loop para llamadas SECUENCIALES. La dedup
+      // window de 5s en `persistence.ts` enmascaraba el log pero NO
+      // prevenía las lecturas de AsyncStorage — QA observó 7 calls en
+      // 30s con cadencia 5s exacta (la ventana se reseteaba tras cada
+      // emisión). Acá guardamos el último resultado por
+      // `HYDRATION_LATCH_MS` (30s) y devolvemos ese mismo boolean si
+      // llega otra llamada dentro de la ventana. El flujo
+      // `dashboard.onSlotChanged` invalida el latch explícitamente vía
+      // `invalidateHydrationLatch()` antes de re-llamar, así un cambio
+      // de slot activo sí fuerza re-hidratación (test slot-multi-save
+      // #264 espera reset a initialSnapshot cuando el slot queda sin
+      // payload).
       if (hydrationInFlight) return hydrationInFlight;
+      const now = Date.now();
+      if (lastHydrationResult && now - lastHydrationResult.at < HYDRATION_LATCH_MS) {
+        return lastHydrationResult.ok;
+      }
       hydrationInFlight = (async (): Promise<boolean> => {
         let saved: Awaited<ReturnType<typeof loadCareerSave>> = null;
         try {
@@ -1203,6 +1242,7 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
           // sigue pudiendo usar la app con initialSnapshot; la próxima
           // save sobrescribirá cualquier estado corrupto.
           set((s) => ({ ...s, hydrated: true }));
+          lastHydrationResult = { ok: false, at: Date.now(), slotId: 'unknown' };
           return false;
         }
         if (!saved) {
@@ -1215,6 +1255,7 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
           // activo. Esto garantiza que dos slots nunca comparten state.
           setSnapshot(() => initialSnapshot());
           set((s) => ({ ...s, hydrated: true }));
+          lastHydrationResult = { ok: false, at: Date.now(), slotId: 'empty' };
           return false;
         }
         setSnapshot((s) => ({
@@ -1248,6 +1289,7 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
           seasonFixtures: saved.seasonFixtures ?? [],
         }));
         set((s) => ({ ...s, hydrated: true }));
+        lastHydrationResult = { ok: true, at: Date.now(), slotId: 'loaded' };
         return true;
       })();
       try {

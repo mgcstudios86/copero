@@ -13,6 +13,7 @@ import {
   useCareerStore,
   flushPendingSave,
   getPendingSave,
+  invalidateHydrationLatch,
 } from '@/shared/store/careerStore';
 import {
   loadCareerSave,
@@ -24,6 +25,11 @@ import { initialSnapshot } from '@/features/career/identity-state';
 describe('MGC-259 career persistence (AC7)', () => {
   beforeEach(async () => {
     await clearCareerSave();
+    // MGC-729 — invalidar el latch sticky de `hydrateFromSave` entre
+    // tests para que la caché de un test previo no contamine al
+    // siguiente. En runtime nativo el latch vive 30s tras un cold-start
+    // (bundle-wide); en tests queremos aislar el estado por test.
+    invalidateHydrationLatch();
     // Reseteamos la store al estado inicial entre tests para evitar
     // que mutaciones de un test contaminen al siguiente.
     useCareerStore.getState().reset();
@@ -350,6 +356,7 @@ describe('MGC-259 career persistence (AC7)', () => {
     // la UI colgada en el splash.
     await clearCareerSave();
     useCareerStore.setState({ hydrated: false });
+    invalidateHydrationLatch();
     await useCareerStore.getState().hydrateFromSave();
     expect(useCareerStore.getState().hydrated).toBe(true);
 
@@ -364,6 +371,10 @@ describe('MGC-259 career persistence (AC7)', () => {
       seed: 5,
     });
     useCareerStore.setState({ hydrated: false });
+    // MGC-729 — invalidar el latch sticky entre el primer hydrate
+    // (storage vacío, result=false) y el segundo (save presente) para
+    // que el segundo realmente relea AsyncStorage.
+    invalidateHydrationLatch();
     await useCareerStore.getState().hydrateFromSave();
     expect(useCareerStore.getState().hydrated).toBe(true);
     expect(useCareerStore.getState().stage).toBe('retirement');
