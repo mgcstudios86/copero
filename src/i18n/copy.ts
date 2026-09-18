@@ -47,6 +47,17 @@ export type Copy = {
     body: string;
     play: string;
   };
+  // MGC-479 / spec PR #655 onboarding-fresh-user step 1 — Welcome screen
+  // fullscreen con CTA primario "Empezar" antes de WF1 (identity). Las
+  // strings viven en este módulo para mantener la paridad con home.* y
+  // permitir re-render al cambiar el locale desde el LanguageSwitcher.
+  welcome: {
+    eyebrow: string;
+    title: string;
+    body: string;
+    cta: string;
+    ctaHint: string;
+  };
   nav: {
     simulator: string;
     buildCareer: string;
@@ -414,6 +425,14 @@ export const COPY: Record<Locale, Copy> = {
       body: 'Tomá decisiones, asumí consecuencias y construí tu carrera futbolística paso a paso.',
       play: 'Jugar',
     },
+    // MGC-479 — Welcome screen (onboarding-fresh-user step 1).
+    welcome: {
+      eyebrow: 'COPERO · BIENVENIDO',
+      title: 'Bienvenido a Copero',
+      body: 'Tu carrera futbolística empieza acá. Creá tu jugador, elegí un club y empezá a competir semana a semana.',
+      cta: 'Empezar',
+      ctaHint: 'Abre el formulario de identidad para crear tu jugador',
+    },
     nav: {
       simulator: 'Simulador de carrera',
       buildCareer: 'Crea tu carrera',
@@ -746,6 +765,14 @@ export const COPY: Record<Locale, Copy> = {
       body: 'Make decisions, face consequences and build your football career one step at a time.',
       play: 'Play',
     },
+    // MGC-479 — Welcome screen (en).
+    welcome: {
+      eyebrow: 'COPERO · WELCOME',
+      title: 'Welcome to Copero',
+      body: 'Your football career starts here. Create your player, pick a club and start competing week by week.',
+      cta: 'Start',
+      ctaHint: 'Opens the identity form to create your player',
+    },
     nav: {
       simulator: 'Career Simulator',
       buildCareer: 'Build your career',
@@ -1077,6 +1104,14 @@ export const COPY: Record<Locale, Copy> = {
       title: '成为传奇',
       body: '做出决定，承担后果，一步步打造你的足球生涯。',
       play: '开始游戏',
+    },
+    // MGC-479 — Welcome screen (zh-CN).
+    welcome: {
+      eyebrow: 'COPERO · 欢迎',
+      title: '欢迎来到 Copero',
+      body: '你的足球生涯从这里开始。创建你的球员，选择一家俱乐部，并开始一周一周地竞争。',
+      cta: '开始',
+      ctaHint: '打开身份表单创建你的球员',
     },
     nav: {
       simulator: '足球生涯模拟器',
@@ -1413,6 +1448,14 @@ export const COPY: Record<Locale, Copy> = {
       title: 'Vire uma lenda',
       body: 'Tome decisões, assuma consequências e construa sua carreira de futebol passo a passo.',
       play: 'Jogar',
+    },
+    // MGC-479 — Welcome screen (pt-BR).
+    welcome: {
+      eyebrow: 'COPERO · BEM-VINDO',
+      title: 'Bem-vindo ao Copero',
+      body: 'Sua carreira de futebol começa aqui. Crie seu jogador, escolha um clube e comece a competir semana a semana.',
+      cta: 'Começar',
+      ctaHint: 'Abre o formulário de identidade para criar seu jogador',
     },
     nav: {
       simulator: 'Simulador de carreira',
