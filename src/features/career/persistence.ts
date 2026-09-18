@@ -31,7 +31,7 @@
  *
  * Keying v2:
  *   - `copero:career:save:v2:${slotId}` (CareerSaveState v:2)
- *   - `copero:career:slots:v1` (índice `{ version:1, slots:[{id,name,savedAt}] }`)
+ *   - `copero:career:slots:v1` (índice `{ version:1, slots:[{id,name,savedAt,temporada?,equipo?}] }`)
  *   - `copero:career:slot:active:v1` (string con slotId activo)
  *
  * Migración silenciosa:
@@ -41,6 +41,13 @@
  *     La key vieja NO se borra para preservar continuidad de save en
  *     QA device (ZY22G728HN tiene una save legacy que sobrevive el
  *     upgrade — DoR subtarea).
+ *
+ * MGC-480 — `temporada` / `equipo` en el SlotMeta. Se derivan del
+ * payload al `saveCareerSave` y se persisten en el índice para que
+ * `listSlots` los devuelva sin tocar los payloads individuales (cada
+ * payload pesa ~30 KB serializado). Slots legacy migrados quedan con
+ * `temporada` / `equipo` undefined hasta el próximo save; la UI los
+ * renderiza como `—` y propone "Guardar para actualizar".
  *
  * La forma del payload está versionada (`v: 2`) para futuras migraciones.
  */
@@ -71,6 +78,13 @@ export type SlotMeta = {
   id: string;
   name: string;
   savedAt: number;
+  /** MGC-480 — temporada (1-indexed) del jugador al momento del save.
+   *  `undefined` para slots legacy migrados que nunca se re-guardaron
+   *  bajo el shape enriquecido (la UI muestra `—`). */
+  temporada?: number;
+  /** MGC-480 — nombre del club actual al momento del save. `null` para
+   *  jugadores sin club (pre-fichaje), `undefined` para legacy. */
+  equipo?: string | null;
 };
 
 export type SlotsIndex = {
@@ -256,6 +270,10 @@ async function readIndex(): Promise<SlotsIndex> {
             typeof s.id === 'string' &&
             typeof s.name === 'string' &&
             typeof s.savedAt === 'number',
+          // MGC-480 — `temporada`/`equipo` son opcionales; slots
+          // legacy no los traen y se aceptan tal cual. El filter
+          // garantiza que el resto del shape sigue válido; los
+          // nuevos campos se completan al próximo save.
         ),
       };
     }
@@ -365,6 +383,12 @@ async function ensureDefaultSlotMigrated(): Promise<void> {
     id: DEFAULT_SLOT_ID,
     name: migrated.profile?.name || DEFAULT_SLOT_NAME,
     savedAt: Date.now(),
+    // MGC-480 — enriquecer SlotMeta desde el snapshot migrado. Para
+    // legacy la `temporada` puede ser 1 si el profile nunca avanzó
+    // de temporada (career default), o lo que diga el profile
+    // si fue escrito bajo F2.3+. `equipo` se deriva de `club.name`.
+    temporada: migrated.profile?.season ?? 1,
+    equipo: migrated.profile?.club?.name ?? null,
   });
   logPersist(
     'log',
@@ -432,7 +456,16 @@ export async function createSlot(name: string): Promise<{ id: string; name: stri
   // `createSlot` con el mismo nombre encuentre la entry con el name
   // real (si llamáramos `saveCareerSave` primero, su index entry
   // tendría `name = 'Partida guardada'` y rompería el dedup-by-name).
-  await appendIndexEntry({ id, name: trimmed, savedAt: Date.now() });
+  // MGC-480 — slot recién creado siempre empieza con `temporada=1` y
+  // `equipo=null` (pre-fichaje). El primer save del usuario reemplaza
+  // estos valores con los del profile real.
+  await appendIndexEntry({
+    id,
+    name: trimmed,
+    savedAt: Date.now(),
+    temporada: 1,
+    equipo: null,
+  });
   // Payload v:2 inicial con seed derivado del slotId — único por slot
   // y determinista (re-create con mismo nombre → mismo seed). El
   // `blankCareerSave` aplica los defaults F3.2 vía `hydrateF3Fields`
@@ -680,12 +713,30 @@ async function saveCareerSaveImpl(
     const index = await readIndex();
     const known = index.slots.find((s) => s.id === targetId);
     if (known) {
-      await updateIndexEntry(targetId, (meta) => ({ ...meta, savedAt: Date.now() }));
+      // MGC-480 — al guardar sobre un slot existente, refrescar
+      // `savedAt` + `temporada` + `equipo` desde el profile actual.
+      // La UI lista muestra estos campos como resumen de qué hay
+      // dentro del slot; sin esto, un save con season 8 seguiría
+      // mostrando "temporada 1, sin club" para siempre.
+      await updateIndexEntry(targetId, (meta) => ({
+        ...meta,
+        savedAt: Date.now(),
+        temporada: state.profile?.season ?? meta.temporada ?? 1,
+        equipo:
+          state.profile?.club?.name !== undefined
+            ? state.profile.club.name
+            : meta.equipo ?? null,
+      }));
     } else {
       await appendIndexEntry({
         id: targetId,
         name: state.profile?.name || DEFAULT_SLOT_NAME,
         savedAt: Date.now(),
+        // MGC-480 — primer save del slot; desde el inicio guardamos
+        // los campos enriquecidos para que la lista los muestre sin
+        // tener que abrir cada payload.
+        temporada: state.profile?.season ?? 1,
+        equipo: state.profile?.club?.name ?? null,
       });
     }
     logPersist(
