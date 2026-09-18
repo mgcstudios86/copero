@@ -232,7 +232,31 @@ export function __seedForTests(entries: Record<string, string>): void {
  * Y en vitest (los tests usan `vi.spyOn(console)` para capturarlos y
  * verificar el contenido). El costo en runtime nativo es despreciable:
  * una línea por mutación de usuario.
+ *
+ * MGC-716 — dedup de logs `hydrate=null`. Si un consumer invoca
+ * `loadCareerSave` en un loop (ej. path de cold-start que re-entra
+ * `hydrateFromSave` por una re-suscripción o un re-render que rebota
+ * el gate de hidratación), el log spam satura logcat y bloquea el JS
+ * thread de Hermes. La dedup key combina slotId + reason y descarta
+ * repeticiones dentro de una ventana de 5s; los `hydrate=ok` no se
+ * dedupean (cada éxito es señal válida). Las saves (`save=ok|fail`)
+ * tampoco se dedupean — cada mutación es relevante.
  */
+const hydrateNullDedup = new Map<string, number>();
+const HYDRATE_NULL_DEDUP_WINDOW_MS = 5000;
+
+function shouldEmitHydrateNull(slotId: string, reason: string): boolean {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+    return true; // los tests quieren ver cada call
+  }
+  const key = `${slotId}:${reason}`;
+  const last = hydrateNullDedup.get(key) ?? 0;
+  const now = Date.now();
+  if (now - last < HYDRATE_NULL_DEDUP_WINDOW_MS) return false;
+  hydrateNullDedup.set(key, now);
+  return true;
+}
+
 function logPersist(level: 'log' | 'error', msg: string, err?: unknown): void {
   if (level === 'log') console.log(msg);
   else console.error(msg, err ?? '');
@@ -560,7 +584,7 @@ async function loadCareerSaveImpl(slotId?: string): Promise<CareerSaveState | nu
           `[persistence] hydrate=null slot=${targetId} reason=json-parse-failed`,
         );
       }
-    } else {
+    } else if (shouldEmitHydrateNull(targetId, 'no-snapshot-in-storage')) {
       logPersist(
         'log',
         `[persistence] hydrate=null slot=${targetId} reason=no-snapshot-in-storage`,

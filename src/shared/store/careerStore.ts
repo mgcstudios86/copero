@@ -393,6 +393,18 @@ export async function flushPendingSave(): Promise<void> {
   await pendingSave;
 }
 
+// MGC-716 — guard de re-entrada para `hydrateFromSave`. Cuando el layout
+// nativo monta + el dashboard re-monta + un caller externo invocan
+// `hydrateFromSave()` casi en paralelo (StrictMode dev, reanimated
+// reconciliation, hot reload), cada llamada disparaba un `getItem`
+// completo en AsyncStorage. Si el slot estaba vacío, el log
+// `[persistence] hydrate=null ...` se emitía 50+ veces/seg, saturaba el
+// JS thread y la home quedaba en blanco. La Promise compartida
+// coalesce las llamadas concurrentes en una sola lectura; llamadas
+// secuenciales (post-resolución) siguen cayendo en `loadCareerSave`
+// normal para honrar el flujo `onSlotChanged`.
+let hydrationInFlight: Promise<boolean> | null = null;
+
 /**
  * MGC-363 — `lastSnapshot` es el snapshot persistible más reciente del
  * store. Se mantiene sincronizado con cada mutación vía un `subscribe`
@@ -1157,62 +1169,92 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     // para que el `hydrateGate` en `_layout.*.tsx` SIEMPRE desbloquee
     // (un save corrupto o AsyncStorage roto no debe dejar la UI colgada
     // en el splash).
+    //
+    // MGC-716 — guard de re-entrada con `hydrationInFlight`. Si un caller
+    // vuelve a invocar `hydrateFromSave()` mientras una llamada previa
+    // todavía está en vuelo (ej: StrictMode dev re-mount, hot reload, o
+    // un path interno que vuelve a llamar al bootstrap del layout),
+    // coalescemos en la misma Promise en vez de disparar N lecturas de
+    // AsyncStorage en paralelo. Cada lectura extra emitía
+    // `[persistence] hydrate=null ... reason=no-snapshot-in-storage` y,
+    // combinado con la cascada de renders que se gatillaba, saturaba el
+    // JS thread hasta dejar la home en blanco.
     hydrateFromSave: async () => {
-      let saved;
+      // MGC-716 — coalesce de llamadas concurrentes. Si ya hay una
+      // hidratación en vuelo (StrictMode dev, layout effect doble,
+      // reanimated reconciliation), devolvemos la misma Promise en vez
+      // de disparar N lecturas paralelas de AsyncStorage. Cada lectura
+      // extra emitía `[persistence] hydrate=null ... reason=no-snapshot-
+      // in-storage` y, combinado con la cascada de renders que se
+      // gatillaba, saturaba el JS thread hasta dejar la home en blanco.
+      // Llamadas secuenciales (no concurrentes) siguen corriendo
+      // normalmente: el `dashboard.onSlotChanged` depende de un
+      // re-hydrate explícito al cambiar slot (test slot-multi-save
+      // #264 espera reset a initialSnapshot cuando el slot activo
+      // queda sin payload).
+      if (hydrationInFlight) return hydrationInFlight;
+      hydrationInFlight = (async (): Promise<boolean> => {
+        let saved: Awaited<ReturnType<typeof loadCareerSave>> = null;
+        try {
+          saved = await loadCareerSave();
+        } catch {
+          // MGC-306 AC4: incluso si AsyncStorage explota, flippeamos
+          // `hydrated` para destrabar el gate del layout. El usuario
+          // sigue pudiendo usar la app con initialSnapshot; la próxima
+          // save sobrescribirá cualquier estado corrupto.
+          set((s) => ({ ...s, hydrated: true }));
+          return false;
+        }
+        if (!saved) {
+          // MGC-2999 — defensa en profundidad. Si no hay payload para el
+          // slot activo (slot recién creado vía picker sin payload legacy,
+          // o slot vaciado por deleteSlot), el store podría seguir
+          // cargando state del slot previo. Reseteamos a initialSnapshot
+          // y dejamos que el caller (`dashboard.onSlotChanged`) o el
+          // próximo `applyAndPersist` reescriban limpio bajo el key
+          // activo. Esto garantiza que dos slots nunca comparten state.
+          setSnapshot(() => initialSnapshot());
+          set((s) => ({ ...s, hydrated: true }));
+          return false;
+        }
+        setSnapshot((s) => ({
+          ...s,
+          stage: saved.stage,
+          profile: saved.profile,
+          draft: saved.draft ?? null,
+          card: saved.card ?? null,
+          log: saved.log,
+          // MGC-487.3 — vitrina temporada-a-temporada. Saves legacy
+          // (pre-MGC-487.3) no la traen → default `[]` para que la UI
+          // muestre "VITRINA VACÍA" en vez de explotar.
+          history: saved.history ?? [],
+          seed: saved.seed,
+          rng: saved.rng,
+          // MGC-1730 (HIGH-2 fix sobre PR #425) — copiar los 3 campos F3.2
+          // del save al store. `loadCareerSave` ya aplicó
+          // `hydrateF3Fields`, así que vienen con defaults si eran
+          // `undefined` en disco.
+          postMatchPending: saved.postMatchPending ?? null,
+          nextWeekModifiers: saved.nextWeekModifiers,
+          transferState: saved.transferState ?? null,
+          // MGC-475 — hidratar mercado con default si el save v:1/v:2 no
+          // lo trae (carreras iniciadas antes de MGC-475).
+          marketState: saved.marketState ?? EMPTY_MARKET_STATE,
+          // MGC-704 — slice de liga persistible. Saves legacy lo traen
+          // `undefined` → `{}` para que `getStandingsForDisplay` caiga al
+          // placeholder determinista hasta que el usuario avance al menos
+          // una fecha.
+          seasonStandings: saved.seasonStandings ?? {},
+          seasonFixtures: saved.seasonFixtures ?? [],
+        }));
+        set((s) => ({ ...s, hydrated: true }));
+        return true;
+      })();
       try {
-        saved = await loadCareerSave();
-      } catch {
-        // MGC-306 AC4: incluso si AsyncStorage explota, flippeamos
-        // `hydrated` para destrabar el gate del layout. El usuario
-        // sigue pudiendo usar la app con initialSnapshot; la próxima
-        // save sobrescribirá cualquier estado corrupto.
-        set((s) => ({ ...s, hydrated: true }));
-        return false;
+        return await hydrationInFlight;
+      } finally {
+        hydrationInFlight = null;
       }
-      if (!saved) {
-        // MGC-2999 — defensa en profundidad. Si no hay payload para el
-        // slot activo (slot recién creado vía picker sin payload legacy,
-        // o slot vaciado por deleteSlot), el store podría seguir
-        // cargando state del slot previo. Reseteamos a initialSnapshot
-        // y dejamos que el caller (`dashboard.onSlotChanged`) o el
-        // próximo `applyAndPersist` reescriban limpio bajo el key
-        // activo. Esto garantiza que dos slots nunca comparten state.
-        setSnapshot(() => initialSnapshot());
-        set((s) => ({ ...s, hydrated: true }));
-        return false;
-      }
-      setSnapshot((s) => ({
-        ...s,
-        stage: saved.stage,
-        profile: saved.profile,
-        draft: saved.draft ?? null,
-        card: saved.card ?? null,
-        log: saved.log,
-        // MGC-487.3 — vitrina temporada-a-temporada. Saves legacy
-        // (pre-MGC-487.3) no la traen → default `[]` para que la UI
-        // muestre "VITRINA VACÍA" en vez de explotar.
-        history: saved.history ?? [],
-        seed: saved.seed,
-        rng: saved.rng,
-        // MGC-1730 (HIGH-2 fix sobre PR #425) — copiar los 3 campos F3.2
-        // del save al store. `loadCareerSave` ya aplicó
-        // `hydrateF3Fields`, así que vienen con defaults si eran
-        // `undefined` en disco.
-        postMatchPending: saved.postMatchPending ?? null,
-        nextWeekModifiers: saved.nextWeekModifiers,
-        transferState: saved.transferState ?? null,
-        // MGC-475 — hidratar mercado con default si el save v:1/v:2 no
-        // lo trae (carreras iniciadas antes de MGC-475).
-        marketState: saved.marketState ?? EMPTY_MARKET_STATE,
-        // MGC-704 — slice de liga persistible. Saves legacy lo traen
-        // `undefined` → `{}` para que `getStandingsForDisplay` caiga al
-        // placeholder determinista hasta que el usuario avance al menos
-        // una fecha.
-        seasonStandings: saved.seasonStandings ?? {},
-        seasonFixtures: saved.seasonFixtures ?? [],
-      }));
-      set((s) => ({ ...s, hydrated: true }));
-      return true;
     },
     // reset: estado inicial sin motor. Borra el save persistido.
     // MGC-2606 — el `void clearCareerSave()` fire-and-forget generaba una
