@@ -1,21 +1,11 @@
-// app/simulador-carrera/compass.tsx — MGC-1210
+// app/simulador-carrera/compass.tsx — MGC-42.C
 //
-// Wrapper file-based para `/simulador-carrera/compass`. Resuelve el "Unmatched
-// Route" del deep link `copero://simulador-carrera/compass` (APK MGC-1194
-// PR-303 SHA 6629ccc3). Mismo patrón que `categoria.tsx` — chunk async desde
-// `@/features/game/screens/compass` (MGC-782 code-split).
-import React, { Suspense, lazy } from 'react';
-
-const CompassScreen = lazy(() =>
-  import('@/features/game/screens/compass').then((m) => ({
-    default: m.default,
-  })),
-);
+// Ruta legacy del quiz Ideología Futbolística (MGC-1210). Auditoría UX
+// MGC-44 marcó compass como dead route fuera del simulador de carrera.
+// Queda como Redirect al index del simulador para preservar deep links
+// viejos sin montar el motor del quiz.
+import { Redirect } from 'expo-router';
 
 export default function CompassRoute() {
-  return (
-    <Suspense fallback={null}>
-      <CompassScreen />
-    </Suspense>
-  );
+  return <Redirect href="/simulador-carrera" />;
 }

@@ -226,6 +226,7 @@ jobs:
       # process.chdir(e2e/), así que nunca encontraba el directorio.
       - name: Upload Playwright report
         if: always()
+        continue-on-error: true  # CTO [MGC-51]: tolerar quota artifact en plan free
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report

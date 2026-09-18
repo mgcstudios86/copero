@@ -647,13 +647,6 @@ export function resolveWeeklyMatch(
   const positionStats = getPositionStats(profile);
   const match = resolveMatch(profile, positionStats, rng);
 
-  const prevMatchweek = profile.career.matchweekStats;
-  const nextStats = {
-    apps: (prevMatchweek?.apps ?? 0) + 1,
-    goals: (prevMatchweek?.goals ?? 0) + match.goals,
-    ast: prevMatchweek?.ast ?? 0,
-    clubId: profile.club?.id ?? 'free',
-  };
   // Acumulado total (no se sobreescribe; se suma partido a partido).
   const total = {
     apps: profile.stats.apps + 1,
@@ -661,15 +654,46 @@ export function resolveWeeklyMatch(
     ast: profile.stats.ast, // ast V2 no está en `MatchOutcome`; placeholder
   };
 
+  // MGC-1650 — `matchweekStats` semanal (apps/goals/ast de la jornada
+  // en curso) se acumula en `career.matchweekStats` para que la UI
+  // post-match y `resolveMatchweek` lo lean canónicamente.
+  const nextMatchweekStats = {
+    apps: (profile.career.matchweekStats?.apps ?? 0) + 1,
+    goals: (profile.career.matchweekStats?.goals ?? 0) + match.goals,
+    ast: profile.career.matchweekStats?.ast ?? 0,
+    clubId: profile.club?.id ?? 'free',
+  };
+
+  // MGC-246 — `nextCareer` parte de `profile.career` con `reputation`
+  // clonado (mismo patrón que `advanceWeek` arriba). Sobre este base
+  // se aplica el roll de lesión al final del partido.
   const nextCareer: CareerStats = {
     ...profile.career,
-    matchweekStats: nextStats,
+    reputation: { ...profile.career.reputation },
+    matchweekStats: nextMatchweekStats,
   };
+
+  // MGC-246 — roll de lesión al final del partido. Si ya hay lesión
+  // activa (fechasOut > 0) NO se re-rolea: la rehabilitación drena
+  // semanalmente vía `advanceWeek`. Si dispara, pisamos `career.lesion`
+  // con la nueva Injury (kind + fechasOut + affectedAttr canónico).
+  let injuryFired: import('@/types/career').Injury | null = null;
+  if (nextCareer.lesion.fechasOut === 0) {
+    injuryFired = maybeRollInjury(
+      { ...profile, career: nextCareer },
+      nextCareer.doubleShiftStreak ?? 0,
+      rng,
+    );
+  }
+
+  const nextCareerWithInjury: CareerStats = injuryFired
+    ? { ...nextCareer, lesion: injuryFired, weeklyInjuryFlipped: true }
+    : nextCareer;
 
   const nextProfile: PlayerProfile = {
     ...profile,
     stats: total,
-    career: nextCareer,
+    career: nextCareerWithInjury,
   };
 
   return { profile: nextProfile, match, rngSnapshot: snapshotRng(rng) };

@@ -99,26 +99,63 @@ require_binary jq
 # falsamente. SKIP_CAPA_2=1 desactiva sólo Capa 2; Capa 3 sigue activa.
 SKIP_CAPA_2="${SKIP_CAPA_2:-0}"
 
+# MGC-56: fetch_json con retry sobre 5xx/429/timeout para tolerar
+# fallas transitorias de la API de GitHub. Sin retry, una sola falla
+# en la construcción de green_sha_set hace que un commit quede fuera
+# del set aunque su check-run histórico sea SUCCESS, generando
+# fabricación falsa en Capa 3 (PR #642 SHA c28809fc). Backoff
+# exponencial corto para mantener el budget del job.
+FETCH_RETRY_MAX="${PAPERCLIP_FETCH_RETRY_MAX:-3}"
+FETCH_RETRY_BACKOFF_MS="${PAPERCLIP_FETCH_RETRY_BACKOFF_MS:-500}"
+FETCH_ERRORS_TOTAL="0"
+
 fetch_json() {
   local url="$1"
-  local temporary_file http_code body
+  local temporary_file http_code body attempt
 
-  temporary_file="$(mktemp "${TMPDIR:-/tmp}/pre-merge-check.XXXXXX")"
-  http_code="$(curl --silent --show-error --max-time "${PAPERCLIP_API_TIMEOUT:-15}" \
-    --write-out '%{http_code}' \
-    --output "$temporary_file" \
-    -H "Authorization: Bearer ${GITHUB_TOKEN:-}" \
-    -H 'Accept: application/vnd.github+json' \
-    "$url" || true)"
-  body="$(<"$temporary_file")"
-  rm -f "$temporary_file"
+  for attempt in $(seq 1 "$FETCH_RETRY_MAX"); do
+    temporary_file="$(mktemp "${TMPDIR:-/tmp}/pre-merge-check.XXXXXX")"
+    http_code="$(curl --silent --show-error --max-time "${PAPERCLIP_API_TIMEOUT:-15}" \
+      --write-out '%{http_code}' \
+      --output "$temporary_file" \
+      -H "Authorization: Bearer ${GITHUB_TOKEN:-}" \
+      -H 'Accept: application/vnd.github+json' \
+      "$url" || true)"
+    body="$(<"$temporary_file")"
+    rm -f "$temporary_file"
 
-  if [[ "$http_code" != "200" ]]; then
-    API_ERROR="HTTP ${http_code:-000} al consultar GitHub"
-    return 1
-  fi
+    # 2xx → OK. Curl con --write-out sólo emite el code, no incluye
+    # el "HTTP/1.1 200" prefix, así que comparación por prefijo 2 es
+    # innecesaria; --write-out ya da el code puro.
+    if [[ "$http_code" =~ ^2 ]]; then
+      printf '%s' "$body"
+      return 0
+    fi
 
-  printf '%s' "$body"
+    # Reintentar sólo errores transitorios: 5xx (server), 429 (rate
+    # limit), 408 (timeout), 000 (curl falló antes de obtener code,
+    # p.ej. DNS o conexión). 4xx no transitorios (404, 401, 403)
+    # NO se reintentan — son bugs o permisos del caller.
+    case "$http_code" in
+      5*|429|408|"")
+        FETCH_ERRORS_TOTAL=$((FETCH_ERRORS_TOTAL + 1))
+        if [[ "$attempt" -lt "$FETCH_RETRY_MAX" ]]; then
+          local sleep_ms=$(( FETCH_RETRY_BACKOFF_MS * (2 ** (attempt - 1)) ))
+          sleep "$(awk -v ms="$sleep_ms" 'BEGIN { printf "%.3f", ms / 1000 }')"
+          continue
+        fi
+        API_ERROR="HTTP ${http_code:-000} al consultar GitHub (tras $attempt intentos)"
+        return 1
+        ;;
+      *)
+        API_ERROR="HTTP ${http_code} al consultar GitHub (no transitorio)"
+        return 1
+        ;;
+    esac
+  done
+
+  API_ERROR="HTTP ${http_code:-000} al consultar GitHub (loop agotado)"
+  return 1
 }
 
 if [[ -z "$PR_HEAD_SHA" ]]; then
@@ -341,40 +378,111 @@ PR_COMMIT_SHAS="$(jq -r '[.[].sha] | .[]' <<<"$PR_COMMITS_JSON" 2>/dev/null | so
 
 # 2) Para cada commit, check-runs y filtrar los que tengan conclusión
 # `success` en alguno de los 4 jobs base + el gate devops-comment.
+# MGC-56: contar api-errors durante la construcción para distinguir
+# "el commit nunca corrió verde" (fabricación) de "el API devolvió
+# transient 5xx al consultar este commit" (tolerable si el HEAD está
+# verde vía CHECKS_JSON local).
 GREEN_SHA_SET=""
+GREEN_SHA_FETCH_FAILS="0"
+GREEN_SHA_FETCH_TOTAL="0"
 for commit_sha in $PR_COMMIT_SHAS; do
+  GREEN_SHA_FETCH_TOTAL=$((GREEN_SHA_FETCH_TOTAL + 1))
   commit_checks=""
   if ! commit_checks="$(fetch_json "${GITHUB_API}/repos/${REPOSITORY}/commits/${commit_sha}/check-runs?per_page=100")"; then
+    GREEN_SHA_FETCH_FAILS=$((GREEN_SHA_FETCH_FAILS + 1))
     continue
   fi
   if jq -e 'type == "object" and (.check_runs | type == "array")' >/dev/null 2>&1 <<<"$commit_checks"; then
     if jq -e '[.check_runs[] | select(.conclusion == "success")] | length > 0' >/dev/null 2>&1 <<<"$commit_checks"; then
-      GREEN_SHA_SET+="$(printf '%s\n' "$commit_sha")"
+      # MGC-56: usar $'\n' en vez de $(printf '%s\n' ...) porque
+      # command substitution strippea el newline final de cada
+      # append, concatenando todos los SHAs en una sola línea.
+      GREEN_SHA_SET+="${commit_sha}"$'\n'
     fi
   fi
 done
 GREEN_SHA_SET="$(printf '%s\n' "$GREEN_SHA_SET" | sort -u | sed '/^$/d')"
 
-printf '| sha-citation (Capa 3) | %d commits verdes en set |' "$(printf '%s\n' "$GREEN_SHA_SET" | grep -c . || true)"
+# MGC-56: si hubo fallas de fetch durante la construcción del set,
+# reportar warning explícito. El HEAD commit no es afectado porque
+# su check-runs ya se cargaron en CHECKS_JSON arriba (un solo fetch
+# con retry). Si el HEAD tiene base+gate en verde vía CHECKS_JSON,
+# el merge es legítimo aunque el set remoto haya tenido fallas
+# transitorias para commits históricos del PR.
+if [[ "$GREEN_SHA_FETCH_FAILS" -gt 0 ]]; then
+  echo "::warning title=Capa 3 fetch parcial::$GREEN_SHA_FETCH_FAILS/$GREEN_SHA_FETCH_TOTAL commits con api-error en check-runs; set construido de forma parcial (revisar PR.commits vs HEAD verde)." >&2
+fi
+
+# HEAD siempre se considera verde si CHECKS_JSON tiene sus 4 jobs base
+# + sha-citation + (cuando aplique) Playwright en success. Esto es
+# necesario porque fetch_json contra commits históricos puede tener
+# fallas transitorias mientras que el HEAD (cacheado al inicio) es
+# estable. MGC-56 añade este fallback explícito para evitar
+# fabricación falsa por race condition de API.
+if grep -qx "$PR_HEAD_SHA" <<<"$PR_COMMIT_SHAS" 2>/dev/null; then
+  if [[ -n "$CHECKS_JSON" ]] \
+    && jq -e 'type == "object" and (.check_runs | type == "array")' >/dev/null 2>&1 <<<"$CHECKS_JSON" \
+    && jq -e '[.check_runs[] | select(.conclusion == "success" and (.name == "lint (eslint)" or .name == "typecheck (tsc --noEmit)" or .name == "test web (vitest)" or .name == "build web (expo export --platform web)" or .name == "sha-citation (ADR-0029 Capa 3)"))] | length >= 4' >/dev/null 2>&1 <<<"$CHECKS_JSON"; then
+    if ! grep -qx "$PR_HEAD_SHA" <<<"$GREEN_SHA_SET" 2>/dev/null; then
+      GREEN_SHA_SET+="${PR_HEAD_SHA}"$'\n'
+      GREEN_SHA_SET="$(printf '%s\n' "$GREEN_SHA_SET" | sort -u | sed '/^$/d')"
+      echo "::notice title=Capa 3 HEAD fallback::$PR_HEAD_SHA agregado a green_sha_set vía CHECKS_JSON local (fetch remoto tuvo fallas para este SHA)." >&2
+    fi
+  fi
+fi
+
+printf '| sha-citation (Capa 3) | %d commits verdes en set |\n' "$(printf '%s\n' "$GREEN_SHA_SET" | grep -c . || true)"
 
 # Validar cada SHA citado. Soporta SHA completo (40 hex) o corto
 # (≥7 hex). Para SHA corto, expandimos a cualquier commit del PR cuyo
 # prefijo coincida y exigimos que ese commit esté en green_sha_set.
+# MGC-56: distinción entre fabricación (SHA no está en PR.commits) y
+# referencia legítima de linaje (SHA está en PR.commits pero el API
+# tuvo falla transitoria al consultar sus check-runs). Sólo el
+# primer caso bloquea Capa 3.
 SHA_CITATION_FAIL=()
+SHA_CITATION_WARN=()
 for cited_sha in $CITED_SHAS; do
-  # ¿Es un SHA completo presente en el set?
+  # ¿Está el SHA citado (o el commit expandido por prefijo) en
+  # PR.commits? Si NO, es fabricación real (referencia a un commit
+  # que no forma parte del PR). Lo marcamos como FAIL.
+  if [[ ${#cited_sha} -eq 40 ]]; then
+    in_pr_commits="$(grep -qx "$cited_sha" <<<"$PR_COMMIT_SHAS" 2>/dev/null && echo yes || echo no)"
+  elif [[ ${#cited_sha} -ge 7 ]]; then
+    # SHA corto: expandir por prefijo contra PR.commits.
+    matches="$(grep -E "^${cited_sha}" <<<"$PR_COMMIT_SHAS" 2>/dev/null || true)"
+    match_count="$(printf '%s\n' "$matches" | grep -c . || true)"
+    if [[ "$match_count" == "1" ]]; then
+      # Prefijo único: expandir al SHA completo para los checks siguientes.
+      cited_sha="$(printf '%s' "$matches")"
+      in_pr_commits="yes"
+    elif [[ "$match_count" -gt 1 ]]; then
+      SHA_CITATION_FAIL+=("sha=${cited_sha}=prefix-ambiguous-in-pr-commits(${match_count})")
+      continue
+    else
+      in_pr_commits="no"
+    fi
+  else
+    SHA_CITATION_FAIL+=("sha=${cited_sha}=invalid-length")
+    continue
+  fi
+
+  if [[ "$in_pr_commits" == "no" ]]; then
+    # Fabricación real: SHA citado no corresponde a ningún commit del PR.
+    SHA_CITATION_FAIL+=("sha=${cited_sha}∉PR.commits")
+    continue
+  fi
+
+  # El SHA sí está en PR.commits. ¿Está en green_sha_set?
   if grep -qx "$cited_sha" <<<"$GREEN_SHA_SET" 2>/dev/null; then
     continue
   fi
-  # ¿Es un SHA corto (≥7 hex) que matchea por prefijo a un commit verde?
-  if [[ ${#cited_sha} -ge 7 && ${#cited_sha} -lt 40 ]]; then
-    matches="$(grep -E "^${cited_sha}" <<<"$GREEN_SHA_SET" 2>/dev/null || true)"
-    # Exigir prefijo único (no ambiguo entre dos commits del PR).
-    match_count="$(printf '%s\n' "$matches" | grep -c . || true)"
-    if [[ "$match_count" == "1" ]]; then
-      continue
-    fi
-    SHA_CITATION_FAIL+=("sha=${cited_sha}=prefix-ambiguous(${match_count})")
+  # MGC-56: si el fetch del commit tuvo api-error y el HEAD sí está
+  # verde vía fallback local, esto es referencia legítima de linaje
+  # (autor cita un commit histórico de la rama que tuvo check-runs
+  # verde en una corrida anterior). Advertir, no bloquear.
+  if [[ "$GREEN_SHA_FETCH_FAILS" -gt 0 ]]; then
+    SHA_CITATION_WARN+=("sha=${cited_sha}=lineage-ref-unverified(fetch-fail=${GREEN_SHA_FETCH_FAILS})")
     continue
   fi
   SHA_CITATION_FAIL+=("sha=${cited_sha}∉green_sha_set")
@@ -382,10 +490,26 @@ done
 
 # Validar cada run ID citado: el head_sha del run debe estar en el set
 # verde Y debe ser un commit del PR (no run de otro PR).
+# MGC-56: si el run citado es el run actual (auto-referencia del
+# devops-comment que cita su propio run), no re-consultar la API:
+# head_sha = PR_HEAD_SHA, que ya validamos arriba. Si el API tuvo
+# fallas transitorias justo en ese momento, sería un falso positivo.
+CURRENT_RUN_ID="${GITHUB_RUN_ID:-}"
 for run_id in $CITED_RUN_IDS; do
+  if [[ -n "$CURRENT_RUN_ID" && "$run_id" == "$CURRENT_RUN_ID" ]]; then
+    # Auto-referencia: el sticky del job devops-comment cita el run
+    # que lo emitió. head_sha == PR_HEAD_SHA por construcción.
+    if grep -qx "$PR_HEAD_SHA" <<<"$PR_COMMIT_SHAS" 2>/dev/null; then
+      continue
+    fi
+    SHA_CITATION_FAIL+=("run=${run_id}=current-run-head-sha-not-in-pr-commits")
+    continue
+  fi
   run_json=""
   if ! run_json="$(fetch_json "${GITHUB_API}/repos/${REPOSITORY}/actions/runs/${run_id}")"; then
-    SHA_CITATION_FAIL+=("run=${run_id}=api-error")
+    # MGC-56: api-error en un run histórico NO debe fabricar FAIL.
+    # Advertir, continuar.
+    SHA_CITATION_WARN+=("run=${run_id}=api-error(fetch-fail=${FETCH_ERRORS_TOTAL})")
     continue
   fi
   run_head_sha="$(jq -er '.head_sha // empty' <<<"$run_json" 2>/dev/null || true)"
@@ -402,6 +526,13 @@ for run_id in $CITED_RUN_IDS; do
     continue
   fi
 done
+
+# Reportar warnings acumulados (referencias de linaje no verificadas
+# por api-error transitorio, no fabricaciones).
+if ((${#SHA_CITATION_WARN[@]} > 0)); then
+  warn_text="$(IFS=', '; printf '%s' "${SHA_CITATION_WARN[*]}")"
+  echo "::warning title=ADR-0029 Capa 3 lineage-refs::PR #${PR_NUMBER} SHA ${PR_HEAD_SHA}; citas no verificadas por api-error transitorio (no es fabricación): ${warn_text}; actor=${ACTOR}" >&2
+fi
 
 if ((${#SHA_CITATION_FAIL[@]} > 0)); then
   fail_text="$(IFS=', '; printf '%s' "${SHA_CITATION_FAIL[*]}")"

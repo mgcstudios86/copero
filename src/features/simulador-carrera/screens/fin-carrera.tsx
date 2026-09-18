@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -66,6 +66,23 @@ export default function FinCarreraScreen() {
   // MGC-1736 — guard de doble tap + estado "loading" durante el await.
   const [restarting, setRestarting] = useState(false);
 
+  // MGC-215 — modal de confirmación destructiva. El CTA "Nueva partida"
+  // abre un modal nativo que pide confirmación antes de invocar
+  // `resetAll` (que limpia TODAS las keys de AsyncStorage vía
+  // `wipeAllCoperoKeys` — game stats + quiz + carrera). Sin este paso,
+  // un tap accidental perdería el save legacy y el high score del juego
+  // de palabras. El modal es accesible (role="alert", hint i18n) y se
+  // descarta con tap fuera / botón "Cancelar".
+  const [confirmingRestart, setConfirmingRestart] = useState(false);
+  const openConfirm = useCallback(() => {
+    if (restarting) return;
+    setConfirmingRestart(true);
+  }, [restarting]);
+  const cancelConfirm = useCallback(() => {
+    if (restarting) return;
+    setConfirmingRestart(false);
+  }, [restarting]);
+
   const summary = useMemo(() => {
     if (!log) return null;
     return buildRetirementSummary(profile, log);
@@ -108,6 +125,9 @@ export default function FinCarreraScreen() {
     // clearCareerSave() consecutivos.
     if (restarting) return;
     setRestarting(true);
+    // MGC-215 — cerramos el modal antes de empezar el wipe para que la
+    // UI no muestre el confirm mientras corre el await de `resetAll`.
+    setConfirmingRestart(false);
     await resetAll();
     // Si la pantalla se desmontó durante el await (back físico),
     // no navegamos ni reseteamos estado: el store ya quedó limpio
@@ -184,7 +204,7 @@ export default function FinCarreraScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -212,7 +232,7 @@ export default function FinCarreraScreen() {
                 <Text
                   style={{
                     color: colors.textMuted,
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: fontWeight.bold,
                     letterSpacing: 1,
                   }}
@@ -248,7 +268,7 @@ export default function FinCarreraScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -309,7 +329,7 @@ export default function FinCarreraScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -336,7 +356,7 @@ export default function FinCarreraScreen() {
             <View style={{ flex: 1 }}>
               <Button
                 label={t('retire.restart')}
-                onPress={onRestart}
+                onPress={openConfirm}
                 variant="primary"
                 fullWidth
                 accessibilityHint={t('retire.restartA11y')}
@@ -359,6 +379,91 @@ export default function FinCarreraScreen() {
           </View>
         </View>
       </ScrollView>
+      {/* MGC-215 — modal nativo de confirmación destructiva para
+          "Nueva partida". Tapar fuera / botón Cancelar cierran sin
+          ejecutar el wipe. El confirm sí dispara `onRestart` que
+          cierra el modal antes de invocar `resetAll` (no se monta
+          sobre el modal mientras corre el await). */}
+      <Modal
+        visible={confirmingRestart}
+        transparent
+        animationType="fade"
+        onRequestClose={cancelConfirm}
+        testID="fin-carrera-confirm-modal"
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('retire.confirmDismiss')}
+          onPress={cancelConfirm}
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(8, 12, 20, 0.65)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: spacing[5],
+          }}
+        >
+          <Pressable
+            // Bloqueamos la propagación al overlay para que tap dentro
+            // del card no cierre el modal.
+            onPress={() => {}}
+            style={{
+              width: '100%',
+              maxWidth: 420,
+              borderRadius: radii.lg,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              padding: spacing[5],
+              gap: spacing[4],
+            }}
+          >
+            <Text
+              accessibilityRole="header"
+              style={{
+                color: colors.textStrong,
+                fontSize: fontSize.lg,
+                fontWeight: fontWeight.bold,
+              }}
+            >
+              {t('retire.confirmTitle')}
+            </Text>
+            <Text
+              style={{
+                color: colors.textMuted,
+                fontSize: fontSize.base,
+                lineHeight: fontSize.base * 1.4,
+              }}
+            >
+              {t('retire.confirmBody')}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: spacing[3] }}>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label={t('retire.confirmCancel')}
+                  onPress={cancelConfirm}
+                  variant="secondary"
+                  fullWidth
+                  hitSlop={44}
+                  testID="btn-fin-carrera-confirm-cancel"
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label={t('retire.confirmAccept')}
+                  onPress={onRestart}
+                  variant="primary"
+                  fullWidth
+                  hitSlop={44}
+                  testID="btn-fin-carrera-confirm-accept"
+                  accessibilityHint={t('retire.restartA11y')}
+                  disabled={restarting}
+                />
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -389,7 +494,7 @@ function Stat({
       <Text
         style={{
           color: colors.textMuted,
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: fontWeight.bold,
           letterSpacing: 2,
         }}

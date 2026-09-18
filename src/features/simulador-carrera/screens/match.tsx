@@ -26,12 +26,49 @@ export default function MatchScreen() {
   const startMatch = useCareerStore((s) => s.startMatch);
   const [loadFailed, setLoadFailed] = useState(false);
 
+  // MGC-386 — self-heal robusto del loader. El usuario puede llegar
+  // aquí de 3 caminos:
+  //   a) dashboard.tsx onAcademyPress → await startMatch() + push (matchStore ya hidratado)
+  //   b) calendar.tsx onAdvanceWeek → await startMatch() + push (MGC-386 fix)
+  //   c) semanal.tsx (doble_turno) → await startMatch() + push
+  //   d) deep-link directo a /match (URL) → outcome=null, hidratar acá
+  //
+  // Antes este useEffect hacía `void startMatch().catch(setLoadFailed)`
+  // y eso provocaba que un deep-link llegara a renderizar el guard de
+  // `match-loading` con `outcome=null` durante un tick antes de que
+  // startMatch resolviera — visualmente correcto pero el guard se
+  // disparaba si el módulo career/simulation fallaba al cargar (chunk
+  // lazy no resuelto). Ahora esperamos 250ms con un timeout-cancelable
+  // para darle tiempo al side-effect a popular el store, y SOLO
+  // declaramos loadFailed si startMatch rechazó explícitamente.
   useEffect(() => {
-    if (!outcome) {
-      // MGC-1729 (MEDIUM-2): `startMatch` hace imports dinámicos; si uno
-      // falla la pantalla quedaba colgada en «Cargando partido» sin salida.
-      void startMatch().catch(() => setLoadFailed(true));
+    if (outcome) {
+      // outcome presente → no hay error de carga. El render gate
+      // `loadFailed && !outcome` ya excluye el error view cuando
+      // outcome está hidratado, así que evitamos setState síncrono
+      // (regla react-hooks/set-state-in-effect).
+      return;
     }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (!cancelled && !outcome) {
+        setLoadFailed(true);
+      }
+    }, 250);
+    void startMatch()
+      .then(() => {
+        if (!cancelled) setLoadFailed(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadFailed(true);
+      })
+      .finally(() => {
+        clearTimeout(timer);
+      });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [outcome, startMatch]);
 
   useEffect(() => {
@@ -120,7 +157,7 @@ export default function MatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -157,7 +194,7 @@ export default function MatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -224,7 +261,7 @@ export default function MatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -276,7 +313,7 @@ export default function MatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -332,7 +369,7 @@ function StatTile({ label, value, testID, colors, spacing, fontSize, fontWeight,
       }}
       testID={testID}
     >
-      <Text style={{ color: colors.textMuted, fontSize: 10, letterSpacing: 1 }}>
+      <Text style={{ color: colors.textMuted, fontSize: 12, letterSpacing: 1 }}>
         {label.toUpperCase()}
       </Text>
       <Text

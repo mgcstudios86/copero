@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/design';
@@ -33,6 +33,10 @@ export default function SemanalScreen() {
   const weeklyChoice = useCareerStore((s) => s.weeklyChoice);
   const resolveMatchweek = useCareerStore((s) => s.resolveMatchweek);
   const startMatch = useCareerStore((s) => s.startMatch);
+  // MGC-265 — `advanceSeason` dispara `applySeasonRollover` (engine.ts#404)
+  // que rota season + stats anuales. Se usa en `onPick` cuando la choice
+  // semanal cruza el cierre de temporada (week 37→38) y NO es partido.
+  const advanceSeason = useCareerStore((s) => s.advanceSeason);
 
   const positionStats: PositionStats = profile.positionStats ?? STAT_INIT;
 
@@ -45,7 +49,28 @@ export default function SemanalScreen() {
   const injured = profile.career.lesion.fechasOut > 0;
 
   const onPick = async (optionId: WeeklyBaseOptionId) => {
+    // MGC-265 — captura la semana ANTES del bump para detectar el cruce
+    // de cierre de temporada. `applyWeeklyChoice` (simulation.ts#~589)
+    // bumpea `week` por 1 sobre el profile. Si la choice NO es partido
+    // y la nueva `week` queda >= 38 (umbral de cierre, ver engine.ts#330),
+    // disparar `advanceSeason` para rotar season + stats anuales. Antes
+    // este flujo semanal nunca llamaba al rollover, así que el counter
+    // overfloweaba (39, 40, 41) sin fin-carrera ni rotación de stats
+    // (repro: tap "Elegir" TURNO_SIMPLE repetidamente → semana sigue
+    // incrementando post 38). Para `doble_turno` el rollover se hace en
+    // /post-match para que el partido + eventos sociales queden bajo
+    // season N antes del reset.
+    const weekBefore = profile.week;
     await weeklyChoice(optionId);
+    if (optionId !== 'doble_turno' && weekBefore >= 37) {
+      await advanceSeason();
+      // Tras el rollover, navegar a /temporada para que el usuario vea
+      // la nueva temporada (o fin-carrera si `stage === 'retirement'`,
+      // manejado por temporada.tsx#useEffect). `replace` evita acumular
+      // /semanal en el back stack.
+      router.replace('/simulador-carrera/temporada');
+      return;
+    }
     if (optionId === 'doble_turno') {
       // doble turno consume partido → resolvemos matchweek tras la choice.
       await resolveMatchweek();
@@ -85,7 +110,7 @@ export default function SemanalScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -100,7 +125,7 @@ export default function SemanalScreen() {
             }}
             accessibilityRole="header"
           >
-            Decisión semanal V2
+            Decisión semanal
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
             6 opciones con árbol posicional · {injured ? 'Lesión activa: solo rehabilitación' : 'Elegí una opción'}
@@ -121,7 +146,7 @@ export default function SemanalScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -189,20 +214,42 @@ export default function SemanalScreen() {
                   prob: {Math.round(opt.prob * 100)}% · deltas posicionales:{' '}
                   {Object.keys(opt.successDeltas).join(', ') || 'ninguno'}
                 </Text>
-                <Text
-                  style={{
-                    color: blocked ? colors.textMuted : colors.primary,
-                    fontSize: fontSize.sm,
-                    fontWeight: fontWeight.semibold,
-                  }}
-                  onPress={blocked ? undefined : () => onPick(opt.id)}
-                  accessibilityRole={blocked ? 'text' : 'button'}
-                  accessibilityLabel={`Elegir ${opt.id}`}
-                  accessibilityState={{ disabled: blocked }}
-                  testID={`btn-semanal-${opt.id}`}
-                >
-                  {blocked ? 'Bloqueado por lesión' : 'Elegir →'}
-                </Text>
+                {blocked ? (
+                  <Text
+                    style={{
+                      color: colors.textMuted,
+                      fontSize: fontSize.sm,
+                      fontWeight: fontWeight.semibold,
+                    }}
+                    accessibilityRole="text"
+                    accessibilityLabel={`Opción ${opt.id} bloqueada por lesión`}
+                    testID={`btn-semanal-${opt.id}`}
+                  >
+                    Bloqueado por lesión
+                  </Text>
+                ) : (
+                  <Pressable
+                    onPress={() => onPick(opt.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Elegir ${opt.id}`}
+                    testID={`btn-semanal-${opt.id}`}
+                    hitSlop={12}
+                    style={({ pressed }) => ({
+                      alignSelf: 'flex-start',
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text
+                      style={{
+                        color: colors.primary,
+                        fontSize: fontSize.sm,
+                        fontWeight: fontWeight.semibold,
+                      }}
+                    >
+                      Elegir →
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             );
           },
@@ -250,7 +297,7 @@ export default function SemanalScreen() {
               gap: spacing[1],
             }}
           >
-            <Text style={{ color: colors.textMuted, fontSize: 10, letterSpacing: 2 }}>
+            <Text style={{ color: colors.textMuted, fontSize: 12, letterSpacing: 2 }}>
               ÚLTIMA MATCHWEEK
             </Text>
             <Text

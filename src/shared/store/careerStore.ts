@@ -30,6 +30,7 @@ import {
   clearCareerSave,
   isPersistentStorage,
 } from '@/features/career/persistence';
+import { wipeAllCoperoKeys } from '@/lib/storage';
 import { createRngSnapshot } from '@/features/career/rng';
 import type { CareerAction } from '@/features/career/engine';
 import type {
@@ -855,13 +856,26 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     //   1) flushPendingSave: drena la save en vuelo al disco para
     //      que NO compita con el clear siguiente.
     //   2) reset memoria: vuelve al initialSnapshot.
-    //   3) await clearCareerSave: borra la entry de AsyncStorage y
-    //      ESPERA a que termine antes de resolver, así el caller
-    //      (CTA "Nueva carrera") navega con disco vacío.
-    // El `try/catch` alrededor de clearCareerSave es best-effort
-    // (idéntico a `reset()`): si falla el clear, el próximo save
-    // sobrescribe; pero el flush previo igual cierra la ventana de
-    // datos fantasma que el AC de no-mutación prohíbe.
+    //   3) await wipeAllCoperoKeys + clearCareerSave (en paralelo):
+    //      ambos paths cubren el AC de "state idéntico a primera
+    //      instalación":
+    //        - wipeAllCoperoKeys enumera y borra TODAS las keys de
+    //          AsyncStorage conocidas de Copero (carrera + legacy +
+    //          game stats + quiz) — vía `AsyncStorage.getAllKeys()`.
+    //        - clearCareerSave borra la save legacy + resetea el
+    //          fallback en memoria privado de `persistence.ts` (que
+    //          cachea la save en RAM si `pickStorage()` no resolvió
+    //          el backend nativo, e.g. tests jsdom sin mock).
+    //
+    // MGC-215 — Antes esta función llamaba `clearCareerSave()`, que sólo
+    // removía `copero:career:save:v1` + legacy `copero-career`. Las keys
+    // de `copero-game-stats` (highScore/bestStreak) y `copero:ideologia:v1:*`
+    // (progreso del quiz) sobrevivían como zombies y el siguiente
+    // onboarding las re-hidrataba con data fantasma. El AC de MGC-215
+    // ("state idéntico a primera instalación") cierra con la combinación
+    // `wipeAllCoperoKeys + clearCareerSave`. Cada uno cubre un eje:
+    // wipe en bloque el disco, clear el cache en memoria del módulo de
+    // persistencia.
     resetAll: async () => {
       try {
         await flushPendingSave();
@@ -870,9 +884,22 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         // y el clear; el peor caso es la misma ventana que reset().
       }
       setSnapshot(() => initialSnapshot());
-      await clearCareerSave().catch(() => {
-        // best-effort: si falla el clear, el próximo save sobrescribe.
-      });
+      // MGC-215: wipeAllCoperoKeys + clearCareerSave en paralelo. Cada
+      // uno tiene un catch independiente — un fallo parcial no aborta
+      // al otro. Si wipeAllCoperoKeys explota, clearCareerSave igual
+      // limpia la save legacy + el memoryStore privado del módulo de
+      // persistencia. Si clearCareerSave explota, wipeAllCoperoKeys
+      // igual limpia el AsyncStorage nativo.
+      await Promise.all([
+        wipeAllCoperoKeys().catch(() => {
+          // best-effort: wipe de bloque falló — clear puntual corre
+          // abajo como red de seguridad.
+        }),
+        clearCareerSave().catch(() => {
+          // best-effort: clear puntual falló — wipe de bloque ya
+          // removió las keys conocidas del disco si resolvió.
+        }),
+      ]);
     },
   };
 });

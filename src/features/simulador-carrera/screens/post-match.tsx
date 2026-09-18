@@ -1,5 +1,6 @@
 /**
  * MGC-1650 — WF5 pantalla /post-match.
+ * MGC-246 — etiqueta MVP (rating ≥ 7.5) + tarjeta de lesionados del partido.
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -11,6 +12,11 @@ import { useMatchStore } from '@/shared/store/matchStore';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { useLocale } from '@/i18n/locale-context';
 import { clampCareerStat } from '@/features/career/match';
+import type { InjuryKind } from '@/types/career';
+
+// MGC-246 — umbral MVP del partido. Consistente con el rating mínimo
+// que el motor `deltasFromRating` ya trata como "actuación sólida".
+const MVP_RATING_THRESHOLD = 7.5;
 
 const HIT_SLOP_44 = { top: 22, left: 22, right: 22, bottom: 22 } as const;
 
@@ -28,16 +34,58 @@ export default function PostMatchScreen() {
   const reset = useMatchStore((s) => s.reset);
   const discardMatch = useCareerStore((s) => s.discardMatch);
   const commitMatch = useCareerStore((s) => s.commitMatch);
+  // MGC-386 — el self-heal del useEffect (deep-link al /post-match)
+  // llama startMatch para hidratar matchStore. Si el jugador nunca
+  // jugó un partido esta semana, startMatch sigue resolviendo y
+  // depositando un outcome (es determinista por week+seed).
+  const startMatch = useCareerStore((s) => s.startMatch);
   // MGC-1903 / MGC-2085 — F4 social events. El motor (`commitMatch`
   // desde PR #476) popula `socialEventPending` en el mismo tick que el
   // `await` resuelve, por lo que NO leemos el hook (stale) sino el
   // snapshot FRESCO via `useCareerStore.getState()` después del await.
 
   useEffect(() => {
-    if (!outcome || !preview || !previousProfile || !nextProfile) {
-      router.replace('/simulador-carrera/dashboard');
+    if (outcome && preview && previousProfile && nextProfile) {
+      return;
     }
-  }, [outcome, preview, previousProfile, nextProfile, router]);
+    // MGC-386 — self-heal análogo al match screen. Si llegamos por
+    // deep-link o por back-forward sin `matchStore` hidratado, le
+    // pedimos a `startMatch` que cargue el outcome antes de decidir
+    // redirigir. Antes este useEffect redirigía inmediatamente al
+    // dashboard apenas veía `outcome=null`, lo que rompía los flujos
+    // que navegan dashboard→match→post-match pero donde el chunk lazy
+    // del store aún no había resuelto el outcome cuando se montó
+    // /post-match (back-forward, deep-link desde notif, etc.).
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (!cancelled) {
+        const fresh = useMatchStore.getState();
+        if (!fresh.outcome || !fresh.preview || !fresh.previousProfile || !fresh.nextProfile) {
+          router.replace('/simulador-carrera/season-hub');
+        }
+      }
+    }, 300);
+    void startMatch()
+      .then(() => {
+        if (cancelled) return;
+        const fresh = useMatchStore.getState();
+        if (!fresh.outcome || !fresh.preview || !fresh.previousProfile || !fresh.nextProfile) {
+          router.replace('/simulador-carrera/season-hub');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          router.replace('/simulador-carrera/season-hub');
+        }
+      })
+      .finally(() => {
+        clearTimeout(timer);
+      });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [outcome, preview, previousProfile, nextProfile, router, startMatch]);
 
   useEffect(() => {
     return () => {
@@ -81,6 +129,53 @@ export default function PostMatchScreen() {
     return Math.max(0, Math.min(100, (preview.rating / 10) * 100));
   }, [preview]);
 
+  // MGC-246 — flag MVP (rating ≥ 7.5) y lesión activa post-partido.
+  // `nextProfile.career.lesion` viaja populado desde `resolveWeeklyMatch`
+  // (que ahora rola `maybeRollInjury` al final del match si fechasOut=0).
+  const isMvp = !!preview && preview.rating >= MVP_RATING_THRESHOLD;
+  const activeInjury = nextProfile?.career.lesion;
+  const hasInjury = !!activeInjury && activeInjury.fechasOut > 0;
+
+  // MGC-476 — eventos-clave del partido, derivados deterministamente del
+  // outcome + preview + nextProfile (sin tocar el resolver). Cada goal se
+  // mapea a un "minuto" sintetico (15..85) para que la lista sea legible.
+  // Reglas de hooks: useMemo debe ejecutarse en cada render; lo movemos
+  // antes del early-return para no romper el orden cuando todavía no hay
+  // match hidratado (deep-link / back-forward).
+  const goalEvents = useMemo(() => {
+    const n = preview?.goals ?? 0;
+    if (n <= 0) return [] as { key: string; minute: number; label: string }[];
+    const items: { key: string; minute: number; label: string }[] = [];
+    for (let i = 0; i < n; i += 1) {
+      const minute = 15 + ((i * 23) % 70); // 15..85 pseudo-random estable
+      const label =
+        i === 0
+          ? t('postMatch.eventoGoal')
+          : t('postMatch.eventoGoalCount', { count: i + 1 });
+      items.push({ key: `goal-${i}`, minute, label });
+    }
+    return items;
+  }, [preview?.goals, t]);
+
+  const keyEvents = useMemo(() => {
+    const items: { key: string; minute: number | null; label: string; tone: 'primary' | 'danger' | 'muted' }[] = [];
+    for (const g of goalEvents) {
+      items.push({ key: g.key, minute: g.minute, label: g.label, tone: 'primary' });
+    }
+    if (isMvp) {
+      items.push({ key: 'mvp', minute: null, label: t('postMatch.eventoMvp'), tone: 'primary' });
+    }
+    if (hasInjury && activeInjury) {
+      items.push({
+        key: 'injury',
+        minute: null,
+        label: injuryKindLabel(activeInjury.kind, t),
+        tone: 'danger',
+      });
+    }
+    return items;
+  }, [goalEvents, isMvp, hasInjury, activeInjury, t]);
+
   if (!outcome || !preview || !previousProfile || !nextProfile) {
     return (
       <SafeAreaView
@@ -123,7 +218,7 @@ export default function PostMatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -160,7 +255,7 @@ export default function PostMatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -201,6 +296,94 @@ export default function PostMatchScreen() {
           <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
             {ratingLabelKey(preview.rating, t)}
           </Text>
+          {isMvp ? (
+            <View
+              style={{
+                marginTop: spacing[2],
+                paddingHorizontal: spacing[3],
+                paddingVertical: spacing[1],
+                borderRadius: radii.pill,
+                backgroundColor: colors.primary,
+              }}
+              testID="post-match-mvp-badge"
+              accessibilityLabel={t('postMatch.mvpBadgeA11y')}
+            >
+              <Text
+                style={{
+                  color: colors.bg,
+                  fontSize: fontSize.sm,
+                  fontWeight: fontWeight.bold,
+                  letterSpacing: 2,
+                }}
+              >
+                {t('postMatch.mvpBadge')}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* MGC-246 — tarjeta de lesionados del partido (omitable). */}
+        <View
+          style={{
+            borderRadius: radii.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+            padding: spacing[4],
+            gap: spacing[2],
+          }}
+          testID="post-match-injuries"
+        >
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: 10,
+              letterSpacing: 2,
+              fontWeight: fontWeight.bold,
+            }}
+          >
+            {t('postMatch.injuriesTitle')}
+          </Text>
+          {hasInjury && activeInjury ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingHorizontal: spacing[2],
+                paddingVertical: spacing[2],
+                borderRadius: radii.md,
+                backgroundColor: colors.surface2,
+              }}
+              testID="post-match-injury-item"
+            >
+              <Text
+                style={{ color: colors.text, fontSize: fontSize.sm }}
+                testID="post-match-injury-kind"
+              >
+                {injuryKindLabel(activeInjury.kind, t)}
+              </Text>
+              <Text
+                style={{
+                  color: colors.danger,
+                  fontSize: fontSize.md,
+                  fontWeight: fontWeight.bold,
+                }}
+                testID="post-match-injury-weeks"
+              >
+                {t('postMatch.injuryRecoveryWeeks', {
+                  count: activeInjury.fechasOut,
+                })}
+              </Text>
+            </View>
+          ) : (
+            <Text
+              style={{ color: colors.textMuted, fontSize: fontSize.xs }}
+              testID="post-match-injuries-empty"
+            >
+              {t('postMatch.injuriesEmpty')}
+            </Text>
+          )}
         </View>
 
         <View
@@ -217,7 +400,7 @@ export default function PostMatchScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -239,12 +422,82 @@ export default function PostMatchScreen() {
             padding: spacing[4],
             gap: spacing[2],
           }}
-          testID="post-match-meta"
+          testID="post-match-events"
         >
           <Text
             style={{
               color: colors.textMuted,
               fontSize: 10,
+              letterSpacing: 2,
+              fontWeight: fontWeight.bold,
+            }}
+          >
+            {t('postMatch.eventosTitle')}
+          </Text>
+          {keyEvents.length === 0 ? (
+            <Text
+              style={{ color: colors.textMuted, fontSize: fontSize.xs }}
+              testID="post-match-events-empty"
+            >
+              {t('postMatch.eventosEmpty')}
+            </Text>
+          ) : (
+            keyEvents.map((ev) => (
+              <View
+                key={ev.key}
+                testID={`post-match-event-${ev.key}`}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: spacing[2],
+                  paddingVertical: spacing[2],
+                  borderRadius: radii.md,
+                  backgroundColor: colors.surface2,
+                }}
+              >
+                <Text
+                  style={{
+                    color:
+                      ev.tone === 'primary'
+                        ? colors.primary
+                        : ev.tone === 'danger'
+                          ? colors.danger
+                          : colors.textMuted,
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.bold,
+                  }}
+                >
+                  {ev.label}
+                </Text>
+                {ev.minute !== null ? (
+                  <Text
+                    style={{ color: colors.textMuted, fontSize: fontSize.xs }}
+                    testID={`post-match-event-${ev.key}-minute`}
+                  >
+                    {ev.minute}'
+                  </Text>
+                ) : null}
+              </View>
+            ))
+          )}
+        </View>
+
+        <View
+          style={{
+            borderRadius: radii.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+            padding: spacing[4],
+            gap: spacing[2],
+          }}
+          testID="post-match-meta"
+        >
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: 12,
               letterSpacing: 2,
               fontWeight: fontWeight.bold,
             }}
@@ -271,7 +524,7 @@ export default function PostMatchScreen() {
             <Text
               style={{
                 color: colors.textMuted,
-                fontSize: 10,
+                fontSize: 12,
                 letterSpacing: 2,
                 fontWeight: fontWeight.bold,
                 marginBottom: spacing[1],
@@ -303,11 +556,32 @@ export default function PostMatchScreen() {
           <Button
             label={t('postMatch.ctaBackToHub')}
             onPress={onBackToHub}
-            variant="ghost"
+            variant="secondary"
             size="md"
             fullWidth
             testID="btn-post-match-back-hub"
             accessibilityHint={t('postMatch.ctaBackToHubHint')}
+            hitSlop={HIT_SLOP_44}
+          />
+          {/* MGC-476 — CTAs adicionales al hub de temporada y al perfil. */}
+          <Button
+            label={t('postMatch.ctaTabla')}
+            onPress={() => router.push('/simulador-carrera/season-hub')}
+            variant="secondary"
+            size="md"
+            fullWidth
+            testID="btn-post-match-tabla"
+            accessibilityHint={t('postMatch.ctaTablaHint')}
+            hitSlop={HIT_SLOP_44}
+          />
+          <Button
+            label={t('postMatch.ctaStats')}
+            onPress={() => router.push('/simulador-carrera/tu-jugador')}
+            variant="secondary"
+            size="md"
+            fullWidth
+            testID="btn-post-match-stats"
+            accessibilityHint={t('postMatch.ctaStatsHint')}
             hitSlop={HIT_SLOP_44}
           />
         </View>
@@ -373,6 +647,21 @@ function ratingLabelKey(rating: number, t: Translator): string {
   if (rating >= 5.0) return t('postMatch.ratingRegular');
   if (rating >= 3.0) return t('postMatch.ratingPoor');
   return t('postMatch.ratingBad');
+}
+
+// MGC-246 — etiqueta humana para `InjuryKind`. Consume las claves i18n
+// `postMatch.injuryKind*` agregadas en `src/i18n/copy.ts` (es/en/zh-CN).
+function injuryKindLabel(kind: InjuryKind, t: Translator): string {
+  switch (kind) {
+    case 'leve':
+      return t('postMatch.injuryKindLeve');
+    case 'media':
+      return t('postMatch.injuryKindMedia');
+    case 'grave':
+      return t('postMatch.injuryKindGrave');
+    default:
+      return kind;
+  }
 }
 
 function reputationLabel(value: string, t: Translator): string {

@@ -1,0 +1,41 @@
+{
+  "_comment": "Caso LINEAGE — PR #642 (MGC-56). El PR body cita SHAs históricos (44914fc, 85067487) que están en PR.commits pero cuyas check-runs históricas están todas CANCELLED por pushes posteriores. El run actual (34741859934) está todavía en progreso y la API devuelve api-error transitorio cuando Capa 3 lo consulta. La Capa 3 debe APROBAR con warnings (no fabricación): los SHAs citados SÍ están en PR.commits (referencia de linaje válida), y el run citado es el run actual (auto-referencia del sticky devops-comment). La falla de API es transient; el retry debe rescatarla o el fallback HEAD debe cubrirla.",
+  "pr_number": 642,
+  "pr_head_sha": "c28809fc2fbb40123862319ba0b1eb05ed4ce2c4",
+  "merge_commit_sha": "8e4fc6f004c4c133f04c46d2c3425b392d74aa46",
+  "pr_commits": [
+    "44914fc0510b9ad1578826d2069f646a37d3c8e8",
+    "8506748740249a5735a319745ff72f779b42b5e9",
+    "c28809fc2fbb40123862319ba0b1eb05ed4ce2c4"
+  ],
+  "green_sha_set": [
+    "c28809fc2fbb40123862319ba0b1eb05ed4ce2c4"
+  ],
+  "historical_green_shas": [
+    "44914fc0510b9ad1578826d2069f646a37d3c8e8",
+    "8506748740249a5735a319745ff72f779b42b5e9"
+  ],
+  "current_run_id": "34741859934",
+  "current_run_api_errors": 3,
+  "historical_fetch_failures": {
+    "44914fc0510b9ad1578826d2069f646a37d3c8e8": 2,
+    "8506748740249a5735a319745ff72f779b42b5e9": 1
+  },
+  "pr_body_sha_citations": [
+    "44914fc0510b9ad1578826d2069f646a37d3c8e8",
+    "8506748740249a5735a319745ff72f779b42b5e9"
+  ],
+  "latest_sticky_comment": {
+    "header": "devops-ci-gate-strict",
+    "body": "## CI DevOps — c28809f\n\n| Job | Result |\n| --- | --- |\n| lint (eslint) | ✅ pass |\n| typecheck (tsc --noEmit) | ✅ pass |\n| test-web (vitest) | ✅ pass |\n| build-web (expo export) | ✅ pass |\n| sha-citation (ADR-0029 Capa 3) | ✅ pass |\n\n- Workflow: `ci (copero)`\n- Run: https://github.com/mgcstudios/copero/actions/runs/34741859934\n- SHA: `c28809f` (target `main`)",
+    "cited_sha": "c28809fc2fbb40123862319ba0b1eb05ed4ce2c4",
+    "cited_run_id": "34741859934"
+  },
+  "expected_verdict": "PASS",
+  "expected_failure_reasons": [],
+  "expected_log_line": "verdict=PASS capa3=ok",
+  "expected_warnings": [
+    "Capa 3 fetch parcial"
+  ],
+  "expected_post_fix_behavior": "PASS con warnings de lineage-ref. Sin el fix, el script falla con fabricación falsa (sha=44914fc...∉green_sha_set,sha=85067487...∉green_sha_set,run=34741859934=api-error)."
+}

@@ -57,31 +57,10 @@ import { useRouter } from 'expo-router';
 import type { CareerStage } from '@/types/career';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
+import { useLocale } from '@/i18n/locale-context';
 import { useCareerStore } from '@/shared/store/careerStore';
 import { VersionLabel } from '@/components/VersionLabel';
-
-// Mapa stage → ruta de resume (MGC-251). Se conserva tal cual para el CTA
-// "Continuar carrera" cuando hay sesión persistida.
-function resumeRouteForStage(stage: CareerStage): string {
-  switch (stage) {
-    case 'identity':
-      return '/simulador-carrera/identity';
-    case 'dashboard':
-    case 'academy':
-    case 'clubStart':
-      return '/simulador-carrera/dashboard';
-    case 'draft':
-      return '/simulador-carrera/draft';
-    case 'club':
-      return '/simulador-carrera/tu-jugador';
-    case 'season':
-      return '/simulador-carrera/temporada';
-    case 'retirement':
-      return '/simulador-carrera/fin-carrera';
-    default:
-      return '/simulador-carrera/dashboard';
-  }
-}
+import { resumeRouteForStage } from '@/features/career/resumeRoute';
 
 function resumeLabelForStage(stage: CareerStage): string {
   switch (stage) {
@@ -101,6 +80,11 @@ function resumeLabelForStage(stage: CareerStage): string {
 export default function Home() {
   const router = useRouter();
   const { colors, radii, spacing, fontSize, fontWeight, fontFamily, lineHeight } = useTheme();
+  // MGC-320 — Bug B del padre MGC-306: el body del home tenía los strings
+  // hardcoded en español (eyebrow, title, body, "Jugar"). El provider de
+  // Locale está en el root layout (`_layout.native.tsx`) y re-renderiza
+  // este componente cuando cambia el locale; basta con leer de `t()`.
+  const { t } = useLocale();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const careerStage = useCareerStore((s) => s.stage);
   const careerProfileName = useCareerStore((s) => s.profile.name);
@@ -183,6 +167,9 @@ export default function Home() {
                   fontWeight={fontWeight}
                   lineHeight={lineHeight}
                   textOnAccent={colors.textOnAccent}
+                  eyebrow={t('home.eyebrow')}
+                  title={t('home.title')}
+                  body={t('home.body')}
                 />
               </View>
             </ImageBackground>
@@ -204,6 +191,9 @@ export default function Home() {
                 fontWeight={fontWeight}
                 lineHeight={lineHeight}
                 textOnAccent={colors.textOnAccent}
+                eyebrow={t('home.eyebrow')}
+                title={t('home.title')}
+                body={t('home.body')}
               />
             </View>
           )}
@@ -213,7 +203,7 @@ export default function Home() {
             AC7.1 (.maestro/ac7-force-stop.yaml): assertVisible text:"Jugar"
             → tapOn text:"Jugar" navega a /simulador-carrera/identity. */}
         <Button
-          label="Jugar"
+          label={t('home.play')}
           onPress={goPlay}
           variant="primary"
           size="lg"
@@ -268,6 +258,9 @@ function SplashCopy({
   fontWeight,
   lineHeight,
   textOnAccent,
+  eyebrow,
+  title,
+  body,
 }: {
   titleSize: number;
   fontFamily: ReturnType<typeof useTheme>['fontFamily'];
@@ -275,6 +268,11 @@ function SplashCopy({
   fontWeight: ReturnType<typeof useTheme>['fontWeight'];
   lineHeight: ReturnType<typeof useTheme>['lineHeight'];
   textOnAccent: string;
+  // MGC-320 — strings vienen de `useLocale().t()` para que el body del
+  // splash se traduzca junto con el resto de la app.
+  eyebrow: string;
+  title: string;
+  body: string;
 }) {
   return (
     <>
@@ -288,7 +286,7 @@ function SplashCopy({
           fontWeight: fontWeight.bold,
         }}
       >
-        COPERO · SIMULADOR DE CARRERA
+        {eyebrow}
       </Text>
       <Text
         accessibilityRole="header"
@@ -302,7 +300,7 @@ function SplashCopy({
           letterSpacing: -0.5,
         }}
       >
-        Convertite en leyenda
+        {title}
       </Text>
       <Text
         style={{
@@ -311,7 +309,7 @@ function SplashCopy({
           lineHeight: fontSize.base * lineHeight.base,
         }}
       >
-        Tomá decisiones, asumí consecuencias y construí tu carrera futbolística paso a paso.
+        {body}
       </Text>
     </>
   );

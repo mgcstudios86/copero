@@ -261,7 +261,7 @@ export default function TemporadaScreen() {
           <Text
             style={{
               color: colors.textMuted,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: fontWeight.bold,
               letterSpacing: 2,
             }}
@@ -445,7 +445,7 @@ export default function TemporadaScreen() {
               style={{
                 flex: 1,
                 color: colors.textMuted,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: fontWeight.bold,
                 letterSpacing: 2,
               }}
@@ -456,7 +456,7 @@ export default function TemporadaScreen() {
               style={{
                 flex: 2,
                 color: colors.textMuted,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: fontWeight.bold,
                 letterSpacing: 2,
               }}
@@ -468,7 +468,7 @@ export default function TemporadaScreen() {
                 flex: 1,
                 textAlign: 'right',
                 color: colors.textMuted,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: fontWeight.bold,
                 letterSpacing: 2,
               }}
@@ -480,7 +480,7 @@ export default function TemporadaScreen() {
                 flex: 1.5,
                 textAlign: 'right',
                 color: colors.textMuted,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: fontWeight.bold,
                 letterSpacing: 2,
               }}
@@ -624,7 +624,7 @@ export default function TemporadaScreen() {
         <Button
           label="Jugar temporada"
           onPress={onAdvance}
-          variant="secondary"
+          variant="primary"
           size="lg"
           fullWidth
           testID="btn-temporada-play"
@@ -634,7 +634,7 @@ export default function TemporadaScreen() {
         <Button
           label="Retirarme"
           onPress={onRetireNow}
-          variant="secondary"
+          variant="primary"
           size="lg"
           fullWidth
           testID="btn-temporada-retire"
@@ -697,7 +697,7 @@ function Tile({
       <Text
         style={{
           color: colors.textMuted,
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: fontWeight.bold,
           letterSpacing: 2,
         }}
@@ -764,7 +764,7 @@ function YearlyPlanPicker({
       <Text
         style={{
           color: colors.textMuted,
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: fontWeight.bold,
           letterSpacing: 2,
         }}

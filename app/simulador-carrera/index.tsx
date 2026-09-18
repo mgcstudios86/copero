@@ -25,29 +25,12 @@ import { Redirect } from 'expo-router';
 import { useCareerStore } from '@/shared/store/careerStore';
 import type { CareerStage } from '@/types/career';
 
-// MGC-251 — mismo mapa que usa el home (`app/index.tsx:42`). Lo duplico acá
-// para no exportar un helper desde el screen (acoplaría la lógica del
-// home al segmento, lo que rompía el §1.2 de `engineering-workflow`).
-function resumeRouteForStage(stage: CareerStage): string {
-  switch (stage) {
-    case 'identity':
-      return '/simulador-carrera/identity';
-    case 'dashboard':
-    case 'academy':
-    case 'clubStart':
-      return '/simulador-carrera/dashboard';
-    case 'draft':
-      return '/simulador-carrera/draft';
-    case 'club':
-      return '/simulador-carrera/tu-jugador';
-    case 'season':
-      return '/simulador-carrera/temporada';
-    case 'retirement':
-      return '/simulador-carrera/fin-carrera';
-    default:
-      return '/simulador-carrera/dashboard';
-  }
-}
+// MGC-42.C — Helper extraído a `src/features/career/resumeRoute.ts`.
+// Antes este mapa estaba duplicado acá y en `app/index.tsx:42` (mismo
+// patrón desde MGC-251). El CTO assessment MGC-43 marcó la duplicación
+// como cosmético P1 — extraer centraliza el cambio cuando se agreguen
+// nuevos stages o rutas.
+import { resumeRouteForStage } from '@/features/career/resumeRoute';
 
 export default function SimuladorCarreraIndex() {
   const stage = useCareerStore((s) => s.stage);

@@ -10,7 +10,7 @@ const MatchScreen = lazy(() =>
 
 export default function MatchRoute() {
   return (
-    <View style={{ flex: 1 }} testID="match-screen-wrapper">
+    <View style={{ flex: 1 }} testID="match-screen">
       <Suspense fallback={null}>
         <MatchScreen />
       </Suspense>
