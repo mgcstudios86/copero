@@ -145,3 +145,100 @@ describe('playoff.tsx — wiring del modal (MGC-601)', () => {
     expect(src).toContain('setCelebrationDismissed(true)');
   });
 });
+
+/**
+ * MGC-614 — fix de navegación de "Nueva temporada" en CelebrationModal.
+ *
+ * Bug: setShowCelebration(false) ANTES de router.push(...) desmonta el
+ * Modal nativo de react-native en vuelo y descarta el push. Resultado:
+ * el botón vuelve a playoff en lugar de ir a season-summary.
+ *
+ * Solución aplicada (opción 1 del fix sugerido): reordenar el handler
+ * para que onCloseSeason() (que ejecuta router.push) corra ANTES de
+ * setShowCelebration(false). celebrationDismissed se setea también
+ * antes para evitar el re-show mid-transition.
+ *
+ * Patrón de test: estructural (lee el source y verifica el orden de
+ * las llamadas dentro de onCelebrationNewSeason). Evita mockear
+ * expo-router / Animated native.
+ */
+describe('playoff.tsx — fix navegación Nueva temporada (MGC-614)', () => {
+  const src = readFileSync(
+    resolve(__dirname, 'playoff.tsx'),
+    'utf8',
+  );
+
+  function extractHandlerBody(): string {
+    const marker = 'const onCelebrationNewSeason = useCallback(';
+    const start = src.indexOf(marker);
+    if (start < 0) throw new Error('handler onCelebrationNewSeason no encontrado');
+    // Tomamos desde el `=>` hasta el `}, [onCloseSeason]);` que cierra.
+    const arrowIdx = src.indexOf('=>', start);
+    const closeIdx = src.indexOf('}, [onCloseSeason]);', arrowIdx);
+    if (closeIdx < 0) throw new Error('cierre del useCallback no encontrado');
+    return src.slice(arrowIdx, closeIdx);
+  }
+
+  it('reordena handler: navega ANTES de desmontar el modal', () => {
+    const body = extractHandlerBody();
+    const idxDismissed = body.indexOf('setCelebrationDismissed(true)');
+    const idxCloseSeason = body.indexOf('onCloseSeason()');
+    const idxHideModal = body.indexOf('setShowCelebration(false)');
+
+    // Sanity: las tres llamadas están presentes.
+    expect(idxDismissed).toBeGreaterThan(-1);
+    expect(idxCloseSeason).toBeGreaterThan(-1);
+    expect(idxHideModal).toBeGreaterThan(-1);
+
+    // El orden es lo crítico: dismissed → navigate → hide modal.
+    // Si el hide modal va primero, el Modal nativo se desmonta en
+    // vuelo y descarta el push (ver root cause en MGC-614).
+    expect(idxDismissed).toBeLessThan(idxCloseSeason);
+    expect(idxCloseSeason).toBeLessThan(idxHideModal);
+  });
+
+  it('mantiene celebrationDismissed=true antes de la navegación', () => {
+    // Sin esto, el useEffect([champion, celebrationDismissed]) puede
+    // re-disparar setShowCelebration(true) mientras el push está en
+    // vuelo y reabrir el modal sobre la pantalla nueva.
+    const body = extractHandlerBody();
+    const idxDismissed = body.indexOf('setCelebrationDismissed(true)');
+    const idxCloseSeason = body.indexOf('onCloseSeason()');
+    expect(idxDismissed).toBeLessThan(idxCloseSeason);
+  });
+
+  it('onCloseSeason ejecuta router.push al season-summary', () => {
+    // El handler llama a onCloseSeason (que internamente hace
+    // router.push('/simulador-carrera/season-summary')). Verificamos
+    // que onCloseSeason sigue siendo la fuente de la navegación.
+    const body = extractHandlerBody();
+    expect(body).toContain('onCloseSeason()');
+  });
+
+  it('onCloseSeason navega a /simulador-carrera/season-summary (mockeable)', () => {
+    // El handler onCloseSeason es la pieza mockeable: en un test de
+    // integración se reemplaza por un jest.fn() y se verifica que el
+    // botón "Nueva temporada" lo invoca. Este test estructural sólo
+    // asegura que el path es el correcto.
+    const closeSeasonMatch = src.match(
+      /const onCloseSeason\s*=\s*useCallback\(\s*\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[router\]\s*\)/,
+    );
+    expect(closeSeasonMatch).not.toBeNull();
+    expect(closeSeasonMatch![1]).toContain(
+      "router.push('/simulador-carrera/season-summary')",
+    );
+  });
+
+  it('onCelebrationClose NO navega — sólo dismissa el modal', () => {
+    // El handler de backdrop/Cerrar debe seguir sin navegar para
+    // preservar el workaround documentado en MGC-614.
+    const closeMatch = src.match(
+      /const onCelebrationClose\s*=\s*useCallback\(\s*\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[\]\s*\)/,
+    );
+    expect(closeMatch).not.toBeNull();
+    expect(closeMatch![1]).not.toContain('router.push');
+    expect(closeMatch![1]).not.toContain('onCloseSeason');
+    expect(closeMatch![1]).toContain('setShowCelebration(false)');
+    expect(closeMatch![1]).toContain('setCelebrationDismissed(true)');
+  });
+});

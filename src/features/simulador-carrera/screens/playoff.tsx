@@ -99,10 +99,18 @@ export default function PlayoffScreen() {
     setCelebrationDismissed(true);
   }, []);
 
+  // MGC-614 — handler "Nueva temporada".
+  // Orden importa: navegamos ANTES de desmontar el Modal nativo. Si
+  // llamamos a setShowCelebration(false) primero, el unmount del <Modal
+  // de react-native puede descartar/cancelar el router.push mientras
+  // el stack swap está en vuelo y el push vuelve a la pantalla actual
+  // (playoff) en lugar de season-summary. Marcamos celebrationDismissed
+  // también antes de la navegación para evitar el re-show mid-transition
+  // por el useEffect([champion, celebrationDismissed]).
   const onCelebrationNewSeason = useCallback(() => {
-    setShowCelebration(false);
     setCelebrationDismissed(true);
     onCloseSeason();
+    setShowCelebration(false);
   }, [onCloseSeason]);
 
   const onBack = useCallback(() => {
