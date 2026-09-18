@@ -343,6 +343,19 @@ export type CareerSnapshot = {
    * (`EMPTY_MARKET_STATE`) si el save no lo trae.
    */
   marketState?: MarketState | null;
+  /**
+   * MGC-704 — slice de liga persistible. `seasonStandings` mapea
+   * `clubId` → fila acumulada de la temporada en curso (PJ / W / D / L
+   * / GF / GC / PTS). Se inicializa vacío al arrancar la carrera y
+   * crece vía `recordMatchweekResults` cada vez que `resolveMatchweek`
+   * corre. `seasonFixtures` guarda los partidos de la fecha en curso
+   * para que la UI pueda mostrar resultados consistentes con la tabla.
+   * Persistido en save v:2; saves legacy lo traen `undefined` → la UI
+   * cae al placeholder `buildStandings` mientras el usuario no haya
+   * avanzado al menos una fecha.
+   */
+  seasonStandings?: Record<string, import('@/features/career/phase').StandingRow>;
+  seasonFixtures?: { week: number; homeId: string; awayId: string; homeGoals: number; awayGoals: number }[];
 };
 
 /** Identificadores de decisión del catálogo de strategies.md (MGC-439). */
@@ -543,6 +556,22 @@ export type CareerSaveState = {
   transferState?: TransferState | null;
   /** MGC-475 — flow mercado-de-pases (compra/venta). Default vía `loadCareerSave`. */
   marketState?: MarketState | null;
+  /**
+   * MGC-704 — slice de liga persistible. `seasonStandings` mapea
+   * `clubId → StandingRow` acumulado de la temporada en curso.
+   * `seasonFixtures` guarda los partidos jugados con resultado para
+   * idempotencia y debugging. Default `{}` / `[]`: saves pre-MGC-704
+   * se hidratan vacíos y la UI cae al placeholder determinista hasta
+   * la primera fecha jugada.
+   */
+  seasonStandings?: Record<string, import('@/features/career/phase').StandingRow>;
+  seasonFixtures?: {
+    week: number;
+    homeId: string;
+    awayId: string;
+    homeGoals: number;
+    awayGoals: number;
+  }[];
 };
 
 /**

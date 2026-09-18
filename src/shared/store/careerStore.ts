@@ -32,6 +32,10 @@ import {
 } from '@/features/career/persistence';
 import { wipeAllCoperoKeys } from '@/lib/storage';
 import { createRngSnapshot } from '@/features/career/rng';
+// MGC-704 — `recordMatchweekResults` necesita la lista de clubes de la
+// liga para derivar los fixtures. Importamos sólo el constante, no el
+// helper de filtrado por posición.
+import { ACADEMY_CLUBS } from '@/features/career/clubs';
 import {
   EMPTY_MARKET_STATE,
   applyAcceptedPurchase,
@@ -257,6 +261,15 @@ type CareerStore = CareerSnapshot & {
   confirmPurchase: () => Promise<{ ok: boolean; reason?: string }>;
   cancelPurchase: () => Promise<void>;
   closeMarket: () => Promise<void>;
+  /**
+   * MGC-704 — dispatch de los resultados de la fecha al slice de liga
+   * persistible. Idempotente: si la fecha ya fue aplicada, no acumula
+   * doble. Llamado por `commitMatch` (WF5) y por `advanceSeason` al
+   * cierre de temporada para back-fillear fechas que el flujo WF5
+   * pudiera haber saltado (carrera pre-MGC-704, carrera saltada por
+   * el self-heal del match, etc.).
+   */
+  recordMatchweekResults: (week: number, force?: boolean) => Promise<void>;
 };
 
 /**
@@ -296,6 +309,12 @@ function snapshotToSave(s: CareerStore): CareerSaveState {
     transferState: s.transferState ?? null,
     // MGC-475 — persistir el estado del mercado de pases (idle/open/closed).
     marketState: s.marketState ?? null,
+    // MGC-704 — slice de liga persistible. Saves legacy lo traen
+    // `undefined` → `{}` (placeholder mientras la UI no haya avanzado al
+    // menos una fecha). `recordMatchweekResults` lo popula cada vez que
+    // se cierra una fecha de liga.
+    seasonStandings: s.seasonStandings ?? {},
+    seasonFixtures: s.seasonFixtures ?? [],
   };
 }
 
@@ -338,6 +357,12 @@ export function getSnapshot(): CareerSaveV2 {
     transferState: s.transferState ?? null,
     // MGC-475 — persistir el estado del mercado de pases (idle/open/closed).
     marketState: s.marketState ?? null,
+    // MGC-704 — slice de liga persistible. Saves legacy lo traen
+    // `undefined` → `{}` (placeholder mientras la UI no haya avanzado al
+    // menos una fecha). `recordMatchweekResults` lo popula cada vez que
+    // se cierra una fecha de liga.
+    seasonStandings: s.seasonStandings ?? {},
+    seasonFixtures: s.seasonFixtures ?? [],
   };
 }
 
@@ -756,6 +781,58 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         },
       }));
     },
+    // MGC-704 — dispatch de los resultados de la fecha al slice de liga.
+    // Calcula los fixtures round-robin con el seed actual del snapshot,
+    // simula el resultado de cada partido de la fecha (idempotente: si
+    // el partido ya está registrado, no acumula doble) y actualiza
+    // `seasonStandings` + `seasonFixtures`. Persistencia inmediata
+    // (async + flushPendingSave) para sobrevivir force-stop, mismo
+    // patrón que `commitMatch`.
+    recordMatchweekResults: async (week, force) => {
+      const s = get();
+      if (week < 1 || week > 38) return;
+      const {
+        generateLeagueFixtures,
+        simulateMatchGoals,
+        applyResultToStandings,
+        emptyStandings,
+      } = await import('@/features/career/phase');
+      const clubs = s.profile.club
+        ? Array.from(new Set([s.profile.club.name, ...ACADEMY_CLUBS.map((c) => c.name)]))
+        : ACADEMY_CLUBS.map((c) => c.name);
+      const seedBase = (s.seed ?? 0) ^ (s.profile.season * 1009);
+      const fixtures = generateLeagueFixtures(clubs, seedBase || 1);
+      const matchweekFixtures = fixtures.filter((f) => f.week === week);
+      if (matchweekFixtures.length === 0) return;
+      const playedIds = new Set(
+        (s.seasonFixtures ?? []).map((f) => `${f.week}:${f.homeId}:${f.awayId}`),
+      );
+      let nextStandings = s.seasonStandings ?? emptyStandings(clubs);
+      const nextFixtures = [...(s.seasonFixtures ?? [])];
+      let mutated = false;
+      for (const f of matchweekFixtures) {
+        const k = `${f.week}:${f.homeId}:${f.awayId}`;
+        if (playedIds.has(k) && !force) continue;
+        const result = simulateMatchGoals(f.homeId, f.awayId, seedBase + f.week);
+        nextStandings = applyResultToStandings(
+          nextStandings,
+          f.homeId,
+          f.awayId,
+          result.homeGoals,
+          result.awayGoals,
+        );
+        nextFixtures.push({ ...f, ...result });
+        mutated = true;
+      }
+      if (!mutated) return;
+      setSnapshot((snap) => ({
+        ...snap,
+        seasonStandings: nextStandings,
+        seasonFixtures: nextFixtures,
+      }));
+      persistSnapshot(get());
+      await flushPendingSave();
+    },
     // Acciones de simulación: dynamic import del engine. La navegación
     // ya ocurrió (la UI está en /dashboard), así que el update
     // asincrónico no rompe el flujo de pantalla.
@@ -908,6 +985,18 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         rng: socialResult.rngSnapshot,
       }));
 
+      // MGC-704 — dispatch de los resultados de la fecha al slice de
+      // liga. Se llama DESPUÉS del setSnapshot para que `advanced.week`
+      // ya esté actualizado. La acción es idempotente, así que un
+      // retry post force-stop no acumula doble.
+      try {
+        await get().recordMatchweekResults(advanced.week);
+      } catch {
+        // best-effort: si falla la simulación (imports rotos), el
+        // placeholder determinista de `getStandingsForDisplay` cubre la
+        // UI. El próximo `commitMatch` reintentará.
+      }
+
       persistSnapshot(get());
       await flushPendingSave();
       ms.commit();
@@ -939,6 +1028,16 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     advance: async () => {
       const { step } = await import('@/features/career/engine');
       setSnapshot((s) => step(s, { type: 'advance' } satisfies CareerAction));
+      // MGC-704 — backfill de la liga para fechas que el flujo WF5
+      // (commitMatch) pudiera haberse saltado (carrera pre-MGC-704,
+      // self-heal del match que reintentó startMatch sin commitMatch,
+      // o advance manual desde una pantalla distinta de /match). La
+      // acción es idempotente vía `seasonFixtures[]`.
+      try {
+        await get().recordMatchweekResults(get().profile.week);
+      } catch {
+        // best-effort: ver commitMatch.
+      }
       persistSnapshot(get());
       await flushPendingSave();
     },
@@ -981,9 +1080,24 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       // season y la pantalla retirement — escenario que 5 PRs
       // previos no cerraron.
       const isClosingLoop = get().profile.season >= 8;
+      // MGC-704 — backfill de la última fecha antes de rotar temporada.
+      // El advanceSeason usualmente corre con `profile.week >= 38` así
+      // que la fecha que falta es la 38. La acción es idempotente.
+      try {
+        await get().recordMatchweekResults(get().profile.week);
+      } catch {
+        // best-effort.
+      }
       setSnapshot((s) =>
         step(s, { type: 'advanceSeason' } satisfies CareerAction),
       );
+      // MGC-704 — reset del slice de liga al rotar temporada. La nueva
+      // temporada arranca con standings y fixtures vacíos.
+      setSnapshot((s) => ({
+        ...s,
+        seasonStandings: {},
+        seasonFixtures: [],
+      }));
       if (isClosingLoop) {
         await persistAndFlush(get());
       } else {
@@ -1090,6 +1204,12 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         // MGC-475 — hidratar mercado con default si el save v:1/v:2 no
         // lo trae (carreras iniciadas antes de MGC-475).
         marketState: saved.marketState ?? EMPTY_MARKET_STATE,
+        // MGC-704 — slice de liga persistible. Saves legacy lo traen
+        // `undefined` → `{}` para que `getStandingsForDisplay` caiga al
+        // placeholder determinista hasta que el usuario avance al menos
+        // una fecha.
+        seasonStandings: saved.seasonStandings ?? {},
+        seasonFixtures: saved.seasonFixtures ?? [],
       }));
       set((s) => ({ ...s, hydrated: true }));
       return true;
