@@ -400,6 +400,14 @@ export type Copy = {
     confirmAccept: string;
     confirmCancel: string;
     confirmDismiss: string;
+    // MGC-481 — paso 2 del flow restart-limpio (PR #655 spec step 2):
+    // "Modal muestra spinner 'Reiniciando...' durante el wipe".
+    // Antes el `disabled` de accept silenciaba la fase de wipe sin feedback
+    // visual; ahora la UI muestra el progreso explícitamente para que el
+    // usuario sepa que el borrado está corriendo (storage wipe + flush
+    // pueden tardar cientos de ms en cold cache).
+    wipingTitle: string;
+    wipingBody: string;
   };
 
 };
@@ -735,6 +743,9 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: 'Sí, borrar todo',
       confirmCancel: 'Cancelar',
       confirmDismiss: 'Cerrar el diálogo sin borrar',
+      // MGC-481 — feedback visual durante el storage wipe.
+      wipingTitle: 'Reiniciando…',
+      wipingBody: 'Borrando partida, high score y progreso del quiz.',
     },
   },
   en: {
@@ -1067,6 +1078,9 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: 'Yes, erase everything',
       confirmCancel: 'Cancel',
       confirmDismiss: 'Close dialog without erasing',
+      // MGC-481 — visual feedback during storage wipe.
+      wipingTitle: 'Resetting…',
+      wipingBody: 'Erasing saved career, high score and quiz progress.',
     },
   },
   'zh-CN': {
@@ -1399,6 +1413,9 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: '是，清除全部',
       confirmCancel: '取消',
       confirmDismiss: '关闭弹窗且不清除',
+      // MGC-481 — visual feedback during storage wipe.
+      wipingTitle: '正在重置…',
+      wipingBody: '正在清除已保存的职业生涯、最高分和测验进度。',
     },
   },
   // MGC-320 — locale pt-BR (Bug A del padre MGC-306). Solo poblamos
@@ -1729,6 +1746,9 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: 'Sim, apagar tudo',
       confirmCancel: 'Cancelar',
       confirmDismiss: 'Fechar o diálogo sem apagar',
+      // MGC-481 — feedback visual durante o storage wipe.
+      wipingTitle: 'Reiniciando…',
+      wipingBody: 'Apagando partida salva, high score e progresso do quiz.',
     },
   },
 };

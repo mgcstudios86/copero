@@ -115,4 +115,43 @@ describe('MGC-1736 WF6 — fin-carrera no-mutación AC', () => {
     // 3) `onRestart` debe ser async y awaitar resetAll antes de navegar.
     expect(src).toMatch(/onRestart\s*=\s*async\s*\(\s*\)\s*=>\s*\{[^}]*await\s+resetAll/s);
   });
+
+  it('MGC-481 — modal implementa 3 pasos visuales (confirm → spinner → nav) — gate estático PR #655 spec', async () => {
+    // PR #655 (docs/flows/restart-limpio/flow.md) step 2: "Modal muestra
+    // spinner 'Reiniciando…' durante el wipe". Antes este paso era
+    // invisible: `restarting=true` sólo deshabilitaba los botones sin
+    // feedback visual. El fix introduce la rama `restarting ? spinner :
+    // confirm` en el render del modal con ActivityIndicator + texto i18n.
+    // Si alguien refactorea y elimina la rama del spinner, este test
+    // rompe — la cobertura de QA (MGC-481) y el spec PR #655 dependen
+    // de ese feedback visual.
+    const src = await import('node:fs').then((m) =>
+      m.promises.readFile(
+        'src/features/simulador-carrera/screens/fin-carrera.tsx',
+        'utf8',
+      ),
+    );
+
+    // 1) El modal debe importar ActivityIndicator para el spinner.
+    expect(src).toMatch(/import\s*\{[^}]*\bActivityIndicator\b[^}]*\}\s*from\s*['"]react-native['"]/);
+    // 2) Debe haber una rama condicional `restarting ? <spinner> : <confirm>`
+    //    en el render del modal. La forma exacta puede variar, pero la
+    //    presencia del ternario sobre `restarting` dentro del bloque del
+    //    Modal es el contrato.
+    expect(src).toMatch(/restarting\s*\?\s*\(/);
+    // 3) El texto "Reiniciando" debe estar cableado vía i18n (no
+    //    hardcoded — los 4 locales tienen que mostrar el feedback).
+    expect(src).toMatch(/t\(['"]retire\.wipingTitle['"]\)/);
+    expect(src).toMatch(/t\(['"]retire\.wipingBody['"]\)/);
+    // 4) El testID del spinner debe existir para que QA lo apunte con
+    //    Maestro (`- id: fin-carrera-wiping-spinner`).
+    expect(src).toMatch(/testID\s*=\s*['"]fin-carrera-wiping-spinner['"]/);
+    // 5) El evento `career_restarted` debe emitirse en `onRestart` para
+    //    cumplir la post-condición de la spec PR #655
+    //    ("Telemetría: analytics.career_reset emitida con payload
+    //    { previousSeason, hadTrophies }").
+    expect(src).toMatch(/trackGameEvent\(['"]career_restarted['"]/);
+    expect(src).toMatch(/previousSeason\s*:/);
+    expect(src).toMatch(/hadTrophies\s*:/);
+  });
 });

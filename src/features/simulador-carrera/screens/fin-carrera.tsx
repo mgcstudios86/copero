@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -9,6 +9,7 @@ import { cardToEntries } from '@/features/career/legends';
 import { buildLegado, buildRetirementSummary } from '@/features/career/retirement';
 import { RETIREMENT_AGE } from '@/features/career/season';
 import { useLocale } from '@/i18n/locale-context';
+import { trackGameEvent } from '@/lib/analytics';
 
 /**
  * MGC-209 [6/6] + MGC-1736 (WF6) — FIN DE CARRERA.
@@ -73,6 +74,16 @@ export default function FinCarreraScreen() {
   // un tap accidental perdería el save legacy y el high score del juego
   // de palabras. El modal es accesible (role="alert", hint i18n) y se
   // descarta con tap fuera / botón "Cancelar".
+  //
+  // MGC-481 — el flow restart-limpio (PR #655 spec) requiere 3 pasos
+  // visuales: (1) confirm con Cancelar/Accept, (2) pantalla de progreso
+  // con spinner "Reiniciando…" durante el await de `resetAll`, (3)
+  // cierre + navegación a /identity. Antes el paso (2) era invisible:
+  // `restarting=true` sólo deshabilitaba los botones sin feedback
+  // visual, dejando al usuario mirando un modal congelado mientras
+  // `wipeAllCoperoKeys` corría. Ahora distinguimos dos sub-estados:
+  // `confirmingRestart` (paso 1) y `restarting` (paso 2, modal muta
+  // al spinner overlay).
   const [confirmingRestart, setConfirmingRestart] = useState(false);
   const openConfirm = useCallback(() => {
     if (restarting) return;
@@ -125,14 +136,32 @@ export default function FinCarreraScreen() {
     // clearCareerSave() consecutivos.
     if (restarting) return;
     setRestarting(true);
-    // MGC-215 — cerramos el modal antes de empezar el wipe para que la
-    // UI no muestre el confirm mientras corre el await de `resetAll`.
-    setConfirmingRestart(false);
+    // MGC-481 — ya NO cerramos el modal acá: el spec de PR #655 step
+    // 2 pide que el modal quede visible mostrando el spinner
+    // "Reiniciando…" durante el await de `resetAll`. Antes
+    // `setConfirmingRestart(false)` dejaba al usuario con pantalla
+    // negra durante cientos de ms sin señal de progreso. Ahora el
+    // modal cambia su contenido (cancel/accept → spinner + texto)
+    // gracias a la rama condicional del render.
+    //
+    // MGC-481 — telemetría `career_restarted` (PR #655 post-condición):
+    // emitimos el evento con `{ previousSeason, hadTrophies }` ANTES
+    // del wipe para capturar el estado de la carrera que se va a
+    // borrar. Si falla el reset (catch en resetAll no aplica — es
+    // best-effort) el evento igual refleja la intención del usuario.
+    // El evento está en `GameAnalyticsEvent` pero `fin-carrera.tsx`
+    // (mobile) no lo emitía — sólo `App.tsx` (web sim) lo hacía en
+    // un contexto distinto (replay del summary phase).
+    trackGameEvent('career_restarted', {
+      previousSeason: profile.season ?? 0,
+      hadTrophies: (summary?.vitrina?.length ?? 0) > 0 ? 1 : 0,
+    });
     await resetAll();
     // Si la pantalla se desmontó durante el await (back físico),
     // no navegamos ni reseteamos estado: el store ya quedó limpio
     // porque resetAll() corrió hasta el final.
     if (!mounted.current) return;
+    setConfirmingRestart(false);
     router.replace('/simulador-carrera/identity');
   };
 
@@ -382,8 +411,16 @@ export default function FinCarreraScreen() {
       {/* MGC-215 — modal nativo de confirmación destructiva para
           "Nueva partida". Tapar fuera / botón Cancelar cierran sin
           ejecutar el wipe. El confirm sí dispara `onRestart` que
-          cierra el modal antes de invocar `resetAll` (no se monta
-          sobre el modal mientras corre el await). */}
+          ahora NO cierra el modal — muta al paso 2 (spinner).
+          MGC-481 — el contenido del modal se renderiza en dos ramas:
+          (1) confirm con Cancelar/Accept cuando `resting===false`,
+          (2) spinner + texto "Reiniciando…" cuando `resting===true`.
+          El overlay oscuro + Pressable padre siguen activos en (2)
+          pero el `onPress` interno se bloquea con el Pressable vacío
+          y `cancelConfirm` queda protegido por el guard
+          `if (restarting) return;` para que el usuario no pueda
+          cancelar el wipe a mitad (sería el mismo force-stop edge
+          case que documenta la spec §"Force-stop durante wipe"). */}
       <Modal
         visible={confirmingRestart}
         transparent
@@ -418,49 +455,98 @@ export default function FinCarreraScreen() {
               gap: spacing[4],
             }}
           >
-            <Text
-              accessibilityRole="header"
-              style={{
-                color: colors.textStrong,
-                fontSize: fontSize.lg,
-                fontWeight: fontWeight.bold,
-              }}
-            >
-              {t('retire.confirmTitle')}
-            </Text>
-            <Text
-              style={{
-                color: colors.textMuted,
-                fontSize: fontSize.base,
-                lineHeight: fontSize.base * 1.4,
-              }}
-            >
-              {t('retire.confirmBody')}
-            </Text>
-            <View style={{ flexDirection: 'row', gap: spacing[3] }}>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label={t('retire.confirmCancel')}
-                  onPress={cancelConfirm}
-                  variant="secondary"
-                  fullWidth
-                  hitSlop={44}
-                  testID="btn-fin-carrera-confirm-cancel"
+            {restarting ? (
+              // MGC-481 — paso 2 del flow restart-limpio. Spinner +
+              // texto i18n. Sin botones: el wipe es awaitable y el
+              // modal se cierra solo cuando resetAll resuelve y
+              // `onRestart` setea `confirmingRestart=false`. Si el
+              // usuario intenta tap fuera, `cancelConfirm` noop-ea
+              // por el guard `if (restarting) return;`.
+              <View
+                testID="fin-carrera-wiping-overlay"
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite"
+                accessibilityLabel={`${t('retire.wipingTitle')}. ${t('retire.wipingBody')}`}
+                style={{
+                  alignItems: 'center',
+                  gap: spacing[3],
+                  paddingVertical: spacing[3],
+                }}
+              >
+                <ActivityIndicator
+                  size="large"
+                  color={colors.primary}
+                  testID="fin-carrera-wiping-spinner"
                 />
+                <Text
+                  accessibilityRole="header"
+                  style={{
+                    color: colors.textStrong,
+                    fontSize: fontSize.lg,
+                    fontWeight: fontWeight.bold,
+                    textAlign: 'center',
+                  }}
+                >
+                  {t('retire.wipingTitle')}
+                </Text>
+                <Text
+                  style={{
+                    color: colors.textMuted,
+                    fontSize: fontSize.base,
+                    lineHeight: fontSize.base * 1.4,
+                    textAlign: 'center',
+                  }}
+                >
+                  {t('retire.wipingBody')}
+                </Text>
               </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label={t('retire.confirmAccept')}
-                  onPress={onRestart}
-                  variant="primary"
-                  fullWidth
-                  hitSlop={44}
-                  testID="btn-fin-carrera-confirm-accept"
-                  accessibilityHint={t('retire.restartA11y')}
-                  disabled={restarting}
-                />
-              </View>
-            </View>
+            ) : (
+              // Paso 1 — confirm con Cancelar/Accept.
+              <>
+                <Text
+                  accessibilityRole="header"
+                  style={{
+                    color: colors.textStrong,
+                    fontSize: fontSize.lg,
+                    fontWeight: fontWeight.bold,
+                  }}
+                >
+                  {t('retire.confirmTitle')}
+                </Text>
+                <Text
+                  style={{
+                    color: colors.textMuted,
+                    fontSize: fontSize.base,
+                    lineHeight: fontSize.base * 1.4,
+                  }}
+                >
+                  {t('retire.confirmBody')}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: spacing[3] }}>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label={t('retire.confirmCancel')}
+                      onPress={cancelConfirm}
+                      variant="secondary"
+                      fullWidth
+                      hitSlop={44}
+                      testID="btn-fin-carrera-confirm-cancel"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label={t('retire.confirmAccept')}
+                      onPress={onRestart}
+                      variant="primary"
+                      fullWidth
+                      hitSlop={44}
+                      testID="btn-fin-carrera-confirm-accept"
+                      accessibilityHint={t('retire.restartA11y')}
+                    />
+                  </View>
+                </View>
+              </>
+            )}
           </Pressable>
         </Pressable>
       </Modal>
