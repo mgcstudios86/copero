@@ -145,3 +145,144 @@ describe('playoff.tsx — wiring del modal (MGC-601)', () => {
     expect(src).toContain('setCelebrationDismissed(true)');
   });
 });
+
+
+/**
+ * MGC-614 / MGC-629 — fix de navegación de "Nueva temporada" en
+ * CelebrationModal.
+ *
+ * Bug raíz confirmado por QA walks MGC-630 / MGC-641 / MGC-642 (SHA
+ * 081251e): el `<Modal>` nativo de RN sobre Android monta un
+ * `DialogFragment` que retiene la transición de expo-router hasta
+ * dismissarse. iter5 (SHA 081251e) reemplazó el Modal por un View
+ * absolute pero siguió llamando `router.replace()` sincrónicamente
+ * dentro del handler. Resultado: modal cierra OK pero la transición
+ * a `/season-summary` se aborta silenciosamente (FAIL confirmado
+ * por QA walk MGC-642).
+ *
+ * Iteraciones:
+ *   - iter1 (ab860c5): reorder push → setShow(false). FAIL.
+ *   - iter2 (f44b94e): diferir setShow(false) con InteractionManager.
+ *     FAIL.
+ *   - iter3 (d3f18ef): backdrop hermano + pointerEvents box-none.
+ *     PASS estructural, NO atacó la race.
+ *   - iter4 (42928c7): NO flipar visible en handler. FAIL.
+ *   - iter5 (081251e): eliminar `<Modal>`, overlay View absolute.
+ *     PASS estructural pero QA falló: router.replace sincrónico
+ *     dentro del handler aborta la transición silenciosamente.
+ *   - iter6 (esta fix): navegación declarativa vía useEffect. El
+ *     handler sólo flippa state JS + flag `newSeasonRequested`. El
+ *     useEffect detecta cuando el overlay está desmontado y
+ *     `celebrationDismissed` está activo, y entonces llama
+ *     `onCloseSeason()`. router.replace corre DESPUÉS del commit que
+ *     desmonta el overlay → sin race de expo-router.
+ *
+ * Patrón de test: estructural (lee el source y verifica la forma del
+ * handler + useEffect). Evita mockear expo-router / Animated native.
+ */
+describe('playoff.tsx — fix navegación Nueva temporada (MGC-614 / MGC-629 iter6)', () => {
+  const src = readFileSync(
+    resolve(__dirname, 'playoff.tsx'),
+    'utf8',
+  );
+
+  function extractHandlerBody(): string {
+    const marker = 'const onCelebrationNewSeason = useCallback(';
+    const start = src.indexOf(marker);
+    if (start < 0) throw new Error('handler onCelebrationNewSeason no encontrado');
+    // Tomamos desde el `=>` hasta el `}, []);` que cierra (iter6 ya
+    // no depende de onCloseSeason — la navegación es declarativa).
+    const arrowIdx = src.indexOf('=>', start);
+    const closeIdx = src.indexOf('}, []);', arrowIdx);
+    if (closeIdx < 0) throw new Error('cierre del useCallback no encontrado');
+    return src.slice(arrowIdx, closeIdx);
+  }
+
+  function extractNavigationEffect(): string {
+    const marker = 'useEffect(';
+    // Tomamos el segundo useEffect (el de navegación declarativa).
+    // El primero es auto-show del modal.
+    const firstIdx = src.indexOf(marker);
+    if (firstIdx < 0) throw new Error('primer useEffect no encontrado');
+    const secondIdx = src.indexOf(marker, firstIdx + 1);
+    if (secondIdx < 0) throw new Error('segundo useEffect (navegación) no encontrado');
+    return src.slice(secondIdx, secondIdx + 1200);
+  }
+
+  it('NO importa InteractionManager (iter4 lo abandonó, iter6 sigue igual)', () => {
+    expect(src).not.toMatch(
+      /import\s*\{[^}]*InteractionManager[^}]*\}\s*from\s*'react-native'/,
+    );
+    const body = extractHandlerBody();
+    expect(body).not.toContain('InteractionManager.runAfterInteractions');
+    expect(body).not.toContain('InteractionManager');
+  });
+
+  it('MGC-629 iter6: handler setea flag newSeasonRequested en lugar de llamar onCloseSeason directo', () => {
+    // iter6 invierte el contrato de iter5: el handler NO llama
+    // router.replace. En su lugar, levanta una flag `newSeasonRequested`
+    // que el useEffect consume cuando el overlay está desmontado.
+    // Si esto regresa a "onCloseSeason() en el handler" sería
+    // reversión a iter5 (FAIL confirmado en MGC-642).
+    const body = extractHandlerBody();
+    expect(body).toContain('setShowCelebration(false)');
+    expect(body).toContain('setCelebrationDismissed(true)');
+    expect(body).toContain('setNewSeasonRequested(true)');
+    expect(body).not.toContain('onCloseSeason()');
+    expect(body).not.toContain('router.replace');
+    expect(body).not.toContain('router.push');
+  });
+
+  it('MGC-629 iter6: console.log instrumentation en handler y useEffect para QA debug', () => {
+    // QA MGC-642 solicitó console.log para confirmar si router.replace
+    // corre. Si no aparece → throw JS silencioso; si aparece sin
+    // navegar → race de stack. iter6 emite logs en los 3 puntos
+    // críticos: handler, useEffect, onCloseSeason.
+    const body = extractHandlerBody();
+    expect(body).toMatch(/console\.log/);
+    expect(src).toMatch(/onCloseSeason called/);
+    expect(extractNavigationEffect()).toMatch(/console\.log/);
+  });
+
+  it('MGC-629 iter6: useEffect declarativo llama onCloseSeason cuando overlay está unmounted', () => {
+    // El useEffect debe esperar a que:
+    //   (a) newSeasonRequested = true (flag levantada por handler)
+    //   (b) !showCelebration (overlay desmontado tras commit)
+    //   (c) celebrationDismissed (no reabrirá el modal)
+    // y entonces llamar onCloseSeason() → router.replace.
+    const effect = extractNavigationEffect();
+    expect(effect).toContain('newSeasonRequested');
+    expect(effect).toContain('!showCelebration');
+    expect(effect).toContain('celebrationDismissed');
+    expect(effect).toContain('onCloseSeason()');
+  });
+
+  it('onCloseSeason usa router.replace (no push) para swap atómico', () => {
+    // router.replace evita acumular un back-stack con playoff tapado
+    // por el modal, y la transición es más atómica que push sobre
+    // un stack con un DialogFragment encima.
+    const closeSeasonMatch = src.match(
+      /const onCloseSeason\s*=\s*useCallback\(\s*\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[router\]\s*\)/,
+    );
+    expect(closeSeasonMatch).not.toBeNull();
+    expect(closeSeasonMatch![1]).toContain(
+      "router.replace('/simulador-carrera/season-summary')",
+    );
+    // No debe seguir navegando con router.push — sería regresión a iter1.
+    expect(closeSeasonMatch![1]).not.toContain('router.push');
+  });
+
+  it('onCelebrationClose NO navega — sólo dismissa el overlay', () => {
+    // El handler de backdrop/Cerrar debe seguir sin navegar para
+    // preservar el contrato original (cancelar sin avanzar).
+    const closeMatch = src.match(
+      /const onCelebrationClose\s*=\s*useCallback\(\s*\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[\]\s*\)/,
+    );
+    expect(closeMatch).not.toBeNull();
+    expect(closeMatch![1]).not.toContain('router.push');
+    expect(closeMatch![1]).not.toContain('router.replace');
+    expect(closeMatch![1]).not.toContain('onCloseSeason');
+    expect(closeMatch![1]).toContain('setShowCelebration(false)');
+    expect(closeMatch![1]).toContain('setCelebrationDismissed(true)');
+  });
+});
