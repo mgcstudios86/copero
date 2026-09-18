@@ -1,10 +1,11 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { ACADEMY_CLUBS } from '@/features/career/clubs';
+import { createRng } from '@/features/career/rng';
 import { useCareerStore } from '@/shared/store/careerStore';
 import {
   advancePlayoffRound,
@@ -14,12 +15,14 @@ import {
   type PlayoffRound,
 } from '@/features/career/playoff';
 import type { Club } from '@/types/career';
+import { CelebrationModal } from './CelebrationModal';
 
 // MGC-487 — Bracket UI de playoffs nacionales (semanas 35–38).
 // Renderiza el bracket por ronda y permite avanzar la ronda
 // (cuartos → semis → final) usando el helper puro `advancePlayoffRound`.
-// MVP: el engine real de partidos (`match.ts#resolveMatch`) reemplaza
-// el 50/50 placeholder cuando se integre con la fase semanal.
+// MGC-487.2 — usa `createRng` del módulo central (mismo Mulberry32 que
+// el motor de partidos) para que `resolvePlayoffMatch` pueda consumir
+// `chance()` además de `int()`.
 
 const ROUND_LABEL: Record<PlayoffRound, string> = {
   quarter: 'Cuartos',
@@ -28,20 +31,6 @@ const ROUND_LABEL: Record<PlayoffRound, string> = {
 };
 
 const ROUND_ORDER: PlayoffRound[] = ['quarter', 'semi', 'final'];
-
-function buildRng(seed: number) {
-  let s = seed >>> 0;
-  return {
-    int: (min: number, max: number) => {
-      s = (s + 0x6d2b79f5) >>> 0;
-      let t = s;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      const r = ((t ^ (t >>> 14)) >>> 0) % (max - min + 1);
-      return min + r;
-    },
-  };
-}
 
 function seedTopEight(profile: { club?: Club | null; seed: number }): string[] {
   const pool = ACADEMY_CLUBS.filter((c) => c.id !== profile.club?.id);
@@ -76,18 +65,45 @@ export default function PlayoffScreen() {
   );
 
   const [bracket, setBracket] = useState<PlayoffMatch[]>(() =>
-    buildPlayoffBracket(seeded, buildRng(seed)),
+    buildPlayoffBracket(seeded, createRng(seed)),
   );
 
   const champion = bracketChampion(bracket);
 
+  // MGC-601 / MGC-487.4 — Modal de celebración del campeón.
+  // Auto-aparece cuando el bracket pasa de `champion === null` a un
+  // campeón resuelto (al tap "Avanzar ronda" sobre la final). El
+  // caller (playoff.tsx) controla el dismiss: backdrop, "Cerrar" o
+  // "Nueva temporada" — todos preservan el estado para que QA pueda
+  // reabrir el modal tras dismiss sin re-jugar el bracket.
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationDismissed, setCelebrationDismissed] = useState(false);
+
+  useEffect(() => {
+    if (champion && !celebrationDismissed) {
+      setShowCelebration(true);
+    }
+  }, [champion, celebrationDismissed]);
+
   const onAdvanceRound = useCallback(() => {
-    setBracket((current) => advancePlayoffRound(current, buildRng(seed + current.length)));
+    setBracket((current) => advancePlayoffRound(current, createRng(seed + current.length)));
   }, [seed]);
 
   const onCloseSeason = useCallback(() => {
     router.push('/simulador-carrera/season-summary');
   }, [router]);
+
+  // MGC-601 — handlers del modal.
+  const onCelebrationClose = useCallback(() => {
+    setShowCelebration(false);
+    setCelebrationDismissed(true);
+  }, []);
+
+  const onCelebrationNewSeason = useCallback(() => {
+    setShowCelebration(false);
+    setCelebrationDismissed(true);
+    onCloseSeason();
+  }, [onCloseSeason]);
 
   const onBack = useCallback(() => {
     router.back();
@@ -300,6 +316,15 @@ export default function PlayoffScreen() {
           fullWidth
         />
       </View>
+
+      {/* MGC-601 / MGC-487.4 — Modal celebración del campeón. */}
+      <CelebrationModal
+        visible={showCelebration}
+        champion={champion}
+        season={profile?.season ?? 1}
+        onClose={onCelebrationClose}
+        onNewSeason={onCelebrationNewSeason}
+      />
     </SafeAreaView>
   );
 }
