@@ -497,6 +497,21 @@ export default function DashboardScreen() {
                   />
                 </View>
               ) : null}
+              {/* MGC-475 — entrada manual al flow mercado-de-pases. Visible
+                  cuando el jugador ya fichó (`profile.club != null`),
+                  aunque no haya cerrado temporada todavía: la oferta al
+                  pool de jugadores no depende del transfer system F3.2. */}
+              {profile.club && !showDraftCta ? (
+                <View style={{ marginTop: spacing[2], alignSelf: 'stretch' }}>
+                  <Button
+                    label="Mercado de pases"
+                    onPress={() => router.push('/simulador-carrera/mercado/lista')}
+                    variant="primary"
+                    size="md"
+                    testID="btn-dashboard-mercado-cta"
+                  />
+                </View>
+              ) : null}
             </View>
           )}
         </Section>

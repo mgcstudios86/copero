@@ -10,6 +10,7 @@
  */
 
 import type { NextWeekModifiers, PostMatchEvent } from '@/features/career/events';
+import type { MarketState } from '@/features/career/market';
 import type { SocialEvent } from '@/features/career/social-events';
 import type { PositionStats } from '@/features/career/position-stats';
 import type { RngSnapshot } from '@/features/career/rng';
@@ -335,6 +336,13 @@ export type CareerSnapshot = {
   nextWeekModifiers?: NextWeekModifiers;
   /** Estado del transfer system al cierre de temporada. */
   transferState?: TransferState | null;
+  /**
+   * MGC-475 — estado del flow mercado-de-pases (compra/venta de jugadores
+   * para el club del manager). Persistido como opcional para no romper
+   * saves v:1/v:2. `loadCareerSave` lo hidrata con el default
+   * (`EMPTY_MARKET_STATE`) si el save no lo trae.
+   */
+  marketState?: MarketState | null;
 };
 
 /** Identificadores de decisión del catálogo de strategies.md (MGC-439). */
@@ -533,6 +541,8 @@ export type CareerSaveState = {
   nextWeekModifiers?: NextWeekModifiers;
   /** Estado del transfer system al cierre de temporada. */
   transferState?: TransferState | null;
+  /** MGC-475 — flow mercado-de-pases (compra/venta). Default vía `loadCareerSave`. */
+  marketState?: MarketState | null;
 };
 
 /**
