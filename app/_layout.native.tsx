@@ -52,18 +52,48 @@ function ThemedShell() {
   // envía AppState 'background' en force-stop) podía quedar huérfana y la
   // home re-pintaba con initialSnapshot vacío en el relaunch (AC4/AC7 de
   // MGC-722 sobre build-MGC306-159-14-dc89705.apk).
+  //
+  // MGC-724 — defensa contra hang en `hydrateFromSave()`. PR #692 redujo
+  // el spam del log `[persistence] hydrate=null` (1440 → 2 entradas) pero
+  // el síntoma visual (white↔dark-refresh + spinner verde permanente en
+  // ZY22G728HN) persiste: el gate nunca avanza. El logcat de MGC-722
+  // muestra `Running "main"` + `hydrate=null` y luego silencio absoluto
+  // por 90s+ — la `set({ hydrated: true })` interna del action nunca
+  // dispara el re-render del layout. Como la causa raíz exacta queda
+  // abierta a MGC-732 (futuro ticket de root-cause), acá blindamos el
+  // gate con un timeout best-effort: si a los 5s post-mount la UI sigue
+  // en el gate, flipeamos `hydrated=true` para destrabar el splash y
+  // avanzar al redirect de onboarding o al index, según corresponda. El
+  // path normal (hydrateFromSave resuelve antes de 5s) sigue intacto y
+  // el set interno gana por timing. Sin este fallback, la app queda en
+  // blanco permanente sobre cualquier APK que no sea dev (debug builds
+  // muestran el warning en consola).
   const hydrated = useCareerStore((s) => s.hydrated);
   useEffect(() => {
     bootstrapPersistence();
+    let settled = false;
     void useCareerStore
       .getState()
       .hydrateFromSave()
+      .then(() => {
+        settled = true;
+      })
       .catch(() => {
+        settled = true;
         // Falla best-effort: si AsyncStorage falla, dejamos el
         // initial snapshot y desbloqueamos igual para no bloquear la
         // UI forever.
         useCareerStore.setState({ hydrated: true });
       });
+    const timer = setTimeout(() => {
+      if (settled) return;
+      // MGC-724 — el Promise de hydrateFromSave quedó colgado (no
+      // resolvió ni rechazó en 5s). Flipeamos `hydrated` igual para no
+      // dejar la UI pegada en el spinner verde. `lastHydrationResult`
+      // puede quedar stale — la próxima save lo sobrescribirá.
+      useCareerStore.setState({ hydrated: true });
+    }, 5000);
+    return () => clearTimeout(timer);
   }, []);
 
   // MGC-722 — drenamos la save pendiente cuando el OS manda la app a
