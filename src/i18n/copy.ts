@@ -278,6 +278,11 @@ export type Copy = {
     ctaNextWeekHint: string;
     ctaBackToHub: string;
     ctaBackToHubHint: string;
+    // MGC-476 — CTAs adicionales al hub de temporada y al perfil del jugador.
+    ctaTabla: string;
+    ctaTablaHint: string;
+    ctaStats: string;
+    ctaStatsHint: string;
     // MGC-246 — etiqueta MVP en pantalla post-match + tarjeta de lesionados.
     mvpBadge: string;
     mvpBadgeA11y: string;
@@ -287,6 +292,12 @@ export type Copy = {
     injuryKindMedia: string;
     injuryKindGrave: string;
     injuryRecoveryWeeks: string;
+    // MGC-476 — tarjeta de eventos-clave del partido (goles + MVP).
+    eventosTitle: string;
+    eventoGoal: string;
+    eventoGoalCount: string;
+    eventoMvp: string;
+    eventosEmpty: string;
 };
   // MGC-1632 (F3.2) — transfer system entre temporadas (ADR-0017 §4).
   transfers: {
@@ -631,6 +642,15 @@ export const COPY: Record<Locale, Copy> = {
       injuryKindMedia: 'Lesión media',
       injuryKindGrave: 'Lesión grave',
       injuryRecoveryWeeks: '{count} sem. de recuperación',
+      ctaTabla: 'Ver tabla',
+      ctaTablaHint: 'Abre el hub de temporada con la tabla de posiciones',
+      ctaStats: 'Ver stats',
+      ctaStatsHint: 'Abre tu perfil con estadísticas acumuladas',
+      eventosTitle: 'EVENTOS CLAVE',
+      eventoGoal: 'Gol',
+      eventoGoalCount: '{count}° gol',
+      eventoMvp: 'Figura del partido',
+      eventosEmpty: 'Sin eventos destacados en este partido.',
 },
     transfers: {
       eyebrow: 'MERCADO DE PASES',
@@ -963,6 +983,15 @@ export const COPY: Record<Locale, Copy> = {
       injuryKindMedia: 'Moderate injury',
       injuryKindGrave: 'Severe injury',
       injuryRecoveryWeeks: '{count} wk of recovery',
+      ctaTabla: 'Standings',
+      ctaTablaHint: 'Open the season hub with the league table',
+      ctaStats: 'My stats',
+      ctaStatsHint: 'Open your profile with career stats',
+      eventosTitle: 'KEY EVENTS',
+      eventoGoal: 'Goal',
+      eventoGoalCount: 'Goal {count}',
+      eventoMvp: 'Player of the match',
+      eventosEmpty: 'No key events in this match.',
 },
     transfers: {
       eyebrow: 'TRANSFER WINDOW',
@@ -1295,6 +1324,15 @@ export const COPY: Record<Locale, Copy> = {
       injuryKindMedia: '中度伤',
       injuryKindGrave: '重伤',
       injuryRecoveryWeeks: '{count} 周恢复',
+      ctaTabla: '查看积分榜',
+      ctaTablaHint: '打开赛季中心,查看联赛积分榜',
+      ctaStats: '我的数据',
+      ctaStatsHint: '打开个人资料,查看累计数据',
+      eventosTitle: '关键事件',
+      eventoGoal: '进球',
+      eventoGoalCount: '第 {count} 球',
+      eventoMvp: '全场最佳',
+      eventosEmpty: '本场无关键事件。',
 },
     transfers: {
       eyebrow: '转会市场',
@@ -1629,6 +1667,15 @@ export const COPY: Record<Locale, Copy> = {
       injuryKindMedia: 'Lesão média',
       injuryKindGrave: 'Lesão grave',
       injuryRecoveryWeeks: '{count} sem. de recuperação',
+      ctaTabla: 'Ver tabela',
+      ctaTablaHint: 'Abre o hub da temporada com a tabela de classificação',
+      ctaStats: 'Ver stats',
+      ctaStatsHint: 'Abre seu perfil com estatísticas acumuladas',
+      eventosTitle: 'EVENTOS-CHAVE',
+      eventoGoal: 'Gol',
+      eventoGoalCount: 'Gol {count}',
+      eventoMvp: 'Craque da partida',
+      eventosEmpty: 'Sem eventos destacados nesta partida.',
     },
     transfers: {
       eyebrow: 'MERCADO DA BOLA',

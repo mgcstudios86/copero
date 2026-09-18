@@ -156,6 +156,43 @@ export default function PostMatchScreen() {
 
   const nextWeek = Math.min(38, previousProfile.week + 1);
 
+  // MGC-476 — eventos-clave del partido, derivados deterministamente del
+  // outcome + preview + nextProfile (sin tocar el resolver). Cada goal se
+  // mapea a un "minuto" sintetico (15..85) para que la lista sea legible.
+  const goalEvents = useMemo(() => {
+    const n = preview?.goals ?? 0;
+    if (n <= 0) return [] as Array<{ key: string; minute: number; label: string }>;
+    const items: Array<{ key: string; minute: number; label: string }> = [];
+    for (let i = 0; i < n; i += 1) {
+      const minute = 15 + ((i * 23) % 70); // 15..85 pseudo-random estable
+      const label =
+        i === 0
+          ? t('postMatch.eventoGoal')
+          : t('postMatch.eventoGoalCount', { count: i + 1 });
+      items.push({ key: `goal-${i}`, minute, label });
+    }
+    return items;
+  }, [preview?.goals, t]);
+
+  const keyEvents = useMemo(() => {
+    const items: Array<{ key: string; minute: number | null; label: string; tone: 'primary' | 'danger' | 'muted' }> = [];
+    for (const g of goalEvents) {
+      items.push({ key: g.key, minute: g.minute, label: g.label, tone: 'primary' });
+    }
+    if (isMvp) {
+      items.push({ key: 'mvp', minute: null, label: t('postMatch.eventoMvp'), tone: 'primary' });
+    }
+    if (hasInjury && activeInjury) {
+      items.push({
+        key: 'injury',
+        minute: null,
+        label: injuryKindLabel(activeInjury.kind, t),
+        tone: 'danger',
+      });
+    }
+    return items;
+  }, [goalEvents, isMvp, hasInjury, activeInjury, t]);
+
   return (
     <SafeAreaView
       style={[styles.safe, { backgroundColor: colors.bg }]}
@@ -382,6 +419,76 @@ export default function PostMatchScreen() {
             padding: spacing[4],
             gap: spacing[2],
           }}
+          testID="post-match-events"
+        >
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: 10,
+              letterSpacing: 2,
+              fontWeight: fontWeight.bold,
+            }}
+          >
+            {t('postMatch.eventosTitle')}
+          </Text>
+          {keyEvents.length === 0 ? (
+            <Text
+              style={{ color: colors.textMuted, fontSize: fontSize.xs }}
+              testID="post-match-events-empty"
+            >
+              {t('postMatch.eventosEmpty')}
+            </Text>
+          ) : (
+            keyEvents.map((ev) => (
+              <View
+                key={ev.key}
+                testID={`post-match-event-${ev.key}`}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: spacing[2],
+                  paddingVertical: spacing[2],
+                  borderRadius: radii.md,
+                  backgroundColor: colors.surface2,
+                }}
+              >
+                <Text
+                  style={{
+                    color:
+                      ev.tone === 'primary'
+                        ? colors.primary
+                        : ev.tone === 'danger'
+                          ? colors.danger
+                          : colors.textMuted,
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.bold,
+                  }}
+                >
+                  {ev.label}
+                </Text>
+                {ev.minute !== null ? (
+                  <Text
+                    style={{ color: colors.textMuted, fontSize: fontSize.xs }}
+                    testID={`post-match-event-${ev.key}-minute`}
+                  >
+                    {ev.minute}'
+                  </Text>
+                ) : null}
+              </View>
+            ))
+          )}
+        </View>
+
+        <View
+          style={{
+            borderRadius: radii.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            backgroundColor: colors.surface,
+            padding: spacing[4],
+            gap: spacing[2],
+          }}
           testID="post-match-meta"
         >
           <Text
@@ -451,6 +558,27 @@ export default function PostMatchScreen() {
             fullWidth
             testID="btn-post-match-back-hub"
             accessibilityHint={t('postMatch.ctaBackToHubHint')}
+            hitSlop={HIT_SLOP_44}
+          />
+          {/* MGC-476 — CTAs adicionales al hub de temporada y al perfil. */}
+          <Button
+            label={t('postMatch.ctaTabla')}
+            onPress={() => router.push('/simulador-carrera/season-hub')}
+            variant="secondary"
+            size="md"
+            fullWidth
+            testID="btn-post-match-tabla"
+            accessibilityHint={t('postMatch.ctaTablaHint')}
+            hitSlop={HIT_SLOP_44}
+          />
+          <Button
+            label={t('postMatch.ctaStats')}
+            onPress={() => router.push('/simulador-carrera/tu-jugador')}
+            variant="secondary"
+            size="md"
+            fullWidth
+            testID="btn-post-match-stats"
+            accessibilityHint={t('postMatch.ctaStatsHint')}
             hitSlop={HIT_SLOP_44}
           />
         </View>
