@@ -100,6 +100,40 @@ describe('CelebrationModal — estructura (MGC-601 / MGC-487.4)', () => {
     expect(src).toMatch(/from 'react-native'[\s\S]*Animated/);
     expect(src).not.toContain("from 'react-native-reanimated'");
   });
+
+  /**
+   * MGC-629 — fix del backdrop que se llevaba el tap del Button.
+   *
+   * Bug: el Pressable del backdrop era padre del card (Animated.View)
+   * que contiene los Button. En React Native, el Pressable padre
+   * captura el touch antes que el hijo y, aunque el hijo registre un
+   * onPress en su Pressable interno, el evento puede ser consumido por
+   * el padre antes de propagarse. Resultado: tocar "Nueva temporada"
+   * disparaba onClose (el backdrop) en lugar de onNewSeason.
+   *
+   * Fix: el backdrop pasa a ser un Pressable hermano del card (no
+   * padre). Se monta como `StyleSheet.absoluteFill` por detrás y el
+   * contenedor del card declara `pointerEvents="box-none"` para que
+   * sólo el área fuera del card reciba el dismiss-tap.
+   *
+   * Test estructural: el Pressable del backdrop NO debe envolver el
+   * `celebration-card` y debe usar `StyleSheet.absoluteFill`.
+   */
+  it('MGC-629: backdrop es Pressable hermano, NO padre del card', () => {
+    // El Pressable del backdrop usa absoluteFill (sibling pattern).
+    expect(src).toMatch(/<Pressable[\s\S]*?style=\{StyleSheet\.absoluteFill\}/);
+    // El Pressable del backdrop lleva testID propio, separado del card.
+    expect(src).toContain('testID="celebration-backdrop"');
+    // El contenedor del card tiene pointerEvents="box-none".
+    expect(src).toMatch(/<View[\s\S]*?pointerEvents="box-none"/);
+    // Sanity: el Pressable del backdrop NO abre un Animated.View como
+    // hijo directo (eso sería el patrón bugueado).
+    const backdropMatch = src.match(
+      /<Pressable[\s\S]*?testID="celebration-backdrop"[\s\S]*?\/>/,
+    );
+    expect(backdropMatch).not.toBeNull();
+    expect(backdropMatch![0]).not.toContain('<Animated.View');
+  });
 });
 
 /**

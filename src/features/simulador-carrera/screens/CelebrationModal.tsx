@@ -37,6 +37,13 @@ import { Button } from '@/design/components';
  *     "Nueva temporada" navega a `/simulador-carrera/season-summary`
  *     y NO cierra sola — el caller (playoff.tsx) lo hace via
  *     `onNewSeason` que ejecuta la navegación + cleanup atómico.
+ *   - **MGC-629**: el backdrop era un Pressable padre del card, lo que
+ *     hacía que capturase los taps de los Button antes de que sus
+ *     `onPress` se ejecutasen (resultado: "Nueva temporada" cerraba el
+ *     modal en lugar de navegar). Solución: backdrop como
+ *     `<Pressable style={StyleSheet.absoluteFill}>` hermano del card,
+ *     con `pointerEvents="box-none"` en el contenedor para que sólo el
+ *     área fuera del card reciba el dismiss-tap.
  *   - Accesibilidad: `accessibilityRole="alert"` para que TalkBack
  *     anuncie el modal al aparecer; `accessibilityLiveRegion="polite"`
  *     en el nombre del campeón para que se lea tras el header.
@@ -198,36 +205,46 @@ export function CelebrationModal({
       onRequestClose={onClose}
       testID="celebration-modal"
     >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Cerrar celebración"
-        onPress={onClose}
-        style={{
-          flex: 1,
-          backgroundColor: 'rgba(8, 12, 20, 0.78)',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: spacing[5],
-        }}
-      >
-        <Animated.View
-          // Bloquea propagación del backdrop al card.
-          style={[
-            {
-              width: '100%',
-              maxWidth: 440,
-              borderRadius: radii.xl,
-              borderWidth: 2,
-              borderColor: '#F5C518',
-              backgroundColor: colors.surface,
-              padding: spacing[6],
-              alignItems: 'center',
-              gap: spacing[4],
-              opacity: cardOpacity,
-            },
-          ]}
-          testID="celebration-card"
+      <View style={{ flex: 1, backgroundColor: 'rgba(8, 12, 20, 0.78)' }}>
+        {/* MGC-629 — backdrop como Pressable hermano (no padre) del card.
+            Antes era un Pressable que envolvía todo el contenido y se
+            llevaba el tap de los Button antes de que sus onPress se
+            ejecutasen. Ahora es absoluteFill detrás del card y el
+            contenedor usa pointerEvents="box-none" para que sólo el
+            área fuera del card reciba el dismiss-tap. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Cerrar celebración"
+          onPress={onClose}
+          style={StyleSheet.absoluteFill}
+          testID="celebration-backdrop"
+        />
+        <View
+          pointerEvents="box-none"
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: spacing[5],
+          }}
         >
+          <Animated.View
+            style={[
+              {
+                width: '100%',
+                maxWidth: 440,
+                borderRadius: radii.xl,
+                borderWidth: 2,
+                borderColor: '#F5C518',
+                backgroundColor: colors.surface,
+                padding: spacing[6],
+                alignItems: 'center',
+                gap: spacing[4],
+                opacity: cardOpacity,
+              },
+            ]}
+            testID="celebration-card"
+          >
           {/* Confeti layer — absoluto detrás del trofeo. */}
           {enableConfetti ? (
             <View
@@ -356,8 +373,9 @@ export function CelebrationModal({
               testID="celebration-btn-close"
             />
           </View>
-        </Animated.View>
-      </Pressable>
+          </Animated.View>
+        </View>
+      </View>
     </Modal>
   );
 }
