@@ -401,6 +401,16 @@ export type Copy = {
     confirmCancel: string;
     confirmDismiss: string;
   };
+  // MGC-487.1 — namespace `playoff`. Cubre el CTA del calendario
+  // ("Ir a playoffs") que se muestra tras la fecha 34 (semanas
+  // 35–37, antes del cierre de temporada en 38) y navega a
+  // /simulador-carrera/playoff. Las pantallas `playoff.tsx`
+  // siguen con strings inline (F2) — esta migración es sólo el
+  // disparador desde el calendario.
+  playoff: {
+    ctaOpenBracket: string;
+    ctaOpenBracketHint: string;
+  };
 
 };
 
@@ -736,6 +746,11 @@ export const COPY: Record<Locale, Copy> = {
       confirmCancel: 'Cancelar',
       confirmDismiss: 'Cerrar el diálogo sin borrar',
     },
+    // MGC-487.1 — CTA de playoffs desde el calendario (es-AR).
+    playoff: {
+      ctaOpenBracket: 'Ir a playoffs',
+      ctaOpenBracketHint: 'Resolver cuartos, semis y final',
+    },
   },
   en: {
     brand: 'Copero',
@@ -1067,6 +1082,11 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: 'Yes, erase everything',
       confirmCancel: 'Cancel',
       confirmDismiss: 'Close dialog without erasing',
+    },
+    // MGC-487.1 — playoffs CTA from calendar.
+    playoff: {
+      ctaOpenBracket: 'Open playoffs',
+      ctaOpenBracketHint: 'Resolve quarterfinals, semis and final',
     },
   },
   'zh-CN': {
@@ -1400,6 +1420,11 @@ export const COPY: Record<Locale, Copy> = {
       confirmCancel: '取消',
       confirmDismiss: '关闭弹窗且不清除',
     },
+    // MGC-487.1 — 季后赛入口（日历 CTA）。
+    playoff: {
+      ctaOpenBracket: '进入季后赛',
+      ctaOpenBracketHint: '解决四强、半决赛与决赛',
+    },
   },
   // MGC-320 — locale pt-BR (Bug A del padre MGC-306). Solo poblamos
   // las claves que el header, settings y home body necesitan; el resto
@@ -1729,6 +1754,11 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: 'Sim, apagar tudo',
       confirmCancel: 'Cancelar',
       confirmDismiss: 'Fechar o diálogo sem apagar',
+    },
+    // MGC-487.1 — CTA dos playoffs a partir do calendário.
+    playoff: {
+      ctaOpenBracket: 'Ir para os playoffs',
+      ctaOpenBracketHint: 'Resolver quartas, semis e final',
     },
   },
 };

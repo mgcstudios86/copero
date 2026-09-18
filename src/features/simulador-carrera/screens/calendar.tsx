@@ -19,6 +19,7 @@ import {
   type SeasonPhase,
   type StandingRow,
 } from '@/features/career/phase';
+import { PLAYOFF_START_WEEK } from '@/features/career/playoff';
 
 /**
  * MGC-212 — Calendar semanal jugable.
@@ -132,8 +133,19 @@ export default function CalendarScreen() {
     await advanceSeason();
   }, [advanceSeason]);
 
+  // MGC-487.1 — disparar el bracket de playoffs desde el calendario.
+  // Visible únicamente durante la fase de playoffs regular (semanas
+  // 35–37). En pretemporada (no llegó a playoffs), en la fase regular
+  // (semana ≤ 34) y en `fin` (semana 38 ya cerrada) el CTA no se
+  // muestra — sólo el botón primario de avanzar / nueva temporada.
+  const onOpenPlayoffs = useCallback(() => {
+    router.push('/simulador-carrera/playoff');
+  }, [router]);
+
   const isPretemporada = week === PRETEMPORADA_WEEK;
   const isFin = phase === 'fin';
+  const isPlayoffPhase =
+    week >= PLAYOFF_START_WEEK && week < SEASON_LENGTH;
   const ctaLabel = isPretemporada
     ? t('calendar.cta.startSeason')
     : isFin
@@ -364,6 +376,7 @@ export default function CalendarScreen() {
             padding: spacing[4],
             backgroundColor: colors.surface,
             borderTopColor: colors.border,
+            gap: spacing[2],
           },
         ]}
         testID="calendar-footer"
@@ -374,6 +387,15 @@ export default function CalendarScreen() {
           variant="primary"
           testID="calendar-advance-cta"
         />
+        {isPlayoffPhase ? (
+          <Button
+            label={t('playoff.ctaOpenBracket')}
+            onPress={onOpenPlayoffs}
+            variant="secondary"
+            accessibilityHint={t('playoff.ctaOpenBracketHint')}
+            testID="calendar-open-playoff-cta"
+          />
+        ) : null}
       </View>
     </SafeAreaView>
   );
