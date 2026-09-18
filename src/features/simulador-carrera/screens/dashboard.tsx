@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { copy, copyHelpers } from '@/design/copy/es-AR/simulador-carrera';
-import { useCareerStore, flushPendingSave } from '@/shared/store/careerStore';
+import { useCareerStore, flushPendingSave, invalidateHydrationLatch } from '@/shared/store/careerStore';
 import { NATIONALITIES_BY_CODE } from '@/features/career/nationalities';
 import { ResetCareerButton } from '@/features/simulador-carrera/components/ResetCareerButton';
 import { SaveSlotPicker } from '@/features/career/components/SaveSlotPicker';
@@ -74,6 +74,11 @@ export default function DashboardScreen() {
     async (slotId: string) => {
       setActiveSlotId(slotId);
       try {
+        // MGC-729 — invalidar el latch para que la próxima hidratación
+        // realmente re-lea AsyncStorage. Sin esto, el latch sticky de
+        // 30s devolvería el resultado anterior y el slot activo quedaría
+        // con state fantasma del slot previo (test slot-multi-save #264).
+        invalidateHydrationLatch();
         await hydrateFromSave();
         const { slots } = await listSlots();
         const meta = slots.find((s) => s.id === slotId);
