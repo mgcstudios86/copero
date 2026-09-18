@@ -153,6 +153,9 @@ export const initialSnapshot = (): CareerSnapshot => ({
   draft: null,
   card: null,
   log: { timeline: [], events: [] },
+  // MGC-475 — market state arranca idle; la primera vez que el usuario
+  // entra al flow, `openMarket` lo materializa con pool + RNG seed.
+  marketState: null,
 });
 
 export function step(state: CareerSnapshot, action: CareerAction): CareerSnapshot {

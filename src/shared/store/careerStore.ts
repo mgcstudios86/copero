@@ -32,6 +32,18 @@ import {
 } from '@/features/career/persistence';
 import { wipeAllCoperoKeys } from '@/lib/storage';
 import { createRngSnapshot } from '@/features/career/rng';
+import {
+  EMPTY_MARKET_STATE,
+  applyAcceptedPurchase,
+  evaluatePurchaseOffer,
+  findMarketPlayer,
+  generateMarketPool,
+  isPlayerStillAvailable,
+  openMarketState as buildMarketState,
+  type MarketOffer,
+  type MarketPlayer,
+  type MarketState,
+} from '@/features/career/market';
 import type { CareerAction } from '@/features/career/engine';
 import type {
 CareerSaveState,
@@ -210,6 +222,30 @@ type CareerStore = CareerSnapshot & {
   // MGC-1802 P0-5 — sale del estado retirement y vuelve a season sin
   // reiniciar la carrera. Persistido por applyAndPersist.
   resumeFromRetirement: () => Promise<void>;
+  /**
+   * MGC-475 — flow mercado-de-pases. Cinco mutaciones del market state en
+   * `CareerSnapshot.marketState`:
+   *
+   *  - `openMarket`: crea/suelta un `MarketState` con pool generado vía
+   *    RNG determinista. Idempotente si ya hay uno abierto para la misma
+   *    temporada.
+   *  - `proposePurchase`: el manager eligió ofertar por un target. Crea la
+   *    `MarketOffer` con snapshot del pool y abre la pantalla de detalle.
+   *    Si el jugador no existe en el pool actual, resuelve con `null`.
+   *  - `confirmPurchase`: la IA aceptó la oferta. Descuenta presupuesto
+   *    del club, drena el modal, refresca el pool (sin el jugador
+   *    vendido). Devuelve `false` si presupuesto insuficiente o el
+   *    jugador fue vendido en background.
+   *  - `cancelPurchase`: cierra el modal sin cerrar la operación. La
+   *    `MarketOffer` se descarta, el pool NO se modifica.
+   *  - `closeMarket`: sale del flow. Setea `status: 'closed'` y vacía
+   *    el pool (la próxima vez que se abra se regenera).
+   */
+  openMarket: () => Promise<void>;
+  proposePurchase: (playerId: string, amount: number) => Promise<MarketOffer | null>;
+  confirmPurchase: () => Promise<{ ok: boolean; reason?: string }>;
+  cancelPurchase: () => Promise<void>;
+  closeMarket: () => Promise<void>;
 };
 
 /**
@@ -242,6 +278,8 @@ function snapshotToSave(s: CareerStore): CareerSaveState {
     postMatchPending: s.postMatchPending ?? null,
     nextWeekModifiers: s.nextWeekModifiers,
     transferState: s.transferState ?? null,
+    // MGC-475 — persistir el estado del mercado de pases (idle/open/closed).
+    marketState: s.marketState ?? null,
   };
 }
 
@@ -279,6 +317,8 @@ export function getSnapshot(): CareerSaveV2 {
     postMatchPending: s.postMatchPending ?? null,
     nextWeekModifiers: s.nextWeekModifiers,
     transferState: s.transferState ?? null,
+    // MGC-475 — persistir el estado del mercado de pases (idle/open/closed).
+    marketState: s.marketState ?? null,
   };
 }
 
@@ -508,6 +548,161 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       applyAndPersist((s) =>
         s.stage === 'retirement' ? { ...s, stage: 'season' as const } : s,
       );
+    },
+    // ── MGC-475 — flow mercado-de-pases ──────────────────────────────
+    //
+    // Cinco mutaciones puras sobre `marketState`. NO pasan por el engine
+    // (son capa UI/store: el mercado es un overlay de la simulación, no
+    // parte del motor puro). Persisten vía `applyAndPersist` /
+    // `flushPendingSave` para sobrevivir force-stop durante la oferta.
+    //
+    // RNG: usamos el `seed` del snapshot (`profile.season` + `s.seed`)
+    // como semilla del pool. Si el seed es 0 (carrera muy vieja),
+    // caemos a un derivado del season para mantener determinismo.
+    openMarket: async () => {
+      const s = get();
+      const current = s.marketState ?? EMPTY_MARKET_STATE;
+      // Idempotente: si ya hay un market abierto para la misma temporada,
+      // no regeneramos el pool (mantiene determinismo dentro de la sesión).
+      if (current.status === 'open' && current.season === s.profile.season) {
+        return;
+      }
+      const seedBase = (s.seed ?? 0) ^ (s.profile.season * 31);
+      const poolSeed = seedBase === 0 ? s.profile.season * 1009 + 7 : seedBase;
+      const excludeClubId = s.profile.club?.id ?? null;
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { createRng } = await import('@/features/career/rng');
+      const rng = createRng(poolSeed);
+      const pool = generateMarketPool(rng, { seed: poolSeed, excludeClubId });
+      // Pool generado. El RNG se descarta; lo persistimos vía el snapshot.
+      applyAndPersist((snap) => ({
+        ...snap,
+        marketState: {
+          status: 'open',
+          pool,
+          pendingOffer: null,
+          season: snap.profile.season,
+        },
+      }));
+    },
+    proposePurchase: async (playerId, amount) => {
+      const s = get();
+      const ms = s.marketState;
+      if (!ms || ms.status !== 'open') return null;
+      const target = findMarketPlayer(ms.pool, playerId);
+      if (!target) return null;
+      const offer: MarketOffer = {
+        id: `offer_${playerId}`,
+        playerId,
+        amount: Math.max(0, Math.floor(amount)),
+        verdict: 'pending',
+        playerSnapshot: target,
+      };
+      applyAndPersist((snap) => ({
+        ...snap,
+        marketState: {
+          ...ms,
+          status: 'awaiting',
+          pendingOffer: offer,
+        },
+      }));
+      return offer;
+    },
+    confirmPurchase: async () => {
+      const s = get();
+      const ms = s.marketState;
+      if (!ms || !ms.pendingOffer) return { ok: false, reason: 'no_offer' };
+      const offer = ms.pendingOffer;
+      const target = findMarketPlayer(ms.pool, offer.playerId);
+      // Vendido en background (pool refrescado en otra sesión / mutated).
+      if (!target) {
+        applyAndPersist((snap) => ({
+          ...snap,
+          marketState: {
+            ...ms,
+            status: 'open',
+            pendingOffer: null,
+          },
+        }));
+        return { ok: false, reason: 'player_unavailable' };
+      }
+      // IA decide (RNG determinista).
+      const seedRng = ((s.seed ?? 0) ^ (ms.season * 17) ^ parseInt(offer.id.slice(-4) || '0', 10)) || 1;
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { createRng } = await import('@/features/career/rng');
+      const rng = createRng(seedRng);
+      const accepted = evaluatePurchaseOffer({
+        offeredAmount: offer.amount,
+        marketValue: target.value,
+        sellingClubReputation: target.fromClub.reputation ?? 3,
+        buyerClubOvr: s.profile.ovr,
+        playerOvr: target.ovr,
+        rng,
+      });
+      if (!accepted) {
+        // IA rechaza: persistir verdict, dejar modal cerrado y permitir
+        // re-ofertar. No tocamos presupuesto.
+        applyAndPersist((snap) => ({
+          ...snap,
+          marketState: {
+            ...ms,
+            status: 'open',
+            pendingOffer: null,
+          },
+        }));
+        return { ok: false, reason: 'ia_rejected' };
+      }
+      // Aceptada: aplicar compra.
+      const result = applyAcceptedPurchase({
+        offer,
+        currentBudget: s.profile.clubPresupuesto,
+        currentPool: ms.pool,
+      });
+      if (!result.ok) {
+        applyAndPersist((snap) => ({
+          ...snap,
+          marketState: {
+            ...ms,
+            status: 'open',
+            pendingOffer: null,
+          },
+        }));
+        return { ok: false, reason: result.reason };
+      }
+      const newPool = ms.pool.filter((p) => p.id !== offer.playerId);
+      applyAndPersist((snap) => ({
+        ...snap,
+        profile: {
+          ...snap.profile,
+          clubPresupuesto: result.newBudget,
+        },
+        marketState: {
+          ...ms,
+          status: 'open',
+          pendingOffer: null,
+          pool: newPool,
+        },
+      }));
+      return { ok: true };
+    },
+    cancelPurchase: async () => {
+      applyAndPersist((s) => ({
+        ...s,
+        marketState: s.marketState
+          ? { ...s.marketState, status: 'open', pendingOffer: null }
+          : s.marketState,
+      }));
+    },
+    closeMarket: async () => {
+      applyAndPersist((s) => ({
+        ...s,
+        marketState: {
+          status: 'closed',
+          pool: [],
+          pendingOffer: null,
+          season: s.profile.season,
+        },
+      }));
     },
     // Acciones de simulación: dynamic import del engine. La navegación
     // ya ocurrió (la UI está en /dashboard), así que el update
@@ -836,6 +1031,9 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         postMatchPending: saved.postMatchPending ?? null,
         nextWeekModifiers: saved.nextWeekModifiers,
         transferState: saved.transferState ?? null,
+        // MGC-475 — hidratar mercado con default si el save v:1/v:2 no
+        // lo trae (carreras iniciadas antes de MGC-475).
+        marketState: saved.marketState ?? EMPTY_MARKET_STATE,
       }));
       set((s) => ({ ...s, hydrated: true }));
       return true;
