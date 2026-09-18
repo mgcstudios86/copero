@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
@@ -46,6 +46,20 @@ export default function CalendarScreen() {
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
   const { t } = useLocale();
 
+  // MGC-705 — el deep-link post-match llega con `?scrollTo=<week>`. Lo
+  // capturamos para centrar la lista de fechas en la semana jugada y
+  // evitar que el usuario quede mirando la fecha actual (que tras
+  // `commitMatch` ya es la próxima).
+  const params = useLocalSearchParams<{ scrollTo?: string }>();
+  const scrollToWeek = useMemo(() => {
+    const raw = Array.isArray(params.scrollTo) ? params.scrollTo[0] : params.scrollTo;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed >= 1 && parsed <= SEASON_LENGTH
+      ? Math.floor(parsed)
+      : null;
+  }, [params.scrollTo]);
+  const scrollRef = useRef<ScrollView | null>(null);
+
   const profile = useCareerStore((s) => s.profile);
   const advance = useCareerStore((s) => s.advance);
   const advanceSeason = useCareerStore((s) => s.advanceSeason);
@@ -60,6 +74,15 @@ export default function CalendarScreen() {
 
   const week = Math.max(0, profile.week ?? PRETEMPORADA_WEEK);
   const season = Math.max(1, profile.season ?? 1);
+
+  // MGC-705 — mapa de offsets capturados por `onLayout` de cada fila.
+  // `useRef` para evitar re-renders al actualizar; el scroll se hace en
+  // el effect cuando `scrollToWeek` y la lista ya tienen layout.
+  const rowLayoutsRef = useRef<Map<number, { y: number; height: number }>>(new Map());
+  // MGC-705 — bump reactivo cuando una nueva fila mide layout, así el
+  // `useEffect` que dispara el scroll se vuelve a ejecutar hasta que la
+  // fila target haya reportado `onLayout`.
+  const [layoutVersion, bumpLayout] = useState(0);
 
   // Seed determinista para que el calendario sea estable entre cargas.
   // MGC-212 §3: QA valida 1 carrera completa con seed fijo.
@@ -133,6 +156,25 @@ export default function CalendarScreen() {
     await advanceSeason();
   }, [advanceSeason]);
 
+  // MGC-705 — cuando el deep-link post-match nos deja con `scrollTo`
+  // y la fila target midió layout, centramos la lista en esa fila.
+  // Sin esto la pantalla abre con la semana actual en viewport y la
+  // semana jugada queda arriba fuera de vista.
+  useEffect(() => {
+    if (scrollToWeek === null) return;
+    const layouts = rowLayoutsRef.current;
+    const target = layouts.get(scrollToWeek);
+    if (!target || !scrollRef.current) return;
+    // Pedimos la altura del ScrollView vía measure para centrar.
+    scrollRef.current.measure((_x, _y, _w, h) => {
+      const offset = Math.max(
+        0,
+        target.y - Math.max(0, (h - target.height) / 2),
+      );
+      scrollRef.current?.scrollTo({ y: offset, animated: true });
+    });
+  }, [scrollToWeek, layoutVersion]);
+
   // MGC-487.1 — disparar el bracket de playoffs desde el calendario.
   // Visible únicamente durante la fase de playoffs regular (semanas
   // 35–37). En pretemporada (no llegó a playoffs), en la fase regular
@@ -159,6 +201,7 @@ export default function CalendarScreen() {
       edges={['bottom']}
     >
       <ScrollView
+        ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={[
           styles.container,
@@ -314,10 +357,20 @@ export default function CalendarScreen() {
         >
           {calendar.map((row) => {
             const isCurrent = row.week === week;
+            const isScrolledTo = scrollToWeek === row.index;
             return (
               <View
                 key={row.index}
                 testID={`calendar-row-${row.index}`}
+                onLayout={(e) => {
+                  // MGC-705 — capturamos y absoluto de cada fila dentro
+                  // del ScrollView. `e.nativeEvent.layout.y` es la
+                  // posición relativa al contenedor, perfecta para
+                  // `scrollTo({ y })`.
+                  const { y, height } = e.nativeEvent.layout;
+                  rowLayoutsRef.current.set(row.index, { y, height });
+                  bumpLayout((v) => v + 1);
+                }}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -325,9 +378,17 @@ export default function CalendarScreen() {
                   paddingHorizontal: spacing[2],
                   paddingVertical: spacing[2],
                   borderRadius: radii.md,
-                  backgroundColor: isCurrent ? colors.bg : 'transparent',
-                  borderWidth: isCurrent ? 1 : 0,
-                  borderColor: colors.accent,
+                  // MGC-705 — resaltar la fila scrolleada (semana jugada)
+                  // cuando el deep-link post-match nos trajo con scrollTo.
+                  // `colors.primary` da contraste claro sin romper el
+                  // highlight del "current week" (que sigue siendo bg+accent).
+                  backgroundColor: isScrolledTo
+                    ? colors.primarySoft
+                    : isCurrent
+                      ? colors.bg
+                      : 'transparent',
+                  borderWidth: isCurrent || isScrolledTo ? 1 : 0,
+                  borderColor: isScrolledTo ? colors.primary : colors.accent,
                 }}
               >
                 <Text

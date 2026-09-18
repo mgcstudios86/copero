@@ -105,6 +105,11 @@ export default function PostMatchScreen() {
     if (committing) return;
     setCommitting(true);
     try {
+      // MGC-705 — capturar la semana jugada ANTES del commit. Tras
+      // `commitMatch` el `profile.week` avanza y `previousProfile.week`
+      // sigue siendo la semana que acabamos de jugar (la que
+      // queremos ver scrolleada en el calendario semanal).
+      const playedWeek = previousProfile?.week ?? 0;
       await commitMatch();
       // MGC-2085 — leer el snapshot FRESCO del store post-commit. El
       // hook `socialEventPending` capturado en el render quedó stale
@@ -117,7 +122,18 @@ export default function PostMatchScreen() {
       if (freshSocialEventPending) {
         router.replace('/simulador-carrera/social-events');
       } else {
-        router.replace('/simulador-carrera/dashboard');
+        // MGC-705 — el CTA "Continuar" debe volver al semanal (calendar
+        // semanal jugable MGC-212) con scroll a la semana jugada, NO
+        // al dashboard. Antes hacía replace a /dashboard, lo que el
+        // QA reportó como "deep-link a Tabla" (el dashboard auto-pusheaba
+        // al snippet de tabla en build buggy) y dejaba al calendario
+        // 3 back-distance del partido finalizado. Reemplazamos por
+        // `/simulador-carrera/calendar?scrollTo=<playedWeek>` para que
+        // la pantalla de calendario haga scroll a la fila de la
+        // semana jugada y el back-stack quede limpio (replace, no push).
+        router.replace(
+          `/simulador-carrera/calendar?scrollTo=${playedWeek}`,
+        );
       }
     } finally {
       setCommitting(false);
