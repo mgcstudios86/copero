@@ -75,9 +75,19 @@ export const initialProfile: PlayerProfile = {
   clubInteres: false,
 };
 
+// MGC-716 — `seasonStandings` y `seasonFixtures` deben estar materializados
+// desde el primer render. Una referencia `undefined` vs `{}` nueva por
+// `useMemo` (en `calendar.tsx` y futuros consumidores del slice de liga)
+// dispara re-renders innecesarios y, combinados con suscripciones
+// concurrentes al store, pueden saturar el JS thread con un loop de
+// hydrate. Default explícito a `{}` y `[]` mantiene identidad estable
+// entre snapshots consecutivos hasta que `recordMatchweekResults` escriba
+// datos reales.
 export const initialSnapshot = (): CareerSnapshot => ({
   stage: 'identity',
   profile: initialProfile,
+  seasonStandings: {},
+  seasonFixtures: [],
 });
 
 /** ¿El profile tiene los campos mínimos para pasar de identity a dashboard? */
