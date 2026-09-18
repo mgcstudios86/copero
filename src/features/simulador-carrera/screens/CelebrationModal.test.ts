@@ -40,12 +40,12 @@ describe('CelebrationModal — estructura (MGC-601 / MGC-487.4)', () => {
     expect(src).toMatch(/if\s*\(!visible\s*\|\|\s*!champion\)\s*return\s*null/);
   });
 
-  it('declara Modal accesible con role=alert y testID estable', () => {
+  it('declara overlay accesible con accessibilityViewIsModal y testID estable', () => {
+    // MGC-629 iter5: ya no usamos `<Modal>` nativo. El overlay es un
+    // `<View>` regular con `accessibilityViewIsModal` para que
+    // TalkBack aísle el foco del screen base mientras esté visible.
     expect(src).toContain('testID="celebration-modal"');
-    // Reanimated Animated.View contenedor con role=alert via
-    // accessibilityRole en el Modal wrapper no aplica — el wrapper
-    // es Pressable con role=button (backdrop). El header del modal
-    // declara role=header para que TalkBack anuncie la sección.
+    expect(src).toContain('accessibilityViewIsModal');
     expect(src).toContain('accessibilityRole="header"');
   });
 
@@ -99,6 +99,39 @@ describe('CelebrationModal — estructura (MGC-601 / MGC-487.4)', () => {
   it('usa Animated nativo (no Reanimated) para mantener consistencia con Ticker/RoundTimer', () => {
     expect(src).toMatch(/from 'react-native'[\s\S]*Animated/);
     expect(src).not.toContain("from 'react-native-reanimated'");
+  });
+
+  /**
+   * MGC-629 iter5 — eliminar el `<Modal>` nativo de RN.
+   *
+   * Bug raíz (iter1-iter4): el `<Modal>` sobre Android monta un
+   * `DialogFragment` nativo que retiene la transición de expo-router
+   * hasta dismissarse. Cualquier `setShow(false)` en el batch del
+   * onPress dismissea el DialogFragment antes que el push/replace
+   * commitee → navegación abortada silenciosamente.
+   *
+   * Fix iter5: el overlay pasa a ser un `<View position="absolute">`
+   * dentro del árbol del screen — sin DialogFragment, sin bridge
+   * race. `setShow(false)` es state JS puro y `router.replace()`
+   * commitea normal.
+   *
+   * Verificación estructural:
+   *  - No hay import `Modal` de react-native.
+   *  - No hay JSX `<Modal ...>` en el source.
+   *  - El contenedor exterior usa `position: 'absolute'` + `zIndex`
+   *    + `elevation` (Android) para superponerse al resto del screen.
+   *  - El overlay declara `accessibilityViewIsModal` para TalkBack.
+   */
+  it('MGC-629 iter5: NO usa <Modal> nativo de react-native', () => {
+    // Si Modal vuelve a aparecer, es regresión a iter1-iter4.
+    expect(src).not.toMatch(/import\s*\{[^}]*\bModal\b[^}]*\}\s*from\s*'react-native'/);
+    expect(src).not.toMatch(/<Modal[\s>]/);
+  });
+
+  it('MGC-629 iter5: overlay usa position absolute con zIndex/elevation', () => {
+    expect(src).toMatch(
+      /<View[\s\S]*?style=\{[\s\S]*?position:\s*'absolute'[\s\S]*?zIndex:\s*1000[\s\S]*?elevation:\s*1000[\s\S]*?\}\s*testID="celebration-modal"/,
+    );
   });
 
   /**
@@ -184,13 +217,12 @@ describe('playoff.tsx — wiring del modal (MGC-601)', () => {
  * MGC-614 / MGC-629 — fix de navegación de "Nueva temporada" en
  * CelebrationModal.
  *
- * Bug raíz confirmado por QA walk MGC-630 (SHA d3f18ef): el Modal
- * de RN sobre Android monta un DialogFragment nativo que retiene la
- * transición del stack hasta que se dismisse. Cualquier
- * `setShowCelebration(false)` en el batch del onPress (sync,
- * microtask vía InteractionManager, o macrotask vía setTimeout)
- * dismissa el DialogFragment ANTES que el router.push commitee el
- * stack swap, y expo-router aborta la navegación silenciosamente.
+ * Bug raíz confirmado por QA walks MGC-630 / MGC-641 / MGC-642 (SHA
+ * 42928c7): el `<Modal>` nativo de RN sobre Android monta un
+ * `DialogFragment` que retiene la transición de expo-router hasta
+ * dismissarse. Cualquier `setShow(false)` en el batch del onPress
+ * dismissea el DialogFragment ANTES que el router.replace commitee
+ * el stack swap → navegación abortada silenciosamente.
  *
  * Iteraciones:
  *   - iter1 (ab860c5): reorder push → setShow(false). FAIL — mismo batch.
@@ -200,18 +232,19 @@ describe('playoff.tsx — wiring del modal (MGC-601)', () => {
  *     mismo commit del press que ya despachó el push.
  *   - iter3 (d3f18ef): backdrop hermano + pointerEvents box-none.
  *     PASS estructural, pero NO atacó la race de navigation.
- *   - iter4 (esta fix): NO flipar visible=false en el handler. El
- *     Modal se desmonta solo cuando playoff unmounts como parte
- *     del navigation transition de expo-router. `router.replace` (no
- *     `push`) evita acumular un back-stack con playoff tapado por
- *     el modal. `celebrationDismissed=true` se setea sincrónicamente
- *     para que el useEffect([champion, dismissed]) no reabra el modal
- *     si el bracket sigue resuelto al volver.
+ *   - iter4 (42928c7): NO flipar visible en handler. FAIL — Modal se
+ *     desmonta al unmount de playoff, pero el DialogFragment dismiss
+ *     igual aborta la transición antes del primer commit.
+ *   - iter5 (esta fix): eliminar el `<Modal>` nativo. El overlay pasa
+ *     a ser un `<View position="absolute">` regular dentro del árbol
+ *     de playoff, sin DialogFragment. `setShow(false)` y
+ *     `router.replace()` son JS puros coordinados por React — la
+ *     transición commitea normal.
  *
  * Patrón de test: estructural (lee el source y verifica la forma del
  * handler). Evita mockear expo-router / Animated native.
  */
-describe('playoff.tsx — fix navegación Nueva temporada (MGC-614 / MGC-629 iter4)', () => {
+describe('playoff.tsx — fix navegación Nueva temporada (MGC-614 / MGC-629 iter5)', () => {
   const src = readFileSync(
     resolve(__dirname, 'playoff.tsx'),
     'utf8',
@@ -228,11 +261,7 @@ describe('playoff.tsx — fix navegación Nueva temporada (MGC-614 / MGC-629 ite
     return src.slice(arrowIdx, closeIdx);
   }
 
-  it('NO importa InteractionManager (iter4 — Modal unmounts con playoff)', () => {
-    // iter4 abandona el diferido InteractionManager (que disparaba en
-    // el mismo commit que el push). El Modal se desmonta con playoff
-    // durante el screen swap, no antes. Si InteractionManager vuelve
-    // a aparecer es regresión.
+  it('NO importa InteractionManager (iter4 lo abandonó, iter5 sigue igual)', () => {
     expect(src).not.toMatch(
       /import\s*\{[^}]*InteractionManager[^}]*\}\s*from\s*'react-native'/,
     );
@@ -241,13 +270,19 @@ describe('playoff.tsx — fix navegación Nueva temporada (MGC-614 / MGC-629 ite
     expect(body).not.toContain('InteractionManager');
   });
 
-  it('handler NO llama setShowCelebration(false) — Modal unmounts con playoff', () => {
-    // Cualquier setShowCelebration(false) en el batch del press
-    // dismissea el DialogFragment y cancela el push. iter4 lo omite
-    // por completo en este handler.
+  it('MGC-629 iter5: handler llama setShowCelebration(false) ANTES de navegar (regresión a iter4 invertido)', () => {
+    // iter5 invierte el contrato de iter4: ya no hay DialogFragment
+    // nativo, así que `setShow(false)` es JS puro y NO aborta la
+    // transición. Se llama antes de navegar para que el overlay se
+    // desmonte en el commit y no reaparezca si el bracket sigue
+    // resuelto al volver. Si esto regresa a "no setShow" sería
+    // reversión a iter4 (FAIL confirmado en MGC-641/MGC-642).
     const body = extractHandlerBody();
-    expect(body).not.toContain('setShowCelebration(false)');
-    expect(body).not.toContain('setShowCelebration(');
+    expect(body).toContain('setShowCelebration(false)');
+    const idxShow = body.indexOf('setShowCelebration(false)');
+    const idxCloseSeason = body.indexOf('onCloseSeason()');
+    expect(idxCloseSeason).toBeGreaterThan(-1);
+    expect(idxShow).toBeLessThan(idxCloseSeason);
   });
 
   it('handler setea celebrationDismissed=true ANTES de navegar', () => {
@@ -282,7 +317,7 @@ describe('playoff.tsx — fix navegación Nueva temporada (MGC-614 / MGC-629 ite
     expect(closeSeasonMatch![1]).not.toContain('router.push');
   });
 
-  it('onCelebrationClose NO navega — sólo dismissa el modal', () => {
+  it('onCelebrationClose NO navega — sólo dismissa el overlay', () => {
     // El handler de backdrop/Cerrar debe seguir sin navegar para
     // preservar el contrato original (cancelar sin avanzar).
     const closeMatch = src.match(

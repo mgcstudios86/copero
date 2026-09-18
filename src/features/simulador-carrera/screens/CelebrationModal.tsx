@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
   Easing,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -37,16 +36,28 @@ import { Button } from '@/design/components';
  *     "Nueva temporada" navega a `/simulador-carrera/season-summary`
  *     y NO cierra sola — el caller (playoff.tsx) lo hace via
  *     `onNewSeason` que ejecuta la navegación + cleanup atómico.
- *   - **MGC-629**: el backdrop era un Pressable padre del card, lo que
- *     hacía que capturase los taps de los Button antes de que sus
- *     `onPress` se ejecutasen (resultado: "Nueva temporada" cerraba el
- *     modal en lugar de navegar). Solución: backdrop como
+ *   - **MGC-629 (iter5)**: iter1-iter4 usaron el `<Modal>` nativo de RN,
+ *     que sobre Android monta un `DialogFragment` nativo. Ese fragment
+ *     bloqueaba los `router.push`/`router.replace` de expo-router
+ *     (sincronización interna del bridge: el NavigationContainer no
+ *     commitea una transición mientras haya un DialogFragment visible).
+ *     Cualquier `setShow(false)` en el batch del onPress dismissea el
+ *     fragment antes de que la transición commitee → push abortado.
+ *     Fix iter5: eliminar el `<Modal>` y renderizar la celebración como
+ *     un `<View position="absolute">` overlay dentro del árbol del
+ *     screen. Sin DialogFragment nativo, `setShow(false)` y
+ *     `router.replace()` son JS puros coordinados por React, sin race
+ *     del bridge.
+ *   - **MGC-629 (iter3)**: el backdrop era un Pressable padre del card,
+ *     lo que hacía que capturase los taps de los Button antes de que
+ *     sus `onPress` se ejecutasen. Solución preservada: backdrop como
  *     `<Pressable style={StyleSheet.absoluteFill}>` hermano del card,
  *     con `pointerEvents="box-none"` en el contenedor para que sólo el
  *     área fuera del card reciba el dismiss-tap.
- *   - Accesibilidad: `accessibilityRole="alert"` para que TalkBack
- *     anuncie el modal al aparecer; `accessibilityLiveRegion="polite"`
- *     en el nombre del campeón para que se lea tras el header.
+ *   - Accesibilidad: `accessibilityViewIsModal` para que TalkBack
+ *     aísle el foco al modal; `accessibilityLiveRegion="polite"` en
+ *     el contenedor y en el nombre del campeón para que se lea tras
+ *     el header.
  */
 
 export type CelebrationModalProps = {
@@ -198,53 +209,65 @@ export function CelebrationModal({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
+    // MGC-629 iter5 — eliminar el `<Modal>` nativo (que monta un
+    // DialogFragment sobre Android y bloqueaba router.replace). El
+    // overlay es un View regular absolute-fill en el árbol de playoff.
+    // zIndex/elevation lo mantienen sobre el resto del screen hasta
+    // que setShow(false) lo desmonte.
+    <View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1000,
+        elevation: 1000,
+        backgroundColor: 'rgba(8, 12, 20, 0.78)',
+      }}
       testID="celebration-modal"
+      accessibilityViewIsModal
+      accessibilityLiveRegion="polite"
     >
-      <View style={{ flex: 1, backgroundColor: 'rgba(8, 12, 20, 0.78)' }}>
-        {/* MGC-629 — backdrop como Pressable hermano (no padre) del card.
-            Antes era un Pressable que envolvía todo el contenido y se
-            llevaba el tap de los Button antes de que sus onPress se
-            ejecutasen. Ahora es absoluteFill detrás del card y el
-            contenedor usa pointerEvents="box-none" para que sólo el
-            área fuera del card reciba el dismiss-tap. */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Cerrar celebración"
-          onPress={onClose}
-          style={StyleSheet.absoluteFill}
-          testID="celebration-backdrop"
-        />
-        <View
-          pointerEvents="box-none"
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: spacing[5],
-          }}
+      {/* MGC-629 iter3 — backdrop como Pressable hermano (no padre) del card.
+          Antes era un Pressable que envolvía todo el contenido y se
+          llevaba el tap de los Button antes de que sus onPress se
+          ejecutasen. Ahora es absoluteFill detrás del card y el
+          contenedor usa pointerEvents="box-none" para que sólo el
+          área fuera del card reciba el dismiss-tap. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Cerrar celebración"
+        onPress={onClose}
+        style={StyleSheet.absoluteFill}
+        testID="celebration-backdrop"
+      />
+      <View
+        pointerEvents="box-none"
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: spacing[5],
+        }}
+      >
+        <Animated.View
+          style={[
+            {
+              width: '100%',
+              maxWidth: 440,
+              borderRadius: radii.xl,
+              borderWidth: 2,
+              borderColor: '#F5C518',
+              backgroundColor: colors.surface,
+              padding: spacing[6],
+              alignItems: 'center',
+              gap: spacing[4],
+              opacity: cardOpacity,
+            },
+          ]}
+          testID="celebration-card"
         >
-          <Animated.View
-            style={[
-              {
-                width: '100%',
-                maxWidth: 440,
-                borderRadius: radii.xl,
-                borderWidth: 2,
-                borderColor: '#F5C518',
-                backgroundColor: colors.surface,
-                padding: spacing[6],
-                alignItems: 'center',
-                gap: spacing[4],
-                opacity: cardOpacity,
-              },
-            ]}
-            testID="celebration-card"
-          >
           {/* Confeti layer — absoluto detrás del trofeo. */}
           {enableConfetti ? (
             <View
@@ -373,10 +396,9 @@ export function CelebrationModal({
               testID="celebration-btn-close"
             />
           </View>
-          </Animated.View>
-        </View>
+        </Animated.View>
       </View>
-    </Modal>
+    </View>
   );
 }
 

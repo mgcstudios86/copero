@@ -105,39 +105,41 @@ export default function PlayoffScreen() {
     setCelebrationDismissed(true);
   }, []);
 
-  // MGC-629 iter4 — handler "Nueva temporada".
+  // MGC-629 iter5 — handler "Nueva temporada".
   //
-  // Race condition raíz confirmado por QA walk MGC-630 (SHA d3f18ef):
-  // el Modal de RN sobre Android monta un `DialogFragment` nativo.
-  // Mientras `visible=true`, ese fragment vive sobre la activity y el
-  // NavigationContainer de expo-router NO commitea un push/replace
-  // hasta que el DialogFragment esté dismissado (sincronización interna
-  // del bridge). Si llamamos `setShowCelebration(false)` en cualquier
-  // momento del batch del onPress (sync, microtask vía
-  // `InteractionManager.runAfterInteractions`, o macrotask vía
-  // `setTimeout(0)`), el dismiss del DialogFragment se ejecuta antes
-  // de que la transición del stack commitee, y expo-router aborta el
-  // push silenciosamente — resultado: modal cierra, navigation no
-  // commitea, usuario queda en playoff.
+  // Race condition raíz confirmado por QA walks MGC-630 / MGC-641 /
+  // MGC-642 (SHA 42928c7): el `<Modal>` nativo de RN sobre Android
+  // monta un `DialogFragment`. Mientras `visible=true`, ese fragment
+  // vive sobre la activity y el NavigationContainer de expo-router NO
+  // commitea un push/replace hasta que el DialogFragment esté
+  // dismissado (sincronización interna del bridge). iter1-iter4
+  // intentaron resolver esto desde el lado del handler:
+  //   iter1 (ab860c5): reorder push → setShow(false). FAIL — mismo
+  //     batch, el dismiss corre antes de que la transición commitee.
+  //   iter2 (f44b94e): diferir setShow(false) con InteractionManager.
+  //     FAIL — sin animaciones JS en flight, runAfterInteractions
+  //     dispara en el próximo microtask del press.
+  //   iter3 (d3f18ef): backdrop hermano + pointerEvents box-none.
+  //     PASS estructural, NO atacó la race.
+  //   iter4 (42928c7): NO flipar visible en handler. FAIL — Modal
+  //     se desmonta al unmount de playoff, pero el DialogFragment
+  //     dismiss igual aborta la transición antes del primer commit.
   //
-  // iter1 (ab860c5): reorder push → setShow(false). FAIL — mismo batch.
-  // iter2 (f44b94e): diferir setShow(false) con InteractionManager.
-  //   FAIL — sin animaciones JS en flight, runAfterInteractions dispara
-  //   en el próximo microtask que sigue corriendo en el mismo commit
-  //   del press que ya despachó el push.
-  // iter3 (d3f18ef): backdrop hermano + pointerEvents box-none. PASS
-  //   estructural, pero NO atacó la race de navigation.
-  // iter4 (esta fix): NO flipar visible=false en el handler. El Modal
-  //   se desmonta solo cuando playoff unmounts como parte del
-  //   navigation transition de expo-router (su `visible` queda en true
-  //   hasta el último commit del screen swap, momento en que el árbol
-  //   de playoff se destruye y con él el Modal — el DialogFragment
-  //   dismiss ocurre DENTRO de la transición del stack, no antes).
-  //   `celebrationDismissed=true` se setea sincrónicamente para que el
-  //   useEffect([champion, dismissed]) no reabra el modal si el bracket
-  //   sigue resuelto al volver. `router.replace` (no `push`) evita
-  //   acumular un back-stack con playoff tapado por el modal.
+  // iter5: eliminar el `<Modal>` nativo. El overlay pasa a ser un
+  // `<View position="absolute">` regular dentro del árbol de playoff,
+  // sin DialogFragment. Ahora `setShowCelebration(false)` y
+  // `router.replace(...)` son JS puros coordinados por React — no hay
+  // bridge race, y la transición de expo-router commitea normal.
+  //
+  // Orden en el handler:
+  //   1. setShowCelebration(false) → overlay se desmonta en el commit.
+  //   2. setCelebrationDismissed(true) → useEffect([champion, dismissed])
+  //      ya no reabre el modal si el bracket sigue resuelto al volver.
+  //   3. onCloseSeason() → router.replace al season-summary.
+  // `router.replace` (no `push`) evita acumular back-stack con playoff
+  // tapado por el overlay.
   const onCelebrationNewSeason = useCallback(() => {
+    setShowCelebration(false);
     setCelebrationDismissed(true);
     onCloseSeason();
   }, [onCloseSeason]);
