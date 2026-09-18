@@ -427,6 +427,42 @@ export type Copy = {
     confirmCancel: string;
     confirmDismiss: string;
   };
+  // MGC-497 — namespace `copa` para el Modo Copero (copa nacional).
+  // Cubre el banner de slot disponible, modal de inscripción, etiquetas de
+  // rondas (32/16/8/semis/final), fallback a 16 (gate #1 CTO) y modal de
+  // celebración del campeón. Locales requeridos: es, en, zh-CN, pt-BR.
+  copa: {
+    bannerEyebrow: string;
+    bannerTitle: string;
+    bannerBody: string;
+    bannerCta: string;
+    inscriptionTitle: string;
+    inscriptionBody: string;
+    inscriptionAccept: string;
+    inscriptionCancel: string;
+    bracketTitle: string;
+    bracketSubtitle: string;
+    /** Etiquetas de ronda. round32/round16/round8/semifinal/final. */
+    round32: string;
+    round16: string;
+    round8: string;
+    semifinal: string;
+    final: string;
+    /** Aviso de fallback a 16 equipos (gate #1 wording CTO). */
+    fallbackNoticeTitle: string;
+    fallbackNoticeBody: string;
+    /** Modal de celebración del campeón (Step 6 del flow). */
+    championTitle: string;
+    championBadge: string;
+    championContinue: string;
+    /** Modal de eliminación (Step 5 alternativa). */
+    eliminatedTitle: string;
+    eliminatedBody: string;
+    eliminatedContinue: string;
+    /** Slot state copy. */
+    slotEmpty: string;
+    slotActive: string;
+  };
   // MGC-487.1 — namespace `playoff`. Cubre el CTA del calendario
   // ("Ir a playoffs") que se muestra tras la fecha 34 (semanas
   // 35–37, antes del cierre de temporada en 38) y navega a
@@ -789,6 +825,33 @@ export const COPY: Record<Locale, Copy> = {
       confirmCancel: 'Cancelar',
       confirmDismiss: 'Cerrar el diálogo sin borrar',
     },
+    copa: {
+      bannerEyebrow: 'MODO COPERO',
+      bannerTitle: 'Copa nacional disponible',
+      bannerBody: 'Inscribí tu equipo y disputá la copa nacional con bracket determinista de {size} equipos.',
+      bannerCta: 'Iniciar Modo Copero',
+      inscriptionTitle: '¿Inscribir tu equipo en la copa?',
+      inscriptionBody: 'Se generará un bracket con {size} equipos usando una seed determinista. Tu posición en la siembra depende del ranking actual.',
+      inscriptionAccept: 'Inscribir equipo',
+      inscriptionCancel: 'Cancelar',
+      bracketTitle: 'Copa nacional',
+      bracketSubtitle: 'Ronda {round} de {total}',
+      round32: 'Ronda de 32',
+      round16: 'Octavos de final',
+      round8: 'Cuartos de final',
+      semifinal: 'Semifinal',
+      final: 'Final',
+      fallbackNoticeTitle: 'Copa con bracket reducido',
+      fallbackNoticeBody: 'Hay {teams} equipos inscritos. El bracket se ajusta automáticamente a la potencia de 2 más cercana con byes.',
+      championTitle: '¡Sos el campeón de la copa!',
+      championBadge: 'Campeón de la Copa N',
+      championContinue: 'Volver al inicio',
+      eliminatedTitle: 'Eliminado de la copa',
+      eliminatedBody: 'Tu equipo quedó fuera del bracket. El slot se libera y podés reinscribirte la próxima temporada.',
+      eliminatedContinue: 'Volver a la temporada',
+      slotEmpty: 'Sin copa activa',
+      slotActive: 'Copa activa · Ronda {round}',
+    },
     // MGC-487.1 — CTA de playoffs desde el calendario (es-AR).
     playoff: {
       ctaOpenBracket: 'Ir a playoffs',
@@ -1142,6 +1205,33 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: 'Yes, erase everything',
       confirmCancel: 'Cancel',
       confirmDismiss: 'Close dialog without erasing',
+    },
+    copa: {
+      bannerEyebrow: 'COPA MODE',
+      bannerTitle: 'National cup available',
+      bannerBody: 'Sign your team up and play the national cup with a deterministic bracket of {size} teams.',
+      bannerCta: 'Start Copa Mode',
+      inscriptionTitle: 'Enter your team in the cup?',
+      inscriptionBody: 'A bracket with {size} teams will be generated using a deterministic seed. Your seed position depends on the current ranking.',
+      inscriptionAccept: 'Enter team',
+      inscriptionCancel: 'Cancel',
+      bracketTitle: 'National cup',
+      bracketSubtitle: 'Round {round} of {total}',
+      round32: 'Round of 32',
+      round16: 'Round of 16',
+      round8: 'Quarterfinals',
+      semifinal: 'Semifinal',
+      final: 'Final',
+      fallbackNoticeTitle: 'Reduced bracket',
+      fallbackNoticeBody: 'Only {teams} teams signed up. The bracket auto-adjusts to the nearest power of 2 with byes.',
+      championTitle: 'You are the cup champion!',
+      championBadge: 'Cup N Champion',
+      championContinue: 'Back to home',
+      eliminatedTitle: 'Eliminated from the cup',
+      eliminatedBody: 'Your team is out of the bracket. The slot is freed and you can sign up again next season.',
+      eliminatedContinue: 'Back to season',
+      slotEmpty: 'No active cup',
+      slotActive: 'Cup active · Round {round}',
     },
     // MGC-487.1 — playoffs CTA from calendar.
     playoff: {
@@ -1497,6 +1587,33 @@ export const COPY: Record<Locale, Copy> = {
       confirmCancel: '取消',
       confirmDismiss: '关闭弹窗且不清除',
     },
+    copa: {
+      bannerEyebrow: '杯赛模式',
+      bannerTitle: '全国杯赛已开放',
+      bannerBody: '为你的球队报名参加由 {size} 支球队组成的全国杯赛，使用确定性抽签。',
+      bannerCta: '开启杯赛模式',
+      inscriptionTitle: '确认报名杯赛？',
+      inscriptionBody: '将通过确定性种子生成 {size} 支球队的淘汰赛对阵。种子顺位由当前排名决定。',
+      inscriptionAccept: '确认报名',
+      inscriptionCancel: '取消',
+      bracketTitle: '全国杯赛',
+      bracketSubtitle: '第 {round} 轮 / 共 {total} 轮',
+      round32: '32强',
+      round16: '16强',
+      round8: '8强',
+      semifinal: '半决赛',
+      final: '决赛',
+      fallbackNoticeTitle: '缩减赛制',
+      fallbackNoticeBody: '当前仅 {teams} 支球队报名。对阵表将自动调整为最近的 2 的幂次并附带轮空。',
+      championTitle: '恭喜夺冠！',
+      championBadge: '第 N 届杯赛冠军',
+      championContinue: '返回主页',
+      eliminatedTitle: '杯赛中出局',
+      eliminatedBody: '你的球队已离开杯赛。名额已释放，下个赛季可再次报名。',
+      eliminatedContinue: '返回赛季',
+      slotEmpty: '暂无进行中的杯赛',
+      slotActive: '杯赛进行中 · 第 {round} 轮',
+    },
     // MGC-487.1 — 季后赛入口（日历 CTA）。
     playoff: {
       ctaOpenBracket: '进入季后赛',
@@ -1848,6 +1965,33 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: 'Sim, apagar tudo',
       confirmCancel: 'Cancelar',
       confirmDismiss: 'Fechar o diálogo sem apagar',
+    },
+    copa: {
+      bannerEyebrow: 'MODO COPA',
+      bannerTitle: 'Copa nacional disponível',
+      bannerBody: 'Inscreva seu time e dispute a copa nacional com chaveamento determinístico de {size} times.',
+      bannerCta: 'Iniciar Modo Copa',
+      inscriptionTitle: 'Inscrever seu time na copa?',
+      inscriptionBody: 'Será gerada uma chave com {size} times usando uma seed determinística. Sua posição na siembra depende do ranking atual.',
+      inscriptionAccept: 'Inscrever time',
+      inscriptionCancel: 'Cancelar',
+      bracketTitle: 'Copa nacional',
+      bracketSubtitle: 'Rodada {round} de {total}',
+      round32: 'Fase de 32',
+      round16: 'Oitavas de final',
+      round8: 'Quartas de final',
+      semifinal: 'Semifinal',
+      final: 'Final',
+      fallbackNoticeTitle: 'Chaveamento reduzido',
+      fallbackNoticeBody: 'Há {teams} times inscritos. A chave ajusta-se automaticamente para a potência de 2 mais próxima com byes.',
+      championTitle: 'Você é o campeão da copa!',
+      championBadge: 'Campeão da Copa N',
+      championContinue: 'Voltar ao início',
+      eliminatedTitle: 'Eliminado da copa',
+      eliminatedBody: 'Seu time saiu da chave. A vaga é liberada e você pode se inscrever na próxima temporada.',
+      eliminatedContinue: 'Voltar à temporada',
+      slotEmpty: 'Sem copa ativa',
+      slotActive: 'Copa ativa · Rodada {round}',
     },
     // MGC-487.1 — CTA dos playoffs a partir do calendário.
     playoff: {
