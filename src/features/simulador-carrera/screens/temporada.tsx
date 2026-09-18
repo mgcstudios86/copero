@@ -32,6 +32,12 @@ export default function TemporadaScreen() {
 
   const profile = useCareerStore((s) => s.profile);
   const log = useCareerStore((s) => s.log);
+  // MGC-487.3 — vitrina temporada-a-temporada. Última entrada
+  // persistida al cierre de cada temporada vía `applySeasonRollover`
+  // (campeón + subcampeón + MVP). Se muestra en lugar del placeholder
+  // "VITRINA VACÍA" en cuanto hay al menos una temporada cerrada.
+  const history = useCareerStore((s) => s.history);
+  const lastTrophy = history && history.length > 0 ? history[history.length - 1] : null;
   const stage = useCareerStore((s) => s.stage);
   const advanceSeason = useCareerStore((s) => s.advanceSeason);
 // MGC-1802 P1-7 — retiro temprano (sin esperar RETIREMENT_AGE).
@@ -238,13 +244,58 @@ export default function TemporadaScreen() {
             </Text>
           </View>
 
-          {/* Vitrina placeholder */}
-          <View style={{ flexDirection: 'row', gap: spacing[2], alignItems: 'center' }}>
-            <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>🏆</Text>
-            <Text style={{ color: colors.textMuted, fontSize: fontSize.xs, letterSpacing: 2, fontWeight: fontWeight.bold }}>
-              VITRINA VACÍA
-            </Text>
-          </View>
+          {/* Vitrina — MGC-487.3: muestra la última temporada cerrada
+              (campeón / subcampeón / MVP) si hay historial. Si todavía
+              no se cerró ninguna temporada (saves legacy o carrera
+              recién empezada), mantiene el placeholder "VITRINA VACÍA"
+              para no mentirle al usuario. */}
+          {lastTrophy ? (
+            <View
+              testID="temporada-trophy-case"
+              accessibilityLabel={`Temporada ${lastTrophy.season}: campeón ${lastTrophy.champion.clubName}, subcampeón ${lastTrophy.runnerUp.clubName}, MVP ${lastTrophy.mvp.name} ${lastTrophy.mvp.lastName}`}
+              style={{
+                borderRadius: radii.md,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.surface2,
+                padding: spacing[3],
+                gap: spacing[1],
+              }}
+            >
+              <View style={{ flexDirection: 'row', gap: spacing[2], alignItems: 'center' }}>
+                <Text style={{ fontSize: fontSize.base }}>🏆</Text>
+                <Text
+                  style={{
+                    color: colors.textMuted,
+                    fontSize: 12,
+                    letterSpacing: 2,
+                    fontWeight: fontWeight.bold,
+                  }}
+                >
+                  VITRINA · TEMPORADA {lastTrophy.season}
+                </Text>
+              </View>
+              <Text style={{ color: colors.text, fontSize: fontSize.sm, fontWeight: fontWeight.bold }}>
+                Campeón: {lastTrophy.champion.clubName}
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
+                Subcampeón: {lastTrophy.runnerUp.clubName}
+              </Text>
+              <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>
+                MVP: {lastTrophy.mvp.name} {lastTrophy.mvp.lastName} · OVR {lastTrophy.mvp.ovr} · {lastTrophy.mvp.goals} G
+              </Text>
+            </View>
+          ) : (
+            <View
+              style={{ flexDirection: 'row', gap: spacing[2], alignItems: 'center' }}
+              testID="temporada-trophy-empty"
+            >
+              <Text style={{ color: colors.textMuted, fontSize: fontSize.xs }}>🏆</Text>
+              <Text style={{ color: colors.textMuted, fontSize: fontSize.xs, letterSpacing: 2, fontWeight: fontWeight.bold }}>
+                VITRINA VACÍA
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Estilo del jugador */}

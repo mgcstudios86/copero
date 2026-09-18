@@ -45,6 +45,12 @@ describe('MGC-282 · backend de persistencia', () => {
     // round-trip. Sin esto, `hydrateF3Fields` los materializa con
     // `null/NO_MODIFIERS/null` al cargar y la comparación `toEqual`
     // rompe (espera `undefined`).
+    //
+    // MGC-487.3 / MGC-643 — el mismo patrón aplica al nuevo `history[]`
+    // (vitrina temporada-a-temporada). `hydrateF3Fields` lo normaliza
+    // a `[]` cuando el save legacy lo trae `undefined`; el snapshot de
+    // round-trip debe llevar `history: []` explícito para que el
+    // `toEqual` no rebote contra la forma materializada.
     const snapshot = {
       ...blankCareerSave(),
       stage: 'draft' as const,
@@ -52,6 +58,7 @@ describe('MGC-282 · backend de persistencia', () => {
       postMatchPending: null,
       nextWeekModifiers: { ...NO_MODIFIERS },
       transferState: null,
+      history: [],
     };
     await saveCareerSave(snapshot);
     expect(await loadCareerSave()).toEqual(snapshot);

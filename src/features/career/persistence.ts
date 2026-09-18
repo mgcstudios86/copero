@@ -630,6 +630,11 @@ export function hydrateF3Fields(state: CareerSaveState): CareerSaveState {
     postMatchPending: state.postMatchPending ?? null,
     nextWeekModifiers: state.nextWeekModifiers ?? { ...NO_MODIFIERS },
     transferState: state.transferState ?? null,
+    // MGC-487.3 — vitrina temporada-a-temporada. Saves pre-MGC-487.3
+    // no la traen → default `[]` para que `hydrateFromSave` no
+    // rebote con `undefined`. El array vacío es válido: la UI muestra
+    // "VITRINA VACÍA" hasta que se cierre la primera temporada.
+    history: Array.isArray(state.history) ? state.history : [],
   };
 }
 
