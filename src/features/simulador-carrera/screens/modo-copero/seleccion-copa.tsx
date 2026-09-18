@@ -28,9 +28,10 @@ import type { Match } from '@/features/copero/bracket';
 
 const PLAYER_TEAM_ID = 'PLAYER';
 
-// 32 equipos sintéticos para el demo (top seeds + lower seeds).
+// 32 equipos para el demo: PLAYER como top seed (idx 0) para que el badge
+// '★ Tu club' siempre aparezca en el preview, per docs/handoffs/modo-copero.md §Pantalla 1.
 const TEAMS_32 = [
-  'RIV', 'BOC', 'IND', 'RAC', 'SLO', 'EST', 'VEL', 'LAN',
+  'PLAYER', 'BOC', 'IND', 'RAC', 'SLO', 'EST', 'VEL', 'LAN',
   'TIG', 'HUR', 'GOD', 'NEW', 'UNI', 'DEF', 'CEN', 'ARS',
   'BAN', 'TAL', 'COL', 'BAR', 'ALM', 'PAT', 'SAN', 'DYJ',
   'ATL', 'CAR', 'BEL', 'SAR', 'CHA', 'GIM', 'ALL', 'PLA',
