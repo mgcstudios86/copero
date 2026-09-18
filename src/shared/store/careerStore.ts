@@ -232,6 +232,11 @@ function snapshotToSave(s: CareerStore): CareerSaveState {
     card: s.card ?? null,
     clubId: s.profile.club ? s.profile.club.id : null,
     log: s.log ?? { timeline: [], events: [] },
+    // MGC-487.3 — vitrina temporada-a-temporada. Persiste junto al
+    // resto del snapshot para sobrevivir force-stop; el loader
+    // (`hydrateFromSave` + `loadCareerSave`) la aplica con default `[]`
+    // para saves legacy que no la traen.
+    history: s.history ?? [],
     seed: s.seed ?? 0,
     rng: s.rng ?? createRngSnapshot(s.seed ?? 0),
     // MGC-1730 (HIGH-2 fix sobre PR #425) — persistir los 3 campos F3.2
@@ -272,6 +277,9 @@ export function getSnapshot(): CareerSaveV2 {
     card: s.card ?? null,
     clubId: s.profile.club ? s.profile.club.id : null,
     log: s.log ?? { timeline: [], events: [] },
+    // MGC-487.3 — vitrina temporada-a-temporada. Mismo default que
+    // `snapshotToSave` (saves v:2 legacy traen `undefined` → `[]`).
+    history: s.history ?? [],
     seed: s.seed ?? 0,
     // MGC-1730 (HIGH-1 fix sobre PR #425) — exponer los 3 campos F3.2
     // también en `getSnapshot` para que tests E2E / telemetry vean el
@@ -827,6 +835,10 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         draft: saved.draft ?? null,
         card: saved.card ?? null,
         log: saved.log,
+        // MGC-487.3 — vitrina temporada-a-temporada. Saves legacy
+        // (pre-MGC-487.3) no la traen → default `[]` para que la UI
+        // muestre "VITRINA VACÍA" en vez de explotar.
+        history: saved.history ?? [],
         seed: saved.seed,
         rng: saved.rng,
         // MGC-1730 (HIGH-2 fix sobre PR #425) — copiar los 3 campos F3.2

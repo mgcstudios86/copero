@@ -554,12 +554,40 @@ export function applySeasonRollover(state: CareerSnapshot): CareerSnapshot {
     timeline: [...(state.log?.timeline ?? []), result.row],
     events: [...(state.log?.events ?? []), ...result.events, ...treeEvents],
   };
+  // MGC-487.3 — vitrina temporada-a-temporada. Persiste campeón +
+  // subcampeón + MVP al cierre para que la próxima `season-summary`
+  // (`temporada.tsx`) lo muestre y la entrada sobreviva un force-stop /
+  // reload. Determinismo: usamos un stream RNG con seed estable
+  // (`seed + 11`) para derivar el subcampeón a partir del id del club
+  // del jugador — si más adelante se conecta al leaderboard real
+  // (F3.3 / parent MGC-487 §Step 5) solo cambia esta función.
+  const historyRng = createRng(seed + 11);
+  const runnerUpId = `club_${(Math.abs(historyRng.int(0, 9999))).toString().padStart(4, '0')}`;
+  const playerClub = result.profile.club;
+  const champion = playerClub
+    ? { clubId: playerClub.id, clubName: playerClub.name }
+    : { clubId: 'unknown', clubName: 'Sin club' };
+  const historyEntry: import('@/types/career').SeasonHistoryEntry = {
+    season: result.profile.season,
+    champion,
+    runnerUp: { clubId: runnerUpId, clubName: `Rival ${runnerUpId.slice(-3)}` },
+    mvp: {
+      name: result.profile.name,
+      lastName: result.profile.lastName ?? '',
+      ovr: result.profile.ovr,
+      goals: result.profile.stats.goals,
+    },
+    closedAt: new Date().toISOString(),
+  };
+  const history = [...(state.history ?? []), historyEntry];
+
   const stage: CareerStage = isRetired(result.profile) ? 'retirement' : 'season';
   return {
     ...state,
     stage,
     profile: result.profile,
     log,
+    history,
     postMatchPending: null,
     socialEventPending: null,
     nextWeekModifiers: { ...NO_MODIFIERS },

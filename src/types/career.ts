@@ -301,6 +301,15 @@ export type CareerSnapshot = {
   card?: PlayerCard | null;
   /** Log temporada-a-temporada (MGC-208 §3 + §4). */
   log?: SeasonLog;
+  /**
+   * MGC-487.3 — historial de temporadas cerradas. Cada entry captura
+   * el campeón, subcampeón y MVP al cierre de la temporada vía
+   * `applySeasonRollover`. Se persiste en AsyncStorage y se hidrata
+   * sin migración (saves viejos lo traen `undefined` → array vacío).
+   * Visible en `temporada.tsx` ("Vitrina" reemplaza al placeholder
+   * "VITRINA VACÍA" en cuanto hay al menos una entrada).
+   */
+  history?: SeasonHistoryEntry[];
   /** Seed determinista para reproducibilidad (MGC-208 §5). */
   seed?: number;
   /** Cursor persistible del stream RNG; se completa al serializar. */
@@ -451,6 +460,22 @@ export type TimelineSeason = {
   assists: number;
 };
 
+/**
+ * MGC-487.3 — resumen canónico de una temporada cerrada. Se persiste
+ * al cierre de cada temporada vía `applySeasonRollover` y se muestra
+ * en `temporada.tsx` ("Vitrina"). `champion` y `runnerUp` son
+ * referencias a Club; `mvp` describe al jugador humano (es single-
+ * player, así que el MVP de la temporada del usuario es el propio
+ * jugador). `closedAt` es un ISO timestamp para debug + orden estable.
+ */
+export type SeasonHistoryEntry = {
+  season: number;
+  champion: { clubId: string; clubName: string };
+  runnerUp: { clubId: string; clubName: string };
+  mvp: { name: string; lastName: string; ovr: number; goals: number };
+  closedAt: string;
+};
+
 /** Eventos que el loop anual puede disparar (MGC-208 §3). */
 export type CareerEventKind =
   | 'match'
@@ -489,6 +514,13 @@ export type CareerSaveState = {
   seed: number;
   /** Cursor determinista; v1 legacy puede no incluirlo. */
   rng?: RngSnapshot;
+  /**
+   * MGC-487.3 — historial de temporadas cerradas (campeón + subcampeón
+   * + MVP). Opcional con default `[]`: saves pre-MGC-487.3 no lo traen y
+   * se hidratan con array vacío sin bump de versión (mismo patrón que
+   * `postMatchPending`).
+   */
+  history?: SeasonHistoryEntry[];
   /**
    * F3.2 / ADR-0017 §6 — campos nuevos, **opcionales con default**. Un
    * save de F2.x que no los traiga se hidrata con `null` /

@@ -128,4 +128,56 @@ describe('MGC-491 engine rollover edge case', () => {
     expect(after.profile.stats).toEqual(before.profile.stats);
     expect(after.log?.timeline.length).toBe(before.log?.timeline.length ?? 0);
   });
+
+  // MGC-487.3 — vitrina temporada-a-temporada. AC:
+  //   1. `applySeasonRollover` agrega una `SeasonHistoryEntry` por
+  //      temporada cerrada (campeón = club del jugador, MVP = el
+  //      propio jugador, subcampeón determinista).
+  //   2. La entrada aparece en `state.history` con la misma `season`
+  //      que `result.profile.season` después del rollover.
+  //   3. N rollovers → N entries, todas con `season` estrictamente
+  //      creciente y `closedAt` ISO válido.
+  it('MGC-487.3 — rollover persiste history[] con campeón + subcampeón + MVP', () => {
+    const s0 = setupWithClub('Vitrina');
+    const afterFirst = applySeasonRollover(s0);
+    expect(Array.isArray(afterFirst.history)).toBe(true);
+    expect(afterFirst.history?.length).toBe(1);
+    const entry = afterFirst.history![0];
+    expect(entry.season).toBe(afterFirst.profile.season);
+    expect(entry.champion.clubId).toBe(s0.profile.club!.id);
+    expect(entry.champion.clubName).toBe(s0.profile.club!.name);
+    expect(entry.runnerUp.clubId).not.toBe(entry.champion.clubId);
+    expect(entry.mvp.name).toBe('Vitrina');
+    expect(typeof entry.closedAt).toBe('string');
+    // ISO 8601 parseable.
+    expect(Number.isFinite(Date.parse(entry.closedAt))).toBe(true);
+  });
+
+  it('MGC-487.3 — múltiples rollovers acumulan history[] sin pisar', () => {
+    let s = setupWithClub('Acum');
+    s = applySeasonRollover(s);
+    const firstSeason = s.profile.season;
+    s = applySeasonRollover(s);
+    s = applySeasonRollover(s);
+    expect(s.history?.length).toBe(3);
+    // seasons crecientes y todas distintas.
+    const seasons = s.history!.map((h) => h.season);
+    expect(new Set(seasons).size).toBe(3);
+    expect(seasons[0]).toBe(firstSeason);
+    expect(seasons[2]).toBe(firstSeason + 2);
+    // cada entry referencia al club del jugador al momento del cierre
+    // (en este test el club no cambia entre rollovers).
+    s.history!.forEach((h) => {
+      expect(h.champion.clubId).toBe(s.profile.club!.id);
+    });
+  });
+
+  it('MGC-487.3 — rollover sobre state sin history[] no rompe (default [])', () => {
+    const s0 = setupWithClub('Legacy');
+    // Simulamos un save pre-MGC-487.3 (history undefined).
+    const sNoHistory: typeof s0 = { ...s0, history: undefined };
+    const after = applySeasonRollover(sNoHistory);
+    expect(Array.isArray(after.history)).toBe(true);
+    expect(after.history?.length).toBe(1);
+  });
 });
