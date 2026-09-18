@@ -113,7 +113,13 @@ describe('MGC-1736 WF6 — fin-carrera no-mutación AC', () => {
     //    fire-and-forget legacy que viola el AC).
     expect(src).not.toMatch(/useCareerStore\([^)]*\)\s*=>\s*s\.reset\b/);
     // 3) `onRestart` debe ser async y awaitar resetAll antes de navegar.
-    expect(src).toMatch(/onRestart\s*=\s*async\s*\(\s*\)\s*=>\s*\{[^}]*await\s+resetAll/s);
+    //    Antes `[^}]*` rompía cuando el cuerpo contenía un object literal
+    //    (p.ej. `trackGameEvent('career_restarted', { previousSeason: ... })`)
+    //    porque el `}` interno del objeto cierra el match antes de llegar a
+    //    `await resetAll`. Usar `[\s\S]*?` (non-greedy any char) refleja
+    //    la intención real: "onRestart awaits resetAll" sin importar qué
+    //    otro código haya en el cuerpo.
+    expect(src).toMatch(/onRestart\s*=\s*async\s*\(\s*\)\s*=>\s*\{[\s\S]*?await\s+resetAll/);
   });
 
   it('MGC-481 — modal implementa 3 pasos visuales (confirm → spinner → nav) — gate estático PR #655 spec', async () => {
