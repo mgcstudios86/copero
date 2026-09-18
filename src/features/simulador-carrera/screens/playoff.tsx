@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  InteractionManager,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -97,7 +96,7 @@ export default function PlayoffScreen() {
   }, [seed]);
 
   const onCloseSeason = useCallback(() => {
-    router.push('/simulador-carrera/season-summary');
+    router.replace('/simulador-carrera/season-summary');
   }, [router]);
 
   // MGC-601 — handlers del modal.
@@ -106,22 +105,41 @@ export default function PlayoffScreen() {
     setCelebrationDismissed(true);
   }, []);
 
-  // MGC-614 — handler "Nueva temporada".
-  // Race condition confirmado en MGC-620: aún reordenando
-  // (router.push → setShowCelebration(false)), el teardown del Modal
-  // nativo se ejecuta en el mismo batch que el push y cancela la
-  // transición antes de que el stack swap commitee → vuelve a playoff.
-  // Fix: diferir el teardown con InteractionManager.runAfterInteractions
-  // para que espere a que la animación/commits de la navegación
-  // terminen antes de desmontar el Modal. celebrationDismissed=true se
-  // setea sincrónicamente para que el useEffect([champion, dismissed])
-  // no reabra el modal mid-transition.
+  // MGC-629 iter4 — handler "Nueva temporada".
+  //
+  // Race condition raíz confirmado por QA walk MGC-630 (SHA d3f18ef):
+  // el Modal de RN sobre Android monta un `DialogFragment` nativo.
+  // Mientras `visible=true`, ese fragment vive sobre la activity y el
+  // NavigationContainer de expo-router NO commitea un push/replace
+  // hasta que el DialogFragment esté dismissado (sincronización interna
+  // del bridge). Si llamamos `setShowCelebration(false)` en cualquier
+  // momento del batch del onPress (sync, microtask vía
+  // `InteractionManager.runAfterInteractions`, o macrotask vía
+  // `setTimeout(0)`), el dismiss del DialogFragment se ejecuta antes
+  // de que la transición del stack commitee, y expo-router aborta el
+  // push silenciosamente — resultado: modal cierra, navigation no
+  // commitea, usuario queda en playoff.
+  //
+  // iter1 (ab860c5): reorder push → setShow(false). FAIL — mismo batch.
+  // iter2 (f44b94e): diferir setShow(false) con InteractionManager.
+  //   FAIL — sin animaciones JS en flight, runAfterInteractions dispara
+  //   en el próximo microtask que sigue corriendo en el mismo commit
+  //   del press que ya despachó el push.
+  // iter3 (d3f18ef): backdrop hermano + pointerEvents box-none. PASS
+  //   estructural, pero NO atacó la race de navigation.
+  // iter4 (esta fix): NO flipar visible=false en el handler. El Modal
+  //   se desmonta solo cuando playoff unmounts como parte del
+  //   navigation transition de expo-router (su `visible` queda en true
+  //   hasta el último commit del screen swap, momento en que el árbol
+  //   de playoff se destruye y con él el Modal — el DialogFragment
+  //   dismiss ocurre DENTRO de la transición del stack, no antes).
+  //   `celebrationDismissed=true` se setea sincrónicamente para que el
+  //   useEffect([champion, dismissed]) no reabra el modal si el bracket
+  //   sigue resuelto al volver. `router.replace` (no `push`) evita
+  //   acumular un back-stack con playoff tapado por el modal.
   const onCelebrationNewSeason = useCallback(() => {
     setCelebrationDismissed(true);
     onCloseSeason();
-    InteractionManager.runAfterInteractions(() => {
-      setShowCelebration(false);
-    });
   }, [onCloseSeason]);
 
   const onBack = useCallback(() => {

@@ -181,29 +181,37 @@ describe('playoff.tsx — wiring del modal (MGC-601)', () => {
 });
 
 /**
- * MGC-614 — fix de navegación de "Nueva temporada" en CelebrationModal.
+ * MGC-614 / MGC-629 — fix de navegación de "Nueva temporada" en
+ * CelebrationModal.
  *
- * Bug: setShowCelebration(false) ANTES de router.push(...) desmonta el
- * Modal nativo de react-native en vuelo y descarta el push. Resultado:
- * el botón vuelve a playoff en lugar de ir a season-summary.
+ * Bug raíz confirmado por QA walk MGC-630 (SHA d3f18ef): el Modal
+ * de RN sobre Android monta un DialogFragment nativo que retiene la
+ * transición del stack hasta que se dismisse. Cualquier
+ * `setShowCelebration(false)` en el batch del onPress (sync,
+ * microtask vía InteractionManager, o macrotask vía setTimeout)
+ * dismissa el DialogFragment ANTES que el router.push commitee el
+ * stack swap, y expo-router aborta la navegación silenciosamente.
  *
- * Iteración 1 (PR-32 / ab860c5) — sólo reordenó las llamadas
- * (dismissed → navigate → hide modal). QA confirmó MGC-620 que el
- * reorder no fue suficiente: el teardown nativo del Modal y el
- * router.push() viven en el mismo batch de React y el push se sigue
- * cancelando antes del stack swap.
- *
- * Solución aplicada (iteración 2, opción 2 del análisis MGC-614):
- * Diferir el setShowCelebration(false) con
- * InteractionManager.runAfterInteractions para que el teardown del
- * Modal espere a que la animación/commits de la navegación terminen.
- * celebrationDismissed=true se setea sincrónicamente para que el
- * useEffect([champion, dismissed]) no reabra el modal mid-transition.
+ * Iteraciones:
+ *   - iter1 (ab860c5): reorder push → setShow(false). FAIL — mismo batch.
+ *   - iter2 (f44b94e): diferir setShow(false) con InteractionManager.
+ *     FAIL — sin animaciones JS en flight, runAfterInteractions
+ *     dispara en el próximo microtask que sigue corriendo en el
+ *     mismo commit del press que ya despachó el push.
+ *   - iter3 (d3f18ef): backdrop hermano + pointerEvents box-none.
+ *     PASS estructural, pero NO atacó la race de navigation.
+ *   - iter4 (esta fix): NO flipar visible=false en el handler. El
+ *     Modal se desmonta solo cuando playoff unmounts como parte
+ *     del navigation transition de expo-router. `router.replace` (no
+ *     `push`) evita acumular un back-stack con playoff tapado por
+ *     el modal. `celebrationDismissed=true` se setea sincrónicamente
+ *     para que el useEffect([champion, dismissed]) no reabra el modal
+ *     si el bracket sigue resuelto al volver.
  *
  * Patrón de test: estructural (lee el source y verifica la forma del
  * handler). Evita mockear expo-router / Animated native.
  */
-describe('playoff.tsx — fix navegación Nueva temporada (MGC-614)', () => {
+describe('playoff.tsx — fix navegación Nueva temporada (MGC-614 / MGC-629 iter4)', () => {
   const src = readFileSync(
     resolve(__dirname, 'playoff.tsx'),
     'utf8',
@@ -220,79 +228,69 @@ describe('playoff.tsx — fix navegación Nueva temporada (MGC-614)', () => {
     return src.slice(arrowIdx, closeIdx);
   }
 
-  it('importa InteractionManager de react-native', () => {
-    // Necesario para el fix de race condition en MGC-614 (iter 2).
-    expect(src).toMatch(
+  it('NO importa InteractionManager (iter4 — Modal unmounts con playoff)', () => {
+    // iter4 abandona el diferido InteractionManager (que disparaba en
+    // el mismo commit que el push). El Modal se desmonta con playoff
+    // durante el screen swap, no antes. Si InteractionManager vuelve
+    // a aparecer es regresión.
+    expect(src).not.toMatch(
       /import\s*\{[^}]*InteractionManager[^}]*\}\s*from\s*'react-native'/,
     );
-  });
-
-  it('reordena handler: navega antes de desmontar el modal', () => {
     const body = extractHandlerBody();
-    const idxDismissed = body.indexOf('setCelebrationDismissed(true)');
-    const idxCloseSeason = body.indexOf('onCloseSeason()');
-    const idxDeferredHide = body.indexOf('InteractionManager.runAfterInteractions');
-
-    // Sanity: las tres piezas están presentes.
-    expect(idxDismissed).toBeGreaterThan(-1);
-    expect(idxCloseSeason).toBeGreaterThan(-1);
-    expect(idxDeferredHide).toBeGreaterThan(-1);
-
-    // El orden es crítico: dismissed → navigate → defer hide modal.
-    expect(idxDismissed).toBeLessThan(idxCloseSeason);
-    expect(idxCloseSeason).toBeLessThan(idxDeferredHide);
+    expect(body).not.toContain('InteractionManager.runAfterInteractions');
+    expect(body).not.toContain('InteractionManager');
   });
 
-  it('difiere setShowCelebration(false) con InteractionManager.runAfterInteractions', () => {
-    // El teardown NO debe ocurrir sincrónicamente: se difiere hasta
-    // que las animaciones/interacciones pendientes terminen, para no
-    // cancelar el router.push en vuelo (MGC-620 evidence).
+  it('handler NO llama setShowCelebration(false) — Modal unmounts con playoff', () => {
+    // Cualquier setShowCelebration(false) en el batch del press
+    // dismissea el DialogFragment y cancela el push. iter4 lo omite
+    // por completo en este handler.
     const body = extractHandlerBody();
-    expect(body).toMatch(
-      /InteractionManager\.runAfterInteractions\(\s*\(\)\s*=>\s*\{[\s\S]*?setShowCelebration\(false\)[\s\S]*?\}\s*\)/,
-    );
+    expect(body).not.toContain('setShowCelebration(false)');
+    expect(body).not.toContain('setShowCelebration(');
   });
 
-  it('mantiene celebrationDismissed=true antes de la navegación', () => {
+  it('handler setea celebrationDismissed=true ANTES de navegar', () => {
     // Sin esto, el useEffect([champion, celebrationDismissed]) puede
-    // re-disparar setShowCelebration(true) mientras el push está en
+    // re-disparar setShowCelebration(true) mientras el replace está en
     // vuelo y reabrir el modal sobre la pantalla nueva.
     const body = extractHandlerBody();
     const idxDismissed = body.indexOf('setCelebrationDismissed(true)');
     const idxCloseSeason = body.indexOf('onCloseSeason()');
+    expect(idxDismissed).toBeGreaterThan(-1);
+    expect(idxCloseSeason).toBeGreaterThan(-1);
     expect(idxDismissed).toBeLessThan(idxCloseSeason);
   });
 
-  it('onCloseSeason ejecuta router.push al season-summary', () => {
-    // El handler llama a onCloseSeason (que internamente hace
-    // router.push('/simulador-carrera/season-summary')). Verificamos
-    // que onCloseSeason sigue siendo la fuente de la navegación.
+  it('handler llama onCloseSeason() después de setear dismissed', () => {
     const body = extractHandlerBody();
     expect(body).toContain('onCloseSeason()');
   });
 
-  it('onCloseSeason navega a /simulador-carrera/season-summary (mockeable)', () => {
-    // El handler onCloseSeason es la pieza mockeable: en un test de
-    // integración se reemplaza por un jest.fn() y se verifica que el
-    // botón "Nueva temporada" lo invoca. Este test estructural sólo
-    // asegura que el path es el correcto.
+  it('onCloseSeason usa router.replace (no push) para swap atómico', () => {
+    // router.replace evita acumular un back-stack con playoff tapado
+    // por el modal, y la transición es más atómica que push sobre
+    // un stack con un DialogFragment encima.
     const closeSeasonMatch = src.match(
       /const onCloseSeason\s*=\s*useCallback\(\s*\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[router\]\s*\)/,
     );
     expect(closeSeasonMatch).not.toBeNull();
     expect(closeSeasonMatch![1]).toContain(
-      "router.push('/simulador-carrera/season-summary')",
+      "router.replace('/simulador-carrera/season-summary')",
     );
+    // No debe seguir navegando con router.push — sería regresión a iter1.
+    expect(closeSeasonMatch![1]).not.toContain('router.push');
   });
 
   it('onCelebrationClose NO navega — sólo dismissa el modal', () => {
     // El handler de backdrop/Cerrar debe seguir sin navegar para
-    // preservar el workaround documentado en MGC-614.
+    // preservar el contrato original (cancelar sin avanzar).
     const closeMatch = src.match(
       /const onCelebrationClose\s*=\s*useCallback\(\s*\(\)\s*=>\s*\{([\s\S]*?)\},\s*\[\]\s*\)/,
     );
     expect(closeMatch).not.toBeNull();
     expect(closeMatch![1]).not.toContain('router.push');
+    expect(closeMatch![1]).not.toContain('router.replace');
     expect(closeMatch![1]).not.toContain('onCloseSeason');
     expect(closeMatch![1]).toContain('setShowCelebration(false)');
     expect(closeMatch![1]).toContain('setCelebrationDismissed(true)');
