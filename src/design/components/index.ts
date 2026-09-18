@@ -40,4 +40,7 @@ export { Spinner } from './Spinner';
 export type { SpinnerSize } from './Spinner';
 export { EmptyState } from './EmptyState';
 export type { EmptyStateVariant } from './EmptyState';
+// MGC-491 — selector de idioma (LanguagePicker consume LanguageFlag).
+export { LanguageFlag } from './LanguageFlag';
+export { LanguagePicker } from './LanguagePicker';
 

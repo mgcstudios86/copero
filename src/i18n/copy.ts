@@ -84,6 +84,21 @@ export type Copy = {
     feedbackSubject: string;
     close: string;
   };
+  // MGC-491 + MGC-555 — namespace `onboarding.*` consumido por
+  // `app/onboarding/language.tsx`. Antes del PR, las keys
+  // `onboarding.languageTitle`, `onboarding.languageSubtitle`,
+  // `onboarding.autoDetectTitle` y `onboarding.autoDetectBody` se
+  // resolvían con `t(...) || 'fallback'` (español hardcoded) — el copy
+  // nunca quedaba persistido en `en` / `zh-CN` / `pt-BR`. El gate
+  // first-launch en `app/_layout*.tsx` redirige al usuario a esta
+  // pantalla antes de la home, por lo que las claves tienen que existir
+  // en los 4 locales soportados (`SUPPORTED_LOCALES`).
+  onboarding: {
+    languageTitle: string;
+    languageSubtitle: string;
+    autoDetectTitle: string;
+    autoDetectBody: string;
+  };
   // MGC-1534 — strings del form `identity`. El screen debe re-renderizar
   // al cambiar locale (subscribe via `useLocale`) y resolver cada etiqueta
   // visible vía `t()` para que el tap en EN/中文 deje TODAS las strings en
@@ -459,6 +474,15 @@ export const COPY: Record<Locale, Copy> = {
       feedbackSubject: 'Feedback Copero',
       close: 'Cerrar',
     },
+    // MGC-491 + MGC-555 — selector de idioma (es default).
+    onboarding: {
+      languageTitle: 'Elegí tu idioma',
+      languageSubtitle:
+        'Tu idioma define los textos y el formato regional (fechas, números, moneda). Podés cambiarlo cuando quieras desde Ajustes.',
+      autoDetectTitle: 'Detectamos tu ubicación',
+      autoDetectBody:
+        'Si tu dispositivo está en otro idioma, podés mantener el actual o cambiar manualmente abajo.',
+    },
     identity: {
       eyebrow: 'COPERO · NUEVA CARRERA',
       title: 'Creá tu jugador',
@@ -799,6 +823,15 @@ export const COPY: Record<Locale, Copy> = {
       feedbackSubject: 'Copero feedback',
       close: 'Close',
     },
+    // MGC-491 + MGC-555 — selector de idioma (en).
+    onboarding: {
+      languageTitle: 'Choose your language',
+      languageSubtitle:
+        'Your language defines the in-app text and regional format (dates, numbers, currency). You can change it anytime from Settings.',
+      autoDetectTitle: 'We detected your location',
+      autoDetectBody:
+        'If your device is set to another language, you can keep it or switch manually below.',
+    },
     identity: {
       eyebrow: 'COPERO · NEW CAREER',
       title: 'Create your player',
@@ -1138,6 +1171,15 @@ export const COPY: Record<Locale, Copy> = {
       feedback: '反馈',
       feedbackSubject: 'Copero 反馈',
       close: '关闭',
+    },
+    // MGC-491 + MGC-555 — selector de idioma (zh-CN).
+    onboarding: {
+      languageTitle: '选择你的语言',
+      languageSubtitle:
+        '你的语言决定了应用内文本和区域格式（日期、数字、货币）。你可以随时在设置中更改。',
+      autoDetectTitle: '我们检测到你的所在地区',
+      autoDetectBody:
+        '如果你的设备设置为其他语言，你可以保留当前语言或在下方手动切换。',
     },
     identity: {
       eyebrow: 'COPERO · 新建生涯',
@@ -1482,6 +1524,15 @@ export const COPY: Record<Locale, Copy> = {
       feedback: 'Enviar feedback',
       feedbackSubject: 'Feedback Copero',
       close: 'Fechar',
+    },
+    // MGC-491 + MGC-555 — selector de idioma (pt-BR).
+    onboarding: {
+      languageTitle: 'Escolha seu idioma',
+      languageSubtitle:
+        'Seu idioma define os textos do app e o formato regional (datas, números, moeda). Você pode mudar quando quiser em Configurações.',
+      autoDetectTitle: 'Detectamos sua localização',
+      autoDetectBody:
+        'Se seu dispositivo está em outro idioma, você pode manter o atual ou trocar manualmente abaixo.',
     },
     identity: {
       eyebrow: 'COPERO · NOVA CARREIRA',

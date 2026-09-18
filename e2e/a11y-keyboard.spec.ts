@@ -25,6 +25,13 @@ test.describe('Copero — keyboard-only happy path (web) — MGC-505', () => {
   test('teclado puro navega home → identity → dashboard sin mouse', async ({ page }, testInfo) => {
     test.setTimeout(90_000);
 
+    // MGC-587 / PR-670: gate first-launch en app/_layout.*.tsx redirige a
+    // /onboarding/language cuando loadOnboardedFlag()=false. Mockeamos la
+    // flag para que el spec salte el redirect (mismo patrón que home.spec.ts:127).
+    await page.addInitScript(() => {
+      window.localStorage.setItem('copero:locale:onboarded', '1');
+    });
+
     // 1) LANDING — MGC-2254: goto directo (home ya no es dispatcher
     // tras MGC-1397 / PR #340).
     await page.goto('/simulador-carrera/identity', { waitUntil: 'domcontentloaded' });

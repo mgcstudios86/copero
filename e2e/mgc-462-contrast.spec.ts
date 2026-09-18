@@ -30,6 +30,12 @@ test.beforeEach(async ({ context }) => {
     }
     return route.continue();
   });
+  // MGC-587 / PR-670: gate first-launch en app/_layout.*.tsx redirige a
+  // /onboarding/language cuando loadOnboardedFlag()=false. Mockeamos la
+  // flag para que el spec axe contrast sobre /identity salten el redirect.
+  await context.addInitScript(() => {
+    window.localStorage.setItem('copero:locale:onboarded', '1');
+  });
 });
 
 type Group = {

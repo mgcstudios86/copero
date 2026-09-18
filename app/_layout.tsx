@@ -1,8 +1,8 @@
-import { Stack } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
 import {
   Inter_400Regular,
@@ -20,6 +20,7 @@ import { Banner } from '@/features/ads';
 import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
+import { loadOnboardedFlag } from '@/i18n/onboarding-flag';
 // MGC-363 — el listener de `AppState` se mudó a `careerStore.ts`.
 // `bootstrapPersistence()` se llama una vez al montar el root layout
 // y registra el listener a nivel módulo + sincroniza `lastSnapshot`
@@ -86,6 +87,33 @@ function ThemedShell() {
     return () => sub.remove();
   }, []);
 
+  // MGC-491 + MGC-555 — gate de primer launch (idioma). 3 ramas explícitas:
+  //   hydrating → splash neutro (sin Stack, sin SiteHeader)
+  //   hydrated && !onboarded → redirect a /onboarding/language
+  //   hydrated && onboarded → main con SiteHeader + Stack normal
+  // Antes del PR el root layout solo esperaba la hidratación del career
+  // store y `loadOnboardedFlag()` NUNCA se leía — un usuario nuevo caía
+  // directo en la home con `colors.bg` negro y sin SiteHeader de chrome
+  // (el branch `!onboarded ⇒ onboarding/language` no existía). El screen
+  // `/onboarding/language` quedaba inaccesible desde el primer launch.
+  // El flag se flippea a `ready` en éxito, vacío (false) y error
+  // (best-effort: nunca dejamos la UI bloqueada en splash).
+  const [onboardedState, setOnboardedState] = useState<
+    'hydrating' | 'needs-onboarding' | 'ready'
+  >('hydrating');
+  useEffect(() => {
+    void loadOnboardedFlag()
+      .then((onboarded) => {
+        setOnboardedState(onboarded ? 'ready' : 'needs-onboarding');
+      })
+      .catch(() => {
+        // best-effort: si AsyncStorage falla, dejamos pasar a main para
+        // no bloquear la UI forever. El usuario verá el LanguageSwitcher
+        // en el SiteHeader y podrá cambiar el locale manualmente.
+        setOnboardedState('ready');
+      });
+  }, []);
+
   // MGC-556 — copia el `colors.bg` al `<body>` y `<html>` en web para que
   // `getComputedStyle(document.body).backgroundColor` matchee `palette.copero.bg`
   // (#09090B). RN-Web renderiza el theme en un `<div>` interno; el `<body>`
@@ -102,14 +130,16 @@ function ThemedShell() {
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <StatusBar style={mode === 'dark' || mode === 'copero' ? 'light' : 'dark'} />
       {/*
-        MGC-306 AC4 — gate hydrated. Hasta que `hydrateFromSave()`
-        resuelva (flag `hydrated === true`) mostramos un splash neutro
-        con el `colors.bg` y sin header/stack. Evita el flash de form
-        identidad vacío que QA reprodujo tras `am force-stop` + relaunch.
-        Cuando llega el save (o se confirma vacío), pintamos el header
-        + stack y la home renderiza con el `stage`/`profile` correctos.
+        MGC-491 + MGC-555 — gate first-launch en 3 ramas:
+        1. hydrating (career store o flag onboarded pendiente) →
+           splash neutro con `colors.bg` y ActivityIndicator.
+        2. !hydrated es el flash histórico que QA reprodujo tras
+           `am force-stop` + relaunch con `careerStage='identity'`
+           durante 50–200 ms (MGC-306 AC4).
+        3. hydrated && !onboarded → redirect a /onboarding/language.
+        4. hydrated && onboarded → main con SiteHeader + Stack.
       */}
-      {!hydrated ? (
+      {!hydrated || onboardedState === 'hydrating' ? (
         <View
           style={[styles.root, styles.hydrationGate, { backgroundColor: colors.bg }]}
           testID="career-hydrate-gate"
@@ -117,6 +147,12 @@ function ThemedShell() {
         >
           <ActivityIndicator color={colors.primary} />
         </View>
+      ) : onboardedState === 'needs-onboarding' ? (
+        // MGC-491 — primer launch: el usuario todavía no pasó por el
+        // selector de idioma. Lo mandamos a `/onboarding/language`,
+        // que monta un Stack mínimo sin SiteHeader y llama
+        // `markOnboarded()` al confirmar.
+        <Redirect href="/onboarding/language" />
       ) : (
         <>
       {/* MGC-653 — SiteHeader global con 7 nav links + LanguageSwitcher +

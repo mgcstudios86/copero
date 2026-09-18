@@ -20,6 +20,13 @@ test.describe('Copero — visual regression MGC-505 / MGC-1188', () => {
     test.setTimeout(90_000);
     mkdirSync('/tmp/mgc373', { recursive: true });
 
+    // MGC-587 / PR-670: el gate first-launch en app/_layout.*.tsx
+    // redirige a /onboarding/language cuando loadOnboardedFlag()=false.
+    // Los specs no-onboarding asumen / → identity; mockeamos la flag para
+    // saltar el redirect (mismo patrón que e2e/home.spec.ts:127).
+    await page.addInitScript(() => {
+      window.localStorage.setItem('copero:locale:onboarded', '1');
+    });
     // MGC-2254: goto directo a identity (home dejo de ser dispatcher
     // tras MGC-1397 / PR #340 — ahora splash visible con CTA Jugar).
     await page.goto('/simulador-carrera/identity', { waitUntil: 'load' });

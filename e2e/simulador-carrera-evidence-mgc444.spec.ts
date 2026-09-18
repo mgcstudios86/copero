@@ -33,6 +33,12 @@ test.beforeEach(async ({ context }) => {
   // page.once() del test #3 (ambos consumen el mismo Alert del clubStart, el
   // segundo lanza "Cannot accept dialog which is already handled"). Cada test
   // que dispara Alert registra su propio handler antes del click.
+  // MGC-587 / PR-670: gate first-launch en app/_layout.*.tsx redirige a
+  // /onboarding/language cuando loadOnboardedFlag()=false. Mockeamos la
+  // flag en beforeEach para que los specs salten el redirect.
+  await context.addInitScript(() => {
+    window.localStorage.setItem('copero:locale:onboarded', '1');
+  });
 });
 
 async function completeIdentity(page: any, name: string) {

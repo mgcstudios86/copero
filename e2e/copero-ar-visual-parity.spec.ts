@@ -65,6 +65,14 @@ test.beforeEach(async ({ context }) => {
     }
     return route.continue();
   });
+  // MGC-587 / PR-670: el gate first-launch en app/_layout redirige a
+  // /onboarding/language cuando loadOnboardedFlag()=false (CI limpio).
+  // Los specs NO-onboarding deben mockear el flag para que `/` resuelva
+  // al arquetipo real (home, juegos, etc.). Patrón canónico
+  // `e2e/home.spec.ts:127`. Ver src/i18n/onboarding-flag.ts:22.
+  await context.addInitScript(() => {
+    window.localStorage.setItem('copero:locale:onboarded', '1');
+  });
 });
 
 async function captureRoute(

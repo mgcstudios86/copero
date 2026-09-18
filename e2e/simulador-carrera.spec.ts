@@ -40,6 +40,13 @@ test.beforeEach(async ({ context }) => {
     }
     return route.continue();
   });
+  // MGC-587 / PR-670: gate first-launch en app/_layout.*.tsx redirige a
+  // /onboarding/language cuando loadOnboardedFlag()=false. Mockeamos la
+  // flag para que los specs no-onboarding salten el redirect (mismo patrón
+  // que e2e/home.spec.ts:127).
+  await context.addInitScript(() => {
+    window.localStorage.setItem('copero:locale:onboarded', '1');
+  });
 });
 
 const BASE = process.env.EXPO_WEB_BASE_URL ?? 'http://127.0.0.1:8081';

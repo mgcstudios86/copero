@@ -46,6 +46,16 @@ async function scanRoute(page: any, label: string) {
 }
 
 test.describe('Copero — axe-core scan (web)', () => {
+  // MGC-587 / PR-670: el gate first-launch en app/_layout.*.tsx
+  // redirige a /onboarding/language cuando loadOnboardedFlag()=false.
+  // Mockeamos la flag en beforeEach para que los specs no-onboarding
+  // (axe sobre identity) salten el redirect.
+  test.beforeEach(async ({ context }) => {
+    await context.addInitScript(() => {
+      window.localStorage.setItem('copero:locale:onboarded', '1');
+    });
+  });
+
   test('axe /: 0 critical/serious (landing tras dispatcher = identity)', async ({
     page,
   }, testInfo) => {

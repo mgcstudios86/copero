@@ -1,13 +1,14 @@
-import { Stack } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFonts, FontDisplay } from 'expo-font';
 import { Banner } from '@/features/ads';
 import { ThemeProvider, useTheme } from '@/design';
 import { SiteHeader } from '@/design/components/SiteHeader';
 import { LocaleProvider } from '@/i18n/locale-context';
+import { loadOnboardedFlag } from '@/i18n/onboarding-flag';
 // MGC-394: SiteFooter removido del root layout web (ver comentario sobre el JSX).
 import {
   useCareerStore,
@@ -118,12 +119,38 @@ function ThemedShell() {
     document.body.style.backgroundColor = target;
   }, [colors.bg]);
 
-  if (!hydrated) {
+  // MGC-491 + MGC-555 — gate de primer launch (idioma). 3 ramas:
+  //   hydrating → splash neutro sin Stack ni SiteHeader
+  //   hydrated && !onboarded → redirect a /onboarding/language
+  //   hydrated && onboarded → main con SiteHeader + Stack normal
+  // Antes del PR el root layout web solo esperaba la hidratación del
+  // career store y `loadOnboardedFlag()` NUNCA se leía — un usuario
+  // nuevo caía directo en la home sin pasar por el selector de idioma.
+  const [onboardedState, setOnboardedState] = useState<
+    'hydrating' | 'needs-onboarding' | 'ready'
+  >('hydrating');
+  useEffect(() => {
+    void loadOnboardedFlag()
+      .then((onboarded) => {
+        setOnboardedState(onboarded ? 'ready' : 'needs-onboarding');
+      })
+      .catch(() => {
+        setOnboardedState('ready');
+      });
+  }, []);
+
+  if (!hydrated || onboardedState === 'hydrating') {
     return (
       <View style={[styles.root, styles.hydrationGate, { backgroundColor: colors.bg }]}>
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (onboardedState === 'needs-onboarding') {
+    // MGC-491 — primer launch: redirect a `/onboarding/language` que monta
+    // un Stack mínimo sin SiteHeader y llama `markOnboarded()` al confirmar.
+    return <Redirect href="/onboarding/language" />;
   }
 
   return (

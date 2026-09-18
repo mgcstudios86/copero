@@ -15,6 +15,15 @@ const OUT = '/tmp/mgc396';
 test.describe('MGC-396 — capturas post-fix verde primario', () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
+  // MGC-587 / PR-670: gate first-launch en app/_layout.*.tsx redirige a
+  // /onboarding/language cuando loadOnboardedFlag()=false. Mockeamos la
+  // flag en beforeEach para que los specs de captura salten el redirect.
+  test.beforeEach(async ({ context }) => {
+    await context.addInitScript(() => {
+      window.localStorage.setItem('copero:locale:onboarded', '1');
+    });
+  });
+
   test('identity (post-fix verde) tras dispatcher de /', async ({ page }) => {
     test.setTimeout(90_000);
     mkdirSync(OUT, { recursive: true });

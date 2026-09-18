@@ -32,6 +32,13 @@ test.describe('MGC-505 — QA visual home + simulador-carrera', () => {
   }, testInfo) => {
     test.setTimeout(90_000);
 
+    // MGC-587 / PR-670: gate first-launch en app/_layout.*.tsx redirige a
+    // /onboarding/language cuando loadOnboardedFlag()=false. Mockeamos la
+    // flag para que el spec salte el redirect (mismo patrón que home.spec.ts:127).
+    await page.addInitScript(() => {
+      window.localStorage.setItem('copero:locale:onboarded', '1');
+    });
+
     // Estado limpio: cookies + storage.
     await page.context().clearCookies();
     await page.goto('/', { waitUntil: 'domcontentloaded' });

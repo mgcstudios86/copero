@@ -37,6 +37,14 @@ test.beforeEach(async ({ context }) => {
     }
     return route.continue();
   });
+  // MGC-587 / PR-670: gate first-launch en app/_layout.*.tsx redirige a
+  // /onboarding/language cuando loadOnboardedFlag()=false. Mockeamos la
+  // flag para que los specs no-onboarding (incluido este `home`) salten
+  // el redirect. El seed del career store sigue seteándose por test
+  // (línea 127) cuando hace falta `hasCareer=true`.
+  await context.addInitScript(() => {
+    window.localStorage.setItem('copero:locale:onboarded', '1');
+  });
 });
 
 // MGC-1188 (legacy) + MGC-1397: el shape del profile persistido es el mismo
