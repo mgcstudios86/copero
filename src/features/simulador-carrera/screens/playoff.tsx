@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  InteractionManager,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
@@ -100,17 +107,21 @@ export default function PlayoffScreen() {
   }, []);
 
   // MGC-614 — handler "Nueva temporada".
-  // Orden importa: navegamos ANTES de desmontar el Modal nativo. Si
-  // llamamos a setShowCelebration(false) primero, el unmount del <Modal
-  // de react-native puede descartar/cancelar el router.push mientras
-  // el stack swap está en vuelo y el push vuelve a la pantalla actual
-  // (playoff) en lugar de season-summary. Marcamos celebrationDismissed
-  // también antes de la navegación para evitar el re-show mid-transition
-  // por el useEffect([champion, celebrationDismissed]).
+  // Race condition confirmado en MGC-620: aún reordenando
+  // (router.push → setShowCelebration(false)), el teardown del Modal
+  // nativo se ejecuta en el mismo batch que el push y cancela la
+  // transición antes de que el stack swap commitee → vuelve a playoff.
+  // Fix: diferir el teardown con InteractionManager.runAfterInteractions
+  // para que espere a que la animación/commits de la navegación
+  // terminen antes de desmontar el Modal. celebrationDismissed=true se
+  // setea sincrónicamente para que el useEffect([champion, dismissed])
+  // no reabra el modal mid-transition.
   const onCelebrationNewSeason = useCallback(() => {
     setCelebrationDismissed(true);
     onCloseSeason();
-    setShowCelebration(false);
+    InteractionManager.runAfterInteractions(() => {
+      setShowCelebration(false);
+    });
   }, [onCloseSeason]);
 
   const onBack = useCallback(() => {
