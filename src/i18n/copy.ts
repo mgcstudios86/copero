@@ -473,6 +473,38 @@ export type Copy = {
     ctaOpenBracket: string;
     ctaOpenBracketHint: string;
   };
+  // MGC-703 — namespace `seasonEnd`. Cubre la pantalla
+  // `/simulador-carrera/season-summary` que se muestra al cerrar la
+  // semana 38, antes de habilitar el rollover a la próxima temporada.
+  // Reemplaza los placeholders F2 hardcoded en español (QA MGC-689
+  // FAIL crítico 2/6: keys crudos en season-summary). i18n 4 locales
+  // con paridad es / en / zh-CN / pt-BR. Los labels de stats
+  // (`pointsLabel`, `recordLabel`, `goalsLabel`, `goalDiffLabel`) se
+  // muestran en MAYÚSCULAS vía CSS `textTransform: 'uppercase'` —
+  // el texto base se guarda en minúsculas como el resto del COPY.
+  seasonEnd: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    finalPosition: string;
+    ofTeams: string;
+    newGame: string;
+    newGameHint: string;
+    points: string;
+    pointsLabel: string;
+    record: string;
+    recordLabel: string;
+    goalsLabel: string;
+    goalDiffLabel: string;
+    rolloverWeekLabel: string;
+    rolloverNextLabel: string;
+    rolloverAgeLabel: string;
+    confirmResetTitle: string;
+    confirmResetBody: string;
+    confirmResetAction: string;
+    confirmResetCancel: string;
+    confirmResetDismiss: string;
+  };
 
 };
 
@@ -857,6 +889,30 @@ export const COPY: Record<Locale, Copy> = {
       ctaOpenBracket: 'Ir a playoffs',
       ctaOpenBracketHint: 'Resolver cuartos, semis y final',
     },
+    // MGC-703 — fin de temporada (es-AR).
+    seasonEnd: {
+      eyebrow: 'FIN DE AÑO · TEMPORADA {season}',
+      title: 'Resumen de la temporada',
+      subtitle: 'Tu rendimiento, tu club y el cierre del año competitivo.',
+      finalPosition: 'Posición final',
+      ofTeams: 'de {total} equipos',
+      newGame: 'Nueva temporada',
+      newGameHint: 'Cierra el año y arranca la próxima temporada',
+      points: 'Puntos',
+      pointsLabel: 'puntos',
+      record: 'Récord',
+      recordLabel: 'G-E-P',
+      goalsLabel: 'Goles',
+      goalDiffLabel: 'Diferencia',
+      rolloverWeekLabel: 'Semana cerrada: {week}',
+      rolloverNextLabel: 'Siguiente temporada: {season} · semana 1',
+      rolloverAgeLabel: 'Edad al rollover: {age}',
+      confirmResetTitle: '¿Empezar una nueva temporada?',
+      confirmResetBody: 'Vas a cerrar el año {season} y arrancar la pretemporada. Tu historial queda archivado.',
+      confirmResetAction: 'Sí, arrancar',
+      confirmResetCancel: 'Cancelar',
+      confirmResetDismiss: 'Cerrar el diálogo sin arrancar',
+    },
   },
   en: {
     brand: 'Copero',
@@ -1237,6 +1293,30 @@ export const COPY: Record<Locale, Copy> = {
     playoff: {
       ctaOpenBracket: 'Open playoffs',
       ctaOpenBracketHint: 'Resolve quarterfinals, semis and final',
+    },
+    // MGC-703 — end of season summary (en).
+    seasonEnd: {
+      eyebrow: 'END OF YEAR · SEASON {season}',
+      title: 'Season recap',
+      subtitle: 'Your performance, your club and the close of the competitive year.',
+      finalPosition: 'Final position',
+      ofTeams: 'of {total} teams',
+      newGame: 'New season',
+      newGameHint: 'Close the year and start the next season',
+      points: 'Points',
+      pointsLabel: 'points',
+      record: 'Record',
+      recordLabel: 'W-D-L',
+      goalsLabel: 'Goals',
+      goalDiffLabel: 'Goal diff',
+      rolloverWeekLabel: 'Closed week: {week}',
+      rolloverNextLabel: 'Next season: {season} · week 1',
+      rolloverAgeLabel: 'Age at rollover: {age}',
+      confirmResetTitle: 'Start a new season?',
+      confirmResetBody: 'You will close season {season} and start the pre-season. Your history stays archived.',
+      confirmResetAction: 'Yes, start',
+      confirmResetCancel: 'Cancel',
+      confirmResetDismiss: 'Close dialog without starting',
     },
   },
   'zh-CN': {
@@ -1619,6 +1699,30 @@ export const COPY: Record<Locale, Copy> = {
       ctaOpenBracket: '进入季后赛',
       ctaOpenBracketHint: '解决四强、半决赛与决赛',
     },
+    // MGC-703 — 赛季结束（zh-CN）。
+    seasonEnd: {
+      eyebrow: '赛季结束 · 第 {season} 季',
+      title: '本赛季回顾',
+      subtitle: '你的表现、你的俱乐部以及这一年的收官。',
+      finalPosition: '最终排名',
+      ofTeams: '共 {total} 支球队',
+      newGame: '开始新赛季',
+      newGameHint: '结束本赛季并开启下一赛季',
+      points: '积分',
+      pointsLabel: '分',
+      record: '战绩',
+      recordLabel: '胜-平-负',
+      goalsLabel: '进球',
+      goalDiffLabel: '净胜球',
+      confirmResetTitle: '开始新赛季？',
+      confirmResetBody: '你将结束第 {season} 季并进入季前赛。历史数据会保留。',
+      confirmResetAction: '是的，开始',
+      confirmResetCancel: '取消',
+      confirmResetDismiss: '关闭弹窗且不开始',
+      rolloverWeekLabel: '已结束周：{week}',
+      rolloverNextLabel: '下一赛季：第 {season} 季 · 第 1 周',
+      rolloverAgeLabel: '升级年龄：{age}',
+    },
   },
   // MGC-320 — locale pt-BR (Bug A del padre MGC-306). Solo poblamos
   // las claves que el header, settings y home body necesitan; el resto
@@ -1997,6 +2101,30 @@ export const COPY: Record<Locale, Copy> = {
     playoff: {
       ctaOpenBracket: 'Ir para os playoffs',
       ctaOpenBracketHint: 'Resolver quartas, semis e final',
+    },
+    // MGC-703 — fim de temporada (pt-BR).
+    seasonEnd: {
+      eyebrow: 'FIM DE ANO · TEMPORADA {season}',
+      title: 'Resumo da temporada',
+      subtitle: 'Seu rendimento, seu clube e o fechamento do ano competitivo.',
+      finalPosition: 'Posição final',
+      ofTeams: 'de {total} times',
+      newGame: 'Nova temporada',
+      newGameHint: 'Fecha o ano e começa a próxima temporada',
+      points: 'Pontos',
+      pointsLabel: 'pontos',
+      record: 'Retrospecto',
+      recordLabel: 'V-E-D',
+      goalsLabel: 'Gols',
+      goalDiffLabel: 'Saldo',
+      confirmResetTitle: 'Começar uma nova temporada?',
+      confirmResetBody: 'Você vai fechar o ano {season} e começar a pré-temporada. Seu histórico fica arquivado.',
+      confirmResetAction: 'Sim, começar',
+      confirmResetCancel: 'Cancelar',
+      confirmResetDismiss: 'Fechar diálogo sem começar',
+      rolloverWeekLabel: 'Semana fechada: {week}',
+      rolloverNextLabel: 'Próxima temporada: {season} · semana 1',
+      rolloverAgeLabel: 'Idade no rollover: {age}',
     },
   },
 };
