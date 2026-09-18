@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -96,6 +96,7 @@ export default function PlayoffScreen() {
   }, [seed]);
 
   const onCloseSeason = useCallback(() => {
+    console.log('[iter6 MGC-629] onCloseSeason called → router.replace');
     router.replace('/simulador-carrera/season-summary');
   }, [router]);
 
@@ -105,44 +106,56 @@ export default function PlayoffScreen() {
     setCelebrationDismissed(true);
   }, []);
 
-  // MGC-629 iter5 — handler "Nueva temporada".
+  // MGC-629 iter6 — handler "Nueva temporada".
   //
-  // Race condition raíz confirmado por QA walks MGC-630 / MGC-641 /
-  // MGC-642 (SHA 42928c7): el `<Modal>` nativo de RN sobre Android
-  // monta un `DialogFragment`. Mientras `visible=true`, ese fragment
-  // vive sobre la activity y el NavigationContainer de expo-router NO
-  // commitea un push/replace hasta que el DialogFragment esté
-  // dismissado (sincronización interna del bridge). iter1-iter4
-  // intentaron resolver esto desde el lado del handler:
-  //   iter1 (ab860c5): reorder push → setShow(false). FAIL — mismo
-  //     batch, el dismiss corre antes de que la transición commitee.
-  //   iter2 (f44b94e): diferir setShow(false) con InteractionManager.
-  //     FAIL — sin animaciones JS en flight, runAfterInteractions
-  //     dispara en el próximo microtask del press.
-  //   iter3 (d3f18ef): backdrop hermano + pointerEvents box-none.
-  //     PASS estructural, NO atacó la race.
-  //   iter4 (42928c7): NO flipar visible en handler. FAIL — Modal
-  //     se desmonta al unmount de playoff, pero el DialogFragment
-  //     dismiss igual aborta la transición antes del primer commit.
+  // iter5 (commit 081251e) confirmó por QA walks MGC-641/MGC-642 que
+  // llamar `router.replace()` sincrónicamente dentro del handler (junto
+  // con `setShow(false)` y `setCelebrationDismissed(true)`) sigue sin
+  // navegar: el modal cierra OK pero `season-summary` no aparece.
   //
-  // iter5: eliminar el `<Modal>` nativo. El overlay pasa a ser un
-  // `<View position="absolute">` regular dentro del árbol de playoff,
-  // sin DialogFragment. Ahora `setShowCelebration(false)` y
-  // `router.replace(...)` son JS puros coordinados por React — no hay
-  // bridge race, y la transición de expo-router commitea normal.
+  // iter6 invierte el contrato: la navegación pasa a ser declarativa
+  // vía `useEffect`. El handler sólo flippa state JS y levanta una
+  // flag `newSeasonRequested`. La navegación se ejecuta cuando el
+  // useEffect detecta que (a) el overlay ya está desmontado
+  // (`!showCelebration`), (b) el bracket está dismissed, y (c) hay un
+  // request pendiente. Así garantizamos que `router.replace` corre
+  // DESPUÉS del commit de React que desmonta el overlay — sin race
+  // con la transición de expo-router.
   //
-  // Orden en el handler:
-  //   1. setShowCelebration(false) → overlay se desmonta en el commit.
-  //   2. setCelebrationDismissed(true) → useEffect([champion, dismissed])
-  //      ya no reabre el modal si el bracket sigue resuelto al volver.
-  //   3. onCloseSeason() → router.replace al season-summary.
-  // `router.replace` (no `push`) evita acumular back-stack con playoff
-  // tapado por el overlay.
+  // console.log instrumentation permite a QA confirmar:
+  //   - "handler fired" → el Pressable del Button ejecutó onPress.
+  //   - "useEffect: navigation requested, overlay unmounted" →
+  //     navigation corre tras el commit.
+  //   - "onCloseSeason called → router.replace" → router.replace
+  //     ejecutó la transición.
+  const [newSeasonRequested, setNewSeasonRequested] = useState(false);
+  const newSeasonRequestedRef = useRef(false);
+
   const onCelebrationNewSeason = useCallback(() => {
+    console.log('[iter6 MGC-629] onCelebrationNewSeason handler fired');
     setShowCelebration(false);
     setCelebrationDismissed(true);
-    onCloseSeason();
-  }, [onCloseSeason]);
+    setNewSeasonRequested(true);
+    newSeasonRequestedRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (
+      newSeasonRequested &&
+      !showCelebration &&
+      celebrationDismissed
+    ) {
+      console.log('[iter6 MGC-629] useEffect: navigation requested, overlay unmounted → calling onCloseSeason');
+      setNewSeasonRequested(false);
+      newSeasonRequestedRef.current = false;
+      onCloseSeason();
+    }
+  }, [
+    newSeasonRequested,
+    showCelebration,
+    celebrationDismissed,
+    onCloseSeason,
+  ]);
 
   const onBack = useCallback(() => {
     router.back();
