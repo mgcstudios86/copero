@@ -73,6 +73,47 @@ const MODULE_INSTANCE_ID = `gate-${Math.random().toString(36).slice(2, 10)}`;
  */
 const SINGLETON_KEY = Symbol.for('@copero/hydrateGate/v1');
 
+/**
+ * MGC-777 iter9 — throttle del log high-call-count. 5 segundos entre
+ * warns consecutivos del mismo callKey. Suficiente para diagnóstico
+ * sin tapar el logcat (3936 calls → 1-2 logs totales).
+ */
+const HIGH_CALL_LOG_THROTTLE_MS = 5_000;
+
+/**
+ * MGC-777 iter9 — callback opcional que invalida caches aguas abajo
+ * del gate (ej: el hard wall al call site de `careerStore.hydrateFromSave`).
+ * Se registra vía `registerInvalidateHook(cb)`. El gate lo invoca
+ * SINCRONAMENTE desde `invalidate()` para que un save+hydrate inmediato
+ * vea el cache reseteado (un dynamic import sería fire-and-forget y
+ * llegaría tarde).
+ *
+ * Patrón registrado-en-lugar-de-import-estático para evitar circular
+ * dep: hydrateGate → careerStore → persistence → hydrateGate (cycle).
+ * `careerStore.ts` se registra a sí mismo en module-load vía
+ * `registerInvalidateHook`. Si dos módulos registran, ambos se llaman.
+ */
+type InvalidateHook = () => void;
+const invalidateHooks: InvalidateHook[] = [];
+
+export function registerInvalidateHook(cb: InvalidateHook): () => void {
+  invalidateHooks.push(cb);
+  return () => {
+    const i = invalidateHooks.indexOf(cb);
+    if (i >= 0) invalidateHooks.splice(i, 1);
+  };
+}
+
+function fireInvalidateHooks(): void {
+  for (const cb of invalidateHooks) {
+    try {
+      cb();
+    } catch {
+      // best-effort: si un hook tira, los demás corren igual.
+    }
+  }
+}
+
 type GateState = {
   /** In-flight Promise compartida entre callers concurrentes. */
   inFlight: Promise<boolean> | null;
@@ -93,6 +134,12 @@ type GateState = {
   firstNullEmitted: boolean;
   /** Counter de calls por slotId, para diagnóstico de loops. */
   callCount: Map<string, number>;
+  /**
+   * MGC-777 iter9 — timestamp del último high-call-count log por
+   * callKey. Permite throttle del spam (3936 calls → 1-2 logs cada
+   * HIGH_CALL_LOG_THROTTLE_MS).
+   */
+  highCallLogAt: Map<string, number>;
   /** Module instance id del primer load; detecta bundle-splits. */
   firstInstanceId: string;
 };
@@ -110,6 +157,7 @@ function getGate(): GateState {
       nullLogEmitted: new Set(),
       firstNullEmitted: false,
       callCount: new Map(),
+      highCallLogAt: new Map(),
       firstInstanceId: MODULE_INSTANCE_ID,
     };
   }
@@ -191,6 +239,29 @@ export async function requestHydrate<T>(
     return wrapOutcome(gate.inFlight, callerSlotId);
   }
 
+  // MGC-777 iter9 — fast-path cache check ANTES del await de
+  // `resolveActiveSlotId()`. iter8 esperaba el slotId para chequear
+  // Capa C, lo que añadía un microtask innecesario y, peor, el IIFE
+  // entraba, incrementaba callCount, emitía high-call-count log y
+  // SOLO ENTONCES early-exit. Si el caller sub-siguiente es del
+  // mismo slotId='default' (el caso típico del bootstrap), podemos
+  // salir INMEDIATO sin tocar AsyncStorage, sin incrementar callCount
+  // y sin emitir log. Esto baja las 3936 entradas `[hydrateGate]
+  // high-call-count` del walk MGC-768 a 0 en el path del default slot.
+  //
+  // Costo: para slots distintos a 'default' el check se hace con
+  // 'default' como heurística y el IIFE re-valida con el slotId real.
+  // Peor caso: 1 ciclo extra de check por call de slot no-default.
+  if (
+    !opts.force &&
+    gate.lastResult &&
+    gate.lastResult.ok === false &&
+    gate.lastResult.reason === 'no-snapshot' &&
+    gate.lastResult.slotId === 'default'
+  ) {
+    return { ok: false, slotId: 'default', reason: 'no-snapshot' };
+  }
+
   // Reservar la promise de coalesce SÍNCRONAMENTE. `resolveOutcome`
   // se llama desde el IIFE async; mientras tanto la promise queda
   // pending en `gate.inFlight` y cualquier caller nuevo se cuelga.
@@ -221,16 +292,26 @@ export async function requestHydrate<T>(
 
       // Counters de diagnóstico — siempre disponibles, costo despreciable.
       gate.callCount.set(callKey, (gate.callCount.get(callKey) ?? 0) + 1);
+      // MGC-777 iter9 — throttle del log high-call-count. iter8 emitía
+      // 1 warn POR CADA call después del threshold, explicando los
+      // 3936 logs del walk MGC-768 (uno por call). Throttle a 1 emit
+      // cada 5s por callKey: el primero se emite inmediato al pasar
+      // el threshold; los siguientes se suprimen hasta que pase el
+      // intervalo. Si el loop sigue activo, el log reaparece cada 5s
+      // con el count actualizado — suficiente para diagnóstico sin
+      // tapar el logcat.
       if ((gate.callCount.get(callKey) ?? 0) > 5) {
-        // Advertir al equipo si un mismo caller supera 5 calls — patrón
-        // típico de loop. El log va con `console.warn` para que aparezca
-        // en logcat Hermes (`*:S ReactNativeJS:W`) sin spam de info-level.
-        // eslint-disable-next-line no-console
-        console.warn(
-          `[hydrateGate] high-call-count caller=${opts.caller ?? 'unknown'} ` +
-            `slotId=${slotId} count=${gate.callCount.get(callKey)} ` +
-            `instance=${gate.firstInstanceId}`,
-        );
+        const now = Date.now();
+        const lastLogAt = gate.highCallLogAt.get(callKey) ?? 0;
+        if (now - lastLogAt >= HIGH_CALL_LOG_THROTTLE_MS) {
+          gate.highCallLogAt.set(callKey, now);
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[hydrateGate] high-call-count caller=${opts.caller ?? 'unknown'} ` +
+              `slotId=${slotId} count=${gate.callCount.get(callKey)} ` +
+              `instance=${gate.firstInstanceId}`,
+          );
+        }
       }
 
       // Capa C — early exit si no-snapshot previo y no se forzó.
@@ -366,21 +447,29 @@ function emitNullOnce(slotId: string, reason: HydrateReason, gate: GateState): v
  *   - `saveCareerSave` tras save exitosa (la próxima lectura debería
  *     encontrar payload — pero conservamos el resultado cacheado si
  *     fue ok=true porque la save exitosa es información terminal).
+ *   - `clearCareerSave` post-clear (idem save: el storage cambió).
  *
  * Sólo resetea `lastResult` para el slotId indicado. NO limpia el
  * Set sticky `nullLogEmitted` (éste vive por bundle-instance lifetime
  * para que el log spam no se reactive tras un reset parcial). Para
  * reset completo usar `__resetGateForTests`.
+ *
+ * MGC-777 iter9 — además del cache del gate, dispara los hooks
+ * registrados via `registerInvalidateHook`. El wall al call site de
+ * `careerStore.hydrateFromSave` se auto-registra al cargar el módulo
+ * de store, y la invalidación corre SINCRÓNICAMENTE desde acá para
+ * que un save+hydrate inmediato vea el cache reseteado. Patrón
+ * registrado-en-lugar-de-import-estático para evitar circular dep
+ * estática (hydrateGate → careerStore → persistence → hydrateGate).
  */
 export function invalidate(slotId?: string): void {
   const gate = getGate();
   if (!slotId) {
     gate.lastResult = null;
-    return;
-  }
-  if (gate.lastResult && gate.lastResult.slotId === slotId) {
+  } else if (gate.lastResult && gate.lastResult.slotId === slotId) {
     gate.lastResult = null;
   }
+  fireInvalidateHooks();
 }
 
 /**
@@ -391,6 +480,10 @@ export function invalidate(slotId?: string): void {
 export function __resetGateForTests(): void {
   const g = globalThis as unknown as GlobalWithGate;
   delete g[SINGLETON_KEY];
+  // MGC-777 iter9 — limpia los hooks registrados para que un test
+  // anterior no contamine el siguiente (los hooks se re-registran
+  // al cargar el módulo careerStore de cada test).
+  invalidateHooks.length = 0;
 }
 
 /**
@@ -407,5 +500,6 @@ export function getGateDebug() {
     nullLogEmittedSize: gate.nullLogEmitted.size,
     firstNullEmitted: gate.firstNullEmitted,
     callCount: Object.fromEntries(gate.callCount.entries()),
+    highCallLogAt: Object.fromEntries(gate.highCallLogAt.entries()),
   };
 }

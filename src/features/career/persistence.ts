@@ -503,7 +503,15 @@ export async function deleteSlot(slotId: string): Promise<void> {
   // para que el slot vacío tras delete NO devuelva un resultado
   // cacheado de `ok=true`. Ver `saveCareerSave` para rationale del
   // dynamic import.
-  void import('@/shared/store/hydrateGate').then((m) => m.invalidate(slotId)).catch(() => {});
+  //
+  // MGC-777 iter9 — awaited (idem saveCareerSave y clearCareerSave)
+  // para que el wall al call site quede reseteado antes de resolver.
+  try {
+    const m = await import('@/shared/store/hydrateGate');
+    m.invalidate(slotId);
+  } catch {
+    // best-effort.
+  }
 }
 
 /** Devuelve la partida guardada del slot o `null` si no hay nada. */
@@ -760,10 +768,22 @@ async function saveCareerSaveImpl(
     // dynamic import evita circular dependency: hydrateGate.ts ya
     // importa desde este módulo (getActiveSlotId), así que un
     // import estático al revés provocaría TDZ.
-    void import('@/shared/store/hydrateGate').then((m) => m.invalidate(targetId)).catch(() => {
+    //
+    // MGC-777 iter9 — esperamos el invalidate para que el wall al
+    // call site de `careerStore.hydrateFromSave` quede reseteado
+    // antes de que saveCareerSave resuelva. Antes era fire-and-forget
+    // (`void import(...).then(...)`); con el wall añadido, un save
+    // seguido inmediatamente de un hydrate (test MGC-306 AC4) veía
+    // el wall aún cerrado y retornaba el cache stale. Await el
+    // invalidate cierra el gap sin afectar producción (el invalidate
+    // es sincrónico via `registerInvalidateHook`).
+    try {
+      const m = await import('@/shared/store/hydrateGate');
+      m.invalidate(targetId);
+    } catch {
       // best-effort: si el módulo de gate no cargó (test environment
       // mockeando persistence), la save sigue siendo válida.
-    });
+    }
     return { slotId: targetId };
   } catch (err) {
     // MGC-262 — antes `.catch(() => {})` silenciaba cualquier error. Si
@@ -808,7 +828,16 @@ async function clearCareerSaveImpl(slotId?: string): Promise<void> {
   // vacío y emitir el warn sticky (no devolver el `ok=true` cacheado).
   // Dynamic import evita circular dep con hydrateGate (que importa
   // `getActiveSlotId` desde acá).
-  void import('@/shared/store/hydrateGate').then((m) => m.invalidate(targetId)).catch(() => {});
+  //
+  // MGC-777 iter9 — awaited (idem saveCareerSave arriba) para que el
+  // wall al call site de `hydrateFromSave` quede reseteado antes de
+  // que clearCareerSave resuelva.
+  try {
+    const m = await import('@/shared/store/hydrateGate');
+    m.invalidate(targetId);
+  } catch {
+    // best-effort.
+  }
 }
 
 /**

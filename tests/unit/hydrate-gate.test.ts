@@ -171,17 +171,65 @@ describe('MGC-755 iter8 — hydrateGate centralizado', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const loader = vi.fn().mockResolvedValue(null);
 
-    // 1ra: cachea no-snapshot.
-    await requestHydrate(loader, { caller: 'spammer' });
-    // 2-6ta: cache hit, no re-load, pero el counter sigue.
+    // MGC-777 iter9 — el fast-path early-exit por default-slot corta
+    // ANTES del IIFE para el caso típico (slotId='default'). Para
+    // ejercitar el counter del IIFE usamos `force: true` en cada
+    // call (simula dashboard.onSlotChanged invalidando el cache cada
+    // vez). El counter sube 1 por call → 6 entradas → high-call-count
+    // se emite la 6ta (umbral > 5).
+    await requestHydrate(loader, { caller: 'spammer', force: true });
     for (let i = 0; i < 5; i++) {
-      await requestHydrate(loader, { caller: 'spammer' });
+      await requestHydrate(loader, { caller: 'spammer', force: true });
     }
 
     const highCountWarns = warnSpy.mock.calls.filter((c) =>
       String(c[0] ?? '').includes('high-call-count'),
     );
     expect(highCountWarns.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('MGC-777 iter9 — fast-path: 2da call sin force sobre default slot retorna SIN tocar el loader', async () => {
+    const { requestHydrate, getGateDebug } = await import('@/shared/store/hydrateGate');
+    const loader = vi.fn().mockResolvedValue(null);
+
+    // 1ra: entra al IIFE, ejecuta loader (1 vez), cachea no-snapshot.
+    const r1 = await requestHydrate(loader, { caller: 'iter9-fastpath' });
+    expect(r1.ok).toBe(false);
+    expect(loader).toHaveBeenCalledTimes(1);
+
+    // 2da-100ma: el gate corta por fast-path ANTES de tocar el IIFE.
+    // El loader NO se invoca N veces más — la promesa resuelta se
+    // devuelve sincrónicamente. Esto es lo que baja las 3936 entradas
+    // `[hydrateGate] high-call-count` del walk MGC-768 a 0 en el
+    // path del default slot.
+    for (let i = 0; i < 99; i++) {
+      const r = await requestHydrate(loader, { caller: 'iter9-fastpath' });
+      expect(r.ok).toBe(false);
+    }
+    expect(loader).toHaveBeenCalledTimes(1); // sigue en 1, no 100
+
+    // El counter del callKey es 1 (no 100): confirma que el fast-path
+    // retornó SIN entrar al IIFE. iter8 hubiera tenido 100 aquí.
+    const debug = getGateDebug();
+    expect(debug.callCount['iter9-fastpath:default']).toBe(1);
+  });
+
+  it('MGC-777 iter9 — throttle: 100 calls force=true emiten 1 high-call-count (no 96)', async () => {
+    const { requestHydrate, invalidate } = await import('@/shared/store/hydrateGate');
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const loader = vi.fn().mockResolvedValue(null);
+
+    // 100 calls con force=true. Sin throttle, iter8 emitía 96 warns
+    // (uno por call después del threshold). Con throttle de 5s,
+    // debería emitir exactamente 1.
+    for (let i = 0; i < 100; i++) {
+      await requestHydrate(loader, { caller: 'throttle-test', force: true });
+    }
+
+    const highCountWarns = warnSpy.mock.calls.filter((c) =>
+      String(c[0] ?? '').includes('high-call-count'),
+    );
+    expect(highCountWarns.length).toBe(1);
   });
 
   it('getGateDebug expone el estado para diagnóstico', async () => {
