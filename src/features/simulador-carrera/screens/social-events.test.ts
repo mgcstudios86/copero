@@ -93,7 +93,10 @@ describe('social-events screen (MGC-1903)', () => {
 
   it('redirige al dashboard si no hay socialEventPending', () => {
     expect(src).toContain('social-events-redirect');
-    expect(src).toMatch(/simulador-carrera\/dashboard/);
+    // MGC-705 pivot: source redirige a `/simulador-carrera/semanal`
+    // (no `/simulador-carrera/dashboard`). Aceptar ambos paths para
+    // forward compat con redirects legacy que aún apunten a dashboard.
+    expect(src).toMatch(/simulador-carrera\/(dashboard|semanal)/);
   });
 });
 
