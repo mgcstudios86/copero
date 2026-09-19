@@ -147,6 +147,10 @@ function ThemedShell() {
         initialRouteName="index"
         screenOptions={{
           headerShown: false,
+          // MGC-1018 — `contentStyle` mantiene `colors.bg`. La defensa real contra
+          // el flash blanco es `styles.root` con `backgroundColor: '#0B1320'`
+          // hardcodeado (ver styles abajo): cubre fontsLoaded splash,
+          // hydration gate y el root wrapper de ThemedShell.
           contentStyle: { backgroundColor: colors.bg },
           animation: 'fade',
         }}
@@ -202,8 +206,14 @@ export default function RootLayout() {
     'Poppins-Bold': Poppins_700Bold,
   });
 
+  // MGC-1018 — fix parpadeo blanco en Moto edge30: el View de splash durante
+  // la carga de fonts (`useFonts` resolving) ahora trae `backgroundColor`
+  // explicito `#0B1320` (mismo dark navy que `app.config.js splashscreen` y
+  // `android:windowBackground`). Antes era transparente → window manager
+  // del Moto flasheaba blanco por unos frames antes de que ThemeProvider
+  // montara con `colors.bg`.
   if (!fontsLoaded && !fontError) {
-    return <View style={styles.root} />;
+    return <View style={[styles.root, styles.splashFallback]} />;
   }
 
   return (
@@ -227,7 +237,12 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  // MGC-1018 — `root` con `backgroundColor: #0B1320` dark navy hardcodeado.
+  // Antes sin bg → transparente durante fontsLoaded → flash blanco en
+  // Moto edge30 (DayNight light fallback). Mismo color que splash nativo
+  // para cadena continua native splash → JS root → ThemeProvider → Stack.
+  root: { flex: 1, backgroundColor: '#0B1320' },
+  splashFallback: { backgroundColor: '#0B1320' },
   hydrationGate: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -166,6 +166,12 @@ function ThemedShell() {
         initialRouteName="index"
         screenOptions={{
           headerShown: false,
+          // MGC-1018 — `contentStyle` mantiene `colors.bg`. La defensa real contra
+          // el flash blanco es `styles.root` con `backgroundColor: '#0B1320'`
+          // hardcodeado (ver styles abajo): cubre fontsLoaded splash,
+          // hydration gate y el root wrapper de ThemedShell. Stack
+          // scenes consumen `contentStyle` durante navegación, así que
+          // la cadena queda dark desde native splash → JS root → Stack.
           contentStyle: { backgroundColor: colors.bg },
           animation: 'fade',
         }}
@@ -230,8 +236,17 @@ export default function RootLayout() {
     'Poppins-Bold': Poppins_700Bold,
   });
 
+  // MGC-1018 — root cause del parpadeo blanco en Moto edge30: durante la
+  // carga tipográfica (`useFonts` resolving) renderizamos un `<View>` vacío
+  // SIN `backgroundColor`. Ese View es transparente → el system window
+  // (en Moto edge30 con DayNight light fallback) flashea blanco antes de
+  // que monte ThemeProvider con `colors.bg = #09090B`. Defensa: hardcode
+  // `#0B1320` (mismo dark navy que `app.config.js splashscreen.backgroundColor`
+  // y `android:windowBackground` en `styles.xml`) en styles.root y en el
+  // early-return. Asi toda la cadena (native splash → root View → ThemeProvider
+  // → Stack contentStyle) es dark-consistente, sin gap de paint.
   if (!fontsLoaded && !fontError) {
-    return <View style={styles.root} />;
+    return <View style={[styles.root, styles.splashFallback]} />;
   }
 
   return (
@@ -255,7 +270,14 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  // MGC-1018 — `root` debe tener SIEMPRE `backgroundColor` oscuro hardcodeado.
+  // Antes solo tenia `flex: 1` → renderizaba transparente durante la fase de
+  // carga de fonts y exponia el window background default del sistema (blanco
+  // en Moto edge30 bajo DayNight light fallback). Hardcodeamos el mismo dark
+  // navy que `app.config.js` y `styles.xml` (`#0B1320`) para cerrar el gap
+  // entre native splash y ThemeProvider mount.
+  root: { flex: 1, backgroundColor: '#0B1320' },
+  splashFallback: { backgroundColor: '#0B1320' },
   hydrationGate: {
     alignItems: 'center',
     justifyContent: 'center',
