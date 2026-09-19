@@ -1,0 +1,13 @@
+# MGC-1018 — invertimos `.gitignore /android` para que EAS local build
+# plugin (que respeta .gitignore al copiar al temp dir) incluya el proyecto
+# android prebuildado completo (gradlew, gradle/, app/src/main/res/values/).
+# Sin esto, "Fix gradlew" phase abre android/gradlew → ENOENT.
+# Las entradas nativas reales que SÍ queremos ignorar siguen acá:
+.git
+node_modules
+android/.gradle
+android/build
+android/app/build
+android/app/.cxx
+android/local.properties
+android/.kotlin
