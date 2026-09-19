@@ -109,13 +109,46 @@ function ThemedShell() {
     'hydrating' | 'needs-onboarding' | 'ready'
   >('hydrating');
   useEffect(() => {
+    // MGC-1045 iter3 — safety-net a 1.5s. QA walk MGC-1040 sobre
+    // build-mgc1035-iter2-70f3f85.apk detectó que la pantalla se
+    // quedaba en ActivityIndicator 60+s sin transicionar a Home ni
+    // onboarding. El log confirmó que `useCareerStore.hydrated` se
+    // liberaba correctamente vía `__mgc1039ColdStartHydrate()`, pero
+    // `loadOnboardedFlag()` quedaba colgado sin resolver ni rechazar,
+    // manteniendo `onboardedState='hydrating'` indefinidamente. La
+    // ventana de 1.5s es generosa para AsyncStorage nativo (típico
+    // <50ms en release) y lo bastante corta para que el usuario no
+    // perciba el spinner más de un par de frames. Si la lectura de
+    // onboarded cuelga, default a 'ready' (saltamos onboarding —
+    // trade-off aceptable: peor caso el usuario pierde el selector de
+    // idioma del primer launch, pero gana acceso a Home en lugar de
+    // un splash perpetuo). El timeout dispara solo si `loadOnboardedFlag`
+    // no resolvió antes; el `.then` que llega tarde se descarta vía
+    // el flag `settled`.
+    let settled = false;
+    const safety = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[copero:onboard] onboardedFlag safety-net 1500ms — default ready',
+      );
+      setOnboardedState('ready');
+    }, 1500);
     void loadOnboardedFlag()
       .then((onboarded) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(safety);
         setOnboardedState(onboarded ? 'ready' : 'needs-onboarding');
       })
       .catch(() => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(safety);
         setOnboardedState('ready');
       });
+    return () => clearTimeout(safety);
   }, []);
 
   if (!hydrated || onboardedState === 'hydrating') {
