@@ -77,7 +77,18 @@ module.exports = ({ config } = {}) => ({
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
   experiments: {
-    newArchEnabled: true,
+    // MGC-804 — regresión de 0b7480a re-flipó `newArchEnabled` a `true`,
+    // revirtiendo el fix be5ca02 (MGC-792). Sobre el base backport
+    // `backport/mgc-759-hydrate-716-729` el codegen de Fabric omite los
+    // core RN specs en SDK 57 + RN 0.86 + profile preview-apk, lo que
+    // rompe SurfaceFlinger paint → screencap blanco. CTO verdict MGC-797
+    // confirma iter10 (newArchEnabled=false) avanzó síntoma pero NO
+    // resuelve AC1; iter11 enfoca R class / codegen / bundle IMPOSTOR.
+    // Mientras tanto, mantener el flag en `false` para no regresar al
+    // surface blank observable (AC5 FAIL color{0,0,0,1}). Cherry-pick
+    // histórico: bab8350 PR #650 MGC-316. Refs: [[copero-platformconstants-fix]]
+    // [[MGC-792]] [[MGC-797-iter10-cto-verdict]].
+    newArchEnabled: false,
   },
   ios: {
     supportsTablet: true,
