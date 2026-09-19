@@ -92,7 +92,7 @@ android {
         applicationId 'com.mgcstudios.copero'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 580
+        versionCode 590
         versionName "0.0.1"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
