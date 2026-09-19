@@ -77,17 +77,15 @@ module.exports = ({ config } = {}) => ({
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
   experiments: {
-    // MGC-804 — regresión de 0b7480a re-flipó `newArchEnabled` a `true`,
-    // revirtiendo el fix be5ca02 (MGC-792). Sobre el base backport
-    // `backport/mgc-759-hydrate-716-729` el codegen de Fabric omite los
-    // core RN specs en SDK 57 + RN 0.86 + profile preview-apk, lo que
-    // rompe SurfaceFlinger paint → screencap blanco. CTO verdict MGC-797
-    // confirma iter10 (newArchEnabled=false) avanzó síntoma pero NO
-    // resuelve AC1; iter11 enfoca R class / codegen / bundle IMPOSTOR.
-    // Mientras tanto, mantener el flag en `false` para no regresar al
-    // surface blank observable (AC5 FAIL color{0,0,0,1}). Cherry-pick
-    // histórico: bab8350 PR #650 MGC-316. Refs: [[copero-platformconstants-fix]]
-    // [[MGC-792]] [[MGC-797-iter10-cto-verdict]].
+    // MGC-869 — iter14 gradle mod + f8b05cd experimentos redundantes.
+    // f8b05cd (iter11) flipeó `newArchEnabled` acá pero es runtime-only;
+    // el binario Gradle lee `android/gradle.properties` durante
+    // `compileSdk`. Por eso el APK vc=515 / PR #710 / SHA 1d4b498 quedó
+    // con `BridgelessReact:startSurface` en logcat pese al flip de
+    // experimentos → home no monta (QA walk FAIL MGC-859). El mod
+    // `mods.android.gradleProperties` abajo flipea `newArchEnabled=false`
+    // en el array `PropertiesItem[]` antes que Expo escriba el archivo.
+    // Refs: [[MGC-863]] [[MGC-870]] [[copero-expo57-newarch-gradle-mod]].
     newArchEnabled: false,
   },
   ios: {
@@ -135,6 +133,21 @@ module.exports = ({ config } = {}) => ({
         backgroundColor: '#0B1320',
       },
     ],
+    [
+      // MGC-869 — iter14: forward-compat plugin entry. v57.0.21 REMOVIÓ
+      // `android.newArchEnabled` del config schema (CHANGELOG), así que
+      // el plugin config es dead-code en este SDK — el trabajo real lo
+      // hace el mod `mods.android.gradleProperties` abajo. Mantenemos el
+      // plugin entry redundante para que un downgrade o un SDK que aún
+      // respete el schema no rompa el flip. El mod corre antes que el
+      // plugin escriba el archivo.
+      'expo-build-properties',
+      {
+        android: {
+          newArchEnabled: false,
+        },
+      },
+    ],
     ...admobPlugin,
   ],
   // Variables `extra` quedan accesibles via `expo-constants` en runtime.
@@ -173,5 +186,36 @@ module.exports = ({ config } = {}) => ({
     // "dev" como fallback. Solo lectura — la fuente de verdad sigue
     // siendo `git rev-parse HEAD` en CI / Mac del developer.
     buildSha: process.env.EAS_BUILD_GIT_COMMIT_HASH || null,
+  },
+  // MGC-869 — mod que sobrescribe `android/gradle.properties` durante
+  // prebuild. La propiedad `newArchEnabled` la escribe el plugin Expo
+  // prebuild en `true` (template estático bakeado en
+  // `node_modules/expo/template.tgz:package/android/gradle.properties`)
+  // → el mod la flipea a `false` en el array `Properties.PropertiesItem[]`
+  // antes que Expo escriba el archivo. Sin este mod, el binario Gradle
+  // lee `newArchEnabled=true` pese a `experiments.newArchEnabled:false`
+  // y el APK queda en Bridgeless + Fabric (root cause MGC-870 / MGC-859).
+  //
+  // El mod compiler (`createBaseMod.js:87 assertModResults`) requiere
+  // que el resultado sea un config object con `.mods`, NO el array
+  // directo. Ver `withGradleProperties` en
+  // `@expo/config-plugins` build/Plugin.types.d.ts:140.
+  mods: {
+    android: {
+      gradleProperties: (config) => {
+        const items = config.modResults;
+        const idx = items.findIndex(
+          (it) => it?.type === 'property' && it?.key === 'newArchEnabled',
+        );
+        const next = {
+          type: 'property',
+          key: 'newArchEnabled',
+          value: 'false',
+        };
+        if (idx >= 0) items[idx] = next;
+        else items.push(next);
+        return { ...config, modResults: items };
+      },
+    },
   },
 });
