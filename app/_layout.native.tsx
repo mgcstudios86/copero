@@ -55,86 +55,32 @@ function ThemedShell() {
   // MGC-722 sobre build-MGC306-159-14-dc89705.apk).
   const hydrated = useCareerStore((s) => s.hydrated);
   useEffect(() => {
+    // MGC-1039 iter19 — `bootstrapPersistence()` se llama UNA vez por
+    // proceso JS, garantizado por el guard módulo-scope
+    // `appStateListenerInstalled` adentro de `careerStore.ts`. Si
+    // ThemedShell se remonta (HMR, Fast Refresh, expo-dev-client, o un
+    // re-mount silencioso durante cold-start), el segundo `useEffect`
+    // es no-op. Antes iter18 llamaba `bootstrapPersistence()` en cada
+    // mount del layout y eso duplicaba listeners de AppState en ZY22G728HN.
     bootstrapPersistence();
-    // MGC-1022 iter18 — bypass directo del hydrate gate sobre cold-start.
-    // Síntoma iter17: `requestHydrate()` (gate centralizado) emitía
-    // `[hydrateGate] FIRST hydrate=null` y luego el JS event loop quedaba
-    // congelado sin disparar el `setTimeout(hardBypass, 250ms)` ni el
-    // `await loader()` continuation. Diagnóstico: la diferencia vs
-    // copero-mgc812 (donde el patrón MGC-852 iter13 funciona) es la
-    // presencia del `hydrateGate` IIFE + `new Error('hydrate=null
-    // first-emission').stack` en `emitNullOnce`. En Hermes release,
-    // capturar stack desde dentro de un IIFE async durante cold-start
-    // bloquea el bridge JS↔native. Mitigación: llamar `loadCareerSave()`
-    // DIRECTO sin pasar por el gate para el bootstrap inicial. El gate
-    // sigue activo para callers sub-siguientes (`dashboard.onSlotChanged`,
-    // `SaveSlotPicker.onConfirm`, `__forceHydrateFromSave`) — solo lo
-    // bypaseamos en el path de cold-start que probó colgarse.
-    const coldStartBypass = (async () => {
-      try {
-        const saved = await loadCareerSave();
-        if (saved) {
-          // Misma aplicación que `hydrateFromSave` hace en el branch
-          // `outcome.ok === true`. Mantenemos los campos críticos para
-          // que la UI monte con state coherente.
-          const cur = useCareerStore.getState();
-          useCareerStore.setState((s) => ({
-            ...s,
-            stage: saved.stage,
-            profile: saved.profile,
-            draft: saved.draft ?? null,
-            card: saved.card ?? null,
-            log: saved.log,
-            history: saved.history ?? [],
-            seed: saved.seed,
-            rng: saved.rng,
-            postMatchPending: saved.postMatchPending ?? null,
-            nextWeekModifiers: saved.nextWeekModifiers,
-            transferState: saved.transferState ?? null,
-            marketState: saved.marketState ?? { entries: [], offers: [], budget: 0, tickAt: 0 },
-            seasonStandings: saved.seasonStandings ?? {},
-            seasonFixtures: saved.seasonFixtures ?? [],
-          }));
-          void cur; // silence unused
-        }
-        useCareerStore.setState({ hydrated: true });
-        // eslint-disable-next-line no-console
-        console.warn('[iter18] cold-start bypass resolved hydrated=true');
-      } catch (err) {
-        useCareerStore.setState({ hydrated: true });
-        // eslint-disable-next-line no-console
-        console.warn('[iter18] cold-start bypass caught error', err);
-      }
-    })();
-    void coldStartBypass;
-    // MGC-1022 iter18 — bypass duro del hydration gate post cold-start.
-    // 50ms es más agresivo que iter17 (250ms) por dos razones:
-    //   (a) iter17 confirmó que el setTimeout NO disparaba — JS event
-    //       loop congelado post-hydrate-gate. 50ms sigue cubriendo
-    //       cold-start normal (~80-150ms hydrate resolve) sin
-    //       parpadear; si el bridge nativo está congelado, el bypass
-    //       duro libera la UI igual.
-    //   (b) requestAnimationFrame es un timer alternativo que NO
-    //       comparte la cola de setTimeout. Si Hermes está饿死 la
-    //       macrotask queue, rAF sigue procesándose vía UI thread.
-    const hardBypass = setTimeout(() => {
-      if (!useCareerStore.getState().hydrated) {
-        useCareerStore.setState({ hydrated: true });
-        // eslint-disable-next-line no-console
-        console.warn('[iter18] hardBypass (50ms) fired hydrated=true');
-      }
-    }, 50);
-    const rafBypass = requestAnimationFrame(() => {
-      if (!useCareerStore.getState().hydrated) {
-        useCareerStore.setState({ hydrated: true });
-        // eslint-disable-next-line no-console
-        console.warn('[iter18] rafBypass fired hydrated=true');
-      }
-    });
-    return () => {
-      clearTimeout(hardBypass);
-      cancelAnimationFrame(rafBypass);
-    };
+    // MGC-1039 iter19 — el cold-start hydration ya NO vive en este
+    // useEffect. iter18 lo puso acá como IIFE (`await loadCareerSave()`)
+    // y QA walk MGC-1033 detectó loop sostenido: 1494 ocurrencias de
+    // `[persistence] hydrate=null reason=no-snapshot-in-storage` en 70s
+    // (~21 Hz). El módulo `__mgc1039ColdStartHydrate()` definido al
+    // final de este archivo es módulo-scope + idempotente: corre apenas
+    // Hermes evalúa el bundle (antes del mount de React), exactamente
+    // UNA vez por proceso JS, y aplica el snapshot al store sin pasar
+    // por el `requestHydrate` gate (que colgaba Hermes con su stack
+    // capture). El gate sigue activo para callers sub-siguientes
+    // (`dashboard.onSlotChanged`, `SaveSlotPicker.onConfirm`,
+    // `__forceHydrateFromSave`).
+    //
+    // Bypass duro post cold-start también se delega al safety-net
+    // módulo-scope (MGC-1035 iter2: 400ms / 3000ms) que ya existía.
+    // Ambos timers son idempotentes y NO montan en cada render de
+    // ThemedShell — el flag `__mgc1035GateReleased` corta la segunda
+    // ejecución.
   }, []);
 
   // MGC-722 — drenamos la save pendiente cuando el OS manda la app a
@@ -391,3 +337,94 @@ const __mgc1035ReleaseHydrationGate = () => {
 };
 setTimeout(__mgc1035ReleaseHydrationGate, 400);
 setTimeout(__mgc1035ReleaseHydrationGate, 3000);
+
+// MGC-1039 iter19 — cold-start hydration a nivel de módulo. Se
+// ejecuta apenas Hermes evalúa el bundle, ANTES del mount de React,
+// y UNA SOLA VEZ por proceso JS (guard `__mgc1039ColdStartResolved`).
+//
+// Por qué módulo-scope y NO dentro del useEffect:
+//   iter18 (MGC-1022, ca9bffd) lo puso como IIFE async adentro de un
+//   `useEffect(() => { ... }, [])` de ThemedShell. QA walk MGC-1033
+//   detectó loop sostenido en release APK sobre ZY22G728HN: 1494
+//   pares `[persistence] hydrate=null` + `[iter18] cold-start bypass
+//   resolved hydrated=true` en 70s (~21 Hz), rafBypass fired UNA sola
+//   vez (a 11:57:26.250), ViewRootImpl visibility=0.
+//
+//   El `useEffect []` debería correr una vez por mount, pero el patrón
+//   mostró que ThemedShell se está remontando por algún motivo no
+//   evidente (Fast Refresh en dev, re-mount silencioso en release,
+//   bundle-split de expo-router, o un side-effect del `useFonts`
+//   resolviendo en frame 1). Cada re-mount dispara un IIFE nuevo que
+//   `await loadCareerSave()` — y como AsyncStorage vacío emite el log
+//   `[persistence] hydrate=null` en cada call, el logcat se llena de
+//   pares cada 47ms.
+//
+//   Mover el bootstrap a módulo-scope + guard idempotente cierra la
+//   ventana: el IIFE corre una vez por proceso JS, sin importar
+//   cuántos mounts de ThemedShell ocurran.
+//
+// Por qué llamar `loadCareerSave()` DIRECTO (sin pasar por
+// `requestHydrate`):
+//   iter17 (MGC-1022, 5e452ff) pasó por el gate centralizado y QA
+//   detectó que `requestHydrate` colgaba Hermes en release: el IIFE
+//   async adentro del gate + `new Error('hydrate=null
+//   first-emission').stack` en `emitNullOnce` capturaba stack en
+//   cold-start y bloqueaba el bridge JS↔native. El `setTimeout(
+//   hardBypass, 250ms)` nunca disparaba, el splash quedaba visible
+//   60-90s. Bypasear el gate SOLO en cold-start (no en callers
+//   sub-siguientes) resuelve el hang sin perder la dedup del gate
+//   para los flujos de slot switch / save / reset.
+//
+// Por qué `loadCareerSave()` y NO `setState({ hydrated: true })` a
+//   secas:
+//   Necesitamos que la home monte con state coherente (stage,
+//   profile, log, history) para que el CTA "Continuar carrera" de
+//   `app/index.tsx` muestre la label correcta. Sin el payload el
+//   usuario caería en `stage='identity'` (default) y perdería la
+//   partida guardada en cada cold-start. La función `loadCareerSave`
+//   ya tiene la serialización correcta detrás de `pendingSave`
+//   (MGC-2606) y el `serialize()` que evita races con clear en vuelo.
+let __mgc1039ColdStartResolved = false;
+const __mgc1039ColdStartHydrate = (): void => {
+  if (__mgc1039ColdStartResolved) return;
+  __mgc1039ColdStartResolved = true;
+  (async () => {
+    try {
+      const saved = await loadCareerSave();
+      if (saved) {
+        // Misma aplicación que `hydrateFromSave` hace en el branch
+        // `outcome.ok === true`. Mantenemos los campos críticos para
+        // que la UI monte con state coherente.
+        useCareerStore.setState((s) => ({
+          ...s,
+          stage: saved.stage,
+          profile: saved.profile,
+          draft: saved.draft ?? null,
+          card: saved.card ?? null,
+          log: saved.log,
+          history: saved.history ?? [],
+          seed: saved.seed,
+          rng: saved.rng,
+          postMatchPending: saved.postMatchPending ?? null,
+          nextWeekModifiers: saved.nextWeekModifiers,
+          transferState: saved.transferState ?? null,
+          marketState:
+            saved.marketState ?? { entries: [], offers: [], budget: 0, tickAt: 0 },
+          seasonStandings: saved.seasonStandings ?? {},
+          seasonFixtures: saved.seasonFixtures ?? [],
+        }));
+      }
+      useCareerStore.setState({ hydrated: true });
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[iter19] cold-start bypass resolved hydrated=true saved=',
+        saved ? 'ok' : 'null',
+      );
+    } catch (err) {
+      useCareerStore.setState({ hydrated: true });
+      // eslint-disable-next-line no-console
+      console.warn('[iter19] cold-start bypass caught error', err);
+    }
+  })();
+};
+__mgc1039ColdStartHydrate();
