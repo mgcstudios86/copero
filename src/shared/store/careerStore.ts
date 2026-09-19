@@ -1273,6 +1273,20 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
       // resetea `hydrationResolved` cuando el storage cambia
       // externamente (save, wipe).
       if (!opts?.force && hydrationResolved && hydrationResult !== null) {
+        // MGC-788 iter10 — sincronizar `hydrated:true` al store Zustand
+        // si quedó desincronizado del wall. Escenario: bundle re-mount
+        // (Running main x2 en logcat del walk MGC-782) donde el JS
+        // context se re-inicializa y el store Zustand arranca con
+        // `hydrated:false` (estado inicial), pero el wall module-scope
+        // mantiene `hydrationResolved:true` + `hydrationResult:false`
+        // del ciclo anterior. Sin este flip idempotente, el layout
+        // quedaba atrapado en la splash blanca con ActivityIndicator
+        // verde (`colors.primary` #22C55E) porque el gate
+        // `if (!hydrated || ...)` nunca levanta. Idempotente: si
+        // `hydrated` ya está true, el set no produce re-render.
+        if (!get().hydrated) {
+          set((s) => ({ ...s, hydrated: true }));
+        }
         return hydrationResult;
       }
 
