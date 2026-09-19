@@ -127,13 +127,23 @@ function ThemedShell() {
     'hydrating' | 'needs-onboarding' | 'ready'
   >('hydrating');
   useEffect(() => {
-    void loadOnboardedFlag()
-      .then((onboarded) => {
-        setOnboardedState(onboarded ? 'ready' : 'needs-onboarding');
-      })
-      .catch(() => {
-        setOnboardedState('ready');
-      });
+    // MGC-1048 iter20 — consumir el resultado pre-computado a nivel de
+    // módulo (ver `__mgc1048ResolveOnboardedRace()` al final del archivo).
+    // Si la lectura del AsyncStorage nativo se cuelga en release APK
+    // sobre ZY22G728HN, el race resuelve a `false` (needs-onboarding)
+    // tras 1500ms y la UI sale del splash gate via `<Redirect>` a
+    // `/onboarding/language`. Patrón simétrico a MGC-1035 (gate de
+    // `hydrated`) — la doble red de seguridad garantiza que
+    // `onboardedState` SIEMPRE sale de 'hydrating' aun si el bridge
+    // JS↔native queda mudo.
+    let cancelled = false;
+    void __mgc1048ResolveOnboardedRace().then((onboarded) => {
+      if (cancelled) return;
+      setOnboardedState(onboarded ? 'ready' : 'needs-onboarding');
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!hydrated || onboardedState === 'hydrating') {
@@ -391,7 +401,17 @@ const __mgc1039ColdStartHydrate = (): void => {
   __mgc1039ColdStartResolved = true;
   (async () => {
     try {
-      const saved = await loadCareerSave();
+      // MGC-1048 iter20 — defense-in-depth: si `loadCareerSave()` se
+      // cuelga (mismo síntoma que `loadOnboardedFlag()` abajo), el
+      // try/catch NO lo detecta (un hang no es un throw). Race contra
+      // un timeout de 1500ms garantiza que `hydrated:true` SIEMPRE
+      // se setea, sin importar si la lectura del snapshot quedó
+      // huérfana. 1500ms = mismo budget que el gate de `onboarded`
+      // para que ambos gates se liberen en ventana.
+      const saved = await Promise.race([
+        loadCareerSave(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+      ]);
       if (saved) {
         // Misma aplicación que `hydrateFromSave` hace en el branch
         // `outcome.ok === true`. Mantenemos los campos críticos para
@@ -428,3 +448,64 @@ const __mgc1039ColdStartHydrate = (): void => {
   })();
 };
 __mgc1039ColdStartHydrate();
+
+// MGC-1048 iter20 — safety-net módulo-scope para `loadOnboardedFlag()`.
+// Patrón simétrico a `__mgc1035ReleaseHydrationGate()` (cubre `hydrated`)
+// y `__mgc1039ColdStartHydrate()` (cubre `loadCareerSave()`).
+//
+// QA walk MGC-1044 sobre build-mgc1039-iter19-vc600-48e0ab4
+// (SHA256 d188d406) sobre ZY22G728HN reportó que tras la resolución
+// del iter19, el splash gate ya NO quedaba en loop infinito pero la
+// app seguía colgada en el ActivityIndicator centrado: t=5/15/30/60/
+// 90/120s = pantalla negra con strip loading, JS thread idle, network
+// OK, rafBypass fired UNA vez, hydrate=null log único (sin loop),
+// cold-start bypass resolved=1 — todo el path de hidratación del
+// careerStore funcionó PERO `onboardedState` quedó en 'hydrating'
+// indefinidamente porque `loadOnboardedFlag()` nunca resolvió
+// (`AsyncStorage.getItem` colgado en release APK sobre el bridge
+// JS↔native del Moto edge30).
+//
+// Si el gate `if (!hydrated || onboardedState === 'hydrating')` en
+// línea 139 sigue mostrando el ActivityIndicator, ningún cambio
+// dentro del componente se ve — ni el `<Stack>`, ni el `<Redirect>`,
+// ni el SiteHeader. La pantalla queda muerta.
+//
+// Mitigación iter20: pre-computar el resultado del flag a nivel de
+// módulo apenas Hermes evalúa el bundle, ANTES del mount de React.
+// El race `Promise.race([loadOnboardedFlag(), timeoutPromise(1500)])`
+// garantiza que:
+//   - Si `loadOnboardedFlag()` resuelve primero → valor real del flag.
+//   - Si AsyncStorage se cuelga → 1500ms después cae a `false` (no
+//     onboarded) → el useEffect consume el valor → setState dispara
+//     `<Redirect href="/onboarding/language" />` → UI monta.
+//
+// 1500ms es generoso para lectura AsyncStorage local (típicamente <50ms)
+// pero lo bastante corto para no parpadear tras el splash.
+let __mgc1048OnboardedResolved = false;
+let __mgc1048OnboardedResult: boolean = false;
+let __mgc1048OnboardedPromise: Promise<boolean> | null = null;
+const __mgc1048ResolveOnboardedRace = (): Promise<boolean> => {
+  if (__mgc1048OnboardedResolved) return Promise.resolve(__mgc1048OnboardedResult);
+  if (__mgc1048OnboardedPromise) return __mgc1048OnboardedPromise;
+  __mgc1048OnboardedPromise = Promise.race<boolean>([
+    loadOnboardedFlag(),
+    new Promise<boolean>((resolve) => {
+      setTimeout(() => resolve(false), 1500);
+    }),
+  ])
+    .then((value) => {
+      __mgc1048OnboardedResolved = true;
+      __mgc1048OnboardedResult = value;
+      return value;
+    })
+    .catch(() => {
+      // Best-effort: si AsyncStorage explota (no solo se cuelga),
+      // caemos a `false` (needs-onboarding) para garantizar salida
+      // del splash gate via redirect.
+      __mgc1048OnboardedResolved = true;
+      __mgc1048OnboardedResult = false;
+      return false;
+    });
+  return __mgc1048OnboardedPromise;
+};
+__mgc1048ResolveOnboardedRace();
