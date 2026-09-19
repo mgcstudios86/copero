@@ -1,6 +1,7 @@
 import { Stack, Redirect } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
@@ -202,8 +203,50 @@ export default function RootLayout() {
     'Poppins-Bold': Poppins_700Bold,
   });
 
-  if (!fontsLoaded && !fontError) {
-    return <View style={styles.root} />;
+  // MGC-763 — root-cause del white-screen permanente en release APK sobre
+  // ZY22G728HN. PR #692 + MGC-724 atajaron el síntoma (throttle logs +
+  // setTimeout 5s en ThemedShell) pero el render seguía congelado desde
+  // el primer frame post-splash, lo que demuestra que el `useEffect` con
+  // el setTimeout del MGC-724 nunca corrió: `ThemedShell` nunca montó
+  // porque `RootLayout` esperaba `useFonts()` antes de ceder. Si el
+  // bridge de expo-font se atasca en release (común cuando el bundle de
+  // TTFs de `@expo-google-fonts/*` falla el autolinking o el asset
+  // bundling pierde el `dist/assets/<hash>.ttf`), `useFonts` queda
+  // esperando indefinidamente, el `<View style={styles.root} />` early
+  // return es transparente (sin backgroundColor) y queda expuesto el
+  // splash de expo-splash-screen — que como nadie llama
+  // `SplashScreen.hideAsync()` (solo se llama automáticamente en dev),
+  // pinta blanco permanente sobre cualquier APK no-dev.
+  //
+  // Fix: (a) timeout 5s sobre fontsLoaded/fontError para no bloquear el
+  // árbol React cuando el bridge no responde — fallback a system fonts;
+  // (b) `SplashScreen.hideAsync()` explícito al desmontar el gate nativo
+  // para destrabar el splash aunque fuentes no carguen; (c)
+  // backgroundColor explícito en el View early-return para que si
+  // splash hide falla el surface matchee el tema copero y no quede un
+  // hueco blanco.
+  const [fontFallbackFired, setFontFallbackFired] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setFontFallbackFired(true), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+  const splashHiddenRef = useRef(false);
+  useEffect(() => {
+    if (!(fontsLoaded || fontError || fontFallbackFired)) return;
+    if (splashHiddenRef.current) return;
+    splashHiddenRef.current = true;
+    void SplashScreen.hideAsync().catch(() => {
+      // best-effort: si el módulo nativo no está disponible (web/jest)
+      // no bloqueamos el render
+    });
+  }, [fontsLoaded, fontError, fontFallbackFired]);
+
+  if (!fontsLoaded && !fontError && !fontFallbackFired) {
+    return (
+      <View
+        style={[styles.root, { backgroundColor: SPLASH_FALLBACK_BG }]}
+      />
+    );
   }
 
   return (
@@ -225,6 +268,12 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+// MGC-763 — color de fondo del early-return antes de que `useTheme()`
+// esté disponible. Matchea `app.json#expo.plugins.expo-splash-screen.backgroundColor`
+// (#0B1320) para que si el splash se atrasa en ocultarse, la transición
+// splash→app sea visualmente continua y no haya flash blanco.
+const SPLASH_FALLBACK_BG = '#0B1320';
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
