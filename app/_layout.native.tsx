@@ -64,6 +64,21 @@ function ThemedShell() {
         // UI forever.
         useCareerStore.setState({ hydrated: true });
       });
+    // MGC-1022 iter17 — bypass duro del hydration gate post cold-start.
+    // Síntoma en ZY22G728HN release: splash gate MGC-998 vector A libera
+    // correctamente (frames=3 elapsedMs=3017) pero `hydrateFromSave()`
+    // queda colgado en su `await loadCareerSave()` — el bridge nativo
+    // AsyncStorage no responde y el `.catch()` nunca se gatilla. Resultado:
+    // ThemedShell nunca libera el gate de hidratación → home nunca pinta.
+    // 250ms hard bypass sobre `hydrated` (alineado con copero-mgc812
+    // MGC-852 iter13) — el store ya tiene initialSnapshot cargado por
+    // `create()`, la UI renderiza contra datos coherentes.
+    const hardBypass = setTimeout(() => {
+      if (!useCareerStore.getState().hydrated) {
+        useCareerStore.setState({ hydrated: true });
+      }
+    }, 250);
+    return () => clearTimeout(hardBypass);
   }, []);
 
   // MGC-722 — drenamos la save pendiente cuando el OS manda la app a
@@ -206,13 +221,27 @@ export default function RootLayout() {
     'Poppins-Bold': Poppins_700Bold,
   });
 
+  // MGC-1022 iter17 — bypass duro del font gate si `useFonts` se cuelga en
+  // release builds. Síntoma: blank/black screen persistente post splash
+  // gate (MGC-998 vector A liberó splash a frames=3 elapsedMs=3017 sobre
+  // ZY22G728HN) — el View temprano mostraba #0B1320 dark navy pero el
+  // árbol React nunca montaba porque `useFonts` quedaba esperando la
+  // respuesta del bridge expo-font. 500ms es lo bastante generoso para
+  // fuentes bundleadas en release (~80-150ms en buenas condiciones) y lo
+  // bastante corto para no parpadear más de 1 frame tras el splash.
+  const [fontFallbackFired, setFontFallbackFired] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setFontFallbackFired(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   // MGC-1018 — fix parpadeo blanco en Moto edge30: el View de splash durante
   // la carga de fonts (`useFonts` resolving) ahora trae `backgroundColor`
   // explicito `#0B1320` (mismo dark navy que `app.config.js splashscreen` y
   // `android:windowBackground`). Antes era transparente → window manager
   // del Moto flasheaba blanco por unos frames antes de que ThemeProvider
   // montara con `colors.bg`.
-  if (!fontsLoaded && !fontError) {
+  if (!fontsLoaded && !fontError && !fontFallbackFired) {
     return <View style={[styles.root, styles.splashFallback]} />;
   }
 
