@@ -188,13 +188,15 @@ export default function CalendarScreen() {
     const target = layouts.get(scrollToWeek);
     if (!target || !scrollRef.current) return;
     // Pedimos la altura del ScrollView vía measure para centrar.
-    scrollRef.current.measure((_x, _y, _w, h) => {
-      const offset = Math.max(
-        0,
-        target.y - Math.max(0, (h - target.height) / 2),
-      );
-      scrollRef.current?.scrollTo({ y: offset, animated: true });
-    });
+    (scrollRef.current as unknown as { measure: (cb: (x: number, y: number, w: number, h: number) => void) => void }).measure(
+      (_x, _y, _w, h) => {
+        const offset = Math.max(
+          0,
+          target.y - Math.max(0, (h - target.height) / 2),
+        );
+        scrollRef.current?.scrollTo({ y: offset, animated: true });
+      },
+    );
   }, [scrollToWeek, layoutVersion]);
 
   // MGC-487.1 — disparar el bracket de playoffs desde el calendario.

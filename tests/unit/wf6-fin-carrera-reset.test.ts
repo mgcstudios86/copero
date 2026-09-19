@@ -19,7 +19,7 @@
  */
 
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { useCareerStore } from '@/shared/store/careerStore';
+import { useCareerStore, invalidateHydrationLatch } from '@/shared/store/careerStore';
 import {
   loadCareerSave,
   saveCareerSave,
@@ -46,6 +46,12 @@ describe('MGC-1736 WF6 — fin-carrera no-mutación AC', () => {
   beforeEach(async () => {
     __resetStorageForTests();
     useCareerStore.getState().reset();
+    // MGC-729 — el latch sticky de hydrateFromSave vive a nivel de
+    // módulo; entre tests del mismo file el resultado cacheado de
+    // hydrateFromSave persitiría. Sin invalidar, el segundo test del
+    // loop "3 corridas consecutivas" leería el cached {ok:true, Carrera-A}
+    // y vería profile.name='' (no se releyó storage).
+    invalidateHydrationLatch();
   });
 
   it('resetAll existe y es Promise-returning (awaitable, a diferencia de reset())', () => {
@@ -84,6 +90,13 @@ describe('MGC-1736 WF6 — fin-carrera no-mutación AC', () => {
   it('3 corridas consecutivas: ninguna deja datos fantasma de la anterior', async () => {
     for (const name of ['Carrera-A', 'Carrera-B', 'Carrera-C']) {
       await saveCareerSave(savedCareer(name));
+      // MGC-729 — saveCareerSave mutó disco por fuera del store; el latch
+      // sticky de hydrateFromSave todavía ve el cached del rehydrate post
+      // resetAll previo ({ok:false}) y devolvería false sin releer.
+      // En runtime real el flujo save→hydrateFromSave pasa por el store,
+      // que invalida el latch internamente; acá llamamos el módulo
+      // directo así que el test debe invalidar a mano.
+      invalidateHydrationLatch();
       await useCareerStore.getState().hydrateFromSave();
       expect(useCareerStore.getState().profile.name).toBe(name);
 

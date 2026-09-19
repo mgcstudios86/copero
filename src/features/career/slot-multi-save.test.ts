@@ -259,6 +259,11 @@ describe('MGC-2099-A · multi-slot save + UI save-picker', () => {
     await persistence.setActiveSlot('dirty-slot'); // cursor al slot vacío
     persistence.__seedForTests({}); // wipe otra vez — slot activo ahora vacío
 
+    // MGC-729 — invalidar el latch sticky de `hydrateFromSave` para que
+    // esta segunda llamada (post-corrupción) realmente relea AsyncStorage.
+    // Sin el invalidate, el latch devolvería el cached `true` del primer
+    // hydrate (slot "default" poblado) y no resetearía la store.
+    storeModule.invalidateHydrationLatch();
     await store.hydrateFromSave();
     const afterReset = storeModule.useCareerStore.getState();
     expect(afterReset.stage).toBe('identity');

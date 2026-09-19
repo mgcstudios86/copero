@@ -208,6 +208,12 @@ export function __resetStorageForTests(): void {
   // cualquier op residual se completa contra el backend nuevo
   // (idempotente: o escribe de nuevo, o no-op).
   writeQueue = Promise.resolve();
+  // MGC-729 — reset del Set sticky de dedup `hydrate=null`. En
+  // runtime nativo el Set vive durante toda la vida del JS bundle y
+  // es correcto que persista; en tests necesitamos poder resetearlo
+  // para que `career-persistence-ac7.test.ts#hydrate=null` siga
+  // pasando entre corridas sucesivas.
+  hydrateNullDedup.clear();
 }
 
 /**
@@ -232,7 +238,41 @@ export function __seedForTests(entries: Record<string, string>): void {
  * Y en vitest (los tests usan `vi.spyOn(console)` para capturarlos y
  * verificar el contenido). El costo en runtime nativo es despreciable:
  * una línea por mutación de usuario.
+ *
+ * MGC-716 — dedup de logs `hydrate=null`. Si un consumer invoca
+ * `loadCareerSave` en un loop (ej. path de cold-start que re-entra
+ * `hydrateFromSave` por una re-suscripción o un re-render que rebota
+ * el gate de hidratación), el log spam satura logcat y bloquea el JS
+ * thread de Hermes. La dedup key combina slotId + reason y descarta
+ * TODAS las repeticiones tras la primera emisión para esa clave —
+ * el flag vive en el closure del módulo (mapa JS-bundle-scoped),
+ * así un loop de cold-start que dispara N calls/s sólo emite 1 línea
+ * y el resto se descartan sincrónicamente. Los `hydrate=ok` no se
+ * dedupean (cada éxito es señal válida). Las saves (`save=ok|fail`)
+ * tampoco se dedupean — cada mutación es relevante.
+ *
+ * MGC-729 — la ventana anterior de 5s era estrictamente insuficiente:
+ * QA reprodujo el bug sobre 467d42f con 7 líneas en 30s espaciadas
+ * EXACTAMENTE 5s (la cadencia de la ventana), lo que demuestra que
+ * `loadCareerSave` se sigue invocando a ritmo >=1 cada 5s y cada
+ * invocación escapa del dedup window porque la ventana se resetea
+ * tras emitir. Una ventana "sticky" — emitir 1 vez por clave y nunca
+ * más hasta que el bundle se recargue — cierra el log spam por
+ * completo. Tests NODE_ENV=test bypass-ean el dedup (igual que antes)
+ * para poder contar calls y verificar el comportamiento.
  */
+const hydrateNullDedup = new Set<string>();
+
+function shouldEmitHydrateNull(slotId: string, reason: string): boolean {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
+    return true; // los tests quieren ver cada call
+  }
+  const key = `${slotId}:${reason}`;
+  if (hydrateNullDedup.has(key)) return false;
+  hydrateNullDedup.add(key);
+  return true;
+}
+
 function logPersist(level: 'log' | 'error', msg: string, err?: unknown): void {
   if (level === 'log') console.log(msg);
   else console.error(msg, err ?? '');
@@ -560,7 +600,7 @@ async function loadCareerSaveImpl(slotId?: string): Promise<CareerSaveState | nu
           `[persistence] hydrate=null slot=${targetId} reason=json-parse-failed`,
         );
       }
-    } else {
+    } else if (shouldEmitHydrateNull(targetId, 'no-snapshot-in-storage')) {
       logPersist(
         'log',
         `[persistence] hydrate=null slot=${targetId} reason=no-snapshot-in-storage`,

@@ -156,6 +156,19 @@ export const initialSnapshot = (): CareerSnapshot => ({
   // MGC-475 — market state arranca idle; la primera vez que el usuario
   // entra al flow, `openMarket` lo materializa con pool + RNG seed.
   marketState: null,
+  // MGC-704 — slice de liga persistible. Incluidos en el initialSnapshot
+  // del motor para que `engine.step({type: 'reset'})` y los demás
+  // `setSnapshot((s) => step(s, action))` no borren los slices al
+  // re-emitir el state. Sin esto, `useCareerStore((s) => s.seasonStandings)`
+  // recibe `undefined` después de un reset / advanceSeason / commitMatch,
+  // y los consumers (calendar.tsx) pierden su placeholder determinista.
+  // MGC-716 — bug regresión: PR #688 mergeó este commit en runtime y la
+  // asimetría entre `identity-state.ts#initialSnapshot` (incluye los
+  // slices) y `engine.ts#initialSnapshot` (no los incluía) hacía que el
+  // motor puro pudiera emitir un snapshot sin ellos cuando un path de
+  // reset corría en cold-start. Loop "hydrate=null" en logcat cada 20ms.
+  seasonStandings: {},
+  seasonFixtures: [],
 });
 
 export function step(state: CareerSnapshot, action: CareerAction): CareerSnapshot {
