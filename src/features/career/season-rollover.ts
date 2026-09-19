@@ -16,7 +16,9 @@
  * `flushPendingSave()` (`careerStore.ts`) después.
  */
 
-import { SEASON_LENGTH } from './phase';
+import { SEASON_LENGTH, buildStandings } from './phase';
+
+export { buildStandings };
 
 export type RolloverInput = {
   season: number;
