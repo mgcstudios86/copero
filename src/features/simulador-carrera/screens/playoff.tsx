@@ -1,10 +1,11 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/design';
 import { Button } from '@/design/components';
 import { ACADEMY_CLUBS } from '@/features/career/clubs';
+import { createRng } from '@/features/career/rng';
 import { useCareerStore } from '@/shared/store/careerStore';
 import {
   advancePlayoffRound,
@@ -14,12 +15,14 @@ import {
   type PlayoffRound,
 } from '@/features/career/playoff';
 import type { Club } from '@/types/career';
+import { CelebrationModal } from './CelebrationModal';
 
 // MGC-487 — Bracket UI de playoffs nacionales (semanas 35–38).
 // Renderiza el bracket por ronda y permite avanzar la ronda
 // (cuartos → semis → final) usando el helper puro `advancePlayoffRound`.
-// MVP: el engine real de partidos (`match.ts#resolveMatch`) reemplaza
-// el 50/50 placeholder cuando se integre con la fase semanal.
+// MGC-487.2 — usa `createRng` del módulo central (mismo Mulberry32 que
+// el motor de partidos) para que `resolvePlayoffMatch` pueda consumir
+// `chance()` además de `int()`.
 
 const ROUND_LABEL: Record<PlayoffRound, string> = {
   quarter: 'Cuartos',
@@ -28,20 +31,6 @@ const ROUND_LABEL: Record<PlayoffRound, string> = {
 };
 
 const ROUND_ORDER: PlayoffRound[] = ['quarter', 'semi', 'final'];
-
-function buildRng(seed: number) {
-  let s = seed >>> 0;
-  return {
-    int: (min: number, max: number) => {
-      s = (s + 0x6d2b79f5) >>> 0;
-      let t = s;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      const r = ((t ^ (t >>> 14)) >>> 0) % (max - min + 1);
-      return min + r;
-    },
-  };
-}
 
 function seedTopEight(profile: { club?: Club | null; seed: number }): string[] {
   const pool = ACADEMY_CLUBS.filter((c) => c.id !== profile.club?.id);
@@ -76,18 +65,105 @@ export default function PlayoffScreen() {
   );
 
   const [bracket, setBracket] = useState<PlayoffMatch[]>(() =>
-    buildPlayoffBracket(seeded, buildRng(seed)),
+    buildPlayoffBracket(seeded, createRng(seed)),
   );
 
   const champion = bracketChampion(bracket);
 
+  // MGC-601 / MGC-487.4 — Modal de celebración del campeón.
+  // Auto-aparece cuando el bracket pasa de `champion === null` a un
+  // campeón resuelto (al tap "Avanzar ronda" sobre la final). El
+  // caller (playoff.tsx) controla el dismiss: backdrop, "Cerrar" o
+  // "Nueva temporada" — todos preservan el estado para que QA pueda
+  // reabrir el modal tras dismiss sin re-jugar el bracket.
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationDismissed, setCelebrationDismissed] = useState(false);
+
+  useEffect(() => {
+    if (champion && !celebrationDismissed) {
+      // Diferimos el setState al próximo tick para evitar
+      // `react-hooks/set-state-in-effect` (cascading renders).
+      // El cleanup cancela el timer si champion cambia antes de que
+      // dispare, evitando re-aperturas cuando el usuario dismissa.
+      const id = setTimeout(() => setShowCelebration(true), 0);
+      return () => clearTimeout(id);
+    }
+  }, [champion, celebrationDismissed]);
+
   const onAdvanceRound = useCallback(() => {
-    setBracket((current) => advancePlayoffRound(current, buildRng(seed + current.length)));
+    setBracket((current) => advancePlayoffRound(current, createRng(seed + current.length)));
   }, [seed]);
 
   const onCloseSeason = useCallback(() => {
-    router.push('/simulador-carrera/season-summary');
+    console.log('[iter6 MGC-629] onCloseSeason called → router.replace');
+    router.replace('/simulador-carrera/season-summary');
   }, [router]);
+
+  // MGC-601 — handlers del modal.
+  const onCelebrationClose = useCallback(() => {
+    setShowCelebration(false);
+    setCelebrationDismissed(true);
+  }, []);
+
+  // MGC-629 iter6 — handler "Nueva temporada".
+  //
+  // iter5 (081251e) confirmó por QA walks MGC-641/MGC-642 que llamar
+  // `router.replace()` sincrónicamente dentro del handler (junto con
+  // `setShow(false)` y `setCelebrationDismissed(true)`) sigue sin
+  // navegar: el modal cierra OK pero `season-summary` no aparece.
+  //
+  // iter6 invierte el contrato: la navegación pasa a ser declarativa
+  // vía `useEffect`. El handler sólo flippa state JS y levanta una
+  // flag `newSeasonRequested`. La navegación se ejecuta cuando el
+  // useEffect detecta que (a) el overlay ya está desmontado
+  // (`!showCelebration`), (b) el bracket está dismissed, y (c) hay un
+  // request pendiente. Así garantizamos que `router.replace` corre
+  // DESPUÉS del commit de React que desmonta el overlay — sin race
+  // con la transición de expo-router.
+  //
+  // console.log instrumentation permite a QA confirmar:
+  //   - "handler fired" → el Pressable del Button ejecutó onPress.
+  //   - "useEffect: navigation requested, overlay unmounted" →
+  //     navigation corre tras el commit.
+  //   - "onCloseSeason called → router.replace" → router.replace
+  //     ejecutó la transición.
+  const [newSeasonRequested, setNewSeasonRequested] = useState(false);
+  const newSeasonRequestedRef = useRef(false);
+
+  const onCelebrationNewSeason = useCallback(() => {
+    console.log('[iter6 MGC-629] onCelebrationNewSeason handler fired');
+    setShowCelebration(false);
+    setCelebrationDismissed(true);
+    setNewSeasonRequested(true);
+    newSeasonRequestedRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (
+      newSeasonRequested &&
+      !showCelebration &&
+      celebrationDismissed
+    ) {
+      console.log('[iter6 MGC-629] useEffect: navigation requested, overlay unmounted → calling onCloseSeason');
+      // Navegación sigue siendo síncrona (no es setState) — es la
+      // pieza que MGC-629 iter6 validó por QA walks MGC-641/642.
+      // Reset de flags se difiere al próximo tick para no caer en
+      // `react-hooks/set-state-in-effect` (cascading renders). El
+      // cleanup cancela el timer si las deps cambian antes de que
+      // dispare.
+      const resetId = setTimeout(() => {
+        setNewSeasonRequested(false);
+        newSeasonRequestedRef.current = false;
+      }, 0);
+      onCloseSeason();
+      return () => clearTimeout(resetId);
+    }
+  }, [
+    newSeasonRequested,
+    showCelebration,
+    celebrationDismissed,
+    onCloseSeason,
+  ]);
 
   const onBack = useCallback(() => {
     router.back();
@@ -300,6 +376,15 @@ export default function PlayoffScreen() {
           fullWidth
         />
       </View>
+
+      {/* MGC-601 / MGC-487.4 — Modal celebración del campeón. */}
+      <CelebrationModal
+        visible={showCelebration}
+        champion={champion}
+        season={profile?.season ?? 1}
+        onClose={onCelebrationClose}
+        onNewSeason={onCelebrationNewSeason}
+      />
     </SafeAreaView>
   );
 }
