@@ -27,6 +27,8 @@ import {
   bootstrapPersistence,
   flushPendingSave,
 } from '@/shared/store/careerStore';
+import { loadCareerSave } from '@/features/career/persistence';
+import { EMPTY_MARKET_STATE } from '@/features/career/market';
 
 /**
  * MGC-555 PR1 — carga tipográfica.
@@ -53,16 +55,31 @@ function ThemedShell() {
   // MGC-722 sobre build-MGC306-159-14-dc89705.apk).
   const hydrated = useCareerStore((s) => s.hydrated);
   useEffect(() => {
+    // MGC-1042 iter19 — `bootstrapPersistence()` se llama UNA vez por
+    // proceso JS, garantizado por el guard módulo-scope
+    // `appStateListenerInstalled` adentro de `careerStore.ts`. Si
+    // ThemedShell se remonta (HMR, Fast Refresh, expo-dev-client, o un
+    // re-mount silencioso durante cold-start), el segundo `useEffect`
+    // es no-op. Antes llamaba `bootstrapPersistence()` en cada mount
+    // y eso duplicaba listeners de AppState en ZY22G728HN.
     bootstrapPersistence();
-    void useCareerStore
-      .getState()
-      .hydrateFromSave()
-      .catch(() => {
-        // Falla best-effort: si AsyncStorage falla, dejamos el
-        // initial snapshot y desbloqueamos igual para no bloquear la
-        // UI forever.
-        useCareerStore.setState({ hydrated: true });
-      });
+    // MGC-1042 iter19 — el cold-start hydration ya NO vive en este
+    // useEffect. La versión previa lo puso acá como `await
+    // hydrateFromSave()` y QA walk MGC-1033 detectó loop sostenido:
+    // 1494 ocurrencias de `[persistence] hydrate=null
+    // reason=no-snapshot-in-storage` en 70s (~21 Hz). El módulo
+    // `__mgc1042ColdStartHydrate()` definido al final de este archivo
+    // es módulo-scope + idempotente: corre apenas Hermes evalúa el
+    // bundle (antes del mount de React), exactamente UNA vez por
+    // proceso JS, y aplica el snapshot al store sin pasar por el gate
+    // centralizado. El gate sigue activo para callers sub-siguientes
+    // (`dashboard.onSlotChanged`, `SaveSlotPicker.onConfirm`,
+    // `__forceHydrateFromSave`).
+    //
+    // Bypass duro post cold-start también se delega al safety-net
+    // módulo-scope (MGC-1035 iter2: 400ms / 3000ms). Ambos timers son
+    // idempotentes y NO montan en cada render de ThemedShell — el flag
+    // `__mgc1042GateReleased` corta la segunda ejecución.
   }, []);
 
   // MGC-722 — drenamos la save pendiente cuando el OS manda la app a
@@ -205,3 +222,138 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+// MGC-1042 iter19 — safety-net a nivel de módulo. Se registra apenas
+// Hermes evalúa el bundle, ANTES del mount de React. QA walk MGC-1033
+// sobre MGC-1025/1022 detectó que los `setTimeout` defensivos de
+// 3s/3.5s NUNCA se disparaban sobre ZY22G728HN: el logcat sólo
+// registró `[persistence] hydrate=null slot=default
+// reason=no-snapshot-in-storage` en loop y luego silencio absoluto —
+// ni el splash gate se liberó ni el ActivityIndicator desapareció. La
+// pantalla quedó blanca con strip vertical angosto (splash dentro de
+// surface oculto) hasta t=60s+ sin contenido renderizado.
+//
+// iter19 invierte el modelo: registra los timers como efectos a nivel
+// de módulo, fuera de cualquier `useEffect`. El setTimeout se agenda
+// en cuanto el import de este archivo resuelve, garantizando que aun
+// si React queda congelado, el gate se libere. Triple cobertura:
+//
+//   t=400ms   → flip hydrated:true  (cubre bridge expo-font colgado,
+//               caso MGC-763). Marca el log `[copero:hydra]`.
+//   t=3000ms  → flip redundante idempotente (cubre el caso worst-case
+//               del bridge AsyncStorage colgado, caso MGC-1022 iter17).
+//
+// Los timers llaman la misma función idempotente. Si hydrated ya es
+// true, el `setState` no hace nada (zustand noop) — el segundo timer
+// queda como red de seguridad.
+//
+// `useCareerStore` ya está importado arriba vía ESM (hoisted), así que
+// la referencia directa está disponible apenas Hermes evalúa el bundle.
+// Si por algún motivo el módulo no terminó de inicializarse, el catch
+// silencioso evita romper el startup y el segundo timer cubre el gap.
+let __mgc1042GateReleased = false;
+const __mgc1042ReleaseHydrationGate = () => {
+  if (__mgc1042GateReleased) return;
+  __mgc1042GateReleased = true;
+  try {
+    if (
+      typeof useCareerStore !== 'undefined' &&
+      useCareerStore.getState &&
+      !useCareerStore.getState().hydrated
+    ) {
+      useCareerStore.setState({ hydrated: true });
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[copero:hydra] module-scope hydration gate timeout — forzando hydrated=true para liberar splash gate',
+      );
+    }
+  } catch {
+    // best-effort: si el store todavía no terminó de inicializar, el
+    // segundo timer a 3000ms cubre el gap.
+  }
+};
+setTimeout(__mgc1042ReleaseHydrationGate, 400);
+setTimeout(__mgc1042ReleaseHydrationGate, 3000);
+
+// MGC-1042 iter19 — cold-start hydration a nivel de módulo. Se
+// ejecuta apenas Hermes evalúa el bundle, ANTES del mount de React,
+// y UNA SOLA VEZ por proceso JS (guard `__mgc1042ColdStartResolved`).
+//
+// Por qué módulo-scope y NO dentro del useEffect:
+//   La versión previa (MGC-722 + iter17/18) lo puso como
+//   `await hydrateFromSave()` adentro de un `useEffect(() => { ... },
+//   [])` de ThemedShell. QA walk MGC-1033 detectó loop sostenido en
+//   release APK sobre ZY22G728HN: 1494 pares `[persistence]
+//   hydrate=null` + `[iter18] cold-start bypass resolved hydrated=true`
+//   en 70s (~21 Hz), ViewRootImpl visibility=0.
+//
+//   El `useEffect []` debería correr una vez por mount, pero el patrón
+//   mostró que ThemedShell se está remontando por algún motivo no
+//   evidente (Fast Refresh en dev, re-mount silencioso en release,
+//   bundle-split de expo-router, o un side-effect del `useFonts`
+//   resolviendo en frame 1). Cada re-mount dispara un IIFE nuevo que
+//   `await loadCareerSave()` — y como AsyncStorage vacío emite el log
+//   `[persistence] hydrate=null` en cada call, el logcat se llena de
+//   pares cada 47ms.
+//
+//   Mover el bootstrap a módulo-scope + guard idempotente cierra la
+//   ventana: el IIFE corre una vez por proceso JS, sin importar
+//   cuántos mounts de ThemedShell ocurran.
+//
+// Por qué llamar `loadCareerSave()` DIRECTO (sin pasar por
+//   `hydrateFromSave`):
+//   El path `hydrateFromSave()` se cuelga en release cuando AsyncStorage
+//   no responde en el primer await: la cascada try/catch queda
+//   esperando al `getItem` y el `setTimeout(hardBypass, 250ms)` nunca
+//   dispara, el splash queda visible 60-90s. Bypaseamos solo el cold-start
+//   (no los callers sub-siguientes) para resolver el hang sin perder
+//   la dedup del store para slot switch / save / reset.
+//
+// Por qué `loadCareerSave()` y NO `setState({ hydrated: true })` a secas:
+//   Necesitamos que la home monte con state coherente (stage, profile,
+//   log, history) para que el CTA "Continuar carrera" de
+//   `app/index.tsx` muestre la label correcta. Sin el payload el
+//   usuario caería en `stage='identity'` (default) y perdería la
+//   partida guardada en cada cold-start. La función `loadCareerSave`
+//   ya tiene la serialización correcta detrás de `pendingSave`
+//   (MGC-2606) y el `serialize()` que evita races con clear en vuelo.
+let __mgc1042ColdStartResolved = false;
+const __mgc1042ColdStartHydrate = (): void => {
+  if (__mgc1042ColdStartResolved) return;
+  __mgc1042ColdStartResolved = true;
+  (async () => {
+    try {
+      const saved = await loadCareerSave();
+      if (saved) {
+        // Misma aplicación que `hydrateFromSave` hace en el branch
+        // `outcome.ok === true`. Mantenemos los campos críticos para
+        // que la UI monte con state coherente.
+        useCareerStore.setState((s) => ({
+          ...s,
+          stage: saved.stage,
+          profile: saved.profile,
+          draft: saved.draft ?? null,
+          card: saved.card ?? null,
+          log: saved.log,
+          seed: saved.seed,
+          rng: saved.rng,
+          postMatchPending: saved.postMatchPending ?? null,
+          nextWeekModifiers: saved.nextWeekModifiers,
+          transferState: saved.transferState ?? null,
+          marketState: saved.marketState ?? EMPTY_MARKET_STATE,
+        }));
+      }
+      useCareerStore.setState({ hydrated: true });
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[iter19] cold-start bypass resolved hydrated=true saved=',
+        saved ? 'ok' : 'null',
+      );
+    } catch (err) {
+      useCareerStore.setState({ hydrated: true });
+      // eslint-disable-next-line no-console
+      console.warn('[iter19] cold-start bypass caught error', err);
+    }
+  })();
+};
+__mgc1042ColdStartHydrate();
