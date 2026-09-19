@@ -20,6 +20,9 @@
     "preview-apk": {
       "distribution": "internal",
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_DEV_RESET_CARRERA": "1"
+      },
       "android": {
         "buildType": "apk"
       }
