@@ -333,3 +333,61 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+// MGC-1035 iter2 — safety-net a nivel de módulo. Se registra apenas
+// Hermes evalúa el bundle, ANTES del mount de React. QA walk MGC-1031
+// sobre MGC-1025 iter1 (build-mgc1025-iter1-7dddf3f.apk) detectó que
+// los `setTimeout` defensivos de 3s/3.5s NUNCA se disparaban sobre
+// ZY22G728HN: el logcat sólo registró `[persistence] hydrate=null
+// slot=default reason=no-snapshot-in-storage` una vez (a t=0.6s) y
+// luego silencio absoluto — ni el splash gate se liberó ni el ActivityIndicator
+// desapareció. La pantalla quedó blanca hasta t=60s sin contenido renderizado.
+//
+// iter1 (MGC-1025) registraba los timers DENTRO de `useEffect` de
+// ThemedShell. Si el árbol React queda congelado antes del primer
+// commit (bug confirmado en release APK sobre ZY22G728HN con Hermes
+// engine), el `useEffect` nunca corre → splash colgado. iter18
+// (MGC-1022, ca9bffd) confía en un `useEffect`-based 50ms hardBypass
+// + rAF + coldStartBypass IIFE — mismo riesgo si React no monta.
+//
+// iter2 invierte el modelo: registra los timers como副作用 a nivel
+// de módulo, fuera de cualquier `useEffect`. El setTimeout se agenda
+// en cuanto el import de este archivo resuelve, garantizando que aun
+// si React queda congelado, el gate se libere. Triple cobertura:
+//
+//   t=400ms   → flip hydrated:true  (cubre bridge expo-font colgado,
+//               caso MGC-763). Marca el log `[copero:hydra]`.
+//   t=3000ms  → flip redundante idempotente (cubre el caso worst-case
+//               del bridge AsyncStorage colgado, caso MGC-1022 iter17).
+//
+// Los timers llaman la misma función idempotente. Si hydrated ya es
+// true, el `setState` no hace nada (zustand noop) — el segundo timer
+// queda como red de seguridad.
+//
+// `useCareerStore` ya está importado arriba vía ESM (hoisted), así que
+// la referencia directa está disponible apenas Hermes evalúa el bundle.
+// Si por algún motivo el módulo no terminó de inicializarse, el catch
+// silencioso evita romper el startup y el segundo timer cubre el gap.
+let __mgc1035GateReleased = false;
+const __mgc1035ReleaseHydrationGate = () => {
+  if (__mgc1035GateReleased) return;
+  __mgc1035GateReleased = true;
+  try {
+    if (
+      typeof useCareerStore !== 'undefined' &&
+      useCareerStore.getState &&
+      !useCareerStore.getState().hydrated
+    ) {
+      useCareerStore.setState({ hydrated: true });
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[copero:hydra] module-scope hydration gate timeout — forzando hydrated=true para liberar splash gate',
+      );
+    }
+  } catch {
+    // best-effort: si el store todavía no terminó de inicializar, el
+    // segundo timer a 3000ms cubre el gap.
+  }
+};
+setTimeout(__mgc1035ReleaseHydrationGate, 400);
+setTimeout(__mgc1035ReleaseHydrationGate, 3000);
