@@ -180,9 +180,15 @@ export function CelebrationModal({
     enableConfetti,
     // trophyScale / trophyPulse / cardOpacity / confettiAnims son
     // referencias estables (Animated.Value instances vía useState lazy).
-    // Excluidas del deps array para evitar el warning de
-    // exhaustive-deps "unnecessary dep"; el effect no rerenderea
-    // cuando esas referencias cambian porque nunca cambian.
+    // Las incluimos en deps para satisfacer `exhaustive-deps`: como
+    // su identidad nunca cambia, el effect no se vuelve a ejecutar
+    // cuando sólo esas refs cambian. `confettiPieces` también es
+    // estable (useMemo con deps vacío).
+    trophyScale,
+    trophyPulse,
+    cardOpacity,
+    confettiAnims,
+    confettiPieces,
   ]);
 
   if (!visible || !champion) return null;
