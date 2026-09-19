@@ -29,6 +29,7 @@ import {
   flushPendingSave,
 } from '@/shared/store/careerStore';
 import { loadCareerSave } from '@/features/career/persistence';
+import { EMPTY_MARKET_STATE } from '@/features/career/market';
 
 /**
  * MGC-555 PR1 — carga tipográfica.
@@ -408,8 +409,7 @@ const __mgc1039ColdStartHydrate = (): void => {
           postMatchPending: saved.postMatchPending ?? null,
           nextWeekModifiers: saved.nextWeekModifiers,
           transferState: saved.transferState ?? null,
-          marketState:
-            saved.marketState ?? { entries: [], offers: [], budget: 0, tickAt: 0 },
+          marketState: saved.marketState ?? EMPTY_MARKET_STATE,
           seasonStandings: saved.seasonStandings ?? {},
           seasonFixtures: saved.seasonFixtures ?? [],
         }));
