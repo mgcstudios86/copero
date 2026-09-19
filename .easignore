@@ -1,0 +1,45 @@
+# EAS Build --local usa este archivo en vez de .gitignore para filtrar
+# la shallow copy al temp build dir (MGC-95 sobre copero).
+# Refs: eas-cli/build/vcs/local.js (Ignore.createForCopyingAsync).
+#
+# CRÍTICO: `.gitignore` declara `/android` (carpeta prebuildada con
+# gradlew/settings.gradle/MainActivity.kt — fuente de la app nativa).
+# Para `eas build --local` SÍ necesitamos `android/` en el temp dir.
+# Sin esto, gradlew queda ENOENT y la build falla con
+# "Error: ENOENT: no such file or directory, open '.../build/android/gradlew'"
+# en la fase de Fix gradlew.
+
+# 1. Excluir todo lo de git primero (build outputs, caches, OS junk).
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+android/.gradle/
+android/build/
+android/app/build/
+android/app/release/
+android/app/debug/
+*.apk
+*.aab
+*.aar
+*.log
+.DS_Store
+*.swp
+*.tmp
+
+# 2. Forzar inclusión de `android/` prebuildado (override del /android en
+#    .gitignore). Sin esto eas-build-local NO encuentra gradlew.
+!android/
+!android/gradlew
+!android/gradlew.bat
+!android/gradle/
+!android/settings.gradle
+!android/app/
+!android/app/build.gradle
+!android/app/src/
+
+# 3. Volver a INCLUIR los secretos que sí necesita --local
+!.env
+!credentials.json
+!credentials/
