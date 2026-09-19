@@ -65,6 +65,25 @@ function ThemedShell() {
         // UI forever.
         useCareerStore.setState({ hydrated: true });
       });
+    // MGC-821 iter12 — bypass duro del hydration latch vía timeout
+    // best-effort. Causa raíz (ver MGC-819 + MGC-786): tras cold-start
+    // el bridge nativo→JS queda congelado antes de propagar
+    // `hydrated:true` desde `hydrateFromSave` (MGC-729 latch de 30s +
+    // queue de native module todavía no drenada en ZY22G728HN). Sin
+    // este fallback la pantalla queda negra con spinner verde
+    // indefinidamente sobre la home. 200ms es lo bastante corto para
+    // no parpadear el splash en cold-start normal (hydrateFromSave
+    // resuelve ~50-80ms) y lo bastante largo para no ganarle al flow
+    // legítimo cuando AsyncStorage está vacío. Si a los 200ms
+    // `hydrated` sigue false, flipeamos directo por setState — el
+    // store ya tiene su initialSnapshot cargado por el `create()`,
+    // así que la UI renderiza contra datos coherentes (no fantasma).
+    const hardTimeout = setTimeout(() => {
+      if (!useCareerStore.getState().hydrated) {
+        useCareerStore.setState({ hydrated: true });
+      }
+    }, 200);
+    return () => clearTimeout(hardTimeout);
   }, []);
 
   // MGC-722 — drenamos la save pendiente cuando el OS manda la app a
