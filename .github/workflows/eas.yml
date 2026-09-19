@@ -52,10 +52,21 @@ jobs:
       ios: ${{ steps.filter.outputs.ios }}
       core: ${{ steps.filter.outputs.core }}
     steps:
+      # MGC-897: pre-checkout cleanup (ver ci.yml mismo comentario)
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
+          persist-credentials: false
       - id: filter
         uses: dorny/paths-filter@v3
         with:
@@ -94,10 +105,21 @@ jobs:
     needs: changes
     if: needs.changes.outputs.android == 'true' || needs.changes.outputs.core == 'true'
     steps:
+      # MGC-897: pre-checkout cleanup (ver ci.yml mismo comentario)
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -173,10 +195,21 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ios == 'true' || needs.changes.outputs.core == 'true'
     steps:
+      # MGC-897: pre-checkout cleanup (ver ci.yml mismo comentario)
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'

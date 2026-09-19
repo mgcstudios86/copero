@@ -71,9 +71,28 @@ jobs:
       typecheck: ${{ steps.filter.outputs.typecheck }}
       tests: ${{ steps.filter.outputs.tests }}
     steps:
+      # MGC-897: pre-checkout cleanup. runners macOS (runner-02 id 3 y
+      # runner-02b id 30) arrastran extraheader stale en .git/config local
+      # del _work dir desde runs previos fallidos (cancel-in-progress deja
+      # el checkout a mitad). Sin esto, git fetch envía el extraheader stale
+      # ADEMÁS del que checkout@v4 inyecta dinámicamente → HTTP 400
+      # "Duplicate header: Authorization". Checkout@v4 corre cleanup
+      # post-fetch, tarde cuando el fetch ya falló. Removemos [http] (bare,
+      # sin scope) Y [http "https://github.com/"] (scoped) en ambos niveles
+      # (global/local) porque git acumula ambos en la misma request HTTPS.
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - id: filter
         uses: dorny/paths-filter@v3
         with:
@@ -126,7 +145,19 @@ jobs:
     needs: changes
     if: needs.changes.outputs.lint == 'true'
     steps:
+      # MGC-897: pre-checkout cleanup. Ver ci.yml primer job.
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -169,7 +200,19 @@ jobs:
     needs: [changes, lint]
     if: always() && needs.changes.outputs.typecheck == 'true' && needs.lint.result != 'failure' && needs.lint.result != 'cancelled'
     steps:
+      # MGC-897: pre-checkout cleanup. Ver ci.yml primer job.
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -206,7 +249,19 @@ jobs:
     needs: [changes, lint, typecheck]
     if: always() && needs.changes.outputs.tests == 'true' && needs.typecheck.result != 'failure' && needs.typecheck.result != 'cancelled'
     steps:
+      # MGC-897: pre-checkout cleanup. Ver ci.yml primer job.
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -244,7 +299,19 @@ jobs:
     needs: [changes, lint, typecheck, test-web]
     if: always() && needs.changes.outputs.web == 'true' && needs.test-web.result != 'failure' && needs.test-web.result != 'cancelled'
     steps:
+      # MGC-897: pre-checkout cleanup. Ver ci.yml primer job.
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -308,7 +375,19 @@ jobs:
     needs: [changes, lint, typecheck, test-web, build-web]
     if: always() && github.event_name == 'pull_request'
     steps:
+      # MGC-897: pre-checkout cleanup (ver ci.yml primer job)
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Verify SHA citation
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -340,7 +419,19 @@ jobs:
     needs: [changes, lint, typecheck, test-web, build-web, sha-citation-check]
     if: always() && github.event_name == 'pull_request'
     steps:
+      # MGC-897: pre-checkout cleanup (ver ci.yml primer job)
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Compute status table + gate verdict
         id: status
         env:

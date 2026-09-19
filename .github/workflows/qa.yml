@@ -63,7 +63,19 @@ jobs:
     runs-on: [self-hosted, copero-qa, Linux]
     if: github.event_name == 'pull_request'
     steps:
+      # MGC-897: pre-checkout cleanup (ver ci.yml mismo comentario)
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Verify SHA citation (Capa 3)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,7 +120,19 @@ jobs:
     env:
       INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
     steps:
+      # MGC-897: pre-checkout cleanup (ver ci.yml mismo comentario)
+      - name: Limpiar stale auth (MGC-897 workaround)
+        if: always()
+        run: |
+          git config --global --remove-section "http" 2>/dev/null || true
+          git config --global --remove-section "http.https://github.com/" 2>/dev/null || true
+          if [ -d .git ]; then
+            git config --local --remove-section "http" 2>/dev/null || true
+            git config --local --remove-section "http.https://github.com/" 2>/dev/null || true
+          fi
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v4
