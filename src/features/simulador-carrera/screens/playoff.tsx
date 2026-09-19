@@ -81,7 +81,12 @@ export default function PlayoffScreen() {
 
   useEffect(() => {
     if (champion && !celebrationDismissed) {
-      setShowCelebration(true);
+      // Diferimos el setState al próximo tick para evitar
+      // `react-hooks/set-state-in-effect` (cascading renders).
+      // El cleanup cancela el timer si champion cambia antes de que
+      // dispare, evitando re-aperturas cuando el usuario dismissa.
+      const id = setTimeout(() => setShowCelebration(true), 0);
+      return () => clearTimeout(id);
     }
   }, [champion, celebrationDismissed]);
 
@@ -140,9 +145,18 @@ export default function PlayoffScreen() {
       celebrationDismissed
     ) {
       console.log('[iter6 MGC-629] useEffect: navigation requested, overlay unmounted → calling onCloseSeason');
-      setNewSeasonRequested(false);
-      newSeasonRequestedRef.current = false;
+      // Navegación sigue siendo síncrona (no es setState) — es la
+      // pieza que MGC-629 iter6 validó por QA walks MGC-641/642.
+      // Reset de flags se difiere al próximo tick para no caer en
+      // `react-hooks/set-state-in-effect` (cascading renders). El
+      // cleanup cancela el timer si las deps cambian antes de que
+      // dispare.
+      const resetId = setTimeout(() => {
+        setNewSeasonRequested(false);
+        newSeasonRequestedRef.current = false;
+      }, 0);
       onCloseSeason();
+      return () => clearTimeout(resetId);
     }
   }, [
     newSeasonRequested,

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -100,17 +100,18 @@ export function CelebrationModal({
   const { colors, radii, spacing, fontSize, fontWeight } = useTheme();
   const reducedMotion = useTheme().reducedMotion;
 
-  // Trophy scale-in.
-  const trophyScale = useRef(new Animated.Value(0)).current;
-  // Trophy pulse (loop) post-settle.
-  const trophyPulse = useRef(new Animated.Value(1)).current;
-  // Card opacity (entera).
-  const cardOpacity = useRef(new Animated.Value(0)).current;
+  // Animated.Value instances via `useState` lazy initializer:
+  // devuelve una referencia estable sin tocar refs durante render
+  // (cumple `react-hooks/refs` v6). Nunca invocamos el setter, así que
+  // React no rerenderea — el contrato coincide con el antiguo `useRef`.
+  const [trophyScale] = useState(() => new Animated.Value(0));
+  const [trophyPulse] = useState(() => new Animated.Value(1));
+  const [cardOpacity] = useState(() => new Animated.Value(0));
 
   const confettiPieces = useMemo(() => buildConfetti(CONFETTI_COUNT), []);
-  const confettiAnims = useRef(
+  const [confettiAnims] = useState(() =>
     confettiPieces.map(() => new Animated.Value(0)),
-  ).current;
+  );
 
   useEffect(() => {
     if (!visible) {
@@ -177,11 +178,11 @@ export function CelebrationModal({
     visible,
     reducedMotion,
     enableConfetti,
-    trophyScale,
-    trophyPulse,
-    cardOpacity,
-    confettiAnims,
-    confettiPieces,
+    // trophyScale / trophyPulse / cardOpacity / confettiAnims son
+    // referencias estables (Animated.Value instances vía useState lazy).
+    // Excluidas del deps array para evitar el warning de
+    // exhaustive-deps "unnecessary dep"; el effect no rerenderea
+    // cuando esas referencias cambian porque nunca cambian.
   ]);
 
   if (!visible || !champion) return null;
