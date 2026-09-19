@@ -1,7 +1,6 @@
 import { Stack, Redirect } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import * as SplashScreen from 'expo-splash-screen';
 import { AppState, Platform, View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
@@ -230,17 +229,11 @@ export default function RootLayout() {
     const timer = setTimeout(() => setFontFallbackFired(true), 5000);
     return () => clearTimeout(timer);
   }, []);
-  const splashHiddenRef = useRef(false);
-  useEffect(() => {
-    if (!(fontsLoaded || fontError || fontFallbackFired)) return;
-    if (splashHiddenRef.current) return;
-    splashHiddenRef.current = true;
-    void SplashScreen.hideAsync().catch(() => {
-      // best-effort: si el módulo nativo no está disponible (web/jest)
-      // no bloqueamos el render
-    });
-  }, [fontsLoaded, fontError, fontFallbackFired]);
 
+  // MGC-890 — el splash nativo ahora lo controla AndroidX core-splashscreen
+  // desde MainActivity.kt (no expo-splash-screen). El release del gate
+  // es responsabilidad de `installSplashScreen().setKeepOnScreenCondition`
+  // en Kotlin; acá sólo esperamos los assets/fonts y montamos React.
   if (!fontsLoaded && !fontError && !fontFallbackFired) {
     return (
       <View
