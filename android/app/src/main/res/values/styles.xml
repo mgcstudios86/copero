@@ -4,6 +4,17 @@
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="android:statusBarColor">@android:color/transparent</item>
     <item name="android:navigationBarColor">@android:color/transparent</item>
+    <!-- MGC-994 — defensive post-splash transition. Sin este
+         windowBackground explícito, AppTheme hereda
+         `?android:colorBackground` que en DayNight dark mode es
+         #000000 puro. Si el ReactRootView no entrega su primer
+         Skia frame antes del primer onCreate frame, el splash
+         dismissa sobre el windowBackground y dumpsys
+         SurfaceFlinger reporta `color{0,0,0,1}` (puro negro) en
+         vez de brand. Forzando @color/splashscreen_background
+         (#0B1320) la transición splash→app es visualmente
+         continua y el surface nunca queda en negro roto. -->
+    <item name="android:windowBackground">@color/splashscreen_background</item>
   </style>
   <!-- MGC-890 — vector 4 splash replacement. Splashscreen theme
        consumido por MainActivity.onCreate vía `setTheme(R.style.Theme_App_Starting)`

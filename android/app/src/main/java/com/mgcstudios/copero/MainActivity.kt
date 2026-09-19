@@ -2,6 +2,8 @@ package com.mgcstudios.copero
 
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
+import android.view.ViewTreeObserver
 
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
@@ -13,29 +15,60 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
-  // MGC-890 — vector 4 splash replacement.
+  // MGC-994 — root-cause del surface-blank cold-start que vector 4 no resolvió.
   //
-  // Antes (plugin `expo-splash-screen`): MainActivity delegaba el splash a
-  // `expo.modules.splashscreen.SplashScreenManager.registerOnActivity(this)`,
-  // que transfería el ownership del SurfaceView al Fabric SurfaceView. Bajo
-  // `newArchEnabled=true` (forzado por SDK 57) esa transferencia dejaba el
-  // compositor pegado al Window background Android-12+ (`color{<0,0,0,1>}`),
-  // Skia no entregaba frames al SurfaceView y el cold-start quedaba en
-  // blanco permanente.
+  // Vector 4 (PR #715, commit f0b60fd) reemplazó `expo-splash-screen` por
+  // `androidx.core:core-splashscreen` y reordenó
+  // `setTheme + installSplashScreen + super.onCreate`. Eso eliminó el path
+  // roto donde el plugin transfería ownership del SurfaceView a Fabric.
+  // PERO `installSplashScreen()` sin `setKeepOnScreenCondition` dismissa
+  // el splash en el PRIMER frame post-onCreate. Bajo SDK 57 + RN 0.86
+  // OldArch + DayNight, ese primer frame suele ser el windowBackground de
+  // AppTheme (`?android:colorBackground` = #000000 en dark mode) ANTES
+  // de que el ReactRootView entregue su primer Skia frame. Resultado QA
+  // MGC-918 sobre PR #715: dumpsys SurfaceFlinger Layer 4068
+  // color{0,0,0,1}, screencap t+2/5/15/30s alternando blanco/negro,
+  // uiautomator ve el árbol React completo pero SurfaceFlinger no —
+  // "Sin Home".
   //
-  // Ahora (androidx.core:core-splashscreen 1.0.1): el splash se monta como
-  // window-background drawable sin tocar el árbol React. La release del
-  // splash la dispara el primer contenido pintado (ver RootLayout
-  // fontsLoaded/fontError fallback + Activity.reportFullyDrawn). El
-  // `setTheme(R.style.Theme_App_Starting)` ANTES de installSplashScreen()
-  // es el punto clave: aplica `Theme.App.Starting` que el manifest ya
-  // pre-asignó a esta Activity, pero MainActivity necesita confirmarlo en
-  // runtime para que `installSplashScreen` haga la transición al
-  // `postSplashScreenTheme` (AppTheme) sin flash blanco.
+  // Fix: gate del splash via `setKeepOnScreenCondition` que se mantiene
+  // hasta que el decorView haya pintado >= 2 frames consecutivos
+  // (umbral empírico: descarta el splash drawable transitorio y
+  // requiere frames de Skia del ReactRootView). Hard-cap 2.5s para
+  // no colgarse si JS crashea antes de dibujar. El OnDrawListener se
+  // adjunta DESPUÉS de super.onCreate para garantizar que el decorView
+  // está formado; `decor.post` lo encola fuera del frame actual, así el
+  // primer OnDraw que contamos es del siguiente vsync.
   override fun onCreate(savedInstanceState: Bundle?) {
     setTheme(R.style.Theme_App_Starting)
-    installSplashScreen()
+    val splashScreen = installSplashScreen()
+
+    val gateStartedAt = SystemClock.uptimeMillis()
+    var reactDrawCount = 0
+    val REQUIRED_FRAMES = 2
+    val HARD_CAP_MS = 2_500L
+
+    splashScreen.setKeepOnScreenCondition {
+      val elapsed = SystemClock.uptimeMillis() - gateStartedAt
+      elapsed < HARD_CAP_MS && reactDrawCount < REQUIRED_FRAMES
+    }
+
     super.onCreate(null)
+
+    window.decorView.post {
+      window.decorView.viewTreeObserver.addOnDrawListener(
+        object : ViewTreeObserver.OnDrawListener {
+          override fun onDraw() {
+            reactDrawCount++
+            if (reactDrawCount >= REQUIRED_FRAMES) {
+              window.decorView.post {
+                window.decorView.viewTreeObserver.removeOnDrawListener(this)
+              }
+            }
+          }
+        }
+      )
+    }
   }
 
   /**
