@@ -489,7 +489,7 @@ export default function DashboardScreen() {
               {showDraftCta ? (
                 <View style={{ marginTop: spacing[2], alignSelf: 'stretch' }}>
                   <Button
-                    label="Empezar draft de leyendas"
+                    label={copy.resolve('dashboard_cta_draft')}
                     onPress={onDraftPress}
                     variant="primary"
                     size="md"
@@ -504,7 +504,7 @@ export default function DashboardScreen() {
               {profile.club && !showDraftCta ? (
                 <View style={{ marginTop: spacing[2], alignSelf: 'stretch' }}>
                   <Button
-                    label="Mercado de pases"
+                    label={copy.resolve('dashboard_cta_market')}
                     onPress={() => router.push('/simulador-carrera/mercado/lista')}
                     variant="primary"
                     size="md"
@@ -600,7 +600,7 @@ export default function DashboardScreen() {
         />
         {showDraftCta ? (
           <Button
-            label="Empezar draft de leyendas"
+            label={copy.resolve('dashboard_cta_draft')}
             onPress={onDraftPress}
             variant="secondary"
             size="md"

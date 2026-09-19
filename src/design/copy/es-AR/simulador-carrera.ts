@@ -99,6 +99,10 @@ const ENTRIES: Record<string, CopyEntry> = {
   dashboard_cta_training: { raw: 'Ir a entrenar' },
   dashboard_cta_match: { raw: 'Jugar la próxima fecha' },
   dashboard_cta_rest: { raw: 'Descansar esta semana' },
+  // MGC-552 — CTAs del flow mercado-de-pases (PR #662). Antes
+  // hardcodeados en español en `dashboard.tsx` (regresión P2).
+  dashboard_cta_draft: { raw: 'Empezar draft de leyendas' },
+  dashboard_cta_market: { raw: 'Mercado de pases' },
   dashboard_suggested_h2: { raw: 'Decisión sugerida' },
 
   // ── Pantalla 3: Academy offer (copy-matrix.md §3) ────────────────

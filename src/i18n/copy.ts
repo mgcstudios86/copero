@@ -402,6 +402,48 @@ export type Copy = {
     confirmDismiss: string;
   };
 
+  // MGC-552 — strings del flow mercado-de-pases (PR #662). Pantallas
+  // /mercado/lista, /mercado/detalle, /mercado/confirmacion. Antes
+  // hardcodeados en español o devueltos por `t()` como path literal
+  // → 'MERCADO.EYEBROW' en pantalla (regresión MGC-2168). El placeholder
+  // `{{amount}}` se interpola con `t('mercado.offer', { amount })`.
+  mercado: {
+    eyebrow: string;
+    title: string;
+    budgetLabel: string;
+    filters: string;
+    all: string;
+    maxPrice: string;
+    maxAge: string;
+    noBudgetTitle: string;
+    noBudgetBody: string;
+    emptyTitle: string;
+    emptyBody: string;
+    back: string;
+    soldTitle: string;
+    soldBody: string;
+    backToList: string;
+    seasonStats: string;
+    apps: string;
+    goals: string;
+    ast: string;
+    value: string;
+    from: string;
+    offer: string;
+    confirmEyebrow: string;
+    currentBudget: string;
+    afterBuy: string;
+    confirm: string;
+    cancel: string;
+    successTitle: string;
+    successBody: string;
+    done: string;
+    retry: string;
+    iaRejected: string;
+    to: string;
+    unknownClub: string;
+  };
+
 };
 
 export const COPY: Record<Locale, Copy> = {
@@ -736,6 +778,43 @@ export const COPY: Record<Locale, Copy> = {
       confirmCancel: 'Cancelar',
       confirmDismiss: 'Cerrar el diálogo sin borrar',
     },
+    // MGC-552 — flow mercado-de-pases (PR #662), default español.
+    mercado: {
+      eyebrow: 'MERCADO DE PASES',
+      title: 'Mercado de pases',
+      budgetLabel: 'Presupuesto',
+      filters: 'Filtros',
+      all: 'Todos',
+      maxPrice: 'Precio máx.',
+      maxAge: 'Edad máx.',
+      noBudgetTitle: 'Sin presupuesto',
+      noBudgetBody: 'No te queda presupuesto para fichar esta temporada.',
+      emptyTitle: 'No hay jugadores disponibles',
+      emptyBody: 'Probá ampliar los filtros o volvé la próxima semana.',
+      back: 'Volver',
+      soldTitle: 'Vendido',
+      soldBody: 'Otro club ya cerró la compra de este jugador.',
+      backToList: 'Volver al mercado',
+      seasonStats: 'TEMPORADA',
+      apps: 'Partidos',
+      goals: 'Goles',
+      ast: 'Asist.',
+      value: 'Valor',
+      from: 'De',
+      offer: 'Ofertar {{amount}}',
+      confirmEyebrow: 'CONFIRMAR PASE',
+      currentBudget: 'Presupuesto actual',
+      afterBuy: 'Después de la compra',
+      confirm: 'Confirmar',
+      cancel: 'Cancelar',
+      successTitle: '¡Fichaje cerrado!',
+      successBody: 'El jugador se suma a tu plantel para la próxima temporada.',
+      done: 'Listo',
+      retry: 'Reintentar',
+      iaRejected: 'La oferta fue rechazada por la IA del club vendedor.',
+      to: 'A',
+      unknownClub: 'Club desconocido',
+    },
   },
   en: {
     brand: 'Copero',
@@ -1067,6 +1146,43 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: 'Yes, erase everything',
       confirmCancel: 'Cancel',
       confirmDismiss: 'Close dialog without erasing',
+    },
+    // MGC-552 — flow mercado-de-pases (PR #662), English.
+    mercado: {
+      eyebrow: 'TRANSFER MARKET',
+      title: 'Transfer market',
+      budgetLabel: 'Budget',
+      filters: 'Filters',
+      all: 'All',
+      maxPrice: 'Max price',
+      maxAge: 'Max age',
+      noBudgetTitle: 'No budget',
+      noBudgetBody: 'You do not have enough budget to sign this season.',
+      emptyTitle: 'No players available',
+      emptyBody: 'Try widening the filters or come back next week.',
+      back: 'Back',
+      soldTitle: 'Sold',
+      soldBody: 'Another club already closed the deal for this player.',
+      backToList: 'Back to market',
+      seasonStats: 'SEASON',
+      apps: 'Apps',
+      goals: 'Goals',
+      ast: 'Ast.',
+      value: 'Value',
+      from: 'From',
+      offer: 'Offer {{amount}}',
+      confirmEyebrow: 'CONFIRM TRANSFER',
+      currentBudget: 'Current budget',
+      afterBuy: 'After buy',
+      confirm: 'Confirm',
+      cancel: 'Cancel',
+      successTitle: 'Deal closed!',
+      successBody: 'The player joins your squad for the next season.',
+      done: 'Done',
+      retry: 'Retry',
+      iaRejected: 'The selling club AI rejected the offer.',
+      to: 'To',
+      unknownClub: 'Unknown club',
     },
   },
   'zh-CN': {
@@ -1400,6 +1516,43 @@ export const COPY: Record<Locale, Copy> = {
       confirmCancel: '取消',
       confirmDismiss: '关闭弹窗且不清除',
     },
+    // MGC-552 — flow mercado-de-pases (PR #662), 简体中文。
+    mercado: {
+      eyebrow: '转会市场',
+      title: '转会市场',
+      budgetLabel: '预算',
+      filters: '筛选',
+      all: '全部',
+      maxPrice: '最高价格',
+      maxAge: '最大年龄',
+      noBudgetTitle: '预算不足',
+      noBudgetBody: '本赛季没有足够的预算签下球员。',
+      emptyTitle: '暂无可用球员',
+      emptyBody: '尝试放宽筛选条件或下周再来。',
+      back: '返回',
+      soldTitle: '已售出',
+      soldBody: '另一家俱乐部已经完成了这笔交易。',
+      backToList: '返回市场',
+      seasonStats: '赛季',
+      apps: '出场',
+      goals: '进球',
+      ast: '助攻',
+      value: '身价',
+      from: '来自',
+      offer: '报价 {{amount}}',
+      confirmEyebrow: '确认转会',
+      currentBudget: '当前预算',
+      afterBuy: '买入之后',
+      confirm: '确认',
+      cancel: '取消',
+      successTitle: '签约成功！',
+      successBody: '该球员将在下个赛季加入你的阵容。',
+      done: '完成',
+      retry: '重试',
+      iaRejected: '卖方俱乐部 AI 拒绝了报价。',
+      to: '去往',
+      unknownClub: '未知俱乐部',
+    },
   },
   // MGC-320 — locale pt-BR (Bug A del padre MGC-306). Solo poblamos
   // las claves que el header, settings y home body necesitan; el resto
@@ -1729,6 +1882,43 @@ export const COPY: Record<Locale, Copy> = {
       confirmAccept: 'Sim, apagar tudo',
       confirmCancel: 'Cancelar',
       confirmDismiss: 'Fechar o diálogo sem apagar',
+    },
+    // MGC-552 — flow mercado-de-pases (PR #662), português brasileiro.
+    mercado: {
+      eyebrow: 'MERCADO DA BOLA',
+      title: 'Mercado da bola',
+      budgetLabel: 'Orçamento',
+      filters: 'Filtros',
+      all: 'Todos',
+      maxPrice: 'Preço máx.',
+      maxAge: 'Idade máx.',
+      noBudgetTitle: 'Sem orçamento',
+      noBudgetBody: 'Não sobra orçamento para contratar nesta temporada.',
+      emptyTitle: 'Sem jogadores disponíveis',
+      emptyBody: 'Tente alargar os filtros ou volte na próxima semana.',
+      back: 'Voltar',
+      soldTitle: 'Vendido',
+      soldBody: 'Outro clube já fechou a compra deste jogador.',
+      backToList: 'Voltar ao mercado',
+      seasonStats: 'TEMPORADA',
+      apps: 'Jogos',
+      goals: 'Gols',
+      ast: 'Assist.',
+      value: 'Valor',
+      from: 'De',
+      offer: 'Oferecer {{amount}}',
+      confirmEyebrow: 'CONFIRMAR TRANSFERÊNCIA',
+      currentBudget: 'Orçamento atual',
+      afterBuy: 'Depois da compra',
+      confirm: 'Confirmar',
+      cancel: 'Cancelar',
+      successTitle: 'Contratação fechada!',
+      successBody: 'O jogador entra no elenco para a próxima temporada.',
+      done: 'Concluído',
+      retry: 'Tentar de novo',
+      iaRejected: 'A IA do clube vendedor recusou a oferta.',
+      to: 'Para',
+      unknownClub: 'Clube desconhecido',
     },
   },
 };

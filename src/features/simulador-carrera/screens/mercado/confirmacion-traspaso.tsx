@@ -237,7 +237,7 @@ export default function ConfirmacionTraspasoScreen() {
   const newBudget = profile.clubPresupuesto - amount;
   const buyerClubDef = buyerClub
     ? ACADEMY_CLUBS.find((c) => c.id === buyerClub.id)
-    : null;
+    : undefined;
   const sellerClubDef = ACADEMY_CLUBS.find((c) => c.id === player.fromClub.id);
 
   return (

@@ -372,7 +372,7 @@ function PlayerRow({
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: club?.crestColor ?? '#1F2937',
+              backgroundColor: '#1F2937',
             }}
           />
         )}
