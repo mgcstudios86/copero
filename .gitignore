@@ -42,8 +42,24 @@ yarn-error.*
 *.tsbuildinfo
 
 # generated native folders
+# MGC-890 — vector 4 fix requires stable native ownership. Pre-iter14
+# este repo ignoraba `/android` y `/ios`; las ediciones natives se
+# regeneraban vía `expo prebuild` desde app.config.js + plugins. La
+# decisión arquitectónica acá es **rastrear** las carpetas natives:
+# (a) el fix de vector 4 reemplaza el plugin `expo-splash-screen` por
+# `androidx.core:core-splashscreen` + edición manual de MainActivity.kt,
+# styles.xml, AndroidManifest.xml y build.gradle. El plugin
+# expo-splash-screen transfería ownership del SurfaceView a Fabric
+# (mano del bug); sin control sobre esas 4 files, el vector 4 no puede
+# ejercerse de forma reproducible.
+# (b) CI no corre `expo prebuild` (validado en .github/workflows/);
+# `eas build --local` consume el android/ commiteado sin regenerar.
+# Si en el futuro se reactiva prebuild en CI, este repo debe volver a
+# /ios y /android como ignorados y la propiedad native debe migrar a un
+# config plugin (con `@expo/config-plugins.withMainActivity` + Expo
+# `expo-build-properties` mods). Por ahora: tracked.
 /ios
-/android
+/android.bak
 
 # Secrets / credentials
 credentials/

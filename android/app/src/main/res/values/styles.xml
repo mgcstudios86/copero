@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+  <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+  </style>
+  <!-- MGC-890 — vector 4 splash replacement. Splashscreen theme
+       consumido por MainActivity.onCreate vía `setTheme(R.style.Theme_App_Starting)`
+       ANTES de `installSplashScreen()` y `super.onCreate()`. Reemplaza
+       al plugin `expo-splash-screen` (parent transfer vía Fabric), que
+       pegaba el compositor al Window background Android-12+ bajo
+       newArchEnabled=true. Parent `Theme.SplashScreen` (androidx.core)
+       provee el `windowSplashScreenBackground/AnimatedIcon` contract. -->
+  <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+    <item name="windowSplashScreenBackground">@color/splashscreen_background</item>
+    <item name="windowSplashScreenAnimatedIcon">@drawable/splashscreen_logo</item>
+    <item name="postSplashScreenTheme">@style/AppTheme</item>
+    <item name="android:windowSplashScreenBehavior">icon_preferred</item>
+  </style>
+</resources>

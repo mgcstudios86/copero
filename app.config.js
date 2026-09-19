@@ -126,14 +126,6 @@ module.exports = ({ config } = {}) => ({
   plugins: [
     'expo-router',
     [
-      'expo-splash-screen',
-      {
-        image: './assets/splash.png',
-        resizeMode: 'contain',
-        backgroundColor: '#0B1320',
-      },
-    ],
-    [
       // MGC-869 — iter14: forward-compat plugin entry. v57.0.21 REMOVIÓ
       // `android.newArchEnabled` del config schema (CHANGELOG), así que
       // el plugin config es dead-code en este SDK — el trabajo real lo
