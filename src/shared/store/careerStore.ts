@@ -30,6 +30,11 @@ import {
   clearCareerSave,
   isPersistentStorage,
 } from '@/features/career/persistence';
+// MGC-755 iter8 — gate centralizado de hidratación. Toda llamada a
+// `hydrateFromSave` pasa por `requestHydrate` que aplica 3 capas:
+// coalesce de concurrentes, early-exit por no-snapshot, y sticky dedup
+// de logs. Ver `hydrateGate.ts` para el rationale completo.
+import { requestHydrate, invalidate as invalidateHydrateGate, registerInvalidateHook } from '@/shared/store/hydrateGate';
 import { wipeAllCoperoKeys } from '@/lib/storage';
 import { createRngSnapshot } from '@/features/career/rng';
 // MGC-704 — `recordMatchweekResults` necesita la lista de clubes de la
@@ -221,8 +226,13 @@ type CareerStore = CareerSnapshot & {
   resolveTransfer: (acceptedOfferId: string | null) => Promise<void>;
   /** MGC-227: hidrata la store desde AsyncStorage vía `loadCareerSave`.
    * Llamado una vez durante el bootstrap de la app (`app/_layout.tsx`).
-   * Devuelve `true` si encontró un save previo y lo aplicó. */
-  hydrateFromSave: () => Promise<boolean>;
+   * Devuelve `true` si encontró un save previo y lo aplicó.
+   *
+   * MGC-755 iter8 — acepta `{ force?: boolean; caller?: string }`:
+   * `force: true` invalida el cache del gate antes de leer (usado por
+   * `dashboard.onSlotChanged` y `SaveSlotPicker.onConfirm`); `caller`
+   * es un tag para los logs de diagnóstico del gate. */
+  hydrateFromSave: (opts?: { force?: boolean; caller?: string }) => Promise<boolean>;
   reset: () => void;
   /**
    * MGC-1736 (WF6) — reset destructivo AWAITABLE para el CTA
@@ -415,6 +425,90 @@ let lastSnapshot: SnapshotPayload | null = null;
 export function getLastSnapshot(): SnapshotPayload | null {
   return lastSnapshot;
 }
+
+/**
+ * MGC-755 iter8 — escape hatch explícito para forzar re-hidratación
+ * saltando la capa C del gate (early-exit por no-snapshot cacheado).
+ * Usar SOLO desde paths donde el caller SABE que el storage cambió:
+ *   - `dashboard.onSlotChanged` (slot activo cambió, otro key)
+ *   - `SaveSlotPicker.onConfirm` (slot nuevo o sobreescritura)
+ *   - código de test que necesita reset determinístico
+ *
+ * Internamente invalida el cache del gate y luego llama al flujo
+ * normal con `force: true`. NO bypassa la coalesce de concurrentes
+ * (capa A+B siguen activas).
+ */
+export async function __forceHydrateFromSave(caller: string): Promise<boolean> {
+  // MGC-777 iter9 — además de invalidar el gate, reseteamos el
+  // hard wall local para que la llamada con `force` re-entre al
+  // flujo completo y resuelva un nuevo outcome.
+  invalidateHydrationLatch();
+  return useCareerStore.getState().hydrateFromSave({ force: true, caller });
+}
+
+/**
+ * MGC-755 iter8 — wrapper conveniente para invalidar el cache del
+ * gate desde fuera del store (ej: dashboard.tsx antes de un slot
+ * switch). Equivalente a `invalidate()` del módulo `hydrateGate.ts`
+ * pero re-exportado acá para mantener un solo punto de entrada
+ * desde el código de UI.
+ *
+ * MGC-777 iter9 — además del gate, resetea el hard wall local
+ * (`hydrationResolved`) para que la próxima `hydrateFromSave` SIN
+ * `force` re-entre al flujo. Sin esto, un `dashboard.onSlotChanged`
+ * que olvidara pasar `force: true` quedaría pegado al cache local.
+ *
+ * NOTA sobre recursión: NO llama `invalidateHydrateGate` porque
+ * ese ya dispara un dynamic import que termina llamando a esta
+ * misma función (el gate's `invalidate` resetea el wall como side
+ * effect). Llamarla desde acá produciría un loop de Promises
+ * infinitos. Los callers que necesitan invalidar AMBOS caches
+ * deben llamar `invalidateHydrateGate()` (que ya cubre el wall).
+ */
+export function invalidateHydrationLatch(): void {
+  hydrationResolved = false;
+  hydrationResult = null;
+}
+
+/**
+ * MGC-777 iter9 — hard wall al call site de hidratación.
+ *
+ * iter8 (PR #695) puso el early-exit DENTRO del IIFE del gate. El
+ * walk QA MGC-768 mostró que esto NO corta el loop: el IIFE entraba,
+ * incrementaba `callCount`, emitía `[hydrateGate] high-call-count` y
+ * SOLO ENTONCES salía por early-exit. 3936 calls en 90s = 3936 logs.
+ *
+ * El wall es una capa ADELANTADA al gate: una vez que `hydrateFromSave`
+ * resolvió (loaded o no-snapshot), las calls sub-siguientes SIN `force`
+ * retornan INMEDIATO sin siquiera tocar `requestHydrate`. La coalesce
+ * y sticky dedup del gate siguen activas para los paths que sí tocan
+ * storage (slot change, save, reset).
+ *
+ * El flag es module-scope (NO en el store Zustand) porque:
+ *   - debe sobrevivir renders que cambian `useCareerStore.getState()`
+ *     y forzarían un re-suscribe costoso.
+ *   - debe ser sincrónico y determinístico (no async), porque el wall
+ *     corre antes del primer await de `hydrateFromSave`.
+ *
+ * Se invalida en `resetAll` (wipe de disco), `invalidateHydrationLatch`
+ * (escape hatch público) y `__forceHydrateFromSave` (que siempre pasa
+ * `force: true` así que el wall no aplica). También se auto-invalida
+ * via `registerInvalidateHook` cuando `hydrateGate.invalidate()` se
+ * dispara externamente (saveCareerSave, clearCareerSave).
+ */
+let hydrationResolved = false;
+let hydrationResult: boolean | null = null;
+
+// MGC-777 iter9 — registro del wall al hook de invalidación del gate.
+// Se ejecuta una vez al cargar el módulo de careerStore (después de
+// que el módulo hydrateGate ya esté cargado por el import estático
+// arriba). Si `__resetGateForTests` borra los hooks (entre tests),
+// este registro persiste solo en este módulo y vuelve a estar activo
+// en el siguiente test que importe careerStore.
+registerInvalidateHook(() => {
+  hydrationResolved = false;
+  hydrationResult = null;
+});
 
 /**
  * MGC-363 — escribe `lastSnapshot` directo a AsyncStorage sin pasar por
@@ -1157,62 +1251,133 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
     // para que el `hydrateGate` en `_layout.*.tsx` SIEMPRE desbloquee
     // (un save corrupto o AsyncStorage roto no debe dejar la UI colgada
     // en el splash).
-    hydrateFromSave: async () => {
-      let saved;
-      try {
-        saved = await loadCareerSave();
-      } catch {
-        // MGC-306 AC4: incluso si AsyncStorage explota, flippeamos
-        // `hydrated` para destrabar el gate del layout. El usuario
-        // sigue pudiendo usar la app con initialSnapshot; la próxima
-        // save sobrescribirá cualquier estado corrupto.
-        set((s) => ({ ...s, hydrated: true }));
-        return false;
+    //
+    // MGC-755 iter8 — toda llamada pasa por `requestHydrate` (gate
+    // centralizado). El gate aplica 3 capas: coalesce de concurrentes,
+    // early-exit por no-snapshot cacheado, y sticky dedup de logs.
+    // `opts.force` se usa desde `dashboard.onSlotChanged` /
+    // `SaveSlotPicker.onConfirm` / `__forceHydrateFromSave` donde el
+    // caller sabe que el cache debe invalidarse. El payload viene
+    // dentro del `outcome` (no hace falta un segundo load).
+    hydrateFromSave: async (opts?: { force?: boolean; caller?: string }) => {
+      // MGC-777 iter9 — hard wall al call site. Si ya resolvimos una
+      // hidratación (loaded o no-snapshot) y el caller NO está forzando,
+      // retornamos el resultado cacheado SIN tocar el gate ni
+      // AsyncStorage. Esto cierra el bucle del walk MGC-768 donde
+      // 3936 calls en 90s saturaban el JS thread entrando al IIFE
+      // del gate sólo para early-exitear adentro.
+      //
+      // El wall es seguro porque el `force: true` path lo bypasea
+      // (dashboard.onSlotChanged, SaveSlotPicker.onConfirm,
+      // __forceHydrateFromSave), y `invalidateHydrationLatch()`
+      // resetea `hydrationResolved` cuando el storage cambia
+      // externamente (save, wipe).
+      if (!opts?.force && hydrationResolved && hydrationResult !== null) {
+        // MGC-788 iter10 — sincronizar `hydrated:true` al store Zustand
+        // si quedó desincronizado del wall. Escenario: bundle re-mount
+        // (Running main x2 en logcat del walk MGC-782) donde el JS
+        // context se re-inicializa y el store Zustand arranca con
+        // `hydrated:false` (estado inicial), pero el wall module-scope
+        // mantiene `hydrationResolved:true` + `hydrationResult:false`
+        // del ciclo anterior. Sin este flip idempotente, el layout
+        // quedaba atrapado en la splash blanca con ActivityIndicator
+        // verde (`colors.primary` #22C55E) porque el gate
+        // `if (!hydrated || ...)` nunca levanta. Idempotente: si
+        // `hydrated` ya está true, el set no produce re-render.
+        if (!get().hydrated) {
+          set((s) => ({ ...s, hydrated: true }));
+        }
+        return hydrationResult;
       }
-      if (!saved) {
-        // MGC-2999 — defensa en profundidad. Si no hay payload para el
-        // slot activo (slot recién creado vía picker sin payload legacy,
-        // o slot vaciado por deleteSlot), el store podría seguir
-        // cargando state del slot previo. Reseteamos a initialSnapshot
-        // y dejamos que el caller (`dashboard.onSlotChanged`) o el
-        // próximo `applyAndPersist` reescriban limpio bajo el key
-        // activo. Esto garantiza que dos slots nunca comparten state.
-        setSnapshot(() => initialSnapshot());
+
+      const outcome = await requestHydrate<Awaited<ReturnType<typeof loadCareerSave>>>(
+        async () => {
+          let saved;
+          try {
+            saved = await loadCareerSave();
+          } catch {
+            return { saved: null, reason: 'error' };
+          }
+          if (!saved) {
+            return { saved: null, reason: 'no-snapshot' };
+          }
+          return { saved };
+        },
+        { force: opts?.force, caller: opts?.caller ?? 'careerStore.hydrateFromSave' },
+      );
+
+      if (outcome.ok) {
+        const saved = outcome.payload;
+        if (!saved) {
+          // Edge case: el loader devolvió `{ saved: null, reason: 'loaded' }`.
+          // Tratamos como no-snapshot (defensa — no debería pasar con el
+          // loader actual, pero blindamos el shape).
+          setSnapshot(() => initialSnapshot());
+          set((s) => ({ ...s, hydrated: true }));
+          // MGC-777 iter9 — cacheamos el resultado del wall ANTES del
+          // return. Sin este set, el wall quedaría cerrado en false
+          // (no-snapshot) y no volvería a consultar hasta un force o
+          // reset — comportamiento correcto pero necesitamos
+          // sincronizar el flag con el resultado que retornamos.
+          hydrationResolved = true;
+          hydrationResult = false;
+          return false;
+        }
+        setSnapshot((s) => ({
+          ...s,
+          stage: saved.stage,
+          profile: saved.profile,
+          draft: saved.draft ?? null,
+          card: saved.card ?? null,
+          log: saved.log,
+          // MGC-487.3 — vitrina temporada-a-temporada. Saves legacy
+          // (pre-MGC-487.3) no la traen → default `[]` para que la UI
+          // muestre "VITRINA VACÍA" en vez de explotar.
+          history: saved.history ?? [],
+          seed: saved.seed,
+          rng: saved.rng,
+          // MGC-1730 (HIGH-2 fix sobre PR #425) — copiar los 3 campos F3.2
+          // del save al store. `loadCareerSave` ya aplicó
+          // `hydrateF3Fields`, así que vienen con defaults si eran
+          // `undefined` en disco.
+          postMatchPending: saved.postMatchPending ?? null,
+          nextWeekModifiers: saved.nextWeekModifiers,
+          transferState: saved.transferState ?? null,
+          // MGC-475 — hidratar mercado con default si el save v:1/v:2 no
+          // lo trae (carreras iniciadas antes de MGC-475).
+          marketState: saved.marketState ?? EMPTY_MARKET_STATE,
+          // MGC-704 — slice de liga persistible. Saves legacy lo traen
+          // `undefined` → `{}` para que `getStandingsForDisplay` caiga al
+          // placeholder determinista hasta que el usuario avance al menos
+          // una fecha.
+          seasonStandings: saved.seasonStandings ?? {},
+          seasonFixtures: saved.seasonFixtures ?? [],
+        }));
         set((s) => ({ ...s, hydrated: true }));
-        return false;
+        // MGC-777 iter9 — wall hit. Cacheamos `true` para que las
+        // próximas calls (sin force) retornen inmediato.
+        hydrationResolved = true;
+        hydrationResult = true;
+        return true;
       }
-      setSnapshot((s) => ({
-        ...s,
-        stage: saved.stage,
-        profile: saved.profile,
-        draft: saved.draft ?? null,
-        card: saved.card ?? null,
-        log: saved.log,
-        // MGC-487.3 — vitrina temporada-a-temporada. Saves legacy
-        // (pre-MGC-487.3) no la traen → default `[]` para que la UI
-        // muestre "VITRINA VACÍA" en vez de explotar.
-        history: saved.history ?? [],
-        seed: saved.seed,
-        rng: saved.rng,
-        // MGC-1730 (HIGH-2 fix sobre PR #425) — copiar los 3 campos F3.2
-        // del save al store. `loadCareerSave` ya aplicó
-        // `hydrateF3Fields`, así que vienen con defaults si eran
-        // `undefined` en disco.
-        postMatchPending: saved.postMatchPending ?? null,
-        nextWeekModifiers: saved.nextWeekModifiers,
-        transferState: saved.transferState ?? null,
-        // MGC-475 — hidratar mercado con default si el save v:1/v:2 no
-        // lo trae (carreras iniciadas antes de MGC-475).
-        marketState: saved.marketState ?? EMPTY_MARKET_STATE,
-        // MGC-704 — slice de liga persistible. Saves legacy lo traen
-        // `undefined` → `{}` para que `getStandingsForDisplay` caiga al
-        // placeholder determinista hasta que el usuario avance al menos
-        // una fecha.
-        seasonStandings: saved.seasonStandings ?? {},
-        seasonFixtures: saved.seasonFixtures ?? [],
-      }));
+
+      // outcome.ok === false. Razones posibles:
+      //   - 'no-snapshot' → reset a initialSnapshot + flippeamos
+      //     `hydrated` para destrabar el layout.
+      //   - 'error' → AsyncStorage explotó; mismo reset, mismo flip.
+      //   - 'version-mismatch' / 'json-parse-failed' → payload
+      //     corrupto; reset + flip (el siguiente save del usuario
+      //     sobrescribirá con payload válido).
+      setSnapshot(() => initialSnapshot());
       set((s) => ({ ...s, hydrated: true }));
-      return true;
+      // MGC-777 iter9 — wall hit (no-snapshot / error / version
+      // mismatch). Cacheamos `false` para que las próximas calls sin
+      // `force` retornen inmediato. La única vía de re-hidratar sin
+      // un save intermedio es el path con `force: true` (slot change,
+      // picker confirm, escape hatch de MGC-729).
+      hydrationResolved = true;
+      hydrationResult = false;
+      return false;
     },
     // reset: estado inicial sin motor. Borra el save persistido.
     // MGC-2606 — el `void clearCareerSave()` fire-and-forget generaba una
@@ -1258,6 +1423,19 @@ export const useCareerStore = create<CareerStore>()((set, get) => {
         // y el clear; el peor caso es la misma ventana que reset().
       }
       setSnapshot(() => initialSnapshot());
+      // MGC-755 iter8 — invalidamos el gate completo para que la
+      // próxima lectura post-wipe NO salga por early-exit (capa C).
+      // El wipe borró el payload de disco; el cache del gate debe
+      // reflejar que la próxima lectura encontró storage vacío, no
+      // devolver el resultado stale de la lectura anterior.
+      invalidateHydrateGate();
+      // MGC-777 iter9 — además del gate, reseteamos el hard wall
+      // local. La próxima `hydrateFromSave` debe re-entrar al flujo
+      // completo (no salir por el wall cacheado) para reflejar el
+      // wipe. Sin esto, un resetAll + reload veía al wall cerrado
+      // en `false` (no-snapshot previo) y la UI quedaba atascada.
+      hydrationResolved = false;
+      hydrationResult = null;
       // MGC-215: wipeAllCoperoKeys + clearCareerSave en paralelo. Cada
       // uno tiene un catch independiente — un fallo parcial no aborta
       // al otro. Si wipeAllCoperoKeys explota, clearCareerSave igual
